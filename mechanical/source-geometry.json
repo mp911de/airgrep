@@ -1,0 +1,1698 @@
+{
+  "display": {
+    "source": "sources/display/1.47 Inch Touch Display Powered by XIAO ESP32-S3 Plus.kicad_pcb",
+    "units": "mm",
+    "axis": "native KiCad, y down",
+    "features": [
+      {
+        "ref": "TP13",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 81.5,
+        "y": 127.046,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 81.5,
+            "y": 127.046,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "GND"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "TP5",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 81.5,
+        "y": 98.26,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 81.5,
+            "y": 98.26,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "/03 Main/EN"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "TP8",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 81.5,
+        "y": 105.88,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 81.5,
+            "y": 105.88,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "/03 Main/MTCK"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "TP23",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 103.5,
+        "y": 132.126,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 103.5,
+            "y": 132.126,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "/03 Main/BTN_USR2"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "TP11",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 103.5,
+        "y": 93.18,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 103.5,
+            "y": 93.18,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "VBUS"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "H2",
+        "footprint": "SeeedStudio:MountingHole_M2.5",
+        "x": 102.5,
+        "y": 137.5,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "",
+            "type": "np_thru_hole",
+            "x": 102.5,
+            "y": 137.5,
+            "drill": [
+              "2.5"
+            ],
+            "net": []
+          }
+        ]
+      },
+      {
+        "ref": "TP9",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 81.5,
+        "y": 108.42,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 81.5,
+            "y": 108.42,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "/03 Main/USB_DN"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "TP17",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 103.5,
+        "y": 98.26,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 103.5,
+            "y": 98.26,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "3V3"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "TP7",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 81.5,
+        "y": 103.34,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 81.5,
+            "y": 103.34,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "/03 Main/MTMS"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "TP18",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 103.5,
+        "y": 100.8,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 103.5,
+            "y": 100.8,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "GND"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "SW1",
+        "footprint": "SeeedStudio:MSK12C02-HB",
+        "x": 81.75,
+        "y": 121.7,
+        "rotation": -90.0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "",
+            "type": "np_thru_hole",
+            "x": 81.75,
+            "y": 120.2,
+            "drill": [
+              "0.85"
+            ],
+            "net": []
+          },
+          {
+            "number": "",
+            "type": "np_thru_hole",
+            "x": 81.75,
+            "y": 123.2,
+            "drill": [
+              "0.85"
+            ],
+            "net": []
+          }
+        ]
+      },
+      {
+        "ref": "TP22",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 103.5,
+        "y": 129.586,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 103.5,
+            "y": 129.586,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "/03 Main/BTN_USR1"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "H4",
+        "footprint": "SeeedStudio:MountingHole_M2.5",
+        "x": 102.5,
+        "y": 115.0,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "",
+            "type": "np_thru_hole",
+            "x": 102.5,
+            "y": 115.0,
+            "drill": [
+              "2.5"
+            ],
+            "net": []
+          }
+        ]
+      },
+      {
+        "ref": "TP4",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 81.5,
+        "y": 95.72,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 81.5,
+            "y": 95.72,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "/03 Main/MTDO"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "J1",
+        "footprint": "SeeedStudio:WAFER-PH2.0-2P_SMD_Horizontal",
+        "x": 97.8,
+        "y": 122.2,
+        "rotation": 90.0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": []
+      },
+      {
+        "ref": "TP10",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 81.5,
+        "y": 110.96,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 81.5,
+            "y": 110.96,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "/03 Main/USB_DP"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "TP3",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 81.5,
+        "y": 93.18,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 81.5,
+            "y": 93.18,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "/03 Main/MTDI"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "J3",
+        "footprint": "SeeedStudio:TF-123-ARP9H15",
+        "x": 91.85,
+        "y": 130.0,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": []
+      },
+      {
+        "ref": "TP19",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 103.5,
+        "y": 103.34,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 103.5,
+            "y": 103.34,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "/03 Main/D11_I2S_SD"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "TP14",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 81.5,
+        "y": 129.586,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 81.5,
+            "y": 129.586,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "3V3"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "TP21",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 103.5,
+        "y": 108.42,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 103.5,
+            "y": 108.42,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "/03 Main/D13_I2S_WS"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "H3",
+        "footprint": "SeeedStudio:MountingHole_M2.5",
+        "x": 82.5,
+        "y": 115.0,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "",
+            "type": "np_thru_hole",
+            "x": 82.5,
+            "y": 115.0,
+            "drill": [
+              "2.5"
+            ],
+            "net": []
+          }
+        ]
+      },
+      {
+        "ref": "H1",
+        "footprint": "SeeedStudio:MountingHole_M2.5",
+        "x": 82.5,
+        "y": 137.5,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "",
+            "type": "np_thru_hole",
+            "x": 82.5,
+            "y": 137.5,
+            "drill": [
+              "2.5"
+            ],
+            "net": []
+          }
+        ]
+      },
+      {
+        "ref": "TP15",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 81.5,
+        "y": 132.126,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 81.5,
+            "y": 132.126,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "/03 Main/CTP_IMU_SDA"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "TP12",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 103.5,
+        "y": 95.72,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 103.5,
+            "y": 95.72,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "GND"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "TP6",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 81.5,
+        "y": 100.8,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 81.5,
+            "y": 100.8,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "GND"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "TP16",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 81.5,
+        "y": 134.666,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 81.5,
+            "y": 134.666,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "/03 Main/CTP_IMU_SCL"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "U1",
+        "footprint": "SeeedStudio:XIAO-ESP32-S3-Plus-SMD",
+        "x": 92.5,
+        "y": 100.8,
+        "rotation": 90.0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": []
+      },
+      {
+        "ref": "TP20",
+        "footprint": "SeeedStudio:TestPoint_THTPad_D1.5mm_Drill0.9mm",
+        "x": 103.5,
+        "y": 105.88,
+        "rotation": 0,
+        "layer": [
+          "F.Cu"
+        ],
+        "pads": [
+          {
+            "number": "1",
+            "type": "thru_hole",
+            "x": 103.5,
+            "y": 105.88,
+            "drill": [
+              "0.9"
+            ],
+            "net": [
+              "/03 Main/D12_I2S_SCK"
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "J2",
+        "footprint": "SeeedStudio:AFE07-S15FMA-HF_Pin1Right",
+        "x": 95.295,
+        "y": 107.4755,
+        "rotation": 180.0,
+        "layer": [
+          "B.Cu"
+        ],
+        "pads": []
+      },
+      {
+        "ref": "SW2",
+        "footprint": "SeeedStudio:TS-1080S-AC015XX",
+        "x": 98.0,
+        "y": 135.0,
+        "rotation": 90.0,
+        "layer": [
+          "B.Cu"
+        ],
+        "pads": [
+          {
+            "number": "",
+            "type": "np_thru_hole",
+            "x": 98.0,
+            "y": 135.0,
+            "drill": [
+              "0.7"
+            ],
+            "net": []
+          }
+        ]
+      },
+      {
+        "ref": "SW3",
+        "footprint": "SeeedStudio:TS-1080S-AC015XX",
+        "x": 87.0,
+        "y": 135.0,
+        "rotation": 90.0,
+        "layer": [
+          "B.Cu"
+        ],
+        "pads": [
+          {
+            "number": "",
+            "type": "np_thru_hole",
+            "x": 87.0,
+            "y": 135.0,
+            "drill": [
+              "0.7"
+            ],
+            "net": []
+          }
+        ]
+      }
+    ],
+    "outline": [
+      [
+        "gr_line",
+        [
+          "start",
+          "80",
+          "92.5"
+        ],
+        [
+          "end",
+          "80",
+          "137.5"
+        ],
+        [
+          "stroke",
+          [
+            "width",
+            "0.05"
+          ],
+          [
+            "type",
+            "default"
+          ]
+        ],
+        [
+          "layer",
+          "Edge.Cuts"
+        ],
+        [
+          "uuid",
+          "e2926d59-eb0a-4951-9492-958e514f726c"
+        ]
+      ],
+      [
+        "gr_arc",
+        [
+          "start",
+          "80",
+          "92.5"
+        ],
+        [
+          "mid",
+          "80.732233",
+          "90.732233"
+        ],
+        [
+          "end",
+          "82.5",
+          "90"
+        ],
+        [
+          "stroke",
+          [
+            "width",
+            "0.05"
+          ],
+          [
+            "type",
+            "default"
+          ]
+        ],
+        [
+          "layer",
+          "Edge.Cuts"
+        ],
+        [
+          "uuid",
+          "2ef59e2e-7918-467f-9ad8-516d685b2b0e"
+        ]
+      ],
+      [
+        "gr_arc",
+        [
+          "start",
+          "82.5",
+          "140"
+        ],
+        [
+          "mid",
+          "80.732233",
+          "139.267767"
+        ],
+        [
+          "end",
+          "80",
+          "137.5"
+        ],
+        [
+          "stroke",
+          [
+            "width",
+            "0.05"
+          ],
+          [
+            "type",
+            "default"
+          ]
+        ],
+        [
+          "layer",
+          "Edge.Cuts"
+        ],
+        [
+          "uuid",
+          "445ef67f-ba39-4d05-9731-2c38e5c7a4c5"
+        ]
+      ],
+      [
+        "gr_line",
+        [
+          "start",
+          "82.5",
+          "140"
+        ],
+        [
+          "end",
+          "102.5",
+          "140"
+        ],
+        [
+          "stroke",
+          [
+            "width",
+            "0.05"
+          ],
+          [
+            "type",
+            "default"
+          ]
+        ],
+        [
+          "layer",
+          "Edge.Cuts"
+        ],
+        [
+          "uuid",
+          "6c26646d-8f91-48bc-84e8-c2a5b45faaef"
+        ]
+      ],
+      [
+        "gr_line",
+        [
+          "start",
+          "102.5",
+          "90"
+        ],
+        [
+          "end",
+          "82.5",
+          "90"
+        ],
+        [
+          "stroke",
+          [
+            "width",
+            "0.05"
+          ],
+          [
+            "type",
+            "default"
+          ]
+        ],
+        [
+          "layer",
+          "Edge.Cuts"
+        ],
+        [
+          "uuid",
+          "a47f7de6-a8ee-477c-a0da-92d054d1a558"
+        ]
+      ],
+      [
+        "gr_arc",
+        [
+          "start",
+          "102.5",
+          "90"
+        ],
+        [
+          "mid",
+          "104.267767",
+          "90.732233"
+        ],
+        [
+          "end",
+          "105",
+          "92.5"
+        ],
+        [
+          "stroke",
+          [
+            "width",
+            "0.05"
+          ],
+          [
+            "type",
+            "default"
+          ]
+        ],
+        [
+          "layer",
+          "Edge.Cuts"
+        ],
+        [
+          "uuid",
+          "4039f2b2-7859-4f00-8287-d9c0907941a1"
+        ]
+      ],
+      [
+        "gr_arc",
+        [
+          "start",
+          "105",
+          "137.5"
+        ],
+        [
+          "mid",
+          "104.267767",
+          "139.267767"
+        ],
+        [
+          "end",
+          "102.5",
+          "140"
+        ],
+        [
+          "stroke",
+          [
+            "width",
+            "0.05"
+          ],
+          [
+            "type",
+            "default"
+          ]
+        ],
+        [
+          "layer",
+          "Edge.Cuts"
+        ],
+        [
+          "uuid",
+          "e782869f-13ec-45a8-9953-d35d48d9d72e"
+        ]
+      ],
+      [
+        "gr_line",
+        [
+          "start",
+          "105",
+          "137.5"
+        ],
+        [
+          "end",
+          "105",
+          "92.5"
+        ],
+        [
+          "stroke",
+          [
+            "width",
+            "0.05"
+          ],
+          [
+            "type",
+            "default"
+          ]
+        ],
+        [
+          "layer",
+          "Edge.Cuts"
+        ],
+        [
+          "uuid",
+          "90011e38-82c5-4ff9-92e6-311b9b278c34"
+        ]
+      ]
+    ]
+  },
+  "rider": {
+    "source": "/Users/mark/Downloads/202002729_PCBA_Lipo Rider Plus_SCH & PCB/Lipo Rider Plus.brd",
+    "units": "mm",
+    "axis": "native Eagle, y up",
+    "outline": [
+      {
+        "x1": "0",
+        "y1": "26.71",
+        "x2": "0",
+        "y2": "3.77",
+        "width": "0.127",
+        "layer": "20"
+      },
+      {
+        "x1": "0",
+        "y1": "3.77",
+        "x2": "1.27",
+        "y2": "2.5",
+        "width": "0.127",
+        "layer": "20",
+        "curve": "90"
+      },
+      {
+        "x1": "1.27",
+        "y1": "2.5",
+        "x2": "39.607",
+        "y2": "2.5",
+        "width": "0.127",
+        "layer": "20"
+      },
+      {
+        "x1": "39.607",
+        "y1": "2.5",
+        "x2": "40.877",
+        "y2": "3.77",
+        "width": "0.127",
+        "layer": "20",
+        "curve": "90"
+      },
+      {
+        "x1": "40.877",
+        "y1": "3.77",
+        "x2": "40.877",
+        "y2": "26.71",
+        "width": "0.127",
+        "layer": "20"
+      },
+      {
+        "x1": "40.877",
+        "y1": "26.71",
+        "x2": "39.607",
+        "y2": "27.98",
+        "width": "0.127",
+        "layer": "20",
+        "curve": "90"
+      },
+      {
+        "x1": "39.607",
+        "y1": "27.98",
+        "x2": "1.27",
+        "y2": "27.98",
+        "width": "0.127",
+        "layer": "20"
+      },
+      {
+        "x1": "1.27",
+        "y1": "27.98",
+        "x2": "0",
+        "y2": "26.71",
+        "width": "0.127",
+        "layer": "20",
+        "curve": "90"
+      }
+    ],
+    "holes": [
+      {
+        "x": "10.778",
+        "y": "25.567",
+        "drill": "3"
+      },
+      {
+        "x": "10.778",
+        "y": "5.04",
+        "drill": "3"
+      },
+      {
+        "x": "38.337",
+        "y": "25.567",
+        "drill": "3"
+      },
+      {
+        "x": "38.337",
+        "y": "5.04",
+        "drill": "3"
+      },
+      {
+        "ref": "USB2",
+        "x": 5.377,
+        "y": 6.889,
+        "drill": "0.6"
+      },
+      {
+        "ref": "USB2",
+        "x": 5.377,
+        "y": 12.669,
+        "drill": "0.6"
+      },
+      {
+        "ref": "SW1",
+        "x": 27.051,
+        "y": 25.186,
+        "drill": "1"
+      },
+      {
+        "ref": "SW1",
+        "x": 30.099,
+        "y": 25.186,
+        "drill": "1"
+      }
+    ],
+    "features": [
+      {
+        "ref": "USB2",
+        "package": "USB2.0-TYPE-C",
+        "pads": [
+          {
+            "number": "S1",
+            "x": 1.727,
+            "y": 14.079,
+            "drill": "0.5",
+            "net": "SHIELD"
+          },
+          {
+            "number": "S3",
+            "x": 5.927,
+            "y": 14.079,
+            "drill": "0.5",
+            "net": "SHIELD"
+          },
+          {
+            "number": "S2",
+            "x": 1.727,
+            "y": 5.479,
+            "drill": "0.5",
+            "net": "SHIELD"
+          },
+          {
+            "number": "S4",
+            "x": 5.927,
+            "y": 5.479,
+            "drill": "0.5",
+            "net": "SHIELD"
+          }
+        ]
+      },
+      {
+        "ref": "J2",
+        "package": "USB4+4P-2.0-14.6X10.6X5.72MM",
+        "pads": [
+          {
+            "number": "S1",
+            "x": 33.527,
+            "y": 8.967,
+            "drill": "0.6",
+            "net": "GND"
+          },
+          {
+            "number": "S2",
+            "x": 33.527,
+            "y": 21.767,
+            "drill": "0.6",
+            "net": "GND"
+          },
+          {
+            "number": "S3",
+            "x": 39.527,
+            "y": 8.967,
+            "drill": "0.6",
+            "net": "GND"
+          },
+          {
+            "number": "S4",
+            "x": 39.527,
+            "y": 21.767,
+            "drill": "0.6",
+            "net": "GND"
+          }
+        ]
+      },
+      {
+        "ref": "J3",
+        "package": "H8-2.54-C65D35MIL",
+        "pads": [
+          {
+            "number": "1",
+            "x": 14.224,
+            "y": 3.937,
+            "drill": "0.889",
+            "net": "VUSB"
+          },
+          {
+            "number": "2",
+            "x": 16.764,
+            "y": 3.937,
+            "drill": "0.889",
+            "net": "GND"
+          },
+          {
+            "number": "3",
+            "x": 19.304,
+            "y": 3.937,
+            "drill": "0.889",
+            "net": "BAT"
+          },
+          {
+            "number": "4",
+            "x": 21.844,
+            "y": 3.937,
+            "drill": "0.889",
+            "net": "GND"
+          },
+          {
+            "number": "5",
+            "x": 24.384,
+            "y": 3.937,
+            "drill": "0.889",
+            "net": "5V"
+          },
+          {
+            "number": "6",
+            "x": 26.924,
+            "y": 3.937,
+            "drill": "0.889",
+            "net": "GND"
+          },
+          {
+            "number": "7",
+            "x": 29.464,
+            "y": 3.937,
+            "drill": "0.889",
+            "net": "EN"
+          },
+          {
+            "number": "8",
+            "x": 32.004,
+            "y": 3.937,
+            "drill": "0.889",
+            "net": "3V3"
+          }
+        ]
+      }
+    ]
+  },
+  "gnss": {
+    "source": "sources/gnss.brd",
+    "units": "mm",
+    "axis": "native Eagle, y up",
+    "outline": [
+      {
+        "x1": "38.1",
+        "y1": "0",
+        "x2": "0",
+        "y2": "0",
+        "width": "0.1524",
+        "layer": "20"
+      },
+      {
+        "x1": "0",
+        "y1": "0",
+        "x2": "0",
+        "y2": "30.48",
+        "width": "0.1524",
+        "layer": "20"
+      },
+      {
+        "x1": "0",
+        "y1": "30.48",
+        "x2": "38.1",
+        "y2": "30.48",
+        "width": "0.1524",
+        "layer": "20"
+      },
+      {
+        "x1": "38.1",
+        "y1": "19.558",
+        "x2": "36.576",
+        "y2": "19.558",
+        "width": "0.1524",
+        "layer": "20"
+      },
+      {
+        "x1": "36.576",
+        "y1": "19.558",
+        "x2": "36.576",
+        "y2": "10.922",
+        "width": "0.1524",
+        "layer": "20"
+      },
+      {
+        "x1": "36.576",
+        "y1": "10.922",
+        "x2": "38.1",
+        "y2": "10.922",
+        "width": "0.1524",
+        "layer": "20"
+      },
+      {
+        "x1": "38.1",
+        "y1": "0",
+        "x2": "38.1",
+        "y2": "10.922",
+        "width": "0.1524",
+        "layer": "20"
+      },
+      {
+        "x1": "38.1",
+        "y1": "19.558",
+        "x2": "38.1",
+        "y2": "30.48",
+        "width": "0.1524",
+        "layer": "20"
+      }
+    ],
+    "holes": [
+      {
+        "ref": "H1",
+        "x": 35.56,
+        "y": 2.54,
+        "drill": "3.302"
+      },
+      {
+        "ref": "H2",
+        "x": 2.54,
+        "y": 2.54,
+        "drill": "3.302"
+      },
+      {
+        "ref": "H3",
+        "x": 2.54,
+        "y": 27.94,
+        "drill": "3.302"
+      },
+      {
+        "ref": "H4",
+        "x": 35.56,
+        "y": 27.94,
+        "drill": "3.302"
+      }
+    ],
+    "features": [
+      {
+        "ref": "J3",
+        "package": "1X04_NO_SILK",
+        "pads": [
+          {
+            "number": "1",
+            "x": 22.86,
+            "y": 29.21,
+            "drill": "1.016",
+            "net": "GND"
+          },
+          {
+            "number": "2",
+            "x": 20.32,
+            "y": 29.21,
+            "drill": "1.016",
+            "net": "3.3V"
+          },
+          {
+            "number": "3",
+            "x": 17.78,
+            "y": 29.21,
+            "drill": "1.016",
+            "net": "SDA"
+          },
+          {
+            "number": "4",
+            "x": 15.24,
+            "y": 29.21,
+            "drill": "1.016",
+            "net": "SCL"
+          }
+        ]
+      },
+      {
+        "ref": "J1",
+        "package": "1X06_NO_SILK",
+        "pads": [
+          {
+            "number": "1",
+            "x": 16.51,
+            "y": 1.27,
+            "drill": "1.016",
+            "net": null
+          },
+          {
+            "number": "2",
+            "x": 19.05,
+            "y": 1.27,
+            "drill": "1.016",
+            "net": "TXO"
+          },
+          {
+            "number": "3",
+            "x": 21.59,
+            "y": 1.27,
+            "drill": "1.016",
+            "net": "RXI"
+          },
+          {
+            "number": "4",
+            "x": 24.13,
+            "y": 1.27,
+            "drill": "1.016",
+            "net": "N$1"
+          },
+          {
+            "number": "5",
+            "x": 26.67,
+            "y": 1.27,
+            "drill": "1.016",
+            "net": null
+          },
+          {
+            "number": "6",
+            "x": 29.21,
+            "y": 1.27,
+            "drill": "1.016",
+            "net": "GND"
+          }
+        ]
+      },
+      {
+        "ref": "J5",
+        "package": "1X08_NO_SILK",
+        "pads": [
+          {
+            "number": "1",
+            "x": 1.27,
+            "y": 24.13,
+            "drill": "1.016",
+            "net": "GND"
+          },
+          {
+            "number": "2",
+            "x": 1.27,
+            "y": 21.59,
+            "drill": "1.016",
+            "net": "3.3V"
+          },
+          {
+            "number": "3",
+            "x": 1.27,
+            "y": 19.05,
+            "drill": "1.016",
+            "net": "!SAFE"
+          },
+          {
+            "number": "4",
+            "x": 1.27,
+            "y": 16.51,
+            "drill": "1.016",
+            "net": "TXO"
+          },
+          {
+            "number": "5",
+            "x": 1.27,
+            "y": 13.97,
+            "drill": "1.016",
+            "net": "RXI"
+          },
+          {
+            "number": "6",
+            "x": 1.27,
+            "y": 11.43,
+            "drill": "1.016",
+            "net": "PPS"
+          },
+          {
+            "number": "7",
+            "x": 1.27,
+            "y": 8.89,
+            "drill": "1.016",
+            "net": "INT"
+          },
+          {
+            "number": "8",
+            "x": 1.27,
+            "y": 6.35,
+            "drill": "1.016",
+            "net": "!RESET"
+          }
+        ]
+      },
+      {
+        "ref": "MEAS",
+        "package": "COMBO-JUMPER_2_NC_TRACE",
+        "pads": [
+          {
+            "number": "3",
+            "x": 26.67,
+            "y": 6.35,
+            "drill": "1.016",
+            "net": "N$1"
+          },
+          {
+            "number": "4",
+            "x": 26.67,
+            "y": 3.81,
+            "drill": "1.016",
+            "net": "3.3V"
+          }
+        ]
+      }
+    ]
+  },
+  "max17048": {
+    "source": "sources/max17048.brd",
+    "units": "mm",
+    "axis": "native Eagle, y up",
+    "outline": [
+      {
+        "x1": "0",
+        "y1": "17.78",
+        "x2": "0",
+        "y2": "2.54",
+        "width": "0",
+        "layer": "20"
+      },
+      {
+        "x1": "0",
+        "y1": "2.54",
+        "x2": "2.54",
+        "y2": "0",
+        "width": "0",
+        "layer": "20",
+        "curve": "90"
+      },
+      {
+        "x1": "2.54",
+        "y1": "0",
+        "x2": "22.86",
+        "y2": "0",
+        "width": "0",
+        "layer": "20"
+      },
+      {
+        "x1": "22.86",
+        "y1": "0",
+        "x2": "25.4",
+        "y2": "2.54",
+        "width": "0",
+        "layer": "20",
+        "curve": "90"
+      },
+      {
+        "x1": "25.4",
+        "y1": "2.54",
+        "x2": "25.4",
+        "y2": "17.78",
+        "width": "0",
+        "layer": "20"
+      },
+      {
+        "x1": "25.4",
+        "y1": "17.78",
+        "x2": "22.86",
+        "y2": "20.32",
+        "width": "0",
+        "layer": "20",
+        "curve": "90"
+      },
+      {
+        "x1": "22.86",
+        "y1": "20.32",
+        "x2": "2.54",
+        "y2": "20.32",
+        "width": "0",
+        "layer": "20"
+      },
+      {
+        "x1": "2.54",
+        "y1": "20.32",
+        "x2": "0",
+        "y2": "17.78",
+        "width": "0",
+        "layer": "20",
+        "curve": "90"
+      }
+    ],
+    "holes": [
+      {
+        "x": "2.54",
+        "y": "17.78",
+        "drill": "2.54"
+      },
+      {
+        "x": "22.86",
+        "y": "17.78",
+        "drill": "2.54"
+      }
+    ],
+    "features": [
+      {
+        "ref": "JP1",
+        "package": "1X06_ROUND_70",
+        "pads": [
+          {
+            "number": "1",
+            "x": 6.35,
+            "y": 2.54,
+            "drill": "1",
+            "net": "VCC"
+          },
+          {
+            "number": "2",
+            "x": 8.89,
+            "y": 2.54,
+            "drill": "1",
+            "net": "GND"
+          },
+          {
+            "number": "3",
+            "x": 11.43,
+            "y": 2.54,
+            "drill": "1",
+            "net": "SCL"
+          },
+          {
+            "number": "4",
+            "x": 13.97,
+            "y": 2.54,
+            "drill": "1",
+            "net": "SDA"
+          },
+          {
+            "number": "5",
+            "x": 16.51,
+            "y": 2.54,
+            "drill": "1",
+            "net": "INT"
+          },
+          {
+            "number": "6",
+            "x": 19.05,
+            "y": 2.54,
+            "drill": "1",
+            "net": "QSTART"
+          }
+        ]
+      },
+      {
+        "ref": "U$19",
+        "package": "MOUNTINGHOLE_2.5_PLATED",
+        "pads": [
+          {
+            "number": "P$1",
+            "x": 2.54,
+            "y": 2.54,
+            "drill": "2.5",
+            "net": null
+          }
+        ]
+      },
+      {
+        "ref": "U$21",
+        "package": "MOUNTINGHOLE_2.5_PLATED",
+        "pads": [
+          {
+            "number": "P$1",
+            "x": 22.86,
+            "y": 2.54,
+            "drill": "2.5",
+            "net": null
+          }
+        ]
+      },
+      {
+        "ref": "JP2",
+        "package": "1X02_ROUND",
+        "pads": [
+          {
+            "number": "1",
+            "x": 11.43,
+            "y": 11.43,
+            "drill": "1",
+            "net": "VBAT"
+          },
+          {
+            "number": "2",
+            "x": 13.97,
+            "y": 11.43,
+            "drill": "1",
+            "net": "GND"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,630 @@
+{
+ "revision": "B",
+ "units": "mm",
+ "origin": "upper-left, front view, +Y down",
+ "board": {
+  "width": 105.0,
+  "height": 95.0
+ },
+ "gnss_sma": {
+  "x": 19.240000000000002,
+  "y_tip": 8.9,
+  "y_base": 15.0
+ },
+ "adsbee_ufl": {
+  "x": 76.0,
+  "y": 17.0
+ },
+ "zones": [
+  {
+   "ref": "GNSS",
+   "x": 4.0,
+   "y": 15.0,
+   "w": 30.48,
+   "h": 38.1,
+   "color": "#c7e1f6",
+   "note": "GPS-18037, SMA up, manufacturer geometry"
+  },
+  {
+   "ref": "DISPLAY",
+   "x": 39.3,
+   "y": 16.0,
+   "w": 26.4,
+   "h": 51.4,
+   "color": "#bce8d7",
+   "note": "100069905 assembly envelope, display-facing mirror"
+  },
+  {
+   "ref": "ADSBEE",
+   "x": 72.0,
+   "y": 15.0,
+   "w": 30.0,
+   "h": 48.0,
+   "color": "#f4d4ce",
+   "note": "48x30 image estimate, portrait, USB faces down; unplug for USB service (OTA available)"
+  },
+  {
+   "ref": "POWER",
+   "x": 66.0,
+   "y": 68.0,
+   "w": 36.0,
+   "h": 19.0,
+   "color": "#ffddaa",
+   "note": "BQ25606, TPS61088, TPS22975, fuse, supervisor; 5 mm below ADSBee, 40 mm from GNSS"
+  },
+  {
+   "ref": "USB_C",
+   "x": 86.0,
+   "y": 88.0,
+   "w": 10.0,
+   "h": 7.0,
+   "color": "#cbd5e1",
+   "note": "charging receptacle, bottom edge"
+  },
+  {
+   "ref": "LED",
+   "x": 81.0,
+   "y": 90.0,
+   "w": 3.0,
+   "h": 3.0,
+   "color": "#a3e635",
+   "note": "bi-colour: blue charging, green running"
+  },
+  {
+   "ref": "POWER_SW",
+   "x": 69.0,
+   "y": 91.5,
+   "w": 9.0,
+   "h": 3.5,
+   "color": "#b7c6d6",
+   "note": "JS102011SAQN, actuator down"
+  },
+  {
+   "ref": "GAUGE_LOGIC",
+   "x": 7.0,
+   "y": 56.0,
+   "w": 22.0,
+   "h": 15.0,
+   "color": "#dacbea",
+   "note": "MAX17048, TUSB320 ILIM helper, NPN, supervisor"
+  },
+  {
+   "ref": "BUZZER",
+   "x": 7.0,
+   "y": 73.0,
+   "w": 14.0,
+   "h": 14.0,
+   "color": "#c9d4f1",
+   "note": "CPT-9019S + driver"
+  },
+  {
+   "ref": "MUTE_SW",
+   "x": 0.0,
+   "y": 62.0,
+   "w": 3.5,
+   "h": 9.0,
+   "color": "#b7c6d6",
+   "note": "JS102011SAQN, actuator left"
+  },
+  {
+   "ref": "TEMP_HDR",
+   "x": 23.0,
+   "y": 73.0,
+   "w": 14.0,
+   "h": 7.0,
+   "color": "#dacbea",
+   "note": "J_NTC, J_THERM"
+  },
+  {
+   "ref": "BAT_CONN",
+   "x": 23.0,
+   "y": 82.0,
+   "w": 14.0,
+   "h": 8.0,
+   "color": "#dacbea",
+   "note": "J_BAT + fuse, rear-cover access"
+  },
+  {
+   "ref": "SHUNTS_TP",
+   "x": 39.3,
+   "y": 70.0,
+   "w": 24.0,
+   "h": 14.0,
+   "color": "#e2e8f0",
+   "note": "JP_PWR_ESP, JP_PWR_ADS, test pads"
+  }
+ ],
+ "holes": [
+  {
+   "ref": "H1",
+   "x": 3.5,
+   "y": 3.5,
+   "drill": 2.8,
+   "keepout": 5.0
+  },
+  {
+   "ref": "H2",
+   "x": 101.5,
+   "y": 3.5,
+   "drill": 2.8,
+   "keepout": 5.0
+  },
+  {
+   "ref": "H3",
+   "x": 3.5,
+   "y": 91.5,
+   "drill": 2.8,
+   "keepout": 5.0
+  },
+  {
+   "ref": "H4",
+   "x": 101.5,
+   "y": 91.5,
+   "drill": 2.8,
+   "keepout": 5.0
+  },
+  {
+   "ref": "H5",
+   "x": 52.5,
+   "y": 91.5,
+   "drill": 2.8,
+   "keepout": 5.0
+  }
+ ],
+ "antenna_mounts": [
+  {
+   "ref": "GNSS_RF",
+   "x": 40.0,
+   "y": 7.0,
+   "drill": 6.5,
+   "keepout": 11.0,
+   "provisional": true
+  },
+  {
+   "ref": "868_RF",
+   "x": 62.0,
+   "y": 7.0,
+   "drill": 6.5,
+   "keepout": 11.0,
+   "provisional": true
+  },
+  {
+   "ref": "1090_RF",
+   "x": 92.0,
+   "y": 7.0,
+   "drill": 6.5,
+   "keepout": 11.0,
+   "provisional": true
+  }
+ ],
+ "battery": {
+  "x": 2.5,
+  "y": 17.5,
+  "w": 100,
+  "h": 60,
+  "thickness": 11,
+  "side": "rear"
+ },
+ "header_pads": [
+  {
+   "ref": "J_GNSS",
+   "number": "1",
+   "x": 10.35,
+   "y": 51.83,
+   "source": "SparkFun native board"
+  },
+  {
+   "ref": "J_GNSS",
+   "number": "2",
+   "x": 12.89,
+   "y": 51.83,
+   "source": "SparkFun native board"
+  },
+  {
+   "ref": "J_GNSS",
+   "number": "3",
+   "x": 15.43,
+   "y": 51.83,
+   "source": "SparkFun native board"
+  },
+  {
+   "ref": "J_GNSS",
+   "number": "4",
+   "x": 17.97,
+   "y": 51.83,
+   "source": "SparkFun native board"
+  },
+  {
+   "ref": "J_GNSS",
+   "number": "5",
+   "x": 20.51,
+   "y": 51.83,
+   "source": "SparkFun native board"
+  },
+  {
+   "ref": "J_GNSS",
+   "number": "6",
+   "x": 23.05,
+   "y": 51.83,
+   "source": "SparkFun native board"
+  },
+  {
+   "ref": "J_GNSS",
+   "number": "7",
+   "x": 25.59,
+   "y": 51.83,
+   "source": "SparkFun native board"
+  },
+  {
+   "ref": "J_GNSS",
+   "number": "8",
+   "x": 28.13,
+   "y": 51.83,
+   "source": "SparkFun native board"
+  },
+  {
+   "ref": "J_ESP_A",
+   "number": "1",
+   "x": 63.5,
+   "y": 19.88,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_A",
+   "number": "2",
+   "x": 63.5,
+   "y": 22.42,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_A",
+   "number": "3",
+   "x": 63.5,
+   "y": 24.96,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_A",
+   "number": "4",
+   "x": 63.5,
+   "y": 27.5,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_A",
+   "number": "5",
+   "x": 63.5,
+   "y": 30.04,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_A",
+   "number": "6",
+   "x": 63.5,
+   "y": 32.58,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_A",
+   "number": "7",
+   "x": 63.5,
+   "y": 35.12,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_A",
+   "number": "8",
+   "x": 63.5,
+   "y": 37.66,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_B",
+   "number": "1",
+   "x": 41.5,
+   "y": 19.88,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_B",
+   "number": "2",
+   "x": 41.5,
+   "y": 22.42,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_B",
+   "number": "3",
+   "x": 41.5,
+   "y": 24.96,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_B",
+   "number": "4",
+   "x": 41.5,
+   "y": 27.5,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_B",
+   "number": "5",
+   "x": 41.5,
+   "y": 30.04,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_B",
+   "number": "6",
+   "x": 41.5,
+   "y": 32.58,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_B",
+   "number": "7",
+   "x": 41.5,
+   "y": 35.12,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_C",
+   "number": "1",
+   "x": 63.5,
+   "y": 53.746,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_C",
+   "number": "2",
+   "x": 63.5,
+   "y": 56.286,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_C",
+   "number": "3",
+   "x": 63.5,
+   "y": 58.826,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_C",
+   "number": "4",
+   "x": 63.5,
+   "y": 61.366,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_D",
+   "number": "1",
+   "x": 41.5,
+   "y": 56.286,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ESP_D",
+   "number": "2",
+   "x": 41.5,
+   "y": 58.826,
+   "source": "Seeed native, mirrored"
+  },
+  {
+   "ref": "J_ADS_MAIN",
+   "number": "1",
+   "x": 99.8,
+   "y": 53.6,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_MAIN",
+   "number": "2",
+   "x": 99.8,
+   "y": 51.06,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_MAIN",
+   "number": "3",
+   "x": 99.8,
+   "y": 48.52,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_MAIN",
+   "number": "4",
+   "x": 99.8,
+   "y": 45.98,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_MAIN",
+   "number": "5",
+   "x": 99.8,
+   "y": 43.44,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_MAIN",
+   "number": "6",
+   "x": 99.8,
+   "y": 40.9,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_MAIN",
+   "number": "7",
+   "x": 99.8,
+   "y": 38.36,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_MAIN",
+   "number": "8",
+   "x": 99.8,
+   "y": 35.82,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_MAIN",
+   "number": "9",
+   "x": 99.8,
+   "y": 33.28,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_MAIN",
+   "number": "10",
+   "x": 99.8,
+   "y": 30.74,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_MAIN",
+   "number": "11",
+   "x": 99.8,
+   "y": 28.2,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_MAIN",
+   "number": "12",
+   "x": 99.8,
+   "y": 25.66,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_MAIN",
+   "number": "13",
+   "x": 99.8,
+   "y": 23.12,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_GNSS",
+   "number": "1",
+   "x": 81.9,
+   "y": 16.2,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_GNSS",
+   "number": "2",
+   "x": 84.44,
+   "y": 16.2,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_GNSS",
+   "number": "3",
+   "x": 86.98,
+   "y": 16.2,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_GNSS",
+   "number": "4",
+   "x": 89.52,
+   "y": 16.2,
+   "source": "image estimate"
+  },
+  {
+   "ref": "J_ADS_GNSS",
+   "number": "5",
+   "x": 92.06,
+   "y": 16.2,
+   "source": "image estimate"
+  }
+ ],
+ "module_holes": [
+  {
+   "module": "GNSS",
+   "x": 6.54,
+   "y": 17.54,
+   "drill": 3.3
+  },
+  {
+   "module": "GNSS",
+   "x": 31.94,
+   "y": 17.54,
+   "drill": 3.3
+  },
+  {
+   "module": "GNSS",
+   "x": 6.54,
+   "y": 50.56,
+   "drill": 3.3
+  },
+  {
+   "module": "GNSS",
+   "x": 31.94,
+   "y": 50.56,
+   "drill": 3.3
+  },
+  {
+   "module": "DISPLAY",
+   "x": 42.5,
+   "y": 41.7,
+   "drill": 2.5
+  },
+  {
+   "module": "DISPLAY",
+   "x": 62.5,
+   "y": 41.7,
+   "drill": 2.5
+  },
+  {
+   "module": "DISPLAY",
+   "x": 42.5,
+   "y": 64.2,
+   "drill": 2.5
+  },
+  {
+   "module": "DISPLAY",
+   "x": 62.5,
+   "y": 64.2,
+   "drill": 2.5
+  },
+  {
+   "module": "ADSBEE",
+   "x": 75.9,
+   "y": 18.1,
+   "drill": 2.5
+  },
+  {
+   "module": "ADSBEE",
+   "x": 75.9,
+   "y": 58.5,
+   "drill": 2.5
+  },
+  {
+   "module": "ADSBEE",
+   "x": 98.5,
+   "y": 18.1,
+   "drill": 2.5
+  },
+  {
+   "module": "ADSBEE",
+   "x": 98.5,
+   "y": 58.5,
+   "drill": 2.5
+  }
+ ],
+ "distances": {
+  "POWER_to_GNSS_mm": 34.9,
+  "POWER_to_ADSBEE_mm": 5.0
+ },
+ "checks": [
+  "zones inside board",
+  "no zone overlap",
+  "hole keepouts clear"
+ ],
+ "issues": [],
+ "not_checked": [
+  "package courtyards",
+  "ADSBee real geometry",
+  "coax bends",
+  "socket heights",
+  "routing"
+ ]
+}

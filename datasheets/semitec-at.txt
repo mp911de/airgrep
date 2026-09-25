@@ -1,0 +1,240 @@
+12
+■ High accuracy thermistor
+The AT series thermistor features high accuracy with tight resistance and B-value tolerances (±1%).
+Features: – Uniform shape facilitates automated assembly 
+ – Long term reliability 
+ – Five different standard shapes available 
+AT Thermistor
+5 ± 1
+600
+ + 2015 max.
+6 ± 0.25 max.
+  0
+□0.3 TPE resin parallel wire
+Bare lead wire
+103AT-11
+AAAS
+8.5±1
+4.0 max.
+0.7
+17±1.5
+3.7 max.2.4 max.
+2.54 ± 0.25
+□0.5 tin plated 42 alloy
+ResinColor code
+Color code:  Product number
+Black: 102AT-2
+Red: 202AT-2
+Yellow: 502AT-2
+White:  103AT-2
+None: 203AT-2
+ResinColor code
+8.5±1
+4.0 max.
+1.0
+17±1.5
+3.7 max.2.4 max.
+2.54 ± 0.25
+□0.5 tin plated 42 alloy
+Tie bar
+Resin PVC AWG30
+40 to 100
+8.0 max. （3）
+2.5 max.
+3 ± 1
+6 ± 1
+30 ± 1
+3.5 ± 1
+2.5 ± 0.5
+2.4 ± 1
+Resin Φ0.5 tin plated copper wire
+103 AT－□－FT
+(AT-5 only)
+FT: Taping
+No marking:  Untaped bulk products
+Shape  11: See Fig. 1
+ 2:   See Fig. 2
+ 3:   See Fig. 3
+ 4:   See Fig. 4
+ 5:   See Fig. 5
+High accuracy thermistor
+Rated zero-power resistance at 25 ℃
+E.g.:  103 = 10 x 10³ Ω
+■ Product number explanation
+■ Applications
+■ Specifications
+■ Dimensions
+Office automation, measuring instruments, controllers, mobile devices, 
+battery chargers, battery packs, fan motors, home electronics, 
+HVAC equipment, solar systems, security, thermometers, automotive, 
+vending machines, refrigerated display cases, agricultural equipment
+Fig. 1
+Fig. 2
+Fig. 3
+Fig. 4Fig. 5
+Product number R25
+１
+R25 tolerance Ｂ value
+２ Dissipation factor 
+(mw / ℃)
+Thermal time 
+constant (s)³
+Rated power at 
+25 ℃ (mW)
+Operating temperature 
+range (℃)
+102AT-11 1.00 ｋ Ω
+± 1％
+3100 Ｋ ± 1％
+approx. 2.6 approx. 75 13
+- 50 to 90
+202AT-11 2.00 ｋ Ω 3182 Ｋ ± 1％
+502AT-11 5.00 ｋ Ω 3324 Ｋ ± 1％
+- 50 to 105103AT-11 10.0 ｋ Ω 3435 Ｋ ± 1％
+203AT-11 20.0 ｋ Ω 4013 Ｋ ± 1％
+102AT-2 1.00 ｋ Ω 3100 Ｋ ± 1％
+approx. 2.0
+approx. 15
+10
+- 50 to 90
+202AT-2 2.00 ｋ Ω 3182 Ｋ ± 1％
+502AT-2 5.00 ｋ Ω 3324 Ｋ ± 1％
+- 50 to 110103AT-2、 3 10.0 ｋ Ω 3435 Ｋ ± 1％
+203AT-2 20.0 ｋ Ω 4013 Ｋ ± 1％
+103AT-4 10.0 ｋ Ω 3435 Ｋ ± 1％ approx. 10 - 30 to 90
+103AT-5 10.0 ｋ Ω 3435 Ｋ ± 1％ approx. 2.5 approx. 15 12.5 - 50 to 110
+1
+: Rated zero-power resistance at 25 ℃   
+2
+: B value calculated from rated zero-power resistance at 25 ℃ and 85 ℃   
+3
+: Time required to reach 63.2% of temperature difference. Measured with sensor suspended in mid-air.
+Unit: mm
+Unit: mm
+Unit: mm
+Unit: mmUnit: mm
+13
+■ Reliability data
+■ Resistance / temperature characteristics
+■ Taping dimensions
+■ Caution
+AT-2, 3, 5
+• When bending the lead wires using for example a radio 
+plier make sure to have a minimum distance from the 
+sensor head of 3 mm.
+• Do not apply a mechanical load of more than 2 N in the 
+way depicted in Fig. 1 below. The variation of the load 
+direction should be less then 0.3 mm (see Fig. 2).
+2N
+±0.3
+Fig. 1 Fig. 2
+• When soldering make sure to have a minimum 
+distance of 5 mm (8.5 mm), use a soldering iron with 
+50 W and solder for maximum 7 (2) seconds at 340 ˚C 
+(350 ˚C). If you plan to cut the lead wire shorter than 
+the above minimum distance please contact us.  
+The values in brackets are for AT-5.
+Temperature 
+(℃)
+Product number
+102AT 202AT 502AT 103AT 203AT
+- 50 24.46 55.66 154.6 329.5 1253
+- 40 14.43 32.34 88.91 188.5 642.0 
+- 30 8.834 19.48 52.87 111.3 342.5
+- 20 5.594 12.11 32.44 67.77 190.0 
+- 10 3.651 7.763 20.48 42.47 109.1
+0 2.449 5.114 13.29 27.28 64.88
+10 1.684 3.454 8.840 17.96 39.71
+20 1.184 2.387 6.013 12.09 24.96
+25 1.000 2.000 5.000 10.00 20.00 
+30 0.8486 1.684 4.179 8.313 16.12
+40 0.6189 1.211 2.961 5.827 10.65
+50 0.4587 0.8854 2.137 4.160 7.181
+60 0.3446 0.6587 1.567 3.020 4.943
+70 0.2622 0.4975 1.168 2.228 3.464
+80 0.1999 0.3807 0.8835 1.668 2.468
+85 0.1751 0.3346 0.7722 1.451 2.096
+90 0.1536 0.2949 0.6771 1.266 1.788
+100 0.5265 0.9731 1.315
+110 0.4128 0.7576 0.9807
+B25/85 3100 K 3182 K 3324 K 3435 K 4013 K
+Unit: kΩ
+Unit: mm
+●AT-5: 2500 pcs / reel 
+3 ± 1
+9.0
+＋ 2.0
+ー 1.016.0 ± 0.5
+11.0 max.
+3.5 ± 1
+6.35 ± 1.3 12.7 ± 1.0
+12.7 ± 0.3
+5 ＋ 0.8
+ ー 0.2
+φ0.5 ± 0.05
+3 max.
+φ4.0 ± 0.3
+12.5 min
+9.0 ＋ 0.75
+ー 0.5  
+18.0 ± 0.5 
+2.4 ± 1
+2.0 max. 2.0 max.
+1.5 max.
+0.6 ± 0.3
+Item Test conditions Criteria
+Resistance to soldering heat AT-2, 3, 4 10 s at 260 ℃ or 3.5 s at 350 ℃ ΔR, ΔB ± 1%AT-5 5 s at 260 ℃ or 1.5 s at 350 ℃
+Solderability AT-2, 3 2 s at 245 ℃. Flux material: Rosin 25%, ethyl alcohol 75%. More than 90% solderedAT-4, 5 2 s at 235 ℃. Flux material: Rosin 25%, ethyl alcohol 75%.
+Tensile strength (lead wire)
+AT-11 10 s at 30 N (horizontal pull)
+ΔR, ΔB ± 1% and visual 
+inspection
+AT-2, 3 A load of 2 N is applied to the wire terminations in vertical direction for 10 s (see Fig. 1)
+AT-4 60 s at 5 N (horizontal pull)
+AT-5 A load of 2 N is applied to the wire terminations in vertical direction for 3 s (see Fig. 1)
+Termination bending
+AT-11 5 N, ten times, 90°
+AT-2, 3 One time, 90°
+AT-4 1 N, five times, 90°
+AT-5 2.5 N, two times, 90°
+Free fall
+AT-11, 2, 3 Three times natural fall to a maple board from 1 m height.
+AT-4 Three times natural fall to a maple board from 0.75 m height.
+AT-5 One time natural fall to a maple board from 1 m height.
+Voltage proof AT-11, 2, 3, 5 1000 V AC for one minute Less than 1 mAAT-4 100 V DC for one second
+Insulation resistance AT-11, 2, 3, 5 500 V DC Over 100 MΩAT-4 100 V DC
+Dry heat
+AT-11 1000 hours at 105 ℃ (90 ℃
+4
+)
+ΔR, ΔB ± 1%
+AT-2, 3, 5 1000 hours at 110 ℃ (90 ℃
+4
+)
+AT-4 1000 hours at 90 ℃
+Damp heat  
+(under electrical load)
+AT-11 1000 hours at 70 ℃ and 90% humidity  
+Electrical load: 1 mA DC
+AT-2, 3, 4, 5 1000 hours at 40 ℃ and 90% humidity  
+Electrical load: 1 mA DC
+Temperature cycle  
+(thermal shock)
+AT-11
+100 cycles as below: 
+1. - 55 ℃ for 30 minutes   2. Room temperature for 3 minutes 
+3. 85 ℃ for 30 minutes     4. Room temperature for 3 minutes
+AT-2, 3
+100 cycles as below: 
+1. - 30 ℃ for 30 minutes   2. Room temperature for 3 minutes 
+3. 90 ℃ for 30 minutes     4. Room temperature for 3 minutes
+AT-4
+100 cycles as below: 
+1. - 20 ℃ for 30 minutes   2. Room temperature for 1 minute 
+3. 70 ℃ for 30 minutes     4. Room temperature for 1 minute
+AT-5
+100 cycles as below: 
+1. - 30 ℃ for 30 minutes   2. Room temperature for 3 minutes 
+3. 90 ℃ for 30 minutes     4. Room temperature for 3 minutes
+4
+: Conditions for 102AT-11, 202AT-11, 102AT-2, 202AT-2

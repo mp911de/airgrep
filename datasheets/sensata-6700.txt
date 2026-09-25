@@ -1,0 +1,229 @@
+FEATURES
+•	Gold-plated	contacts
+•	Up	to	20,000	life	cycles	@	max	standard	amperage
+•	Up	to	100,000	life	cycles	@	max	gold	contact	amperage
+•	RoHS	compliant	per	EU	directive	2002	/	95	/	EC
+•	TO-220	/	Y-220	international	electronic	package	standard
+•	Ideal	for	surface	and	air	sensing	on	PC	boards	and	heat	sinks	
+•	VDE	approved	with	“P”	bracket	option
+DESCRIPTION
+The	Airpax™	6700	series	is	a	RoHS	compliant,	positive	snap	action,	single	pole	/	single	throw,	sub-miniature	bimetallic	thermostat	
+which	provides	accurate	and	reliable	sensing	and	switching	in	a	single	device.
+The	6700	series	thermostat	dimensionally	conforms	to	the	international	product	package	standard	Y220	/	TO220.		Thus,	the	6700	may	be	
+automatically	placed	and	soldered	onto	PC	boards	with	high	speed	automated	equipment,	eliminating	the	need	for	the	expensive	 hand 	
+placement	and	termination	required	today	for	most	power	supply	thermostats.
+	
+The	6700	provides	fast,	positive	response	with	excellent	repeatability.		The	thermostat	has	a	switch	capability	of	up	to	0.5	amp	for	48	
+VDC,	and	achieves	low-level	switching	down	to	0.001A	to	0.020A	at	5	VDC	for	100,000	cycles.			Temperature	is	pre-set	at	the	factory	and	
+is	non-adjustable	in	the	field.
+Thermal	conductivity	is	mainly	through	the	terminals	and	the	mounting	bracket	making	the	unit	ideal	for	both	surface	mount	and	
+ambient	air	sensing.		The	nickel-plated	copper	mounting	bracket	comes	standard,	or	you	can	utilize	the	laminated	plastic	mounting	
+bracket	for	increased	dielectric	strength	and	VDE	approval.	
+Primarily	developed	for	thermal	management	applications	on	power	supplies,	the	Airpax™	6700	series	is	also	ideally	suited	for	use	
+on	crowded	PC	boards.		Typical	uses	include	turning	on	an	indicator	light,	sounding	an	audible	alarm,	switch	on	a	control	circuit	to 	
+send	a	message	to	a	display	screen	or	even	switching	a	circuit	to	shut	down	a	system.		Applications	include	computers	and	computer	
+peripherals,	aircraft,	automotive,	medical	devices	and	test	equipment.
+OPERATION SCHEMATICS
+Schematic	for	
+Open	on	Rise	
+Operation
+Schematic	for	
+Close	on	Rise	
+Operation
+6700 Series
+TO-220, Subminiature Bimetal Disc Thermostat
+6700 Series - Introduction http://airpax.sensata.com37
+
+6600	& 	6700 	Series
+6700 Series - Specifications 38
+Contact	Resistance 50	milliohms	max	(before	and	after	rated	life)
+Contact	Ratings Cycles	 Voltage	 Amps 	(resistive)	
+20,000	 48 	VDC	 0.5
+100,000	 5 		VDC	 0.001 	(gold)
+Contact	Operations Either	close	on	rise	(make)	or	open	on	rise	(break)
+Operating	Temperature 40°C	to	130°C	(104°F	to	266°F)
+Temperature	Tolerance Standard	of	±5°C	(±9°F)	with	nominal	operating	temperature	settings	in	5°C	increments
+Short	Term	/	Long	Term	
+Exposure	Limit Short	=	260°C	(500°F),	10	second	duration Long	=		-55°C	to	160°C	(-67°F	to	320°F)
+Dielectric	Strength Nickel-plated	copper 	bracket 	has 	1480 	V AC 	60Hz, 	1 	second 	duration 	terminals 	to 	case. 		Plastic 	bracket 	
+has	2000	VAC	60Hz,	1	second	duration	terminals	to	case.	
+Insulation	Resistance 100	Mohms	at	500	VDC
+Contact	Bounce 3	milliseconds	max	(make)
+Vibration Per	Mil-Std-202,	method	204D,	test	condition	D,	10	to	2,000	Hz
+Shock Per	Mil-Std-202,	method	213,	test	condition	C,	100	G’s	for	6	millisecond	duration,	½	sine	wave
+Seal High	temperature	epoxy	sealed	for	wave	soldering	and	cleaning,	moisture	proof	per	Sensata	
+specification	S-722	(unit	will	not	leak	while	submerged	in	9”	of	water	for	a	minimum	of	two	minutes)
+Base	Material PPS	(Polyphenylene	Sulfide),	94	VO	rated
+Terminal	Material 65%	Copper,	18%	Nickel
+Contact	Material Gold-plated	or	overlay,	silver	crossbar
+Mounting	Bracket	Material Nickel-plated	copper	(standard)	or	high	pressure	laminated	plastic	(“P”	mounting	bracket	option)
+Chemical	Resistance Unit	is	resistance	to	water,	salt,	alcohol,	ammonia,	trichlorethane	and	most	other	organic	solvents
+Solderability Terminal	material	is	selectively	striped	with	lead-free	solder	for	improved	solderability.
+Soldering	Heat	Resistance Per	Mil-Std-202G,	method	210F,	test	condition	C	&	K,	test	condition	K	validated	at	260°C	for	25	seconds
+Weight Approximately	0.5	grams
+Agency	Approvals cЯUus	recognized	E36687	
+VDE	approval	0631/12.83
+RoHS	Compliant	per	EU	Directive	2002/95/EC
+SPECIFICATIONS
+DIMENSIONAL SPECIFICATIONS,  inches [mm]
+0.200 ± 0.005
+(5.08 ± 0.13)
+0.110 ± 0.005
+(2.79 ± 0.13)
+0.050 ± 0.004
+(1.27 ± 0.10)
+0.030 ± 0.003
+(0.76 ± 0.08)
+0.200 ± 0.010
+(5.08 ± 0.25)
+REF0.565
+(14.35)
+REF0.706
+(17.93)
+0.216 ± 0.005
+(5.49 ± 0.13)
+1.165 ± 0.029
+(29.59 ± 0.74)
+0.1435 ± 0.0035
+(3.64 ± 0.089)
+(10.16 ± 0.13)
+0.400 ± 0.005
+0.250 ± 0.020
+(6.35 ± 0.51)
+0.110 ± 0.005
+(2.79 ± 0.13)
+0.013 ± 0.0005
+(0.33 ± 0.013)
+0.030 ± 0.001
+(0.76 ± 0.03)
+0.185 ± 0.010
+(4.70 ± 0.25)
+STANDARD PACKAGING
+All	samples	and	production	orders	will	be	shipped	in	plastic,	industry	standard	shipping	tubes.
+ 0.110 ± 0.010
+(2.79 ± 0.25)
+ 0.100 ± 0.010
+(2.54 ± 0.25)
+ 0.055 ± 0.010
+(1.40 ± 0.25)
+0.560 ± 0.010
+(14.22 ± 0.25)
+ 0.380 ± 0.010
+(9.65 ± 0.25)
+ 0.095 ± 0.010
+(2.41 ± 0.25)
+ 0.265 ± 0.010
+(6.73 ± 0.25)
+Ø0.250 REF(Ø6.35)
+THROUGH BOTH WALLS
+THROUGH BOTH WALLS
+ 0.300 ± 0.010
+(7.62 ± 0.25)
+21.000 ± 0.050
+(533.40 ± 1.19)0.300 ± 0.010
+(7.62 ± 0.25)
+0.404 ± 0.015
+(10.26 ± 0.38)
+0.404 ± 0.015
+(10.26 ± 0.38)
+Ø0.125 ± 0.002
+(Ø3.18 ± 0.05)
+1.300 REF(33.02)
+1.240
+(31.50)
+0.325 REF(8.25)
+0.030 TYP(0.76)
+ 3x  0.030
+(3x  0.76)
+6700 Series - Dimensions http://airpax.sensata.com39
+DECISION TABLES
+Basic Product Series
+Contact Operation	
+F	=	Fan	(close	on	rise)	
+L	=	Limit	(open	on	rise)
+Operating Temperature	
+in	°C,	3	digits	(from	above	table,	put	“0”	in	front	of	2	digit	temps)
+Mounting Bracket Designation	
+Blank	or	no	entry	for	a	standard	nickel-plated	copper	bracket	
+P	=	Plastic	mounting	bracket	(VDE	approved)
+Factory Assigned Number	
+Nondescript,	4	digit	dash	number	assigned	for	a	
+customer’s	special	requirements.		The	dash	and	
+factory	assigned	number	is	not	required	for	
+ordering	a	standard	product
+67 L 0 9 0 P 5 5 8 8
+OPERATE 
+(±5°C)
+MIN DIFFERENTIAL 
+(°C)
+MIN RESET 
+(°C)
+40 4 20
+45 4 20
+50 4 30
+55 4 30
+60 4 40
+65 4 40
+70 4 50
+75 4 50
+80 6 55
+85 6 55
+90 6 60
+95 6 60
+100 6 70
+105 6 70
+110 6 80
+115 6 80
+120 9 85
+125 9 85
+130 9 90
+STANDARD TEMPERATURE CALIBRATION TABLE
+Each	thermostat	part	number	consists	of	functional	“building	
+blocks”	to	enable	the	user	to	specify	the	desired	characteristics.		
+Select	the	proper	code	in	each	category,	then	transfer	it	to	the	
+box	indicated.		Unless	a	special	requirement	is	indicated,	the	part	
+number	will	be	complete	when	the	proper	temperature	is	selected.		
+If	you	have	a	special	requirement,	please	call	Sensata	for	a	factory	
+assigned	number	to	complete	the	part	number.
+Example 1:	
+	
+A	67F090	thermostat	will	close	(make	contact)	on	a	rising	
+temperature	from	85°C	to	95°C	and	will	reset	open	(break	contact)	
+on	a	falling	temperature	within	a	window	of	no	greater	than	6°C	
+lower	than	the	actual	close	temperature	and	no	less	than	60°C	
+ambient	temperature.
+Example 2:	
+	
+A	67L060P	thermostat	has	a	plastic	mounting	bracket	with	2000	
+VAC	dielectric	strength	and	VDE	approval.The	thermostat	will	open	
+(break	contact)	on	a	rising	temperature	from	55°C	to	65°C	and	will	
+reset	close	(make	contact)	on	a	falling	temperature	within	a	window	
+of	no	greater	than	4°C	lower	than	the	actual	open	temperature	and	
+no	less	than	40°C	ambient	temperature.
+The	mounting	bracket	designation	and	the	4	digit	manufacturing	
+dash	number	are	used	for	ordering	special	features	and	may	not	
+appear	as	part	of	the	marking	on	the	thermostat.
+Temperature	set	point	calibration	is	checked	at	Sensata	
+Technologies	with	precision	test	equipment	and	proven	methods.		
+Because	customer	checking	methods	may	differ,	a	typical	variance	
+allowed	for	correlation	is	±1°C.
+6600	& 	6700 	Series
+6700 Series - Decision T ables 40
+©2013 Sensata Technologies, Inc. All rights reserved worldwide.  The following data sheet is an excerpt from our Airpax™ Power 
+Protection Catalog, Literature # 2455005000, printed in the USA, May 9th, 2013. 
+Important Notice: Sensata Technologies reserves the right to make changes to, or to discontinue, any product or service identified in 
+this publication without notice. Before placing orders, users should obtain the latest version of the relevant information to verify that 
+the information being relied upon is current.
+Sensata Technologies assumes no responsibility for customers’ product designs or applications. Users must determine the suitability 
+of the Sensata device described in this publication for their application, including the level of reliability required. Many factors beyond 
+Sensata’s control can affect the use and performance of a Sensata product in a particular application, including the conditions under 
+which the product is used and the time and environmental conditions in which the product is expected to perform.  As these factors 
+are uniquely within the user’s knowledge and control, it is essential that the user evaluate the Sensata product to determine whether it 
+is fit for a particular purpose and suitable for the user’s application.
+Sensata Technologies products are sold subject to Sensata’s Terms and Conditions of Sale which can be found at: 
+www.sensata.com/terms.htm
+http://airpax.sensata.com/
+Sensata Technologies Inc.
+529 Pleasant Street 
+Attleboro, MA 02703, USA 
+Phone: +1 508-236-3287

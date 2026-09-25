@@ -1,0 +1,159 @@
+[
+  {
+    "file": "bq25895.pdf",
+    "manufacturer_url": "https://www.ti.com/lit/ds/symlink/bq25895.pdf",
+    "download_url": "https://www.ti.com/lit/ds/symlink/bq25895.pdf",
+    "downloaded": "2026-09-24",
+    "pages": 65,
+    "bytes": 2681280,
+    "sha256": "2667a8d185cbf9138aed63f47616d35c0d0d29da877702b32b301caa55f8d404"
+  },
+  {
+    "file": "tps61088.pdf",
+    "manufacturer_url": "https://www.ti.com/lit/ds/symlink/tps61088.pdf",
+    "download_url": "https://www.ti.com/lit/ds/symlink/tps61088.pdf",
+    "downloaded": "2026-09-24",
+    "pages": 33,
+    "bytes": 1847930,
+    "sha256": "9806d6caa5e6f6d5ae01e10359ff86bf27fac85e383d0a471e29f6d25d6acc53"
+  },
+  {
+    "file": "tps22975.pdf",
+    "manufacturer_url": "https://www.ti.com/lit/ds/symlink/tps22975.pdf",
+    "download_url": "https://www.ti.com/lit/ds/symlink/tps22975.pdf",
+    "downloaded": "2026-09-24",
+    "pages": 29,
+    "bytes": 1862409,
+    "sha256": "5405dc9d901f39b4597c8c0d5e8e52d4caf43cd4e207dbc5be3be8aa9ca4af63"
+  },
+  {
+    "file": "max17048.pdf",
+    "manufacturer_url": "https://www.analog.com/media/en/technical-documentation/data-sheets/MAX17048-MAX17049.pdf",
+    "download_url": "https://cdn-learn.adafruit.com/assets/assets/000/114/607/original/MAX17048-MAX17049.pdf",
+    "downloaded": "2026-09-24",
+    "pages": 19,
+    "bytes": 1109267,
+    "sha256": "70dc8eef0e012276dcdc58b6dce64af08258304bcf865ceace64e856b8029330"
+  },
+  {
+    "file": "bmp390.pdf",
+    "manufacturer_url": "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp390-ds002.pdf",
+    "download_url": "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp390-ds002.pdf",
+    "downloaded": "2026-09-24",
+    "pages": 59,
+    "bytes": 1930878,
+    "sha256": "8dcf0f74449cb1627e865c7f24d328b76c204d8b9621091ede8c6869fb393e48"
+  },
+  {
+    "file": "mmbt3904.pdf",
+    "manufacturer_url": "https://www.diodes.com/datasheet/download/MMBT3904.pdf",
+    "download_url": "https://www.diodes.com/datasheet/download/MMBT3904.pdf",
+    "downloaded": "2026-09-24",
+    "pages": 7,
+    "bytes": 349108,
+    "sha256": "483284b10e2a58c8ddafea3c1c3f77388edf9efd394ca30f9559e605f644f2dc"
+  },
+  {
+    "file": "semitec-at.pdf",
+    "manufacturer_url": "https://www.semitec-global.com/uploads/2022/01/P12-13-AT-Thermistor.pdf",
+    "download_url": "https://www.semitec-global.com/uploads/2022/01/P12-13-AT-Thermistor.pdf",
+    "downloaded": "2026-09-24",
+    "pages": 2,
+    "bytes": 102736,
+    "sha256": "389dc527ed8d783cbbf94db460504e26d17993020d8d3627056499a9264b3262"
+  },
+  {
+    "file": "sensata-6700.pdf",
+    "manufacturer_url": "https://www.sensata.com/sites/default/files/a/sensata-6700-series-subminiature-bimetal-disc-thermostats-datasheet.pdf",
+    "download_url": "https://irp.cdn-website.com/e7a7b959/files/uploaded/6700-series-datasheet-Sensata.pdf",
+    "downloaded": "2026-09-24",
+    "pages": 5,
+    "bytes": 287558,
+    "sha256": "18523935734291a38c36385de592161adfd64672ebfb8d474e9a2a043c02e9b4"
+  },
+  {
+    "file": "sn74lvc1g08.pdf",
+    "manufacturer_url": "https://www.ti.com/lit/ds/symlink/sn74lvc1g08.pdf",
+    "download_url": "https://www.ti.com/lit/ds/symlink/sn74lvc1g08.pdf",
+    "downloaded": "2026-09-24",
+    "pages": 50,
+    "bytes": 2837825,
+    "sha256": "30b963cc44233cf3ca35c891ff987c8323a2244ecc765e23296ec96ca4b42666"
+  },
+  {
+    "file": "bst-bmp581-ds004.pdf",
+    "manufacturer_url": "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp581-ds004.pdf",
+    "download_url": "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp581-ds004.pdf",
+    "downloaded": "2026-09-24",
+    "pages": 75,
+    "bytes": 2816457,
+    "sha256": "ddcf4202c4fdf2ab6ad86f22b67ba4d2471d76b9ce510397cacfe398400ab439"
+  },
+  {
+    "file": "cenker-ckst-series.pdf",
+    "manufacturer_url": "https://www.cenkersz.com/file/upload/products/CKSTPDF.pdf",
+    "download_url": "https://datasheet.lcsc.com/datasheet/pdf/7f3524df0c0413329162f7a59f525713.pdf?productCode=C3002587",
+    "downloaded": "2026-09-24",
+    "pages": 22,
+    "bytes": 558913,
+    "sha256": "2e6475e8cba9ad3f1b81807024ca8d297e58e297500951ae1fe0f1bbdfb8a6f7"
+  },
+  {
+    "file": "molex-43650-0200-drawing.pdf",
+    "manufacturer_url": "https://www.molex.com/content/dam/molex/molex-dot-com/products/automated/en-us/salesdrawingpdf/436/43650/436500200_sd.pdf",
+    "download_url": "https://cdn.ozdisan.com/public/product/assets/MOLEX-436500200.pdf",
+    "downloaded": "2026-09-24",
+    "pages": 5,
+    "bytes": 69137,
+    "sha256": "812ccaba101541cd4b253d16ae41757ea4663fb1cef7f0c57633d055fe90b6fe"
+  },
+  {
+    "file": "jst-ph-series.pdf",
+    "manufacturer_url": "https://www.jst-mfg.com/product/pdf/eng/ePH.pdf",
+    "download_url": "https://www.jst-mfg.com/product/pdf/eng/ePH.pdf",
+    "downloaded": "2026-09-24",
+    "pages": 5,
+    "bytes": 103369,
+    "sha256": "447624f4f2f7d37c58c1eaa7ee314ad757fe7aff48f6186491ef6f69fbc00b96"
+  },
+  {
+    "file": "samtec-ssq-drawing.pdf",
+    "download_url": "https://suddendocs.samtec.com/prints/ssq-1xx-xx-xxx-x-xx-xxx-xx-x-mkt.pdf",
+    "downloaded": "2026-09-24",
+    "bytes": 368190,
+    "sha256": "3609be190ef021cc260abf423296449d797dd474fe1618dcf0fec719e2a05141",
+    "note": "Manufacturer drawing or catalog"
+  },
+  {
+    "file": "samtec-ssq-footprint.pdf",
+    "download_url": "https://suddendocs.samtec.com/prints/ssq-1xx-xx-xx-x-xx-xxx-xx-xx.pdf",
+    "downloaded": "2026-09-24",
+    "bytes": 25534,
+    "sha256": "22412225a71a963f7337ba8057011971d161901832198f98770636aa7912b19c",
+    "note": "Manufacturer drawing or catalog"
+  },
+  {
+    "file": "samtec-ssq-catalog.pdf",
+    "download_url": "https://suddendocs.samtec.com/catalog_english/ssw_th.pdf",
+    "downloaded": "2026-09-24",
+    "bytes": 471452,
+    "sha256": "6d89f5c186a49e0f52f37d7bf7b5095081aff8f98e5ba18a85b0811caaf6f509",
+    "note": "Manufacturer drawing or catalog"
+  },
+  {
+    "file": "samtec-snt-drawing.pdf",
+    "download_url": "https://suddendocs.samtec.com/prints/snt-100-xx-x-x-mkt.pdf",
+    "downloaded": "2026-09-24",
+    "bytes": 158902,
+    "sha256": "04b812db965b8acb0f031f0b10a77f18371c8836cdd27e10da5a947c97cbd34f",
+    "note": "Manufacturer drawing or catalog"
+  },
+  {
+    "file": "ck-js-switches.pdf",
+    "download_url": "https://www.ic-components.pt/files/bd/JS102011SAQN.pdf",
+    "downloaded": "2026-09-24",
+    "bytes": 1625625,
+    "sha256": "e5141b487dae3f9b4e7127a983e443b95be180d0120e60d55770402533fb3fd3",
+    "note": "Manufacturer drawing; C&K PDF hosted by distributor mirror"
+  }
+]

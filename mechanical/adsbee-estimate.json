@@ -1,0 +1,322 @@
+{
+  "status": "IMAGE ESTIMATE - NOT FOR FABRICATION",
+  "source": "sources/adsbee-two-sided-reference.png",
+  "method": "Two independent affine image reconstructions using known 2.54 mm header pitch; manually picked landmarks.",
+  "units": "mm",
+  "view": "component/shield side, USB on left; origin upper-left bounding corner; X right, Y down",
+  "allowance": "Use at least +/-0.5 mm planning allowance on inferred offsets, outline and mounting centres. This is not a measured tolerance or confidence interval. Header mating must be verified before manufacture.",
+  "outline": {
+    "width": 48.0,
+    "height": 30.0,
+    "corner_radius": 3.5
+  },
+  "usb_overhang_reservation": 3.0,
+  "mounting_holes": [
+    {
+      "x": 4.5,
+      "y": 3.9,
+      "nominal_diameter": 2.5
+    },
+    {
+      "x": 44.9,
+      "y": 3.9,
+      "nominal_diameter": 2.5
+    },
+    {
+      "x": 4.5,
+      "y": 26.5,
+      "nominal_diameter": 2.5
+    },
+    {
+      "x": 44.9,
+      "y": 26.5,
+      "nominal_diameter": 2.5
+    }
+  ],
+  "headers": {
+    "main": [
+      {
+        "ordinal": 1,
+        "label": "5VIN",
+        "x": 9.4,
+        "y": 27.8
+      },
+      {
+        "ordinal": 2,
+        "label": "GND",
+        "x": 11.94,
+        "y": 27.8
+      },
+      {
+        "ordinal": 3,
+        "label": "TX",
+        "x": 14.48,
+        "y": 27.8
+      },
+      {
+        "ordinal": 4,
+        "label": "RX",
+        "x": 17.02,
+        "y": 27.8
+      },
+      {
+        "ordinal": 5,
+        "label": "3.3V",
+        "x": 19.56,
+        "y": 27.8
+      },
+      {
+        "ordinal": 6,
+        "label": "IOA",
+        "x": 22.1,
+        "y": 27.8
+      },
+      {
+        "ordinal": 7,
+        "label": "IOB",
+        "x": 24.64,
+        "y": 27.8
+      },
+      {
+        "ordinal": 8,
+        "label": "IOC",
+        "x": 27.18,
+        "y": 27.8
+      },
+      {
+        "ordinal": 9,
+        "label": "CS",
+        "x": 29.72,
+        "y": 27.8
+      },
+      {
+        "ordinal": 10,
+        "label": "CLK",
+        "x": 32.26,
+        "y": 27.8
+      },
+      {
+        "ordinal": 11,
+        "label": "MOSI",
+        "x": 34.8,
+        "y": 27.8
+      },
+      {
+        "ordinal": 12,
+        "label": "MISO",
+        "x": 37.34,
+        "y": 27.8
+      },
+      {
+        "ordinal": 13,
+        "label": "GND",
+        "x": 39.88,
+        "y": 27.8
+      }
+    ],
+    "gnss": [
+      {
+        "ordinal": 1,
+        "label": "3V3",
+        "x": 46.8,
+        "y": 9.9
+      },
+      {
+        "ordinal": 2,
+        "label": "TX",
+        "x": 46.8,
+        "y": 12.44
+      },
+      {
+        "ordinal": 3,
+        "label": "RX",
+        "x": 46.8,
+        "y": 14.98
+      },
+      {
+        "ordinal": 4,
+        "label": "PPS",
+        "x": 46.8,
+        "y": 17.52
+      },
+      {
+        "ordinal": 5,
+        "label": "GND",
+        "x": 46.8,
+        "y": 20.06
+      }
+    ]
+  },
+  "landmarks_pixels": {
+    "front": {
+      "main_1": [
+        537,
+        897
+      ],
+      "main_13": [
+        929,
+        529
+      ],
+      "gnss_1": [
+        784,
+        231
+      ],
+      "gnss_5": [
+        915,
+        354
+      ],
+      "holes": [
+        [
+          159,
+          669
+        ],
+        [
+          454,
+          940
+        ],
+        [
+          681,
+          181
+        ],
+        [
+          977,
+          454
+        ]
+      ]
+    },
+    "rear": {
+      "main_1": [
+        1855,
+        532
+      ],
+      "main_13": [
+        1461,
+        898
+      ],
+      "gnss_1": [
+        1138,
+        763
+      ],
+      "gnss_5": [
+        1270,
+        888
+      ],
+      "holes": [
+        [
+          1605,
+          181
+        ],
+        [
+          1899,
+          457
+        ],
+        [
+          1084,
+          668
+        ],
+        [
+          1377,
+          945
+        ]
+      ]
+    }
+  },
+  "raw_reconstructions_mm": {
+    "front": {
+      "gnss_1": [
+        37.18235045216959,
+        -17.93109765203684
+      ],
+      "holes": [
+        [
+          -5.255543018335685,
+          -24.074471086036674
+        ],
+        [
+          -5.007717580685307,
+          -1.442276611631959
+        ],
+        [
+          35.24811084377334,
+          -23.99017671948893
+        ],
+        [
+          35.451997842860706,
+          -1.2365983572554544
+        ]
+      ],
+      "edge_landmarks": [
+        [
+          118,
+          616
+        ],
+        [
+          635,
+          133
+        ],
+        [
+          495,
+          990
+        ],
+        [
+          1021,
+          499
+        ],
+        [
+          105,
+          718
+        ],
+        [
+          408,
+          1004
+        ],
+        [
+          723,
+          137
+        ],
+        [
+          1022,
+          419
+        ]
+      ],
+      "outline_from_straight_edges_mm": {
+        "xmin": -9.415311955529745,
+        "xmax": 38.67704762299843,
+        "ymin": -27.804918277607236,
+        "ymax": 2.2704687629635774,
+        "width": 48.092359578528175,
+        "height": 30.075387040570813
+      }
+    },
+    "rear": {
+      "gnss_1": [
+        37.52655911112934,
+        -17.85024169246223
+      ],
+      "holes": [
+        [
+          -4.711868965375864,
+          -23.930495889793157
+        ],
+        [
+          -4.811217482216437,
+          -1.4002517373567573
+        ],
+        [
+          35.71766630450381,
+          -23.806362313195713
+        ],
+        [
+          35.698608884606706,
+          -1.2732022713761504
+        ]
+      ]
+    }
+  },
+  "limits": [
+    "Corner radius is a visual placeholder.",
+    "2.5 mm holes are a nominal M2.5 representation, not measured drill sizes.",
+    "USB reservation is not a dimensioned connector or cable envelope.",
+    "Header ordinals and silkscreen labels are physical image annotations, not verified schematic pin numbering."
+  ]
+}

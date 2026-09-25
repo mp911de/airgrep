@@ -1,0 +1,520 @@
+ 
+MMBT3904 
+Document number: DS30036 Rev. 27 - 2 
+1 of 7 
+www.diodes.com  
+March 2025 
+©  2025 Copyright Diodes Incorporated. All Rights Reserved. 
+ 
+MMBT3904 
+ 
+ 
+ 
+40V NPN SMALL-SIGNAL TRANSISTOR IN SOT23 
+ 
+Features 
+• Complementary PNP Type Available (MMBT3906) 
+• Ideal for Medium-Power Amplification and Switching 
+• Totally Lead-Free & Fully RoHS Compliant (Notes 1 & 2) 
+• Halogen and Antimony Free. “Green” Device (Note 3) 
+• An automotive-compliant part is available under separate 
+datasheet (MMBT3904Q) 
+ 
+Mechanical Data 
+• Package: SOT23 
+• Package Material: Molded Plastic, “Green” Molding Compound. 
+UL Flammability Classification Rating 94V-0 
+• Moisture Sensitivity: Level 1 per J-STD-020 
+• Terminals: Finish – Matte Tin Plated Leads. Solderable per  
+MIL-STD-202, Method 208 
+• Weight: 0.008 grams (Approximate) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Ordering Information (Note 4)   
+Orderable Part Number Package Marking Reel Size (inches) Tape Width (mm) Packing 
+Qty. Carrier 
+MMBT3904-7-F SOT23 K1N 7 8 3,000 Reel 
+MMBT3904-13-F SOT23 K1N 13 8 10,000 Reel 
+Notes: 1. No purposely added lead. Fully EU Directive 2002/95/EC (RoHS), 2011/65/EU (RoHS 2) & 2015/863/EU (RoHS 3) compliant.  
+ 2. See https://www.diodes.com/quality/lead-free/ for more information about Diodes Incorporated’s definitions of Halogen - and Antimony-free, "Green" and 
+Lead-free.  
+ 3. Halogen- and Antimony-free "Green” products are defined as those which contain <900ppm bromine, <900ppm chlorine (<1500ppm total Br + Cl) and 
+<1000ppm antimony compounds. 
+ 4. For packaging details, go to our website at https://www.diodes.com/design/support/packaging/diodes -packaging/. 
+ 
+ 
+Marking Information 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Date Code Key 
+Year 2003 - 2025 2026 2027 2028 2029 2030 2031 2032 2033 2034 
+Code P - M N P R S T U V W X 
+ 
+Month Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec 
+Code 1 2 3 4 5 6 7 8 9 O N D 
+ 
+ 
+  
+Top View 
+SOT23 
+Device Symbol 
+Top View 
+Pinout 
+ 
+K1N = Product Type Marking Code 
+YM = Date Code Marking 
+Y or Y or Y = Year (ex: M = 2025) 
+M or M = Month (ex: 9 = September) 
+ 
+C
+E
+B
+
+ 
+MMBT3904 
+Document number: DS30036 Rev. 27 - 2 
+2 of 7 
+www.diodes.com  
+March 2025 
+©  2025 Copyright Diodes Incorporated. All Rights Reserved. 
+ 
+MMBT3904 
+ 
+ 
+ 
+ 
+ 
+Absolute Maximum Ratings (@TA = +25°C, unless otherwise specified.) 
+Characteristic Symbol Value Unit 
+Collector-Base Voltage VCBO 60 V 
+Collector-Emitter Voltage VCEO 40 V 
+Emitter-Base Voltage VEBO 6 V 
+Collector Current IC 200 mA 
+ 
+ 
+ 
+Thermal Characteristics (@TA = +25°C, unless otherwise specified.) 
+Characteristic Symbol Value Unit 
+Power Dissipation  (Note 5) PD 
+310 mW (Note 6) 350 
+Thermal Resistance, Junction to Ambient  (Note 5) RθJA 403 °C/W (Note 6) 357 
+Thermal Resistance, Junction to Leads  (Note 7) RθJL 350 °C/W 
+Operating and Storage Temperature Range TJ, TSTG -55 to +150 °C 
+ 
+ 
+ 
+ESD Ratings (Note 8) 
+Characteristic Symbol Value Unit JEDEC Class 
+Electrostatic Discharge - Human Body Model ESD HBM 4,000 V 3A 
+Electrostatic Discharge - Machine Model ESD MM 400 V C 
+Notes: 5. For a device mounted on minimum recommended pad layout 1oz copper that is on a single-sided FR4 PCB; device is measured under still air conditions 
+whilst operating in a steady state. 
+ 6. Same as Note 5, except the device is mounted on 15mm x 15mm 1oz copper. 
+ 7 Thermal resistance from junction to solder-point (at the end of the leads).  
+ 8. Refer to JEDEC specification JESD22-A114 and JESD22-A115. 
+  
+ 
+MMBT3904 
+Document number: DS30036 Rev. 27 - 2 
+3 of 7 
+www.diodes.com  
+March 2025 
+©  2025 Copyright Diodes Incorporated. All Rights Reserved. 
+ 
+MMBT3904 
+ 
+ 
+ 
+ 
+ 
+Thermal Characteristics and Derating Information 
+0 25 50 75 100 125 150
+0.0
+0.1
+0.2
+0.3
+0.4
+Derating Curve
+ Temperature (°C)
+ Max Power Dissipation (W)
+100µ 1m 10m 100m 1 10 100 1k
+0
+50
+100
+150
+200
+250
+300
+350
+400
+Transient Thermal Impedance
+D=0.5
+D=0.2
+D=0.1
+Single Pulse
+D=0.05
+Thermal Resistance (°C/W)Pulse Width (s)
+10m 100m 1 10 100 1k
+0.1
+1
+10
+Single Pulse. Tamb=25°C
+Pulse Power Dissipation
+Pulse Width (s)
+ Max Power Dissipation (W)
+ 
+ 
+ 
+ 
+  
+0.001
+0.01
+0.1
+1
+0.1 1 10 100
+V , COLLECTOR-EMITTER VOLTAGE (V)CE
+I , COLLECTOR CURRENT (A)C
+Fig. 5 Typical Collector Current
+vs. Collector-Emitter Voltage
+DC
+Pw = 100ms
+Pw = 10ms
+T  = 25 蚓A
+Single Non-repetitive Pulse
+DUT mounted onto 1xMRP 
+FR-4 board
+Figure 1. Derating Curve Figure 2. Transient Thermal Impedance 
+Figure 3. Pulse Power Dissipation 
+Figure 4. Typical Collector Current vs. 
+Collector-Emitter Voltage 
+25°C 
+ 
+MMBT3904 
+Document number: DS30036 Rev. 27 - 2 
+4 of 7 
+www.diodes.com  
+March 2025 
+©  2025 Copyright Diodes Incorporated. All Rights Reserved. 
+ 
+MMBT3904 
+ 
+ 
+ 
+ 
+ 
+Electrical Characteristics (@TA = +25°C, unless otherwise specified.) 
+Characteristic Symbol Min Max Unit Test Condition 
+OFF CHARACTERISTICS 
+Collector-Base Breakdown Voltage BVCBO 60 ⎯ V IC = 10μA, IE = 0 
+Collector-Emitter Breakdown Voltage (Note 9) BVCEO 40 ⎯ V IC = 10mA, IB = 0 
+Emitter-Base Breakdown Voltage BVEBO 6.0 ⎯ V IE = 10μA, IC = 0 
+Collector Cutoff Current ICEX ⎯ 50 nA VCE = 30V, VEB(off) = 3.0V 
+Base Cutoff Current IBL ⎯ 50 nA VCE = 30V, VEB(off) = 3.0V 
+Emitter Base Cutoff Current IEBO ⎯ 50 nA VEB = 6V 
+Collector-Base Cutoff Current ICBO ⎯ 50 nA VCB = 48V 
+ON CHARACTERISTICS (Note 9) 
+DC Current Gain hFE 
+40 
+70 
+100 
+60 
+30 
+⎯ 
+⎯ 
+300 
+⎯ 
+⎯ 
+⎯ 
+IC = 100µA, VCE = 1.0V 
+IC = 1.0mA, VCE = 1.0V 
+IC = 10mA, VCE = 1.0V 
+IC = 50mA, VCE = 1.0V 
+IC = 100mA, VCE = 1.0V 
+Collector-Emitter Saturation Voltage VCE(sat) ⎯ 
+⎯ 
+0.20 
+0.30 V IC = 10mA, IB = 1.0mA 
+IC = 50mA, IB = 5.0mA 
+Base-Emitter Saturation Voltage VBE(sat) 0.65 
+⎯ 
+0.85 
+0.95 V IC = 10mA, IB = 1.0mA 
+IC = 50mA, IB = 5.0mA 
+SMALL-SIGNAL CHARACTERISTICS 
+Output Capacitance Cobo ⎯ 4.0 pF VCB = 5.0V, f = 1.0MHz, IE = 0 
+Input Capacitance Cibo ⎯ 8.0 pF VEB = 0.5V, f = 1.0MHz, IC = 0 
+Input Impedance hIE 1.0 10 kΩ 
+VCE = 10V, IC = 1.0mA  
+f = 1.0kHz 
+Voltage Feedback Ratio hRE 0.5 8.0 x 10-4 
+Small-Signal Current Gain hFE 100 400 ⎯ 
+Output Admittance hOE 1.0 40 µS 
+Current Gain-Bandwidth Product fT 300 ⎯ MHz VCE = 20V, IC = 10mA  
+f = 100MHz 
+Noise Figure NF ⎯ 5.0 dB VCE = 5.0V, IC = 100μA  
+RS = 1.0kΩ, f = 1.0kHz 
+SWITCHING CHARACTERISTICS 
+Delay Time td ⎯ 35 ns VCC = 3.0V, IC = 10mA  
+VBE(off) = - 0.5V, IB1 = 1.0mA Rise Time tr ⎯ 35 ns 
+Storage Time ts ⎯ 200 ns VCC = 3.0V, IC = 10mA 
+IB1 = IB2 = 1.0mA Fall Time tf ⎯ 50 ns 
+Note: 9. Measured under pulsed conditions. Pulse width ≤ 300µs. Duty cycle ≤ 2%. 
+ 
+ 
+ 
+ 
+ 
+  
+ 
+MMBT3904 
+Document number: DS30036 Rev. 27 - 2 
+5 of 7 
+www.diodes.com  
+March 2025 
+©  2025 Copyright Diodes Incorporated. All Rights Reserved. 
+ 
+MMBT3904 
+ 
+ 
+ 
+ 
+ 
+Typical Electrical Characteristics (@TA = +25°C, unless otherwise specified.) 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+ 
+ 
+   
+1
+10
+1,000
+100
+0.1 1 10 1,000100
+h , DC CURRENT GAINFE
+I , COLLECTOR CURRENT (mA)
+Fig. 1 Typical DC Current Gain vs. Collector Current
+C
+0.01
+0.1
+1
+0.1 1 10 100 1,000
+V , COLLECTOR-EMITTER 
+(V)
+            
+CE(SAT)
+SATURATION VOLTAGE 
+I , COLLECTOR CURRENT (mA)
+Fig. 2 Typical Collector-Emitter Saturation Voltage 
+vs. Collector Current
+C
+0.1
+1
+10
+0.1 1 10 100 1,000
+V , BASE-EMITTER SATURATION VOLTAGE (V)BE(SAT)
+I , COLLECTOR CURRENT (mA)C
+Fig. 3 Typical Base-Emitter Saturation Voltage 
+vs. Collector Current
+IC
+BI = 10
+T  = 25° CA
+T  = 75° CA
+T  = -25° CA
+T  = 125° CA
+0
+5
+15
+10
+0.1 1 10 100
+CAPACITANCE (pF)
+V , REVERSE VOLTAGE (V)
+Fig. 4 Typical Capacitance Characteristics
+R
+(sat) 
+(sat) 
+Figure 5.  Figure 6.  
+Figure 7.  Figure 8.  
+ 
+MMBT3904 
+Document number: DS30036 Rev. 27 - 2 
+6 of 7 
+www.diodes.com  
+March 2025 
+©  2025 Copyright Diodes Incorporated. All Rights Reserved. 
+ 
+MMBT3904 
+ 
+ 
+ 
+ 
+ 
+Package Outline Dimensions 
+Please see http://www.diodes.com/package-outlines.html for the latest version. 
+ 
+SOT23 
+ 
+ 
+ 
+SOT23 
+Dim Min Max Typ 
+A 0.37 0.51 0.40 
+B 1.20 1.40 1.30 
+C 2.30 2.50 2.40 
+D 0.89 1.03 0.915 
+F 0.45 0.60 0.535 
+G 1.78 2.05 1.83 
+H 2.80 3.00 2.90 
+J 0.013 0.10 0.05 
+K 0.890 1.00 0.975 
+K1 0.903 1.10 1.025 
+L 0.45 0.61 0.55 
+L1 0.25 0.55 0.40 
+M 0.085 0.150 0.110 
+a 0° 8° -- 
+All Dimensions in mm 
+ 
+ 
+ 
+Suggested Pad Layout 
+Please see http://www.diodes.com/package-outlines.html for the latest version. 
+ 
+SOT23 
+ 
+ 
+Dimensions Value (in mm) 
+C 2.0 
+X 0.8 
+X1 1.35 
+Y 0.9 
+Y1 2.9 
+ 
+ 
+ 
+ 
+ 
+  
+J
+K1 K
+L1
+GAUGE PLANE
+0.25
+H
+L
+M
+All 7°
+A
+C B
+D
+GF
+a
+X
+Y
+Y1 C
+X1
+ 
+MMBT3904 
+Document number: DS30036 Rev. 27 - 2 
+7 of 7 
+www.diodes.com  
+March 2025 
+©  2025 Copyright Diodes Incorporated. All Rights Reserved. 
+ 
+MMBT3904 
+ 
+ 
+ 
+ 
+ 
+ 
+IMPORTANT NOTICE 
+ 
+1. DIODES INCORPORATED (Diodes) AND ITS SUBSIDIARIES MAKE NO WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, WITH 
+REGARDS TO ANY INFORMATION CONTAINED IN THIS DOCUMENT, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY, FITNESS FOR A PARTICUL AR PURPOSE OR NON -INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY 
+RIGHTS (AND THEIR EQUIVALENTS UNDER THE LAWS OF ANY JURISDICTION).   
+ 
+2. The Information contained herein is for informational purpose only and is provided only to illustrate the operation of Diodes ’ products 
+described herein and application examples. Diodes does not assume any liability arising out of the application or use of this document or any product 
+described herein. This document is intended for skilled and technically trained engineering customers and users who design with Diodes’ products. 
+Diodes’ products may be used to facilitate safety-related applications; however, in all instances customers and users are responsible for (a) selecting 
+the appropriate Diodes products for their applications, (b) evaluating the suitability of Diodes’ products for their intended  applications, (c) ensuring 
+their applications, which in corporate Diodes’ products, comply the applicable legal and regulatory requirements as well as safety and functional -
+safety related standards, and (d) ensuring they design with appropriate safeguards (including testing, validation, quality co ntrol techniqu es, 
+redundancy, malfunction prevention, and appropriate treatment for aging degradation) to minimize the risks associated with their applications.    
+ 
+3. Diodes assumes no liability for any application-related information, support, assistance or feedback that may be provided by Diodes from 
+time to time. Any customer or user of this document or products described herein will assume all risks and liabilities associated with such use, and 
+will hold Diodes and all companies whose products are represented herein or on Diodes’ websites, harmless against all damages and liabilities.   
+ 
+4. Products described herein may be covered by one or more United States, international or foreign patents and pending patent applications. 
+Product names and markings noted herein may also be covered by one or more United States, international or foreign t rademarks and trademark 
+applications. Diodes does not convey any license under any of its intellectual property rights or the rights of any third parties (including third parties 
+whose products and services may be described in this document or on Diodes’ website) under this document.   
+ 
+5. Diodes’ products are provided subject to Diodes’ Standard Terms and Conditions of Sale  
+(https://www.diodes.com/about/company/terms-and-conditions/terms-and-conditions-of-sales/) or other applicable terms. This document does not 
+alter or expand the applicable warranties provided by Diodes. Diodes does not warrant or accept any liability whatsoever in respect of any products 
+purchased through unauthorized sales channel.   
+ 
+6. Diodes’ products and technology may not be used for or incorporated into any products or systems whose manufacture, use or sa le is 
+prohibited under any applicable laws and regulations. Should customers or users use Diodes’ products in contravention of a ny applicable laws or 
+regulations, or for any unintended or unauthorized application, customers and users will (a) be solely responsible for any da mages, losses or 
+penalties arising in connection therewith or as a result thereof, and (b) indemnify and hold  Diodes and its representatives and agents harmless 
+against any and all claims, damages, expenses, and attorney fees arising out of, directly or indirectly, any claim relating to any noncompliance with 
+the applicable laws and regulations, as well as any unintended or unauthorized application. 
+ 
+7. While efforts have been made to ensure the information contained in this document is accurate, complete and current, it may c ontain 
+technical inaccuracies, omissions and typographical errors. Diodes does not warrant that information contained in this do cument is error-free and 
+Diodes is under no obligation to update or otherwise correct this information. Notwithstanding the foregoing, Diodes reserves  the right to make 
+modifications, enhancements, improvements, corrections or other changes without further notice to this document and any product described herein. 
+This document is written in English but may be translated into multiple languages for reference. Only the English version of this document is the final 
+and determinative format released by Diodes. 
+ 
+8. Any unauthorized copying, modification, distribution, transmission, display or other use of this document (or any portion her eof) is 
+prohibited. Diodes assumes no responsibility for any losses incurred by the customers or users or any third parties arising from any such unauthorized 
+use. 
+ 
+9.  This Notice may be periodically updated with the most recent version available at https://www.diodes.com/about/company/terms-and-
+conditions/important-notice 
+ 
+ 
+The Diodes logo is a registered trademark of Diodes Incorporated in the United States and other countries. 
+All other trademarks are the property of their respective owners. 
+©  2025 Diodes Incorporated. All Rights Reserved. 
+   
+www.diodes.com 
+ 
+ 
+ 
+ 

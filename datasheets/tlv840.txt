@@ -1,0 +1,445 @@
+TLV840 Nano-Power Ultra-Low Voltage Supervisor with Adjustable Reset Time Delay
+1 Features
+• Operating voltage range : 0.7 V to 6 V
+• Nano supply current : 120 nA (Typical)
+• Fixed threshold voltage (V IT-): 0.8 V to 5.4 V
+– Threshold voltages available in 100mV steps
+– High accuracy: ±0.5% (Typical)
+– Built-in hysteresis (V HYS): 5% (Typical)
+• Reset time delay (t D): capacitor-based
+programmable (TLV840C, TLV840M)
+– Minimum time delay: 40 µs (typical) without
+capacitor
+• Active-low manual reset ( MR) (TLV840M)
+• Four output topologies:
+– TLV840xxDL: open-drain, active-low ( RESET)
+– TLV840xxPL: push-pull, active-low ( RESET)
+– TLV840xxDH: open-drain, active-high (RESET)
+– TLV840xxPH: push-pull, active-high (RESET)
+• Wide temperature range: –40°C to +125°C
+• Package: SOT23-5 (DBV)
+2 Applications
+• Motor Drives
+• Factory Automation and Control
+• Home Theater and Entertainment
+• Electronic Point of Sale
+• Grid Infrastructure
+• Data Center and Enterprise Computing
+• Multifunction Printer
+3 Description
+The TLV840 family of voltage supervisors or reset ICs
+can operate at high voltage levels while maintaining
+very low quiescent current across the whole VDD and
+temperature range. TLV840 offers best combination of
+low power consumption, high accuracy and low
+propagation delay (tp_HL= 30 µs typical).
+Reset output signal is asserted when the voltage at
+VDD drops below the negative voltage threshold
+(VIT-). Reset signal is cleared when VDD rise above
+VIT- plus hysteresis (V HYS) and the reset time delay
+(tD) expires. Reset time delay can be programmed by
+connecting a capacitor between the CT pin and
+ground for TLV840C and TLV840M. For a minimum
+reset delay time the CT pin can be left floating.
+TLV840N does not offer a programmable delay and
+offers fixed reset delay timing options: 40 µs, 2 ms, 10
+ms, 30 ms, 50 ms, 80 ms, 100 ms, 150 ms, 200 ms.
+Additional features: Low power-on reset voltage
+(VPOR), built-in glitch immunity protection for VDD,
+built-in hysteresis, low open-drain output leakage
+current (I lkg(OD)). TLV840 is a perfect voltage
+monitoring solution for industrial applications and
+battery-powered / low-power applications.
+Device Information
+PART NUMBER PACKAGE(1) BODY SIZE (NOM)
+TLV840 SOT-23 (5) (DBV) 2.90 mm × 1.60 mm
+(1) For package details, see the mechanical drawing addendum
+at the end of the data sheet.
+TLV840CADL29
+VDD
+GND
+RESET
+Microcontroller
+VDD
+5 V
+RESET
+LDO 
+3.3 V
+CT
+IN OUT
+*Rpu
+*Rpu only for open-drain output
+Typical Application Circuit
+VDD (V)
+IDD (µA)
+0.5 1 1.5 2 2.5 3 3.5 4 4.5 5 5.5 6
+0.08
+0.12
+0.16
+0.2
+0.24
+0.28
+0.32
+0.36
+0.4
+IDDv
+25°C
+-40°C
+125°C
+Typical Supply Current
+www.ti.com
+TLV840
+SNVSBC3C – DECEMBER 2019 – REVISED SEPTEMBER 2020
+Copyright © 2020 Texas Instruments Incorporated Submit Document Feedback 1
+Product Folder Links: TLV840
+TLV840
+SNVSBC3C – DECEMBER 2019 – REVISED SEPTEMBER 2020
+An IMPORTANT NOTICE at the end of this data sheet addresses availability, warranty, changes, use in safety-critical applications,
+intellectual property matters and other important disclaimers. PRODUCTION DATA.
+Table of Contents
+1 Features............................................................................1
+2 Applications.....................................................................1
+3 Description.......................................................................1
+4 Revision History.............................................................. 2
+5 Device Comparison.........................................................3
+6 Pin Configuration and Functions...................................4
+Pin Functions.................................................................... 4
+7 Specifications.................................................................. 5
+7.1 Absolute Maximum Ratings ....................................... 5
+7.2 ESD Ratings .............................................................. 5
+7.3 Recommended Operating Conditions ........................5
+7.4 Thermal Information ...................................................5
+7.5 Electrical Characteristics ............................................6
+7.6 Timing Requirements .................................................7
+7.7 Timing Diagrams ........................................................8
+7.8 Typical Characteristics................................................9
+8 Detailed Description......................................................10
+8.1 Overview...................................................................10
+8.2 Functional Block Diagram.........................................10
+8.3 Feature Description...................................................10
+8.4 Device Functional Modes..........................................14
+9 Application and Implementation..................................15
+9.1 Application Information............................................. 15
+9.2 Typical Application....................................................15
+10 Power Supply Recommendations..............................18
+11 Layout...........................................................................19
+11.1 Layout Guidelines................................................... 19
+11.2 Layout Example...................................................... 19
+12 Device and Documentation Support..........................20
+12.1 Device Nomenclature..............................................20
+12.2 Receiving Notification of Documentation Updates..21
+12.3 Support Resources................................................. 21
+12.4 Trademarks.............................................................21
+13 Mechanical, Packaging, and Orderable
+Information.................................................................... 21
+4 Revision History
+NOTE: Page numbers for previous revisions may differ from page numbers in the current version.
+Changes from Revision B (July 2020) to Revision C (September 2020) Page
+• Updated the numbering format for tables, figures, and cross-references throughout the document.................. 1
+• Updated Pin Connections................................................................................................................................... 4
+• Added Timing Diagram....................................................................................................................................... 8
+• New Typical Characteristics................................................................................................................................ 9
+Changes from Revision A (February 2020) to Revision B (July 2020) Page
+• APL to RTM release............................................................................................................................................ 1
+Changes from Revision * (December 2019) to Revision A (February 2020) Page
+• Initial APL Release............................................................................................................................................. 1
+TLV840
+SNVSBC3C – DECEMBER 2019 – REVISED SEPTEMBER 2020 www.ti.com
+2 Submit Document Feedback Copyright © 2020 Texas Instruments Incorporated
+Product Folder Links: TLV840
+5 Device Comparison
+Figure 5-1 shows the device naming nomenclature to compare the different device variants. See Table 12-1 for a
+more detailed explanation.
+TLV 840 X  X  XX  XX  XXX
+Feature Option 
+N: no capacitor delay (CT), 
+no manual reset (MR)
+C: Capacitor delay (CT)
+M: Capacitor delay (CT) and 
+manual reset (MR) 
+Output Type
+DL: Open-drain, 
+active-low
+PL: Push-pull, 
+active-low
+DH: Open-drain, 
+active-high
+PH: Push-pull, 
+active-high
+Detect Voltage Threshold
+08: 0.8V
+...
+54: 5.4V
+Delay Option
+A: 40 µs
+B: 2 ms
+C: 10 ms
+D: 30 ms
+E: 50 ms
+F: 80 ms
+G: 100 ms
+H: 150 ms
+I: 200 ms
+Package
+DBV: SOT23
+Figure 5-1. Device Naming Nomenclature
+Orderable part numbers starting with TLV840C and TLV840M are only available with the delay option A.
+However, longer delays can be achieved through an external capacitor on the CT pin. Leaving the CT pin
+floating will result in typical 40us delay for these 2 feature options.
+www.ti.com
+TLV840
+SNVSBC3C – DECEMBER 2019 – REVISED SEPTEMBER 2020
+Copyright © 2020 Texas Instruments Incorporated Submit Document Feedback 3
+Product Folder Links: TLV840
+6 Pin Configuration and Functions
+1RESET
+2VDD
+3GND 4
+5 CT
+Not to scale
+NC
+Figure 6-1. Pin Configuration TLV840C,
+DBV Package, 5-Pin SOT-23,
+TLV840C Top View
+1RESET
+2VDD
+3GND 4
+5 CT
+Not to scale
+MR
+Figure 6-2. Pin Configuration TLV840M,
+DBV Package, 5-Pin SOT-23,
+TLV840M Top View
+1RESET
+2VDD
+3GND 4
+5 NC
+Not to scale
+NC
+Figure 6-3. Pin Configuration TLV840N,
+DBV Package, 5-Pin SOT-23,
+TLV840N Top View
+Pin Functions
+PIN
+I/O DESCRIPTIONPIN
+NUMBER
+TLV840CxL TLV840MxL TLV840NxL
+1 RESET RESET RESET O Active-Low Output Reset Signal: This pin is driven logic low when
+VDD voltage falls below the negative voltage threshold (VIT-). RESET
+remains low (asserted) for the delay time period (tD) after VDD voltage
+rises above VIT+=VIT-+VHYS.
+2 VDD VDD VDD I Input Supply Voltage TLV840 monitors VDD voltage
+3 GND GND GND _ Ground
+4 NC MR NC I Manual Reset Pull this pin to a logic low to assert a reset signal in the
+RESET  output pin. After MR  pin is left floating or pulls to logic high, the
+RESET  output deasserts to the nominal state after the reset delay time
+(tD)expires.
+NC stands for “No Connect”. The pin can be left floating.
+Recommended connection to GND.
+5 CT CT NC - Capacitor Time Delay Pin. The CT pin offers a user-programmable
+delay time. Connect an external capacitor on this pin to adjust time
+delay. When not in use leave pin floating for the smallest fixed time
+delay.
+NC stands for “No Connect”. The pin can be left floating.
+Recommended connection to GND.
+TLV840
+SNVSBC3C – DECEMBER 2019 – REVISED SEPTEMBER 2020 www.ti.com
+4 Submit Document Feedback Copyright © 2020 Texas Instruments Incorporated
+Product Folder Links: TLV840
+7 Specifications
+7.1 Absolute Maximum Ratings
+over operating free-air temperature range, unless otherwise noted(1)
+MIN MAX UNIT
+Voltage VDD –0.3 6.5 V
+Voltage
+CT,  MR (2),  RESET (TLV840xxPL) –0.3 VDD+0.3 (3)
+V
+RESET (TLV840xxDL) –0.3 6.5
+Current RESET, RESET pin –20 20 mA
+Temperature (4) Operating ambient temperature, TA –40 125
+℃
+Temperature (4) Storage, Tstg –65 150
+(1) Stresses beyond those listed under Absolute Maximum Rating may cause permanent damage to the device. These are stress ratings
+only, which do not imply functional operation of the device at these or any other conditions beyond those indicated under
+Recommended Operating Condition. Exposure to absolute-maximum-rated conditions for extended periods may affect device
+reliability.
+(2) If the logic signal driving MR  is less than VDD, then additional current flows into VDD and out of MR. 
+(3) The absolute maximum rating is (VDD + 0.3) V or 6.5 V, whichever is smaller
+(4) As a result of the low dissipated power in this device, it is assumed that T J = TA.
+7.2 ESD Ratings
+VALUE UNIT
+V(ESD) Electrostatic discharge
+Human body model (HBM), per ANSI/ESDA/JEDEC
+JS-001(1) ± 2000
+V
+Charged device model (CDM), per JEDEC specification
+JESD22-C101(2) ± 750
+(1) JEDEC document JEP155 states that 500-V HBM allows safe manufacturing with a standard ESD control process.
+(2) JEDEC document JEP157 states that 250-V CDM allows safe manufacturing with a standard ESD control process.
+7.3 Recommended Operating Conditions
+over operating free-air temperature range (unless otherwise noted)
+MIN NOM MAX UNIT
+Voltage
+VDD (TLV840xxxL) 0.7 6
+V
+CT, RESET (TLV840xxxL),  MR 0 6
+Current RESET  pin current –5 5 mA
+TA Operating ambient temperature –40 125 ℃
+7.4 Thermal Information
+THERMAL METRIC(1)
+TLV840
+UNITDBV (SOT23-5)
+5 PINS
+RθJA Junction-to-ambient thermal resistance 193.5 °C/W
+RθJC(top) Junction-to-case (top) thermal resistance 117.9 °C/W
+RθJB Junction-to-board thermal resistance 98.5 °C/W
+ψJT Junction-to-top characterization parameter 43.4 °C/W
+ψJB Junction-to-board characterization parameter 97.8 °C/W
+RθJC(bot) Junction-to-case (bottom) thermal resistance N/A °C/W
+(1) For more information about traditional and new thermal metrics, see the Semiconductor and IC Package Thermal Metrics application
+report.
+www.ti.com
+TLV840
+SNVSBC3C – DECEMBER 2019 – REVISED SEPTEMBER 2020
+Copyright © 2020 Texas Instruments Incorporated Submit Document Feedback 5
+Product Folder Links: TLV840
+7.5 Electrical Characteristics
+At 0.7 V ≤ VDD ≤ 6 V, CT = MR = Open, RESET  pull-up resistor (Rpull-up) = 100 kΩ to VDD, output reset
+load (CLOAD) = 10 pF and over operating free-air temperature range –40℃ to 125℃, unless otherwise noted.
+VDD ramp rate ≤ 100 mV/µs. Typical values are at TA = 25℃
+PARAMETER TEST CONDITIONS MIN TYP MAX UNIT
+COMMON PARAMETERS
+VDD Input supply voltage TLV840xxxL 0.7 6 V
+VIT–
+Negative-going input threshold accuracy
+(1)
+VIT- = 0.8 V to 1.7 V –2.5 ±0.5 2.5
+%
+VIT- = 1.8 V to 5.4 V –2 ±0.5 2
+VHYS Hysteresis on VIT– pin 2.5 5 7 %
+IDD Supply current into VDD pin (2)
+VDD = 2 V
+VIT– = 0.8 V to 1.8 V
+TA = –40℃ to
+85℃ 0.12 0.3
+µA
+0.12 1.0
+VDD = 6 V
+VIT– = 0.8 V to 5.5 V
+TA = –40℃ to
+85℃ 0.15 0.4
+0.15 1.2
+V MR_L Manual reset logic low input (2) 0.3VDD V
+V MR_H Manual reset logic high input (2) 0.7VDD V
+R MR Manual reset internal pull-up resistance 100 kΩ
+RCT CT pin internal resistance 500 kΩ
+TLV840xxDL (Open-drain active-low)
+VPOR Power on Reset Voltage (3) VOL(max) = 300 mV
+IOUT(Sink) = 15 µA 700 mV
+VOL
+Low level output voltage
+ 
+VDD = 0.7 V, 0.8 V ≤ VIT–  ≤ 1.5 V
+IOUT(Sink) = 15 µA 300
+mVVDD =1.5 V, 1.6 V ≤ VIT– ≤ 3.3 V
+IOUT(Sink) = 500 µA 300
+VDD = 3.3 V, 3.4 V ≤ VIT– ≤ 5.5 V
+IOUT(Sink) = 2 mA 300
+Ilkg(OD) Open-Drain output leakage current
+VDD = VPULLUP = 6V
+TA = –40℃ to 85℃ 10 100 nA
+VDD = VPULLUP = 6V 10 350 nA
+TLV840xxPL (Push-pull active-low)
+VPOR Power on Reset Voltage (3) VOL(max) = 300 mV
+IOUT(Sink) = 15 µA 700 mV
+VOL
+Low level output voltage
+ 
+VDD = 0.7 V, 0.8 V ≤ VIT– ≤ 1.5 V
+IOUT(Sink) = 15 µA 300
+mVVDD = 1.5 V, 1.6 V ≤ VIT– ≤ 3.3 V
+IOUT(Sink) = 500 µA 300
+VDD = 3.3 V, 3.4 V ≤ VIT– ≤ 5.5 V
+IOUT(Sink) = 2 mA 300
+VOH
+High level output voltage
+ 
+VDD = 1.8 V, 0.8 V ≤ VIT– ≤ 1.4 V
+IOUT(Source) = 500 µA 0.8VDD
+VVDD = 3.3 V, 1.5 V ≤ VIT– ≤ 3.0 V
+IOUT(Source) = 500 µA 0.8VDD
+VDD = 6 V, 3.1 V ≤ VIT– ≤ 5.5 V
+IOUT(Source) = 2 mA 0.8VDD
+(1) V IT– threshold voltage range from 0.8 V to 5.4 V (for DL, PL versions) in 100 mV steps
+(2) If the logic signal driving MR  is less than VDD, then IDD current increases based on voltage differential
+(3) V POR is the minimum VDD voltage level for a controlled output state
+TLV840
+SNVSBC3C – DECEMBER 2019 – REVISED SEPTEMBER 2020 www.ti.com
+6 Submit Document Feedback Copyright © 2020 Texas Instruments Incorporated
+Product Folder Links: TLV840
+7.6 Timing Requirements
+At 0.7 V ≤ VDD ≤ 6 V, CT = MR = Open, RESET  pull-up resistor (Rpull-up) = 100 kΩ to VDD, output reset
+load (CLOAD) = 10 pF and over operating free-air temperature range –40℃ to 125℃, unless otherwise noted.
+VDD ramp rate ≤ 100 mV/µs. Typical values are at TA = 25℃
+PARAMETER TEST CONDITIONS MIN TYP MAX UNIT
+tP_HL
+Propagation detect delay for VDD falling
+below VIT–
+VDD : (VIT+ + 10%) to (VIT– – 10%)
+(1) 30 50 µs
+tD Reset time delay
+TLV840xA CT pin = Open or NC
+(VIT- - 10%) to (VIT+ + 10%) 40 80 µs
+TLV840CA,
+TLV840MA
+CT pin = 10 nF 6.2 ms
+CT pin = 1 µF 619 ms
+tGI_VIT– Glitch immunity VIT– 5% VIT– overdrive(2) 10 µs
+t MR_PW MR pin pulse duration to assert reset (3) 500 ns
+t MR_RES
+Propagation delay from MR low to reset
+assertion
+VDD = 3.3 V,
+MR = V MR_H to V MR_L 
+1 µs
+t MR_tD Delay from MR  release to reset deassert VDD = 3.3 V,
+MR = V MR_L to V MR_H  
+tD ms
+(1) t P_HL measured from threshold trip point (VIT–) to RESET assert. VIT+ = VIT– + VHYS
+(2) Overdrive % = [(V DD/ VIT–) – 1] × 100%
+(3) Refer section on Manual Reset Input for min pulse width needed on MR pin
+www.ti.com
+TLV840
+SNVSBC3C – DECEMBER 2019 – REVISED SEPTEMBER 2020
+Copyright © 2020 Texas Instruments Incorporated Submit Document Feedback 7
+Product Folder Links: TLV840
+7.7 Timing Diagrams
+tDtP_HL
+VDD
+VPOR
+VOH
+VOL
+VIT+ 
+VIT- 
+RESET
+tP_HL
+VDD(0v)
+ tD tD
+(1) Open-Drain timing diagram where RESET is pulled up to VDD via a pull-up resistor
+(2) RESET output is undefined when VDD is < VPOR
+Figure 7-1. Timing Diagram TLV840DL (Open-Drain Active-Low)
+tDtP_HL
+VDD
+VPOR
+VOH
+VOL
+VIT+ 
+VIT- 
+RESET
+tP_HLtD tD 
+(3) RESET output is undefined when VDD is < VPOR and limited to VOL for VDD slew rate = 100mV / μS
+Figure 7-2. Timing Diagram TLV840PL (Push-Pull Active-Low)
+TLV840
+SNVSBC3C – DECEMBER 2019 – REVISED SEPTEMBER 2020 www.ti.com
+8 Submit Document Feedback Copyright © 2020 Texas Instruments Incorporated
+Product Folder Links: TLV840

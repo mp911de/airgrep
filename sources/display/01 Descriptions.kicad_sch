@@ -1,0 +1,216 @@
+(kicad_sch
+	(version 20260306)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "4d56f4c0-f65b-4157-a832-1791dc247fce")
+	(paper "A4")
+	(title_block
+		(title "1.47 Inch Touch Display Powered by XIAO ESP32-S3 Plus")
+		(date "2026-06-10")
+		(rev "v1.0")
+		(company "Seeed Studio")
+	)
+	(lib_symbols)
+	(rectangle
+		(start 63.5 38.1)
+		(end 241.3 146.05)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(fill
+			(type none)
+		)
+		(uuid "5dd29173-4a78-4ff0-96cf-76609a4d7e34")
+	)
+	(text "2026-06-10"
+		(exclude_from_sim no)
+		(at 205.74 50.8 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+		)
+		(uuid "3a3eb231-a302-452a-93f7-f4dd6956612f")
+	)
+	(text "First release"
+		(exclude_from_sim no)
+		(at 100.838 50.8 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+				(thickness 0.254)
+			)
+		)
+		(uuid "3b0b7807-27a1-4d6c-b9e7-e4cff9701f9e")
+	)
+	(text "DATE"
+		(exclude_from_sim no)
+		(at 205.994 41.656 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+				(thickness 0.508)
+				(bold yes)
+			)
+		)
+		(uuid "65eddd4f-043d-461c-8e59-2a2e0030dd80")
+	)
+	(text "REV"
+		(exclude_from_sim no)
+		(at 72.898 41.656 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+				(thickness 0.508)
+				(bold yes)
+			)
+		)
+		(uuid "740a8a99-38d5-42d3-9cc0-303b53442187")
+	)
+	(text "BY"
+		(exclude_from_sim no)
+		(at 231.648 41.656 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+				(thickness 0.508)
+				(bold yes)
+			)
+		)
+		(uuid "add0c9b1-8c9e-4314-bfce-30259e1bf0f2")
+	)
+	(text "Description"
+		(exclude_from_sim no)
+		(at 124.46 41.656 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+				(thickness 0.508)
+				(bold yes)
+			)
+		)
+		(uuid "c4c5b31d-402c-4af1-b4a7-b779f45c5013")
+	)
+	(text "v1.0"
+		(exclude_from_sim no)
+		(at 72.898 50.8 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+				(thickness 0.254)
+			)
+		)
+		(uuid "e309a9a6-6099-43b1-9d61-cb513ae9f0d9")
+	)
+	(polyline
+		(pts
+			(xy 63.5 120.65) (xy 241.3 120.65)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "33a72897-f09c-425a-8f3f-bc8f3416321c")
+	)
+	(polyline
+		(pts
+			(xy 63.5 57.15) (xy 241.3 57.15)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "37298965-e328-46d1-a192-e9a2763b979a")
+	)
+	(polyline
+		(pts
+			(xy 63.5 69.85) (xy 241.3 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "628236dd-c82f-48ed-839e-5496e72d8253")
+	)
+	(polyline
+		(pts
+			(xy 63.5 44.45) (xy 241.3 44.45)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "65dca0d9-cf5c-483e-b565-0a6691d24093")
+	)
+	(polyline
+		(pts
+			(xy 190.5 38.1) (xy 190.5 146.05)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6c9597ce-8d32-471c-a360-5b789b90fb2d")
+	)
+	(polyline
+		(pts
+			(xy 82.55 38.1) (xy 82.55 146.05)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7a5303fa-c1f4-4b0c-828a-f50f5fec70ca")
+	)
+	(polyline
+		(pts
+			(xy 63.5 107.95) (xy 241.3 107.95)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9fb29e88-f636-49dd-a444-6b087e9cab89")
+	)
+	(polyline
+		(pts
+			(xy 63.5 82.55) (xy 241.3 82.55)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a2d6b7d6-8875-43ab-a442-b4c642a24763")
+	)
+	(polyline
+		(pts
+			(xy 63.5 133.35) (xy 241.3 133.35)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c749abbb-bfd2-452a-b551-b906c76a9b76")
+	)
+	(polyline
+		(pts
+			(xy 63.5 95.25) (xy 241.3 95.25)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e488e474-f279-4bb5-8e7d-2db18c0d4803")
+	)
+	(polyline
+		(pts
+			(xy 222.25 38.1) (xy 222.25 146.05)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e54e2d91-172d-4325-a1d9-06a56e2c80a4")
+	)
+)

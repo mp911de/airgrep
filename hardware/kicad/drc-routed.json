@@ -1,0 +1,203 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-09-25T20:58:56",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning",
+        "exclusion"
+    ],
+    "kicad_version": "10.0.6",
+    "schematic_parity": [],
+    "source": "carrier.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "Footprint 'MountingHole_6.5mm' does not match copy in library 'MountingHole'",
+            "items": [
+                {
+                    "description": "Footprint MH6",
+                    "pos": {
+                        "x": 40.0,
+                        "y": 7.0
+                    },
+                    "uuid": "0934f394-858d-4bbf-a1d9-8cb50a6716be"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'MountingHole_2.8mm' not found in library 'MountingHole'",
+            "items": [
+                {
+                    "description": "Footprint MH5",
+                    "pos": {
+                        "x": 52.5,
+                        "y": 91.5
+                    },
+                    "uuid": "2c77cde3-fc13-4179-add3-efd73590f79f"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'SW-SMD_JS102011SAQN' does not match copy in library 'carrier'",
+            "items": [
+                {
+                    "description": "Footprint SW1",
+                    "pos": {
+                        "x": 63.0,
+                        "y": 90.5
+                    },
+                    "uuid": "6d349364-9c6e-4834-bf1d-d0eee1844280"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'MountingHole_6.5mm' does not match copy in library 'MountingHole'",
+            "items": [
+                {
+                    "description": "Footprint MH8",
+                    "pos": {
+                        "x": 92.0,
+                        "y": 7.0
+                    },
+                    "uuid": "772f8bdc-c6cb-4eee-8f0c-066cf2cd75fa"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'MountingHole_2.8mm' not found in library 'MountingHole'",
+            "items": [
+                {
+                    "description": "Footprint MH3",
+                    "pos": {
+                        "x": 3.5,
+                        "y": 91.5
+                    },
+                    "uuid": "7f658435-b666-4ada-b493-bca298fb9598"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'MountingHole_6.5mm' does not match copy in library 'MountingHole'",
+            "items": [
+                {
+                    "description": "Footprint MH7",
+                    "pos": {
+                        "x": 62.0,
+                        "y": 7.0
+                    },
+                    "uuid": "7f9c3a44-3f16-4c9c-bb15-44c69fbddc92"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'MountingHole_2.8mm' not found in library 'MountingHole'",
+            "items": [
+                {
+                    "description": "Footprint MH1",
+                    "pos": {
+                        "x": 3.5,
+                        "y": 3.5
+                    },
+                    "uuid": "8acc9f5e-3caf-4f0c-843d-d33c439057dd"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'MountingHole_2.8mm' not found in library 'MountingHole'",
+            "items": [
+                {
+                    "description": "Footprint MH4",
+                    "pos": {
+                        "x": 101.5,
+                        "y": 91.5
+                    },
+                    "uuid": "8b02fdd5-b8f1-4525-82ac-08ff416a56f3"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'MountingHole_2.8mm' not found in library 'MountingHole'",
+            "items": [
+                {
+                    "description": "Footprint MH2",
+                    "pos": {
+                        "x": 101.5,
+                        "y": 3.5
+                    },
+                    "uuid": "aa692585-0283-4cd4-a949-fd7278d442fe"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_issues"
+        },
+        {
+            "description": "Footprint 'SW-SMD_JS102011SAQN' does not match copy in library 'carrier'",
+            "items": [
+                {
+                    "description": "Footprint SW2",
+                    "pos": {
+                        "x": 4.5,
+                        "y": 66.5
+                    },
+                    "uuid": "ba47f87d-7008-4c6f-9206-38605da695c7"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        },
+        {
+            "description": "Footprint 'USB_C_Receptacle_Hanbo_MC-107DMS' does not match copy in library 'carrier'",
+            "items": [
+                {
+                    "description": "Footprint J1",
+                    "pos": {
+                        "x": 86.5,
+                        "y": 92.5
+                    },
+                    "uuid": "f2b08ac9-967e-4fb4-b309-8549a6d0da04"
+                }
+            ],
+            "severity": "warning",
+            "type": "lib_footprint_mismatch"
+        }
+    ]
+}

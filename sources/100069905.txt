@@ -1,0 +1,131 @@
+PAGE 1
+INDUSTRIAL PRODUCT DATASHEET
+XIAO 1.47'' IPS Touch
+Display(ESP32-S3)
+The XIAO 1.47'' IPS Touch Display(ESP32-S3) is a compact ESP32-S3 board with a
+built-in 1.47-inch touch display, microphone, IMU, Wi-Fi, and Bluetooth for rapid
+development of connected touch-enabled devices.
+SKU
+100069905
+UPDATED
+2026-09-21 03:34:19
+PRICE
+$19.90(Excl. VAT)
+
+PAGE 2
+Overview
+The XIAO 1.47'' IPS Touch Display(ESP32-S3) integrates a 1.47-inch color touch display,
+microphone, IMU, battery, and buttons around the XIAO ESP32-S3 Plus for Wi-Fi and Bluetooth
+connectivity. It is designed for small connected AIoT devices and supports applications such as
+mini desktop dashboards, smart home touch controllers, AI voice assistant prototypes, and
+interactive toys.
+2
+XIAO 1.47'' IPS Touch Display(ESP32-S3)XIAO 1.47'' IPS Touch Display(ESP32-S3)
+PAGE 3
+Key Features
+A Mini Smart Device Board, Ready for Your Next Project
+For many small hardware projects, the hard part is not starting the controller. It is turning a screen, touch input,
+microphone, sensors, battery, and buttons into a small device that feels complete and usable. This board already
+brings these key parts together, so you can spend more time building the actual experience: designing the UI,
+reading data, adding interaction, and connecting to the network, instead of wiring modules one by one.
+Make Your Projects That Look and Feel More Finished
+The 1.47-inch color touch display helps your project move beyond serial output, LEDs, or rough test setups. You can
+build menus, status pages, icons, buttons, sensor dashboards, and simple animations, making your prototype
+easier to show, use, and share. For demos, customer presentations, classroom projects, and maker builds, it helps
+the ﬁnal result feel much more complete.
+Touch, Voice, and Motion in One Small Board
+This board does more than show information. It also gives your project multiple ways to respond to the user. The
+touch screen is great for menus and controls. The microphone can be used for recording, sound triggers, or voice
+interaction. The IMU can detect orientation, shaking, ﬂipping, and motion. With these built in, you can build a small
+device that can “listen”, “move”, and respond to touch, not just display data.
+Built for Connected AIoT Ideas
+Powered by XIAO ESP32-S3 Plus, this board is a strong ﬁt for small devices that need Wi-Fi and Bluetooth
+connectivity. Build a desktop weather screen, server status monitor, Home Assistant panel, smart home touch
+controller, cloud data display, or a mini AIoT node that connects sensors with online services.
+3
+XIAO 1.47'' IPS Touch Display(ESP32-S3)XIAO 1.47'' IPS Touch Display(ESP32-S3)
+PAGE 4
+Product Gallery
+Specification
+Speciﬁcation XIAO 1.47'' IPS Display(ESP32-S3) XIAO 1.14'' IPS
+Display(ESP32-S3)
+XIAO 0.96'' IPS Display(ESP32-S3)
+4
+XIAO 1.47'' IPS Touch Display(ESP32-S3)XIAO 1.47'' IPS Touch Display(ESP32-S3)
+PAGE 5
+Positioning Touch & Full Interaction Sensing &
+Expansion
+Ultra-Compact
+Core Controller Seeed Studio XIAO ESP32-S3 Plus
+Processor ESP32-S3R8, Dual-Core, up to 240 MHz
+Memory 8 MB PSRAM + 16 MB Flash
+Wireless 2.4 GHz Wi-Fi + BLE 5.0
+Display 1.47" IPS TFT 1.14" IPS TFT 0.96" IPS TFT
+Resolution 172 × 320 135 × 240 80 × 160
+Display Driver JD9853A ST7789 ST7789
+Touch Capacitive Touch No No
+6-Axis IMU Yes
+PDM Digital
+Microphone
+Yes
+MicroSD Card Slot Yes No No
+Grove I2C
+Connector
+No Yes No
+User Buttons 2 3 2
+Battery Connector 2-pin JST, 3.7 V LiPo
+Battery Monitoring Battery voltage monitoring via D16 ADC; battery level can be estimated from the measured voltage.
+Battery status detection is not supported.
+Expansion
+Interfaces
+1x I2C Interface
+1x I2S Interface
+1x JTAG Interface
+2x User Button Interface
+1x I2C Interface
+1x I2S Interface
+1x JTAG Interface
+3x User Button
+Interface
+1x I2C Interface
+1x I2S Interface
+1x JTAG Interface
+2x User Button Interface
+Board Size 26.4 × 51.4 × 12.6 mm 26 × 48 × 10.6 mm 18.8 × 43.6 × 10.6 mm
+Best For Touch UI, portable HMI, local media & data logging Sensor dashboards,
+Grove projects,
+physical controllers
+Tiny IoT devices, wearables, status displays
+5
+XIAO 1.47'' IPS Touch Display(ESP32-S3)XIAO 1.47'' IPS Touch Display(ESP32-S3)
+PAGE 6
+Hardware Overview
+Applications
+Mini Desktop Dashboard
+AI Voice Assistant & Agent Terminal Prototype
+Smart Home Touch Controller
+Digital Pet and Interactive Toy
+Part List
+XIAO 1.47'' IPS Display(ESP32-S3) ×1
+2.4GHz FPC Antenna A-02 for XIAO ESP32-S3 ×1
+6
+XIAO 1.47'' IPS Touch Display(ESP32-S3)XIAO 1.47'' IPS Touch Display(ESP32-S3)
+PAGE 7
+Compliance & Logistics
+HSCODE 8543709990
+USHSCODE 8517180050
+UPC
+EUHSCODE 8543709099
+COO CHINA
+Resource Links
+https://www.seeedstudio.com/1-47-Inch-Touch-Display-Powered-by-XIAO-ESP32-S3-Plus-p-6996.html
+Wiki-XIAO 1.47'' IPS Touch Display(ESP32-S3) Resources
+3D-Printed Enclosure for XIAO 1.47" Touch Display — Designed by Gokul
+Seeed Technology Co.,Ltd.
+9F, Building G3, International E City,
+Zhongshanyuan Road, Nanshan, Shenzhen, China
+Tel: +86 0755-80695676
+Web: www.seeed.cc
+Shop: www.seeedstudio.com
+7
+XIAO 1.47'' IPS Touch Display(ESP32-S3)XIAO 1.47'' IPS Touch Display(ESP32-S3)
