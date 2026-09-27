@@ -1,0 +1,36 @@
+(version 1)
+
+# Units: mil (integers). 1 mil = 0.0254 mm.
+# Fab limits: JLCPCB 2-layer, 1 oz (jlcpcb.com/blog/pcb-design-rules-best-practices,
+# jlcpcb.com/capabilities/pcb-capabilities). Board Setup > Constraints holds:
+#   track 5 mil, spacing 5 mil, via hole 12 mil, annular 6 mil (via dia 24 mil),
+#   via hole-to-hole 8 mil, copper-to-edge 8 mil, silk 6 mil line / 40 mil text.
+
+(rule "pad hole to hole 18 mil (JLCPCB 0.45 mm)"
+  (condition "A.Type == 'Pad' && B.Type == 'Pad'")
+  (constraint hole_to_hole (min 18mil)))
+
+(rule "non-plated hole min 20 mil (JLCPCB 0.5 mm)"
+  (condition "A.Pad_Type == 'NPTH, mechanical'")
+  (constraint hole_size (min 20mil)))
+
+(rule "smd pad to pad, different nets 6 mil (JLCPCB 0.15 mm)"
+  (condition "A.Type == 'Pad' && B.Type == 'Pad' && A.Net != B.Net")
+  (constraint clearance (min 6mil)))
+
+# Project rules (stricter than fab)
+
+(rule "edge clearance 40 mil"
+  (constraint edge_clearance (min 40mil)))
+(rule "J1 shell pads at the edge"
+  (condition "A.Reference == 'J1'")
+  (constraint edge_clearance (min 12mil)))
+
+# current capacity (JLCPCB blog, 1 oz, 10 C rise): 1 A ~ 10 mil, 2 A ~ 30-40 mil
+(rule "power nets min 16 mil outside fine-pitch areas"
+  (condition "A.NetClass == 'power' && A.Type == 'Track' && !A.intersectsArea('FINE_U4') && !A.intersectsArea('FINE_U6') && !A.intersectsArea('FINE_U7') && !A.intersectsArea('FINE_J1') && !A.intersectsArea('FINE_USB')")
+  (constraint track_width (min 16mil)))
+
+(rule "signal track spacing 12 mil"
+  (condition "A.NetClass == 'Default' && B.NetClass == 'Default' && (A.Type == 'Track' || A.Type == 'Via') && (B.Type == 'Track' || B.Type == 'Via') && !A.intersectsArea('FINE_USB') && !A.intersectsArea('FINE_U4') && !A.intersectsArea('FINE_U6') && !A.intersectsArea('FINE_U7') && !A.intersectsArea('FINE_J1') && !A.intersectsArea('FINE_U10') && !A.intersectsArea('FINE_U1')")
+  (constraint clearance (min 12mil)))
