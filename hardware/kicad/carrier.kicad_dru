@@ -4,11 +4,23 @@
 # Fab limits: JLCPCB 2-layer, 1 oz (jlcpcb.com/blog/pcb-design-rules-best-practices,
 # jlcpcb.com/capabilities/pcb-capabilities). Board Setup > Constraints holds:
 #   track 5 mil, spacing 5 mil, via hole 12 mil, annular 6 mil (via dia 24 mil),
-#   via hole-to-hole 8 mil, copper-to-edge 8 mil, silk 6 mil line / 40 mil text.
+#   via hole-to-hole 8 mil, hole-to-copper 8 mil, copper-to-edge 8 mil,
+#   silk-to-pad 6 mil (JLCPCB 0.15 mm), silk 6 mil line / 40 mil text,
+#   mask web 4 mil (JLCPCB 0.10 mm, 0.13 mm for black/white),
+#   mask opening to other-net copper 4 mil (JLCPCB 0.09 mm).
 
-(rule "pad hole to hole 18 mil (JLCPCB 0.45 mm)"
-  (condition "A.Type == 'Pad' && B.Type == 'Pad'")
+(rule "pad hole to hole 18 mil (JLCPCB 0.45 mm), pad-to-pad and pad-to-via"
+  (condition "A.Type == 'Pad' && (B.Type == 'Pad' || B.Type == 'Via')")
   (constraint hole_to_hole (min 18mil)))
+
+(rule "PTH hole to track 12 mil (JLCPCB 0.28 mm min, 0.35 mm recommended)"
+  (condition "A.Pad_Type == 'Through-hole' && (B.Type == 'Track' || B.Type == 'Arc')")
+  (constraint hole_clearance (min 12mil)))
+
+# 7.5 mil because 8 mil (0.2032 mm) would flag the J1 shell slot pads (0.20 mm ring).
+(rule "PTH annular ring 7.5 mil (JLCPCB 0.18 mm absolute, 0.25 mm recommended)"
+  (condition "A.Pad_Type == 'Through-hole'")
+  (constraint annular_width (min 7.5mil)))
 
 (rule "non-plated hole min 20 mil (JLCPCB 0.5 mm)"
   (condition "A.Pad_Type == 'NPTH, mechanical'")
@@ -20,6 +32,19 @@
 
 # Project rules (stricter than fab)
 
+(rule "routed holes 6.5 mm: copper keepaway 16 mil (CNC +/-8 mil)"
+  (condition "A.Reference == 'MH6' || A.Reference == 'MH7' || A.Reference == 'MH8'")
+  (constraint hole_clearance (min 16mil)))
+
+(rule "drilled mounting holes: copper keepaway 12 mil"
+  (condition "A.Reference == 'MH1' || A.Reference == 'MH2' || A.Reference == 'MH3' || A.Reference == 'MH4' || A.Reference == 'MH5'")
+  (constraint hole_clearance (min 12mil)))
+
+(rule "PTH annular ring 10 mil (JLCPCB recommended 0.25 mm)"
+  (condition "A.Type == 'Pad' && A.Pad_Type == 'Through-hole'")
+  (constraint annular_width (min 10mil)))
+
+
 (rule "edge clearance 40 mil"
   (constraint edge_clearance (min 40mil)))
 (rule "J1 shell pads at the edge"
@@ -28,9 +53,9 @@
 
 # current capacity (JLCPCB blog, 1 oz, 10 C rise): 1 A ~ 10 mil, 2 A ~ 30-40 mil
 (rule "power nets min 16 mil outside fine-pitch areas"
-  (condition "A.NetClass == 'power' && A.Type == 'Track' && !A.intersectsArea('FINE_U4') && !A.intersectsArea('FINE_U6') && !A.intersectsArea('FINE_U7') && !A.intersectsArea('FINE_J1') && !A.intersectsArea('FINE_USB')")
+  (condition "A.NetClass == 'power' && A.Type == 'Track' && !A.intersectsArea('FINE_U4') && !A.intersectsArea('FINE_U6') && !A.intersectsArea('FINE_U7') && !A.intersectsArea('FINE_J1') && !A.intersectsArea('FINE_USB') && !A.intersectsArea('FINE_U8')")
   (constraint track_width (min 16mil)))
 
 (rule "signal track spacing 12 mil"
-  (condition "A.NetClass == 'Default' && B.NetClass == 'Default' && (A.Type == 'Track' || A.Type == 'Via') && (B.Type == 'Track' || B.Type == 'Via') && !A.intersectsArea('FINE_USB') && !A.intersectsArea('FINE_U4') && !A.intersectsArea('FINE_U6') && !A.intersectsArea('FINE_U7') && !A.intersectsArea('FINE_J1') && !A.intersectsArea('FINE_U10') && !A.intersectsArea('FINE_U1')")
+  (condition "A.NetClass == 'Default' && B.NetClass == 'Default' && (A.Type == 'Track' || A.Type == 'Via') && (B.Type == 'Track' || B.Type == 'Via') && !A.intersectsArea('FINE_USB') && !A.intersectsArea('FINE_U4') && !A.intersectsArea('FINE_U6') && !A.intersectsArea('FINE_U7') && !A.intersectsArea('FINE_J1') && !A.intersectsArea('FINE_U10') && !A.intersectsArea('FINE_U1') && !A.intersectsArea('FINE_U8')")
   (constraint clearance (min 12mil)))
