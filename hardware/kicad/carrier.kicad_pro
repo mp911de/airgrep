@@ -617,39 +617,6 @@
         "wire_width": 6
       },
       {
-        "clearance": 0.127,
-        "diff_pair_gap": 0.254,
-        "diff_pair_width": 0.2032,
-        "microvia_diameter": 0.3048,
-        "microvia_drill": 0.1016,
-        "name": "Dense",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 0,
-        "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.127,
-        "tuning_profile": "",
-        "via_diameter": 0.6096,
-        "via_drill": 0.3048
-      },
-      {
-        "bus_width": 12,
-        "clearance": 0.1524,
-        "diff_pair_gap": 0.254,
-        "diff_pair_width": 0.2032,
-        "line_style": 0,
-        "microvia_diameter": 0.3048,
-        "microvia_drill": 0.1016,
-        "name": "power",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 1,
-        "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.4064,
-        "tuning_profile": "",
-        "via_diameter": 0.8128,
-        "via_drill": 0.4064,
-        "wire_width": 6
-      },
-      {
         "clearance": 0.1524,
         "diff_pair_gap": 0.1905,
         "diff_pair_width": 0.127,
@@ -728,6 +695,21 @@
         "via_drill": 0.3048
       },
       {
+        "clearance": 0.127,
+        "diff_pair_gap": 0.254,
+        "diff_pair_width": 0.2032,
+        "microvia_diameter": 0.3048,
+        "microvia_drill": 0.1016,
+        "name": "Dense",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 0,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.127,
+        "tuning_profile": "",
+        "via_diameter": 0.6096,
+        "via_drill": 0.3048
+      },
+      {
         "clearance": 0.1524,
         "diff_pair_gap": 0.1524,
         "diff_pair_width": 0.1524,
@@ -778,6 +760,24 @@
         "tuning_profile": "",
         "via_diameter": 0.6096,
         "via_drill": 0.3048
+      },
+      {
+        "bus_width": 12,
+        "clearance": 0.1524,
+        "diff_pair_gap": 0.254,
+        "diff_pair_width": 0.2032,
+        "line_style": 0,
+        "microvia_diameter": 0.3048,
+        "microvia_drill": 0.1016,
+        "name": "power",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 1,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.4064,
+        "tuning_profile": "",
+        "via_diameter": 0.8128,
+        "via_drill": 0.4064,
+        "wire_width": 6
       }
     ],
     "meta": {
@@ -835,7 +835,7 @@
   "pcbnew": {
     "last_paths": {
       "idf": "",
-      "netlist": "",
+      "netlist": "./",
       "plot": "",
       "specctra_dsn": "",
       "step": "",
@@ -970,13 +970,46 @@
       {
         "filename": "carrier.kicad_sch",
         "name": "carrier",
-        "uuid": "00000000-0000-0000-0000-000000000000"
+        "uuid": "1d76d2ec-7795-4c71-8167-b1182c3ebc1d"
       }
     ],
     "used_designators": "",
     "variants": []
   },
-  "sheets": [],
+  "sheets": [
+    [
+      "1d76d2ec-7795-4c71-8167-b1182c3ebc1d",
+      "carrier"
+    ],
+    [
+      "8d582056-b074-472b-a300-fd21b59a9139",
+      "USB input"
+    ],
+    [
+      "813d6342-6820-4479-ab2d-8f2e0246f11a",
+      "5V boost and load switch"
+    ],
+    [
+      "85e779da-b238-4408-b509-099899e823d5",
+      "Buzzer and barometer"
+    ],
+    [
+      "ca5da11d-56a4-4cac-94d5-ee3030474f4d",
+      "Charger BQ25606"
+    ],
+    [
+      "3f53ac70-9f38-49d5-b028-e652ebac7ccc",
+      "Modules and service shunts"
+    ],
+    [
+      "70bb31ad-859e-4aa6-9d27-4818f29c93a4",
+      "Battery, thermal, power control"
+    ],
+    [
+      "f622a697-5a21-4794-a4ab-94e63edd90cd",
+      "Gauge and status"
+    ]
+  ],
   "text_variables": {},
   "tuning_profiles": {
     "meta": {

@@ -1263,11 +1263,15 @@
 			(embedded_fonts no)
 		)
 		(symbol "carrier:PKMCS0909E4000-R1"
+			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
 			(property "Reference" "BUZ"
-				(id 0)
 				(at 0 6.35 0)
+				(show_name no)
+				(do_not_autoplace no)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -1275,8 +1279,9 @@
 				)
 			)
 			(property "Value" "PKMCS0909E4000-R1"
-				(id 1)
 				(at 0 -6.35 0)
+				(show_name no)
+				(do_not_autoplace no)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -1284,57 +1289,86 @@
 				)
 			)
 			(property "Footprint" "carrier:BUZ-SMD_L9.0-W9.0_PKMCS0909E4000-R1"
-				(id 2)
 				(at 0 -8.89 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
-					) hide)
+					)
+				)
 			)
 			(property "Datasheet" "https://www.lcsc.com/datasheet/C910763.pdf"
-				(id 3)
 				(at 0 -11.43 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
-					) hide)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
 			)
 			(property "Manufacturer" "muRata(村田)"
-				(id 4)
 				(at 0 -13.97 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
-					) hide)
+					)
+				)
 			)
 			(property "MPN" "PKMCS0909E4000-R1"
-				(id 5)
 				(at 0 -16.51 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
-					) hide)
+					)
+				)
 			)
 			(property "LCSC Part" "C910763"
-				(id 6)
 				(at 0 -19.05 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
-					) hide)
+					)
+				)
 			)
 			(property "ki_keywords" "Pre-ordered Products"
-				(id 8)
-				(at 0 -21.59 0)
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
 				(effects
 					(font
 						(size 1.27 1.27)
-					) hide)
+					)
+				)
 			)
 			(symbol "PKMCS0909E4000-R1_0_1"
 				(polyline
 					(pts
-						(xy 0.0 1.78) (xy 0.0 -1.78)
+						(xy 0 1.78) (xy 0 -1.78)
 					)
 					(stroke
 						(width 0)
@@ -1346,7 +1380,7 @@
 				)
 				(polyline
 					(pts
-						(xy 0.0 1.78) (xy 1.27 1.78) (xy 3.81 3.81) (xy 3.81 -3.81) (xy 1.27 -1.78) (xy 0.0 -1.78)
+						(xy 0 1.78) (xy 1.27 1.78) (xy 3.81 3.81) (xy 3.81 -3.81) (xy 1.27 -1.78) (xy 0 -1.78)
 					)
 					(stroke
 						(width 0)
@@ -1393,6 +1427,7 @@
 					)
 				)
 			)
+			(embedded_fonts no)
 		)
 	)
 	(no_connect
@@ -1927,6 +1962,28 @@
 			)
 		)
 	)
+	(global_label "BUZZ_PLUS"
+		(shape bidirectional)
+		(at 146.05 48.26 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "d7a8ab6e-df09-4e30-95d2-94523d5852a8")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 146.05 48.26 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
 	(global_label "BUZZ_LIM"
 		(shape bidirectional)
 		(at 114.3 53.34 270)
@@ -1993,6 +2050,28 @@
 			)
 		)
 	)
+	(global_label "GND"
+		(shape bidirectional)
+		(at 146.05 50.8 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "f370af87-3b33-432c-91c6-5b1c9f747891")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 146.05 50.8 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
 	(symbol
 		(lib_id "Device:R")
 		(at 20.32 80.01 0)
@@ -2004,15 +2083,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "2a725ac1-e6d9-467c-995e-752402f3c1b4")
-		(property "LCSC" "C25803"
-			(at 17.78 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "R27"
 			(at 17.78 80.01 0)
 			(show_name no)
@@ -2066,6 +2136,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C25803"
+			(at 17.78 80.01 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "5ce0d38c-50e8-41a4-99f3-2337f5d4e372")
 		)
@@ -2092,15 +2173,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "3f3b5253-22e5-4900-bb9c-ab88d638b7cf")
-		(property "LCSC" "C14663"
-			(at 121.92 139.7 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "C30"
 			(at 121.92 139.7 0)
 			(show_name no)
@@ -2156,6 +2228,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C14663"
+			(at 121.92 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "32fd4d88-8d3b-4661-bdd0-5b5865da0340")
 		)
@@ -2182,15 +2265,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "6a3881fe-8128-4d61-ae85-3569c85ce138")
-		(property "LCSC" "C221660"
-			(at 115.57 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "SW2"
 			(at 115.57 50.8 0)
 			(show_name no)
@@ -2244,6 +2318,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C221660"
+			(at 115.57 50.8 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "f203b01f-d4d3-49a6-8059-da23026ee011")
 		)
@@ -2273,15 +2358,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "6d3d9752-ac02-4e83-ad5a-ecd7d51b62e4")
-		(property "LCSC" "C14663"
-			(at 107.95 139.7 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "C29"
 			(at 107.95 139.7 0)
 			(show_name no)
@@ -2337,6 +2413,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C14663"
+			(at 107.95 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "dc0d6e57-18dd-47db-931d-6e6bc696e877")
 		)
@@ -2363,15 +2450,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "76d06474-307f-4b61-a11e-2d1caa2e572a")
-		(property "LCSC" "C7836"
-			(at 49.53 36.83 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "U9"
 			(at 49.53 36.83 0)
 			(show_name no)
@@ -2428,6 +2506,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C7836"
+			(at 49.53 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "a2aa9c7e-ca11-4e4a-bb31-3ac97f72c14b")
 		)
@@ -2463,15 +2552,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "aa1524db-f7c0-4e61-add2-0b2cd9c6fd45")
-		(property "LCSC" "C22808"
-			(at 82.55 49.53 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "R28"
 			(at 82.55 49.53 0)
 			(show_name no)
@@ -2516,6 +2596,17 @@
 		)
 		(property "Description" "Resistor"
 			(at 85.09 49.53 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C22808"
+			(at 82.55 49.53 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2604,15 +2695,39 @@
 				)
 			)
 		)
-    (property "LCSC" "C5362283" (at 59.69 139.7 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "MPN" "BMP581" (at 59.69 139.7 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Manufacturer" "Bosch Sensortec" (at 59.69 139.7 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
+		(property "LCSC" "C5362283"
+			(at 59.69 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "BMP581"
+			(at 59.69 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "Bosch Sensortec"
+			(at 59.69 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "e763684c-e311-4772-9535-d4a6cb95c536")
 		)
@@ -2663,15 +2778,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "cf9f5703-5933-4573-bacd-b8fe72222fae")
-		(property "LCSC" "C14663"
-			(at 46.99 90.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "C28"
 			(at 46.99 90.17 0)
 			(show_name no)
@@ -2718,6 +2824,17 @@
 		)
 		(property "Description" "Unpolarized capacitor"
 			(at 49.53 90.17 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C14663"
+			(at 46.99 90.17 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2808,11 +2925,13 @@
 		)
 		(property "LCSC" "C910763"
 			(at 149.86 49.53 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "1"
@@ -2829,26 +2948,6 @@
 				)
 			)
 		)
-	)
-	(global_label "BUZZ_PLUS"
-		(at 146.05 48.26 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "d7a8ab6e-df09-4e30-95d2-94523d5852a8")
-	)
-	(global_label "GND"
-		(at 146.05 50.800000000000004 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "f370af87-3b33-432c-91c6-5b1c9f747891")
 	)
 	(sheet_instances
 		(path "/"

@@ -1233,6 +1233,10 @@
 		(at 48.26 59.69)
 		(uuid "258333bb-eba5-4096-8a0b-dc55fb9c4338")
 	)
+	(no_connect
+		(at 48.26 72.39)
+		(uuid "3a2997c4-e1c7-43f2-bf0e-f289371245a8")
+	)
 	(global_label "GND"
 		(shape bidirectional)
 		(at 71.12 74.93 0)
@@ -2322,15 +2326,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "2cb91c7e-b125-4fd9-9ae7-aff86e33d4ff")
-		(property "LCSC" "C15849"
-			(at 116.84 30.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "C5"
 			(at 116.84 30.48 0)
 			(show_name no)
@@ -2386,6 +2381,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C15849"
+			(at 116.84 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "b1263db3-cd64-4c7b-a3ec-f0a20b3de634")
 		)
@@ -2412,15 +2418,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "3614b27c-2070-4a37-86a2-63c2cac748f3")
-		(property "LCSC" "C1622"
-			(at 116.84 59.69 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "C8"
 			(at 116.84 59.69 0)
 			(show_name no)
@@ -2476,6 +2473,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C1622"
+			(at 116.84 59.69 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "694f8312-9eab-4f8c-bb5c-910ce9e7c832")
 		)
@@ -2502,15 +2510,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "58af057e-b89a-4531-96e1-ccdc333c2dca")
-		(property "LCSC" "C3002634"
-			(at 139.7 67.31 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "L1"
 			(at 139.7 67.31 0)
 			(show_name no)
@@ -2564,6 +2563,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C3002634"
+			(at 139.7 67.31 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "b905f47b-2bab-46fa-90cb-9db47057db6e")
 		)
@@ -2590,15 +2600,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "66a328cc-d70b-4bfb-b9c8-670bf328bf04")
-		(property "LCSC" "C15850"
-			(at 167.64 100.33 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "C11"
 			(at 167.64 100.33 0)
 			(show_name no)
@@ -2654,6 +2655,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C15850"
+			(at 167.64 100.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "21d5375a-3f70-4c0b-a773-be8881e629e5")
 		)
@@ -2680,15 +2692,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "6f215d31-437f-4bd7-912d-5b84406f4b4b")
-		(property "LCSC" "C45783"
-			(at 187.96 69.85 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "C10"
 			(at 187.96 69.85 0)
 			(show_name no)
@@ -2735,6 +2738,17 @@
 		)
 		(property "Description" "Unpolarized capacitor"
 			(at 190.5 69.85 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C45783"
+			(at 187.96 69.85 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2849,15 +2863,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "759b74b3-3afc-48f2-ae49-9ff5948815c6")
-		(property "LCSC" "C45783"
-			(at 167.64 69.85 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "C9"
 			(at 167.64 69.85 0)
 			(show_name no)
@@ -2913,6 +2918,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C45783"
+			(at 167.64 69.85 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "56905540-090b-416d-98fc-a0467210709f")
 		)
@@ -2939,15 +2955,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "89426d18-9042-4f22-bc04-2b7d6f249886")
-		(property "LCSC" "C23138"
-			(at 17.78 119.38 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "R5"
 			(at 17.78 119.38 0)
 			(show_name no)
@@ -3001,6 +3008,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C23138"
+			(at 17.78 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "98e1d01c-5004-4a1a-89a1-58bf0f52b5b1")
 		)
@@ -3027,15 +3045,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "ab718745-bff7-4cef-aa8d-1c76a457c819")
-		(property "LCSC" "C23138"
-			(at 36.83 119.38 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "R6"
 			(at 36.83 119.38 0)
 			(show_name no)
@@ -3089,6 +3098,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C23138"
+			(at 36.83 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "722591dc-f5a7-437f-9dea-0c3a3aba01a3")
 		)
@@ -3115,15 +3135,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "de7ef851-3038-46c8-8544-a589f2bb9d39")
-		(property "LCSC" "C25803"
-			(at 57.15 119.38 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "R7"
 			(at 57.15 119.38 0)
 			(show_name no)
@@ -3177,6 +3188,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C25803"
+			(at 57.15 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "51579e66-2dfc-43d2-aa86-58d1939aac30")
 		)
@@ -3203,15 +3225,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "dfd743f0-e359-481f-bff1-de2879d396d4")
-		(property "LCSC" "C1779"
-			(at 157.48 30.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "C7"
 			(at 157.48 30.48 0)
 			(show_name no)
@@ -3267,6 +3280,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C1779"
+			(at 157.48 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "8b1b9029-47b3-4b58-ae42-86a24701aa31")
 		)
@@ -3293,15 +3317,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f3aea559-6d4f-4b0a-90b1-959035a6704f")
-		(property "LCSC" "C15850"
-			(at 137.16 30.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "C6"
 			(at 137.16 30.48 0)
 			(show_name no)
@@ -3357,6 +3372,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C15850"
+			(at 137.16 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "a4e9b0c0-6bac-4a33-9e86-6086f282e3e1")
 		)
@@ -3383,15 +3409,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f7243c6f-398b-4256-9e26-49c08f17e053")
-		(property "LCSC" "C25804"
-			(at 87.63 119.38 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "R8"
 			(at 87.63 119.38 0)
 			(show_name no)
@@ -3445,6 +3462,17 @@
 				)
 			)
 		)
+		(property "LCSC" "C25804"
+			(at 87.63 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "4fe02fe5-5f40-4eef-bc67-f8d92d7dab21")
 		)
@@ -3471,15 +3499,6 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f8f9bf50-be26-4c25-bb76-effd20f205e8")
-		(property "LCSC" "C374063"
-			(at 59.69 52.07 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(property "Reference" "U4"
 			(at 59.69 52.07 0)
 			(show_name no)
@@ -3524,6 +3543,17 @@
 		)
 		(property "Description" ""
 			(at 59.69 69.85 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C374063"
+			(at 59.69 52.07 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3616,10 +3646,6 @@
 				)
 			)
 		)
-	)
-	(no_connect
-		(at 48.26 72.39)
-		(uuid "3a2997c4-e1c7-43f2-bf0e-f289371245a8")
 	)
 	(sheet_instances
 		(path "/"
