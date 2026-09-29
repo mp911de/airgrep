@@ -1,0 +1,2059 @@
+Click here to ask an associate for production status of specific part numbers. 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+19-100986; Rev 1; 3/21 
+ 
+ 
+ 
+General Description 
+The MAX77757 is a standalone 3.15A charger with 
+integrated USB Type -C® CC detection with JEITA 
+compliance that supports reverse boost capability. The 
+fast-charge current is easily configured with resistors. 
+The MAX77757 operates with an input voltage of 4.5V 
+to 13.7V and has a maximum input current limit of 3A. 
+The IC also i mplements the adaptive input current limit 
+(AICL) function that regulates the input voltage by 
+reducing input current to prevent the voltage of a weak 
+adapter from collapsing or folding back. 
+The USB Type-C Configuration Channel (CC) detection 
+pins on the MAX77757 enable automatic USB Type -C 
+power source detection and input current limit 
+configuration. To support a variety of legacy USB types 
+as well as proprietary adapters, the IC also integrates 
+BC1.2 detection using the D+ and D - pins. The IC runs 
+the CC pin and BC1.2 detection automatically as soon 
+as a USB plug is inserted without any software control. 
+The IC also offers reverse -boost capability up to 5.1V 
+and 1.5A, which can be enabled with the ENBST pin. 
+The STAT pin indicates charging status while the INOKB 
+pin indicates valid input voltage. Charging can be 
+stopped by pulling the THM pin low. 
+The MAX77757 is equipped with a Smart Power 
+Selector™ and a battery true-disconnect FET to control 
+the charging and discharging of the battery or to isolate 
+the battery in case of a fault. The MAX77757 is offered 
+in several variants to support Li-ion batteries with various 
+termination voltages from 4.1V to 4.5V. It also has a 3.6V 
+termination voltage option for LiFePO4 batteries. The IC 
+comes in a 3mm x 3mm, 0.4mm pitch, 24-lead FC2QFN 
+package making it suitable for low-cost PCB assembly. 
+ 
+Applications 
+• Mobile Point-of-Sale (mPOS) Terminals 
+• Portable Medical Devices 
+• Wireless Headphones 
+• GPS Trackers 
+• Charging Cradles for Wearable Devices 
+• Power Banks 
+• Mobile Routers 
+  
+ 
+ 
+  
+ 
+Benefits and Features 
+• Up to 16V Protection 
+• 13.7V Maximum Input Operating Voltage 
+• 3.15A Maximum Charging Current 
+• 6A Discharge Current Protection 
+• No Firmware or Communication Required 
+• Integrated CC Detection for USB Type-C 
+• Integrated BC1.2 Detection for Legacy SDP, 
+DCP, CDP, and DCD Timeout 
+• Integrated USB Detection for Common 
+Proprietary Charger Types 
+• Automatic Input Current Limit Configuration 
+• Input Voltage Regulation with Adaptive Input 
+Current Limit (AICL) 
+• Reverse Boost Capability up to 5.1V, 1.5A 
+• Termination Voltage  
+• 4.1V to 4.5V for Li-ion and Li-poly Batteries  
+• 3.6V/3.7V for LiFePO4 Battery  
+• Safety 
+• Charge Safety Timer 
+• JEITA Compliance with NTC Thermistor  
+(MAX77757J) 
+• HOT/COLD Stop Charging with NTC Thermistor 
+(MAX77757H) 
+• Thermal Shutdown 
+• Pin Control of All Functions 
+• Resistor Configurable Fast-Charge Current 
+• ENBST Pin to Enable and Disable Reverse Boost 
+• STAT Pin to Indicate Charging Status 
+• INOKB Pin to Indicate Input Power-OK 
+• THM Pin to Disable Charge 
+• Integrated Power Path  
+• Integrated Battery True-Disconnect FET 
+• 3mm x 3mm, 24-Lead FC2QFN Package 
+ 
+Ordering Information appears at end of data sheet. 
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 2 
+ 
+Simplified Block Diagram 
+   
+  
+VPVL
+T
+THERMISTOR
+4.5V TO 13.7V/3A
+BYP
+SYS
+0.47µH
+2.2µF
+2x10µF
+CC1
+CC2
+USB TYPE-C
+CONNECTOR
+CHGIN
+LX
+SYS
+PGND
+ENBST
+BATT
+THM
+PVL
+GND
+BST
+10µF + 
+22µF
+0.1µF
+10µF
+VSYS
+INOKB
+STAT
+IFAST
+DP
+DN
+VDD
+3.15A
+MAX77757
+2.2µF
+2.2µF
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 3 
+ 
+Absolute Maximum Ratings 
+CHGIN to GND ................................................ -0.3V to +16.0V 
+BYP, LX to PGND ........................................... -0.3V to +16.0V 
+BATT, SYS, INOKB, STAT, ENBST to GND ..... -0.3V to +6.0V 
+BST to PVL...................................................... -0.3V to +16.0V 
+BST to LX .......................................................... -0.3V to +2.2V 
+DN, DP to GND ................................................. -0.3V to +6.0V 
+CC1, CC2 to GND ............................................. -0.3V to +6.0V 
+VDD, PVL, IFAST, THM to GND........................ -0.2V to +2.2V 
+VCHGIN, BYP Continuous Current ............................. 3.2ARMS 
+LX, PGND Continuous Current .................................. 3.5ARMS 
+SYS, BATT Continuous Current ................................. 4.5ARMS 
+Operating Temperature Range ........................ -40°C to +85°C 
+Storage Temperature Range ......................... -65°C to +150°C
+ 
+Stresses beyond those listed under “Absolute Maximum Ratings” may cause permanent damage to the device. These are stress ratings only, and functional operation of the device at these or 
+any other conditions beyond those indicated in the operational sections o f the specifications is not implied. Exposure to absolute maximum rating conditions for extended periods may affect 
+device reliability. 
+Package Information 
+24-Lead FC2QFN 
+ 
+For the latest package outline information and land patterns (footprints), go to www.maximintegrated.com/packages. Note that a “+”, 
+“#”, or “-” in the package code indicates RoHS status only. Package drawings may show a different suffix character, but the drawing 
+pertains to the package regardless of RoHS status. 
+Package thermal resistances were obtained using the method described in JEDEC specification JESD51-7, using a four-
+layer board. For detailed information on package thermal considerations, refer to www.maximintegrated.com/thermal-
+tutorial. 
+Electrical Characteristics 
+(Limits are 100% tested at TA = +25°C. Limits over the operating temperature range and relevant supply voltage range are guaranteed 
+by design and characterization.) 
+PARAMETER SYMBOL CONDITIONS MIN TYP MAX UNITS 
+ 
+GENERAL ELECTRICAL CHARACTERISTICS 
+Battery Only Quiescent 
+Current IBATT_Q USBC as UFP and BATT = SYS = 3.6V  30 50 µA 
+SWITCHING MODE CHARGER 
+CHGIN Voltage Range VCHGIN Operating voltage (Note 1) VCHGIN_
+UVLO  VCHGIN_
+OVLO V 
+CHGIN Overvoltage 
+Threshold VCHGIN_OVLO VCHGIN rising 13.4 13.7 14 V 
+CHGIN Overvoltage-
+Threshold Hysteresis 
+VCHGINH_OVL
+O VCHGIN falling  300  mV 
+CHGIN to GND 
+Minimum Turn-On 
+Threshold Accuracy 
+VCHGIN_UVLO VCHGIN rising 4.6 4.7 4.8 V 
+CHGIN to SYS 
+Minimum Turn-On 
+Threshold 
+VCHGIN2SYS VCHGIN rising VSYS + 
+0.12 
+VSYS + 
+0.20 
+VSYS + 
+0.28 V 
+Package Code F243A3F+1 
+Outline Number 21-100385B 
+Land Pattern Number 90-100128A 
+Thermal Resistance, Four-Layer Board: 
+Junction-to-Ambient (θJA) 31°C/W 
+Junction-to-Case Thermal Resistance (θJC) 7.5°C/W 
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 4 
+ 
+(Limits are 100% tested at TA = +25°C. Limits over the operating temperature range and relevant supply voltage range are guaranteed 
+by design and characterization.) 
+PARAMETER SYMBOL CONDITIONS MIN TYP MAX UNITS 
+ 
+CHGIN Adaptive 
+Voltage Regulation 
+Threshold Accuracy 
+VCHGIN_REG  4.4 4.5 4.6 V 
+CHGIN Current Limit 
+Range CHGIN_ILIM Automatically configured after charger 
+type detection 0.5  3.0 A 
+CHGIN Supply Current IIN 
+VCHGIN = 5.0V, charger enabled, VSYS = 
+VBATT = 4.5V, (no switching, battery 
+charged) 
+ 2.7 4 mA 
+VCHGIN Input Current 
+Limit IINLIMIT 
+Charger enabled, 500mA input current 
+setting 423 460 500 
+mA Charger enabled, 1500mA input current 
+setting 1300 1400 1500 
+Charger enabled, 3000mA input current 
+setting 2600 2800 3000 
+CHGIN Self-Discharge 
+Down to UVLO Time tINSD 
+Time required for the charger input to 
+cause CHGIN capacitor to decay from 
+6.0V to 4.3V 
+ 100  ms 
+CHGIN Input Self-
+Discharge Resistance RINSD   44  kΩ 
+CHGIN to BYP 
+Resistance RCHGIN2BYP Bidirectional  45  mΩ 
+LX High-Side 
+Resistance RHS   60  mΩ 
+LX Low-Side Resistance RLS   60  mΩ 
+BATT to SYS Dropout 
+Resistance RBAT2SYS   20  mΩ 
+CHGIN to BATT 
+Dropout Resistance RCHGIN2BAT 
+Calculation estimates a 0.04Ω inductor 
+resistance (RL) 
+ 
+RCHGIN2BAT = RCHGIN2BYP + RHS + RL 
++ RBAT2SYS 
+ 165  mΩ 
+LX Leakage Current  LX = PGND or BYP, TA = +25°C  0.01 10 
+µA 
+LX = PGND or BYP, TA = +85°C  1  
+BST Leakage Current  
+BST = PGND or 1.8V, TA = +25°C  0.01 10 
+µA 
+BST = PGND or 1.8V, TA = +85°C  1  
+BYP Leakage Current  
+VBYP = 5V, VCHGIN = 0V, LX = 0V, 
+charger disabled, TA = +25°C  0.01 10 
+µA VBYP = 5V, VCHGIN = 0V, LX = 0V, 
+charger disabled, TA = +85°C 
+ 1  
+SYS Leakage Current  
+VSYS = 0V, VBATT = 4.2V, charger 
+disabled, TA = +25°C  0.01 10 
+µA VSYS = 0V, VBATT = 4.2V, charger 
+disabled, TA = +85°C  1  
+Minimum ON Time tON-MIN   75  ns 
+Minimum OFF Time tOFF-MIN   75  ns 
+Buck Current Limit ILIM  5.16 6.0 6.84 A 
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 5 
+ 
+(Limits are 100% tested at TA = +25°C. Limits over the operating temperature range and relevant supply voltage range are guaranteed 
+by design and characterization.) 
+PARAMETER SYMBOL CONDITIONS MIN TYP MAX UNITS 
+ 
+Reverse Boost 
+Quiescent Current  Non-switching; output forced 200mV 
+above its target regulation voltage  2000  µA 
+Reverse Boost BYP 
+Voltage in OTG Mode VBYP.OTG  4.94 5.1 5.26 V 
+CHGIN Output Current 
+Limit  
+ICHGIN.OTG.LI
+M 3.4V < VBATT < 4.5V 1500  1725 mA 
+Reverse Boost Output 
+Voltage Ripple  
+Discontinuous inductor current (i.e., skip 
+mode)  ±150  
+mV 
+Continuous inductor current  ±150  
+BATT Regulation 
+Voltage Accuracy  
+TA = +25°C, BATT regulation voltage 
+(See the Ordering Information table) -0.9 -0.3 +0.3 
+% TA = 0°C to +85°C, BATT regulation 
+voltage (See the Ordering Information 
+table) 
+-1 -0.3 +0.5 
+Fast-Charge Current 
+Program Range  External resistor programmable 0.5  3.15 A 
+Fast-Charge Currents IFC 
+VBATT > VSYSMIN, programmed for 3.0A 2850 3000 3150 
+mA VBATT > VSYSMIN, programmed for 2.0A 1900 2000 2100 
+VBATT > VSYSMIN, programmed for 0.5A 465 500 535 
+Trickle Charge 
+Threshold VTRICKLE 
+VBATT rising for termination voltage from 
+4.1V to 4.5V; trickle charge is disabled for 
+3.6V option 
+3.0 3.1 3.2 V 
+Precharge Threshold VPRECHG VBATT rising 2.4 2.5 2.6 V 
+Prequalification 
+Threshold Hysteresis VPQ-H Applies to both VTRICKLE and VPRECHG  100  mV 
+Trickle Charge Current ITRICKLE 
+ITRICKLE for termination voltage from 
+4.1V to 4.5V option; trickle charge is 
+disabled for 3.6V option 
+270 300 330 mA 
+Precharge Charge 
+Current IPRECHG  40 55 80 mA 
+Charger Restart 
+Threshold VRSTRT  50 100 150 mV 
+Charger Restart 
+Deglitch Time  10mV overdrive, 100ns rise time  130  ms 
+Top-Off Current 
+Program Range ITO See Table 3 50  150 mA 
+Top-Off Current 
+Accuracy ITO 
+Programmed for 150mA 130 150 170 
+mA 
+Programmed for 50mA 25 50 75 
+Charge Termination 
+Deglitch Time tTERM 2mV overdrive, 100ns rise/fall time  30  ms 
+Charger Soft-Start Time tSS   1.5  ms 
+BATT to SYS Reverse 
+Regulation Voltage VBSREG 
+IBATT = 10mA  70  mV 
+Load regulation during the reverse 
+regulation mode  1  mV/A 
+Minimum SYS Voltage VSYSMIN 
+For termination voltage from 4.1V to 4.5V  3.5  
+V 
+For 3.6V termination voltage  3.0  
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 6 
+ 
+(Limits are 100% tested at TA = +25°C. Limits over the operating temperature range and relevant supply voltage range are guaranteed 
+by design and characterization.) 
+PARAMETER SYMBOL CONDITIONS MIN TYP MAX UNITS 
+ 
+Minimum SYS Voltage 
+Accuracy VSYSMIN  -3  +3 % 
+Prequalification Time tPQ Applies to both low-battery precharge and 
+trickle modes  30  min 
+Fast-Charge Constant 
+Current Plus Fast-
+Charge Constant 
+Voltage Time 
+tFC   6  h 
+Top-Off Time tTO   30  s 
+Timer Accuracy   -20  +20 % 
+Junction Temperature 
+Thermal Regulation 
+Loop Setpoint Program 
+Range 
+TREG Junction temperature when charge 
+current is reduced  130  °C 
+Thermal Regulation 
+Gain ATJREG IFC = 3.15A  -157.5  mA/°C 
+THM Threshold, COLD  THM_COLD  
+VTHM/VPVL rising, 1% hysteresis 
+(thermistor temperature falling)  72.5 74 75.5 % 
+THM Threshold, COOL THM_COOL 
+VTHM/VPVL rising, 1% hysteresis 
+(thermistor temperature falling)  63.5 65 66.5 % 
+THM Threshold, WARM  THM_WARM  
+VTHM/VPVL falling, 1% hysteresis 
+(thermistor temperature rising)  31 32.5 34 % 
+THM Threshold, HOT THM_HOT  
+VTHM/VPVL falling, 1% hysteresis 
+(thermistor temperature rising)  21.5 23 24.5 % 
+Charger Disable 
+Threshold  
+VCHGR_EN VTHM/VPVL falling, 1% hysteresis 
+(charger is disabled below this threshold)  4.5 6 7.5 % 
+THM Input Leakage 
+Current  
+VTHM = GND or VPVL; TA = +25°C   0.1 1 μA  
+VTHM = GND or VPVL; TA = +85°C   0.1  μA 
+Battery Overcurrent 
+Threshold IBOVCR   6.0  A 
+Battery Overcurrent 
+Debounce Time tBOVRC  6   ms 
+Battery Overcurrent 
+Retry tOCP_RETRY   0.15  s 
+Battery Overcurrent 
+Protection Quiescent 
+Current 
+IBOVRC   3 + IBATT 
+/18040  µA 
+System Power-Up 
+Current ISYSPU  35 50 80 mA 
+System Power-Up 
+Voltage VSYSPU VSYS rising, 100mV hysteresis 1.9 2.0 2.1 V 
+INOKB, STAT 
+Logic Input Leakage 
+Current    0.1 1 µA 
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 7 
+ 
+(Limits are 100% tested at TA = +25°C. Limits over the operating temperature range and relevant supply voltage range are guaranteed 
+by design and characterization.) 
+PARAMETER SYMBOL CONDITIONS MIN TYP MAX UNITS 
+ 
+Output Low Voltage 
+INOKB, STAT  Isource = 5mA   0.4 V 
+Output High Leakage 
+INOKB, STAT  
+VSYS = 5.5V, TA = +25°C -1 0 +1 
+µA VSYS = 5.5V, TA = +85°C  0.1  
+ENBST 
+ENBST Logic Input Low 
+Threshold 
+VIL    0.4 V 
+ENBST Logic Input High 
+Threshold 
+VIH  1.4   V 
+ENBST Logic Input 
+Leakage Current 
+IENBST ENBST = 5.5V (including current through 
+pulldown resistor)  24 60 µA 
+ENBST Pulldown 
+Resistor 
+RENBST   235  kΩ 
+CHARGER DETECTION 
+BC1.2 State Timeout tTMO  180 200 220 ms 
+Data Contact Detect 
+Time-Out 
+tDCDtmo  700 800 900 ms 
+Proprietary Charger 
+Debounce 
+tPRDeb  5 7.5 10 ms 
+Primary to Secondary 
+Timer 
+tPDSDWait  27 35 39 ms 
+Charger Detection 
+Debounce 
+tCDDeb  45 50 55 ms 
+VBUS64 Threshold VBUS64 
+DP and DN pins; threshold in percent of 
+VBUS voltage 
+3V < VBUS < 5.5V 
+57 64 71 % 
+VBUS64 Hysteresis VBUS64_H   0.015  V 
+VBUS47 Threshold VBUS47 
+DP and DN pins; threshold in percent of 
+VBUS voltage 
+3V < VBUS < 5.5V 
+43.3 47 51.7 % 
+VBUS47 Hysteresis    0.015  V 
+VBUS31 Threshold VBUS31 
+DP and DN pins; threshold in percent of 
+VBUS voltage 
+3V < VBUS < 5.5V 
+26 31 36 % 
+VBUS31 Hysteresis    0.015  V 
+IWEAK Current IWEAK  0.01 0.1 0.5 µA 
+RDM_DWN Resistor RDM_DWN  14.25 20 24.8 kΩ 
+IDP_SRC Current IDP_SRC/IDCD Accurate over 0V to 2.5V 7 10 13 µA 
+IDM_SINK Current 
+IDM_SINK/ 
+IDATSINK Accurate over 0.15V to 3.6V 45 80 125 µA 
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 8 
+ 
+(Limits are 100% tested at TA = +25°C. Limits over the operating temperature range and relevant supply voltage range are guaranteed 
+by design and characterization.) 
+PARAMETER SYMBOL CONDITIONS MIN TYP MAX UNITS 
+ 
+VLGC Threshold VLGC  1.62 1.7 1.9 V 
+VLGC Hysteresis VLGC_H   0.015  V 
+VDAT_REF Threshold VDAT_REF  0.25 0.32 0.4 V 
+VDAT_REF Hysteresis VDAT_REF_H   0.015  V 
+VDN_SRC Voltage 
+VDN_SRC/ 
+VSRC06 Accurate over ILOAD = 0 to 200µA 0.5 0.6 0.7 V 
+VDP_SRC Voltage 
+VDP_SRC/ 
+VSRC06 Accurate over ILOAD = 0 to 200µA 0.5 0.6 0.7 V 
+COMP2 Load Resistor RUSB Load resistor on DP/DN 3 6.1 12 MΩ 
+CC DETECTION 
+CC Pin Voltage in DFP 
+1.5A Mode 
+VCC_PIN Measured at CC pins with 126kΩ load; 
+IDFP1.5_CC enable and VAVL ≥ 2.5V 1.85   V 
+CC Pin Clamp Voltage VCC_ClAMP 60µA ≤ ICC_≤ 600µA  1.1 1.32 V 
+CC Pin Clamp Voltage 
+(5.5V)  ICC_ < 2mA  5.25 5.5 V 
+CC UFP Pulldown 
+Resistance 
+RPD_UFP  -10% 5.1K +10% Ω 
+CC DFP 1.5A Current 
+Source 
+IDFP1.5_CC  -8% 180 +8% µA 
+CC RA RD Threshold VRA_RD0.5  0.15 0.2 0.25 V 
+CC UFP 0.5A RD 
+Threshold 
+VUFP_RD0.5  0.61 0.66 0.7 V 
+CC UFP 0.5A RD 
+Hysteresis 
+VUFP_RD0.5_H   0.015  V 
+CC UFP 1.5A RD 
+Threshold 
+VUFP_RD1.5  1.16 1.23 1.31 V 
+CC UFP 1.5A RD 
+Hysteresis 
+VUFP_RD1.5_H   0.15  V 
+CC Pin Power-Up Time tClampSwap Max time allowed from removal of voltage 
+clamp till 5.1kΩ resistor attached   15 ms 
+CC Detection Debounce tCCDeb  100 119 200 ms 
+Type-C Debounce tPDDeb  10 15 20 ms 
+Type-C Quick Debounce tQDeb  0.9 1 1.1 ms 
+   
+Note 1: The CHGIN input must be less than VCHGIN_OVLO and greater than both VCHGIN_UVLO and VCHGIN2SYS for the charger 
+to turn on.     
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 9 
+ 
+Pin Configuration 
+ 
+ 
+   
+ 
+ 
+Pin Descriptions 
+PIN NAME FUNCTION 
+1 BST Provides Drive To High-Side Internal nMOS. Connect a 0.1μF/6.3V bootstrap capacitor between this pin 
+and the LX node. 
+2 INOKB Charger Input Valid, Active-Low Logic Output Flag. Open-drain output indicates when valid voltage is 
+present at CHGIN. 
+3 STAT 
+Open-Drain Charge Status Indication Output. STAT is toggling low and high impedance during charge. 
+STAT becomes low when top-off threshold is detected and in done state. STAT becomes high 
+impedance when charge faults happen. 
+4 CC2 USB Type-C CC2 Connection 
+5 CC1 USB Type-C CC1 Connection 
+6 DP Common Positive Output 1. Connect to D+ on USB Type-C or micro-USB connector. 
+7 DN Common Negative Output 1. Connect to D- on USB Type-C or micro-USB connector. 
+8 ENBST Active-High Logic Input. Enable/disable the reverse boost converter. 
+9 GND Analog Ground. Short to ground plane. 
+10 VDD Output of On-Chip LDO Used to Power On-Chip, Low-Noise Circuits. Bypass with a 2.2µF/10V ceramic 
+capacitor to GND. Powering external loads from VDD is not recommended other than pullup resistors. 
+ENBST
+VDD
+THM
+IFAST
+DN
+CHGIN
+LX
+LX
+CHGIN
+PGND
+CC2
+CC1
+DP
+SYS
+SYS
+BATT
+BATT
+GND BYP
+STAT
+PVLINOKB
+PGNDBST
+(3mm x 3mm, 0.4mm PITCH)
+TOP VIEW
+192021222324
+121110987
+MAX77757
+1
+2
+3
+4
+5
+6
+18
+17
+16
+15
+14
+13
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 10 
+ 
+11 THM 
+Thermistor Connection. Connect an external negative temperature coefficient (NTC) thermistor from 
+THM to GND. Connect a resistor equal to the thermistor +25°C resistance from THM to PVL. 
+12 IFAST Fast-Charge Current Setting Pin. Connect a resistor (RIFAST) from IFAST to GND to program the fast 
+charge current. Use 24.9kΩ for 3.15A fast charge current. See the Application Information section. 
+13, 14 BATT Battery Power Connection. Connect to the positive terminal of a single-cell (or parallel cell) Li-ion battery. 
+Bypass BATT to PGND ground plane with a 10µF ceramic capacitor. 
+15, 16 SYS System Power Node. Bypass SYS to PGND with a 2x10µF/10V ceramic capacitor. 
+17 PVL Output of On-Chip LDO, Noisy Rail due to Bootstrap Operation. Bypass with a 2.2µF/10V ceramic 
+capacitor to PGND. Powering external loads from PVL is not recommended. 
+18, 19 PGND Power Ground. Connect the return of the buck output capacitor close to these pins. 
+20, 21 LX 
+Switching Node. Connect an inductor between LX and SYS. When the buck converter is enabled, LX 
+switches between BYP and PGND to control the input current, battery current, battery voltage, and die 
+temperature. 
+22 BYP System Power Connection. Output of OVP adapter input block and input to switching charger. Bypass 
+with a 22µF/16V ceramic capacitor from BYP to PGND. 
+23, 24 CHGIN Charger Input. Up to 13.7V operating, 16VDC withstand input pin connected to an adapter or USB power 
+source. Connect a 2.2µF/16V ceramic capacitor from CHGIN to GND.   
+Functional Diagram 
+ 
+ 
+ 
+Detailed Description 
+The MAX77757 is a highly integrated USB Type-C Charger with autonomous configuration. The MAX77757 can operate 
+from an input range of 4.5V to 13.7V to support 5V, 9V, and 12V AC adapters as well as USB input. The fast -charge 
+current is up to 3.15A and the max input current limit is 3.0A. 
+CHARGER INPUT 
+SENSE AND CONTROL
+BIAS AND REF
+BC1.2,
+USB TYPE-C CC
+DETECTION
+CHARGER SW
+CONTROL,
+REVERSE BOOST
+USB TYPE-C
+SWITCH
+REVERSE BLOCKING
++
+2
+2
+2
+2
+2
+SYS
+SYS
+DN
+DP
+CC2
+CC1
+VBUS
+INOKB
+CHGIN
+PVL
+VDD
+ENBST
+STAT
+IFAST
+BYP
+BST
+LX
+PGND
+SYS
+BATT
+SYS
+10µF+
+22µF
+0.1µF
+2x10µF
+BATTERY
+PACK
+10µF
+1kΩ
+2.2µF
+2.2µF
+2.2µF
+1kΩ
+24.9kΩ
+GND
+THERMISTOR
+THM
+T
+PVL
+MAX77757
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 11 
+ 
+The MAX77757 can run BC1.2 and USB Typ e-C CC detection upon input insertion and configure input source to max 
+power option and charger input current limit to max power. 
+Fast-charge current and top -off current threshold can be programmed with an external resistor. The input voltage 
+regulation feature (AICL) even allows users to use weak AC adapters without preventing a charge. 
+The power path design provides system power even when the battery is fully discharged, and it supplements current from 
+the battery and charge input automatically when the system demands a higher current. 
+A reverse boost from the battery can be enabled by the ENBST pin to allow 5.1V/1.5A OTG to VBUS. 
+Switching Mode Charger 
+Features 
+• Complete Li+/LiPoly/LiFePO4 Battery Charger  
+• Prequalification, Constant Current, Constant Voltage 
+• 55mA Precharge Current 
+• 300mA Trickle Charge Current for Charge Termination Voltage from 4.1V to 4.5V. For the 3.6V/3.7V Termination 
+Voltage Options, Trickle Charge Current is Disabled  
+• Resistor Adjustable Constant Current Charge  
+o 500mA to 3.15A 
+• Resistor Adjustable Charge Termination Threshold  
+o 50mA to 150mA 
+• Battery Regulation Voltage  
+o 3.60V, 4.20V, 4.35V, and 4.40V 
+o -0.9/+0.3% Accuracy at +25°C 
+o -1/+0.5% Accuracy from 0°C to +85°C 
+• Synchronous Switch-Mode Based Design 
+• Smart Power Selector 
+• Optimally Distributes Power Between the Charge Adapter, System, and Main Battery 
+• When Powered by a Charge Adapter, the Main Battery can Provide Supplemental Current to the System 
+• The Charge Adapter can Support the System without the Main Battery 
+• No External MOSFETs Required 
+• Single Input Operation  
+• Reverse Leakage Protection (Prevents the Battery from Leaking Current to the Inputs) 
+• VCHGIN_OVLO = 13.7V 
+• Supports AC-to-DC Wall Adapters 
+• Automatic Input Current Limit Selection After Charger Type Detection  
+o 500mA, 1A, 2A, 2.5A, and 3A 
+• Charge Safety Timer  
+• 6 Hours 
+• Die Temperature Monitor with Thermal Foldback Loop  
+• Die Temperature Thresholds: 130°C 
+• Input Voltage Regulation Allows Operation from High-Impedance Sources (AICL) 
+• BATT to SYS Switch is 20mΩ Typical 
+• Capable of 4.5A Steady-State Operation from BATT to SYS 
+• Short Circuit Protection  
+• BATT to SYS Overcurrent Threshold: 6A 
+• SYS Short-to-Ground  
+o Buck Operates with Input Current Limit to 200mA when VSYS < VSYSPU 
+ 
+ 
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 12 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Figure 1. Simplified Functional Diagram 
+ 
+SYS
+BATT
+LX
+BYP
+BUCK/BOOST
+CONTROLLER
+PGND
+CHARGE AND 
+SMART POWER 
+PATH CONTROLLER
++
+5.1V
+(REVERSE BOOST MODE)
+BYP
+UP TO 3.15A
+ CHARGE CURRENT
+SYS
+CHGIN
+CHGIN INPUT CURRENT
+LIMIT SWITCH
+CHGIN
+UP TO +13.7V OPERATING
+UP TO 3.0A INPUT CURRENT
+VUSB/VADP
+REVERSE
+BLOCKING
+BST
+QCHGIN
+QHS
+QLS
+QBAT
+MAX77757
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 13 
+ 
+ 
+ 
+Figure 2. Main Battery Charger Detailed Functional Diagram 
+ 
+Detailed Description 
+The MAX77757 is a switch-mode charger for a one-cell lithium-ion (Li+), lithium polymer (Li-polymer), or LiFePO4 battery. 
+The current limit for CHGIN input is configured automatically allowing the flexibility to connect to either an AC -to-DC wall 
+charger or a USB port, as shown in Figure 2. 
+The synchronous switch-mode DC-DC converter utilizes a high 1.3MHz switching frequency, which is ideal for portable 
+devices since it allows the use of small components while eliminating excessive heat generation. The DC -DC converter 
+has both a buck and a boost mode of operation. When charging, the main battery converter operates in buck mode. The 
+DC-DC buck operates from a 4.3V to 13.7V source and delivers up to 3.15A to the battery. The battery charge current is 
+programmable from 500mA to 3.15A with an external resistor.  
+CHGIN
+SYS
+LX
+PGND
+BYP
+BATT
+INPUT CONTROL
+10µF
+16V
+0603
+QBAT
+2x10µF
+10V
+0603
+10µF
+10V
+0603
+0.47µH
+BYP
+BATT
+VUSB/VADP
+JUNCTION 
+TEMPERATURE 
+SENSOR TEMP
+SYS
+DRV_OUT
+1.3MHz
+BUCK CONTROLLER
+CHARGE CONTROLLER
+REVERSE BOOST 
+CONTROLLER
+CHARGE
+TIMER
+2.2µF
+16V
+0603
+VMBATT
+VSYS
+TJ
+WATCHDOG
+QHS
+QLS
+UP TO 3.15A OF 
+CHARGE 
+CURRENT AND 
+UP TO 6A OF 
+DISCHARGE 
+CURRENT 
+BATT
+GND
+VBYP
+VIBATT
++
+RINSD
+REVERSE
+BLOCKING
+QCHGIN
+BST
+0.1µF
+6.3V
+0402
+22µF
+16V
+0603
+VCHGIN
+MAX77757
+UP TO +13.7V OPERATING
+UP TO 3.0A INPUT CURRENT
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 14 
+ 
+As a boost converter, the DC -DC uses energy from the main battery to boost the voltage at BYP. The boosted BYP 
+voltage is used to supply the USB OTG voltage which is fixed to 5.1V. 
+Maxim Integrated’s Smart Power Selector architecture makes the best use of the limited adapter power and the battery’s 
+power at all times to supply up to buck current limit from the buck to the system. (Additionally, supplement mode provides 
+additional current from the battery to the system up to B2SOVRC.) Adapter power that is not used for the system is used 
+to charge the battery. All power switches for charging and switching the system load between the battery and adapter 
+power are included on-chip—no external MOSFETs are required. 
+Maxim Integrated’s proprietary process technology allows for low -RDSON devices in a small solution size. The total 
+dropout resistance from the adapter power input to the battery is 165mΩ (typ), assuming that the inductor has 0.04Ω of 
+ESR. This 165mΩ typical dropout resistance allows for charging a battery up to 3.0A from a 5V supply.  The resistance 
+from the BATT-to-SYS node is 20mΩ, allowing for low power dissipation and long battery life. 
+A multitude of safety features ensures reliable charging. Features include a charge timer, junction thermal regulation, 
+over/undervoltage protection, and short circuit protection. 
+The BATT-to-SYS switch has overcurrent protection (see the Main Battery Overcurrent Protection During System Power-
+Up section for more information).  
+Smart Power Selector (SPS) 
+The SPS architecture is a network of internal switches and control loops that distribute energy between external power 
+sources CHGIN, BYP, SYS, and BATT.  
+Figure 1 shows a simplified arrangement for the smart power selector’s power steering switches. Figure 2 shows a more 
+detailed arrangement of the smart power selector switches with the following names: QCHGIN, QHS, QLS, and QBAT. 
+Switch and Control Loop Descriptions 
+• CHGIN Input Switch: QCHGIN provides the input overvoltage protection of +16V.  The input switch is either completely 
+on or completely off.   As shown in Figure 2, there are SPS control loops that monitor the current through the input 
+switches as well as the input voltage. 
+• DC-DC Switches: QHS and QLS are the DC-DC switches that can operate as a buck (step-down) or a boost (step-up). 
+When operating as a buck, energy is moved from BYP to SYS. When operating as a boost, energy is moved from 
+SYS to BYP. SPS control loops monitor the DC-DC switch current, the SYS voltage, and the BYP voltage. 
+• Battery-to-System Switch: QBAT controls the battery charging and discharging. Additionally, Q BAT allows the battery 
+to be isolated from the system (SYS). An SPS control loop monitors the QBAT current. 
+SYS Regulation Voltage 
+• When DC-DC is enabled as a buck and the charger is enabled but in a non -charging state such as done, thermal 
+shutdown, or timer fault, VSYS is regulated to VBATTREG and QBAT is off. 
+• When the DC-DC is enabled as a buck and charging in trickle-charge, fast-charge, or top-off modes, VSYS is regulated 
+to VSYSMIN when the VPRECHG < VBATT < VSYSMIN. And, when the DC -DC is enabled as a buck and charging in 
+precharge mode (VBATT < VPRECHG), VSYS is regulated to VBATTREG. In these modes, the Q BAT switch acts as a 
+linear regulator and dissipates power (P = (VSYS - VBATT) × IBATT). When VBATT > VSYSMIN, then VSYS = VBATT + 
+IBATT × RBAT2SYS. In this mode, the QBAT switch is closed. 
+In all of the previous modes, if the combined SYS load exceeds the input current limit, then V SYS drops to V BATT – 
+VBSREG, and the battery provides supplemental current. 
+Input Validation 
+The charger input is compared with several voltage thresholds to determine if it is valid. A charger input must meet the 
+following three characteristics to be valid: 
+• CHGIN must be above VCHGIN_UVLO to be valid. Once CHGIN is above the UVLO threshold, the information (together 
+with LIN2SYS, described as follows) is latched and only can be reset when the charger is in adaptive input current 
+loop (AICL) and input current is lower than the IULO threshold of 60mA. Note that V CHGIN_REG is lower than their 
+UVLO falling threshold, respectively. 
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 15 
+ 
+• CHGIN must be below its overvoltage lockout threshold (VCHGIN_OVLO). 
+• CHGIN must be above the system voltage by VCHGIN2SYS. 
+ 
+Figure 3. CHGIN Valid Signal Generation Logic 
+INOKB pin is pulled down when CHGINOK = 1 and the switcher starts. 
+ 
+INOKB
+VCHGIN_VLD
+SWITCHER START
+ 
+Figure 4. INOKB Signal Generation Logic 
+ 
+Input Current Limit 
+After the charger type detection is complete, the MAX77757 automatically configures the input current limit to the highest 
+setting that the source can provide. If the input source is not a standard power source described by BC1.2, USB Type-C, 
+or a proprietary charger type that the MAX77757 can detect, the MAX77757 sets the input current limit to 3A. 
+Input Voltage Regulation Loop 
+An input voltage regulation loop allows the charger to function well when it is attached to a poor -quality charge source. 
+The loop improves performance with relatively high resistance charge sources that exist when long cables are used or 
+devices are charged with non-compliant USB hub configurations. 
+The input voltage regulation loop automatically reduces the inpu t current limit in order to keep the input voltage at 
+VCHGIN_REG. If the input current limit is reduced to I CHGIN_REG_OFF (50mA, typ) and the input voltage is below 
+VCHGIN_REG, then the charger input is turned off. 
+Input Self-Discharge 
+To ensure that a rapid removal and reinsertion of a charge source always results in a charger input interrupt, the charger 
+input presents loading to the input capacitor to ensure that when the charge source is removed the input voltage decays 
+below the UVLO threshold in a  reasonable time (t INSD). The input self -discharge is implemented with a 44kΩ resistor 
+(RINSD) from CHGIN input to ground. 
+  
+USB_CHG R_EN
+VCHGI NUVLO
+INPUT I S  NOT
+UNDER V O LTAGE
+INPUT I S  NOT
+OVERVO LTAGE
+LO W IN P U T TO  SYS 
+HEADRO OM
+VCHGI N_OVL OB
+LIN2SYS
+VCHGI N_UVLO B
+VCHGI N_VLD
+VCHGI N
+VCHGI N_REG
+ADAPTIVE INPUT
+CURR ENT LOO P
+AICL
+I_IULO
+ICHGI N2BYP
+INPUT CU RRENT
+LO W
+IULO
+S
+R
+Q
+VSYS + OFFSET
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 16 
+ 
+Charger States 
+Li+/Li-Poly Battery 
+The MAX77757 utilizes several charging states to safely and quickly charge Li+/Li -Poly batteries as shown in Figure 5 
+and Figure 6. Figure 5 shows an exaggerated view of the L i+/Li-Poly battery progressing through the following charge 
+states when there is no system load and the die and battery are close to room temperature:  precharge ➔ trickle ➔ fast-
+charge ➔ top-off ➔ done.  
+ 
+ 
+ 
+ 
+Figure 5. Li+/Li-Poly Charge Profile 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+VTRICKLE
+VBATTREG
+ICHG ≤ ISET
+ITO
+TRICKLE-CHARGE
+FAST-CHARGE (CC)
+BATTERY VOLTAGEBATTERY CHARGE CURRENT
+ITRICKLE
+VPRECHG
+TIME
+TIME
+VRSTRT
+RESTART
+FAST-CHARGE (CV)
+0V
+FAST-CHARGE (CV)
+TOP-OFF
+DONE
+DONE
+STATES
+0AIPRECHG
+CHARGER
+ENABLED
+PRECHARGE
+NOT TO SCALE, VCHGIN = 5.0V, ISYS = 0A, TJ = +25°C
+TOP-OFF
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 17 
+ 
+ 
+Figure 6. Li+/Li-Poly Charger State Diagram 
+  
+VTRICKLE  ≤ VBATT
+(SOFT-START)
+VBATT < VTRICKLE
+AND 
+VPRECHG ≤ VBATT
+ICHG ≤ ITO FOR tTERM
+CHG TIMER ≥ tTO
+CHG TIMER SUSPEND
+DONE
+INOKB = LOW AND 
+STAT = LOW
+ICHG = 0
+TIMER FAULT
+INOKB = LOW AND STAT = Hi-Z
+ICHG = 0
+CHG TIMER ≥ tPQ
+CHG TIMER SUSPEND
+CHG TIMER ≥ tFC
+CHG TIMER SUSPEND
+VBATTREG ≤ VBATTIFC < ICHG
+CHG TIMER ≥ tFC
+CHG TIMER SUSPEND
+VBATT < (VBATTREG – VRSTRT)
+(NO SOFT-START)
+INPUT IS INVALID
+CHG TIMER SUSPEND
+VBATT < (VBATTREG – VRSTRT)
+CHG TIMER RESUME
+VBATT < VPRECHG
+(SOFT-START)
+INIT
+INKOB = Hi-Z OR STAT = Hi-Z
+ICHG = 0
+CHG TIMER = 0
+TRICKLE CHARGE
+INOKB = LOW AND 
+STAT = BLINK
+ICHG ≤ ITRICKLE
+FAST CHARGE (CC)
+INOKB = LOW AND 
+STAT = BLINK
+ICHG ≤ IFC
+FAST CHARGE (CV)
+INOKB = LOW AND 
+STAT = BLINK
+ITO < ICHG ≤ IFC
+CHARGER STATE WHERE THE CHARGE IS DISABLED
+(BATTERY CHARGE STOPPED)
+CHARGER STATE WHERE THE CHARGE IS ENABLED
+(BATTERY CHARGE ON-GOING)
+CHG TIMER = 0 CHG TIMER 
+TRANSITION BETWEEN TWO CHARGER STATES
+VBATT < VPQLB CONDITION NEEDED TO TRANSITION BETWEEN TWO CHARGER STATES
+VPRECHG  ≤ VBATT
+(SOFT-START)
+VBATT < VRECHG
+(SOFT-START)
+VPRECHG  ≤ VBATT
+and PQEN = 0
+(SOFT-START)
+CHG TIMER ≥ tPQ
+CHG TIMER SUSPEND
+PRECHARGE
+INOKB = LOW AND 
+STAT = BLINK
+ICHG ≤ IPRRECHG
+TOP OFF
+INOKB = LOW AND 
+STAT = LOW
+ICHG ≤ ITO
+BUCK
+INKOB = LOW OR STAT = Hi-Z
+SWITCHER = BUCK MODE
+QBAT = OFF UNLESS SUPPLEMENT
+INPUT IS VALID
+INPUT IS INVALID
+VTHM > VCHGR_EN THRESHOLD
+AND TJ < TSHDN 
+ANY STATE*
+VTHM < VCHGR_EN THRESHOLD
+OR TJ > TSHDN
+CHG TIMER SUSPEND
+* EXCEPT INIT AND BUCK STATES
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 18 
+ 
+LiFePO4 Battery 
+As for the LiFePO4 battery, the MAX77757 skips the trickle charge state and directly enters the fast-charge state after the 
+precharge state. Figure 7 and Figure 8 presents the LiFePO 4 battery charge profile and state machine: precharge ➔ 
+trickle ➔ fast-charge ➔ top-off ➔ done. 
+ 
+Figure 7. LiFePO4 Battery Charge Profile 
+ 
+VBATTREG
+ICHG ≤ ISET
+ITO
+FAST-CHARGE (CC)
+BATTERY VOLTAGEBATTERY CHARGE CURRENT
+VPRECHG
+TIME
+TIME
+VRSTRT
+RESTART
+FAST-CHARGE (CV)
+0V
+FAST-CHARGE (CV)
+TOP-OFF
+DONE
+DONE
+STATES
+0AIPRECHG
+CHARGER
+ENABLED
+PRECHARGE
+NOT TO SCALE, VCHGIN = 5.0V, VBATTREG=3.6V, ISYS = 0A, TJ = +25°C
+TOP-OFF
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 19 
+ 
+ 
+Figure 8. LiFePO4 State Machine 
+ 
+INIT State 
+From any state shown in Figure 6 except thermal shutdown, the “INIT” state is entered whenever the charger inputs 
+CHGIN is invalid or the charger timer is suspended. 
+While in the “INIT” state, the charger current is 0mA, the charge timer is forced to 0, a nd the power to the system is 
+provided by the battery. 
+To exit the “INIT” state, the charger input must be valid. 
+ICHG ≤ ITO FOR tTERM
+CHG TIMER ≥ tTO
+CHG TIMER SUSPEND
+DONE
+INOKB = LOW AND 
+STAT = LOW
+ICHG = 0
+TIMER FAULT
+INOKB = LOW AND STAT = Hi-Z
+ICHG = 0
+CHG TIMER ≥ tFC
+CHG TIMER SUSPEND
+VBATTREG ≤ VBATTIFC < ICHG
+CHG TIMER ≥ tFC
+CHG TIMER SUSPEND
+VBATT < (VBATTREG – VRSTRT)
+(NO SOFT-START)
+INPUT IS INVALID
+CHG TIMER SUSPEND
+VBATT < (VBATTREG – VRSTRT)
+CHG TIMER RESUME
+VBATT < VPRECHG
+(SOFT-START)
+INIT
+INKOB = Hi-Z OR STAT = Hi-Z
+ICHG = 0
+CHG TIMER = 0
+FAST CHARGE (CC)
+INOKB = LOW AND 
+STAT = BLINK
+ICHG ≤ IFC
+FAST CHARGE (CV)
+INOKB = LOW AND 
+STAT = BLINK
+ITO < ICHG ≤ IFC
+CHARGER STATE WHERE THE CHARGE IS DISABLED
+(BATTERY CHARGE STOPPED)
+CHARGER STATE WHERE THE CHARGE IS ENABLED
+(BATTERY CHARGE ON-GOING)
+CHG TIMER = 0 CHG TIMER 
+TRANSITION BETWEEN TWO CHARGER STATES
+VBATT < VPQLB CONDITION NEEDED TO TRANSITION BETWEEN TWO CHARGER STATES
+VPRECHG  ≤ VBATT
+(SOFT-START)
+VBATT < VRECHG
+(SOFT-START)
+VPRECHG  ≤ VBATT
+and PQEN = 0
+(SOFT-START)
+CHG TIMER ≥ tPQ
+CHG TIMER SUSPEND
+PRECHARGE
+INOKB = LOW AND 
+STAT = BLINK
+ICHG ≤ IPRRECHG
+TOP OFF
+INOKB = LOW AND 
+STAT = LOW
+ICHG ≤ ITO
+BUCK
+INKOB = LOW OR STAT = Hi-Z
+SWITCHER = BUCK MODE
+QBAT = OFF UNLESS SUPPLEMENT
+INPUT IS VALID
+INPUT IS INVALID
+VTHM > VCHGR_EN THRESHOLD
+AND TJ < TSHDN 
+ANY STATE*
+VTHM < VCHGR_EN THRESHOLD
+OR TJ > TSHDN
+CHG TIMER SUSPEND
+* EXCEPT INIT AND BUCK STATES
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 20 
+ 
+Buck State 
+In the buck state, battery charging is disabled while the charger input CHGIN is valid. Entering or leaving the buck state 
+is controlled by the voltage of the THM pin. If the voltage of this pin is pulled down by an external device (e.g., MCU) 
+under VCHGR_EN, the chip goes to the buck state from any state if CHGIN is valid as shown in Figure 6. Charging is 
+disabled in the buck state, which means Q BAT is off unless it is in supplement mode. If the voltage of this pin is over 
+VCHGR_EN, the chip leaves the buck state and resumes charging. It should be noted that it is only when CHGIN is valid 
+that charging can be enabled or disabled. Therefore, the external device (e.g., MCU) should check the INOKB signal if 
+CHGIN is valid before trying to enable or disable charging. 
+Precharge State 
+As shown in Figure 6, the precharge state occurs when the main battery voltage is less than VPRECHG. In the precharge 
+state, charge current into the battery is IPRECHG. 
+The following events cause the state machine to exit this state: 
+• The main battery voltage rises above V PRECHG and the charger enters the next state in the charging cycle, trickle 
+charge. 
+• If the battery charger remains in this state for longer than t PQ, the charger state machine transitions to the timer fault 
+state. 
+Note that the precharge state works with battery voltages down to 0V. The low 0V operation typically allows this battery 
+charger to recover batteries that have an “open” internal pack protector. Typically a pack internal protection circuit opens 
+if the battery has seen an overcurrent, undervoltage, or overvoltage. When a battery with an “open” internal pack protector 
+is used with this charger, the precharge mode current flows into the 0V battery —this current raises the pack’s terminal 
+voltage to the point where the internal pack protection switch closes. 
+Note that a normal battery typically stays in the precharge state for several minutes or less; therefore, a battery that stays 
+in the precharge state for longer than tPQ might be experiencing a problem. 
+Trickle Charge State 
+The trickle charge mode descripted below is for L i-ion and Li -poly batteries only, with charge termination voltage from 
+4.1V to 4.5V. 
+The trickle charge state occurs when VBATT > VPRECHG and VBATT < VTRICKLE, as shown in Figure 6. 
+When the MAX77757 is in its trickle charge state, the charge current in the battery is less than or equal to ITRICKLE. 
+Charge current might be less than ITRICKLE/IFC for any of the following reasons: 
+• The charger input is under input current limit 
+• The charger input voltage is low 
+• The charger is in thermal foldback 
+• The system load is consuming adapter current.  Note that the system load always gets priority over the battery charge 
+current. 
+The following events cause the state machine to exit this state: 
+• When the main battery voltage rises above V TRICKLE, the charger enters the next state in the charging cycle, fast -
+charge constant current (CC). 
+• If the battery charger remains in this state for longer than t PQ, the charger state machine transitions to the timer fault 
+state. 
+Note that a normal battery ty pically stays in the trickle charge state for several minutes or less; therefore, a battery that 
+stays in trickle charge for longer than tPQ might be experiencing a problem. 
+Based on the characteristic of the LiFePO4 battery, the trickle charge state of th e MAX77757 3.6V option is disabled. 
+After the precharge state, when VPRECHG < VBATT < VBATTREG, the MAX77757 enters the fast-charge constant current 
+state to improve the charger efficiency. 
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 21 
+ 
+Fast-Charge Constant Current State 
+As shown in Figure 6, the fast-charge constant current (CC) state occurs when the main -battery voltage is greater than 
+the trickle threshold and less than the battery regulation threshold (VTRICKLE < VBATT < VBATTREG). 
+In the fast-charge CC state, the current into the battery is less than or equal to I FC. Charge current can be less than I FC 
+for any of the following reasons: 
+• The charger input is under input current limit 
+• The charger input voltage is low 
+• The charger is in thermal foldback 
+• The system load is consuming adapter current.  Note that the system load always gets priority over the battery charge 
+current. 
+The following events cause the state machine to exit this state: 
+• When the main battery voltage rises above V BATTREG, the charger enters the next state in the charging cycle, fast -
+charge constant voltage (CV). 
+• If the battery charger remains in this state for longer than t FC, the charger state machine transitions to the timer fault 
+state. 
+The battery charger dissipates the most power in the fast -charge constant current state. This power dissipation causes 
+the internal die temperature to rise. If the die temperature exceeds T REG, IFC is reduced. See the Thermal Foldback 
+section for more information. 
+Fast-Charge Constant Voltage State 
+As shown in Figure 6, the fast-charge constant voltage (CV) state occurs when the battery voltage rises to V BATTREG 
+from the fast-charge CC state. 
+In the fast-charge CV state, the battery charger maintains V BATTREG across the battery and the charge current is less 
+than or equal to IFC. As shown in Figure 5, charger current decreases exponentially in this state as the battery becomes 
+fully charged. 
+The smart power selector control circuitry might reduce the charge current lower than the battery can otherwise consume 
+for any of the following reasons: 
+• The charger input is under input current limit 
+• The charger input voltage is low 
+• The charger is in thermal foldback 
+• The system load is consuming adapter current. Note that the system load always gets priority over the battery charge 
+current. 
+The following events cause the state machine to exit this state: 
+• When the charger current is below ITO for tTERM, the charger enters the next state in the charging cycle, top off. 
+• If the battery charger remains in this state for longer than t FC, the charger state machine transitions to the timer fault 
+state. 
+Top-Off State 
+As shown in Figure 6, the top -off state can only be entered from the fast -charge CV state when the charger current 
+decreases below I TO for tTERM. In the top -off state, the battery charger tries to maintain V BATTREG across the battery 
+and typically the charge current is less than or equal to ITO. 
+The smart power selector control circuitry might reduce the charge current lower than the battery can otherwise consume 
+for any of the following reasons: 
+• The charger input is under input current limit 
+• The charger input voltage is low 
+• The charger is in thermal foldback 
+• The system load is consuming adapter current. Note that the system load always gets priority over the battery charge 
+current. 
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 22 
+ 
+The following events cause the state machine to exit this state: 
+• After being in this state for the top-off time (tTO), the charger enters the next state in the charging cycle, done. 
+• If VBATT < VBATTREG – VRSTRT, the charger goes back to the fast-charge (CC) state 
+Done State 
+As shown in Figure 6, the battery charger enters the done state after the charger has been in the top-off state for tTO. 
+The following event causes the state machine to exit this state: 
+• If VBATT < VBATTREG – VRSTRT, the charger goes back to the fast-charge (CC) state  
+In the done state, the charge current into the battery (I CHG) is 0A. In the done state, the charger presents a very low 
+quiescent current to the battery. If the system load presented to the battery is low (<100μA), then a typical system can 
+remain in the done state for many days. If left in the done state long enough, the battery voltage decays below the restart 
+threshold (VRSTRT), and the charger state machine transitions back into the fast -charge CC state. There is no soft -start 
+(di/dt limiting) during the done-to-fast-charge state transition. 
+Timer Fault State 
+The battery charger provides a charge timer to ensure safe charging. As shown in Figure 6, the charge timer prevents 
+the battery from charging indefinitely. The time that the charger is allowed to remain in each of the prequalification states 
+is tPQ. The time that the charger is allowed to remain in the fast-charge CC and CV states is tFC. Finally, the time that the 
+charger is in the top-off state is tTO. Upon entering the timer fault state, STAT becomes Hi-Z.  
+In the timer fault state, the charger is off. The charger input can be removed and re -inserted to exit the timer fault state 
+(See the “any state” bubble in the lower left of Figure 6). 
+Thermal Shutdown State 
+As shown in Figure 6 , the thermal shutdown state occurs when the battery charger is in any state and the junction 
+temperature (TJ) exceeds the device’s thermal-shutdown threshold (TSHDN). When TJ is close to REG, the charger folds 
+back the input current limit to 0A so that the charger and inputs are effectively off.  
+In the thermal shutdown state, the charger is off. 
+Reverse Boost Mode 
+The DC-DC converter topology of the MAX77757 allows it to operate as a buck converter or as a reverse boost converter. 
+The modes of the DC -DC converter are controlled by ENBST. When ENBST = high and CHGIN voltage is lower than 
+0.7V, the DC-DC converter operates in reverse boost mode allowing it to source current to BYP and CHGIN. This mode 
+is commonly referred to as OTG mode or a source role.  
+The current through the BYP to CHGIN switch is limited to a 1.5A minimum. When the reverse boost mode is enabled, 
+the unipolar CHGIN transfer function measures current going out of CHGIN.  
+The BYP to CHGIN switch automatically  retries after 300ms if CHGIN loading exceeds the 1.5A current limit. If the 
+overload at CHGIN persists, then the CHGIN switch toggles ON and OFF with approximately 60ms ON and 300ms OFF. 
+Under the reverse boost mode, the CC pins enter the low power source  mode until the connection is established. Once 
+Rd is detected, the MAX77757 enables the 180 μA current source of the active CC pin, whereas the other CC pin stays 
+high impedance. 
+Main Battery Overcurrent Protection During System Power-Up 
+The main batte ry overcurrent protection during system power -up feature limits the main battery to system current to 
+ISYSPU if VSYS is less than VSYSPU. This feature limits the surge current that typically flows from the main battery to the 
+device’s low -impedance system bypass capacitors during a system power -up. System power -up occurs anytime that 
+energy from the battery is supplied to SYS when V SYS < VSYSPU. This “system power -up” condition typically occurs 
+when a battery is hot-inserted into an otherwise unpowered device.  
+When “system power-up” occurs due to hot -insertion into an otherwise unpowered device, a small delay is required for 
+this feature’s control circuits to activate. A current spike over ISYSPU might occur during this time. 
+  
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 23 
+ 
+Main Battery Overcurrent Protection Due To Fault 
+The MAX77757 protects itself, the battery, and the system from potential damage due to excessive battery discharge 
+current. Excessive battery discharge current can occur for several reasons such as exposure to moisture , a software 
+problem, an IC failure, a component failure, or a mechanical failure that causes a short circuit. 
+When the main battery (BATT) -to-system (SYS) discharge current (I BATT) exceeds 6A for at least t BOVRC, then the 
+MAX77757 disables the BATT-to-SYS discharge path (QBAT switch) and turns off the buck. Under OCP fault condition, 
+when SYS is low (VSYS < VSYSUP) for tocp_retry, the MAX77757 restarts on its own and attempts to pull up SYS again. 
+If the fault condition remains, the whole cycle repeats until this fault condition is removed. 
+Thermal Management 
+The MAX77757 charger uses several thermal management techniques to prevent excessive battery and die 
+temperatures. 
+Thermal Foldback 
+Thermal foldback maximizes the battery charge current while reg ulating the MAX77757 junction temperature. As shown 
+in Figure 9, when the die temperature exceeds the REGTEMP (T REG), a thermal limiting circuit reduces the battery 
+charger’s target current by 5% of the fast-charge current per 1°C (ATJREG), which corresponds to 157.5mA/°C when the 
+fast-charge current is 3.15A. For lower programmed charge currents such as 480mA, this slope is valid for charge current 
+reductions down to 80mA; below 100mA, the slope becomes shallower but the charge current reduces to 0A if the junction 
+temperature is 20°C above the programmed loop set point. The target charge current reduction is achieved with an analog 
+control loop (i.e., not a digital reduction in the input current). 
+ 
+ 
+Figure 9. Charge Currents vs. Junction Temperature 
+CURRENT (A)
+JUNCTION TEMPERATURE (°C)
+IFC = 3.15A
+1.0A
+3.0A
+2.0A
+TJREG
+0.0A
+ATJREG = -5%/°C
+TJREG + 20°C
+DRAWN TO SCALE, VCHGIN = 5.0V, VSYS = 0A, CHGIN INPUT CURRENT LIMIT IS SET FOR MAXIMUM
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 24 
+ 
+Thermistor Input (THM) 
+The thermistor input can be utilized to achieve functions that include charge suspension, JEITA -compliant charging, and 
+disabling the charger.  
+The charger can be disabled by pulling the THM pin to ground. Figure 11 shows a recommended system diagram where 
+the MCU has a GPIO output connected to THM to enable or disable charging, and a GPIO input connected to INOKB to 
+check the presence of a valid charger. Note that the GPIO output should be an open-drain type. 
+JEITA Compliance 
+The MAX77757J version safely charges batteries in accordance with JEITA specifications. The MAX77757J version 
+monitors the battery temperature with an NTC thermistor connected at the THM pin and automatical ly adjusts the fast -
+charge current or charge termination voltage as the battery temperature varies.  
+The JEITA controlled fast-charge current is reduced to 50% of the detected fast charge current for TCOLD < T < TCOOL.  
+The charge termination voltage for TWARM < T < THOT is reduced to programmed termination voltage -150mV, as shown 
+in Figure 10. Charging is suspended when the battery temperature is too cold or too hot (T < TCOLD or THOT < T).  
+The MAX77757H version disables the JEITA under warm and cool conditions and stops charging when the temperature 
+is too hot or cold. See the Ordering Information for details. 
+Temperature thresholds (T COLD, TCOOL, TWARM, and T HOT) depend on the thermistor selection. See the Thermistor 
+Input (THM) section for more details. 
+Since the thermistor monitoring circuit employs an external bias resistor from THM to PVL, the thermistor is not limited 
+only to 10kΩ (at +25ºC); any resistance thermistor can be used if the value is equivalent to the thermistors +25ºC 
+resistance. The thermistor installed on the evaluation kit is 10kΩ with a beta of 3435.  
+The general relation of thermistor resistance to temperature is defined by the following equation:  
+𝑅𝑇 = 𝑅25 × 𝑒[𝛽×( 1
+𝑇+273− 1
+298)] 
+where  
+RT = The resistance in Ω of the thermistor at temperature T in Celsius  
+R25 = The resistance in Ω of the thermistor at +25ºC  
+β = The material constant of the thermistor, which typically ranges from 3000k to 5000k  
+T = The temperature of the thermistor in Celsius 
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 25 
+ 
+ 
+Figure 10. MAX77757J Version JEITA Compliance 
+TCOOL TEMPERATURE
+JEITA CONTROLLED 
+FAST-CHARGE CURRENT 
+(ICHGCC_JEITA)
+TCOLD THOTTWARM
+ICHGCC_COOL
+ICHGCC_NORMAL
+TCOOL TEMPERATURE
+JEITA CONTROLLED 
+CHARGE TERMINATION VOLTAGE
+(VCHGCV_JEITA)
+TCOLD THOTTWARM
+VCHGCV_NORMAL
+CHGCV_PRM-150mV/cell
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 26 
+ 
+ 
+Figure 11. MAX77757H Version Hot/Cold Stop 
+ 
+VDD Internal Supply 
+VDD is the 1.8V power for the MAX77757 charger’s analog circuit. VDD chooses the higher value between the BATT and 
+CHGIN as power input source. VDD has a bypass capacitance of 2.2µF. 
+ENBST For Reverse Boost 
+ENBST is an input control signal for the reverse boost mode with an external logic signal. If ENBST is driven high, the 
+reverse boost is enabled and the BYP to CHGIN path is closed. It has an internal 235kΩ pulldown resistor. When ENBST 
+sets high, the MAX77757 disconnects Rd from the CC line and provides 180μA current source. 
+TCOOL TEMPERATURE
+HOT/COLD STOP
+FAST-CHARGE CURRENT (ICHGCC)
+TCOLD THOTTWARM
+ICHGCC_NORMAL
+TCOOL TEMPERATURE
+HOT/COLD STOP 
+CHARGE TERMINATION VOLTAGE
+(VCHGCV)
+TCOLD THOTTWARM
+VCHGCV_NORMAL
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 27 
+ 
+USB BC1.2 Charger Detection 
+Features 
+• D+/D- Charging Signature Detector 
+• USB BC1.2 Compliant 
+• SDP, DCP, and CDP Detection 
+• Detect Proprietary Charger Types 
+• Apple® 500mA, 1A, 2A, 12W 
+• Samsung® 2A 
+Description 
+The USB charger detection is USB BC1.2 compliant with the ability to automatically detect some common proprietary 
+charger types. 
+The Charger Detection State Machine follows USB BC1.2 requirements and detects SDP, CDP, and DCP types. The 
+Charger Detection State Machine indicates if D+/D- were found as open but ChgTyp indicates SDP as required by BC1.2 
+specifications. 
+In addition to the USB BC1.2 State Machine, the IC also detects a limited number of proprietary charger types (Apple, 
+Samsung, and generic 500mA). The  UIC automatically sets the CHGIN input current limiting based on the charger type 
+detection results. If the charger type detection results are from an unknown charger type or data contact detection timed 
+out, the input current limits are set to a maximum of 3A. 
+Table 1. BC1.2 Charger Type 
+USB BC1.2 DETECTED CHARGER TYPE 
+INPUT CURRENT LIMIT CHARGER DETECTED 
+500mA The default setting before charger detection 
+500mA SDP 
+1.5A CDP 
+1.5A DCP 
+  
+Table 2. Proprietary Charger Type 
+DETECTED PROPRIETARY CHARGER TYPE 
+INPUT CURRENT LIMIT CHARGER DETECTED 
+500mA Apple 
+1A Apple 
+2A Apple 
+2.4A Apple 
+2A Samsung 
+3A All others 
+ 
+  
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 28 
+ 
+USB Type-C CC Detection 
+Features 
+• USB Type-C sink support 
+• CC source detection and automatically set the input current limit according to source capability 
+• Source role is supported by ENBST pin 
+CC Description 
+The MAX77757 works as a sink compliant to USB Type -C rev1.2. The USB Type -C functions are controlled by a 
+logic state machine that follows the USB Type -C requirements. The MAX77757 sets the CHGIN input current limit 
+based on the current advertised on the CC wires. Source role is enabled by the ENBST pin. When source role is 
+enabled, Rd is removed and a 180μA current source is connected.  
+Detecting Connected Source 
+When a source is detected, the USB Type-C state machine auto-detects the active CC line. The state machine also auto-
+detects the source advertised current (500mA, 1.5A, and 3.0A). Upon detection of a change in advertised current, the 
+MAX77757 automatically sets the input current limit. 
+Enable Source Role 
+ENBST = high enables the MAX77757's source role. The MAX77757 disconnects Rd from the CC line and connects a 
+180μA current source to advertise a 5V/1.5A power source. The MAX77757 enables the reverse boost and supplies  
+5.1V/1.5A through the CHGIN pin. 
+ 
+  
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 29 
+ 
+ 
+Applications Information 
+Fast-Charge Current and Top-Off Current Setting 
+While a valid input source is present, the battery charger attempts to charge the battery with a fast -charge current 
+determined by the resistance from IFAST to GND. Top -off current matches to the fast -charge current. Table 3 shows 
+resistance values which correspond to target IFAST and ITOPOFF values. 
+Table 3. Fast-Charge Current and Top-Off Current Setting 
+RESISTANCE (kΩ) IFAST (mA) ITOPOFF (mA) 
+24.9 3150 150 
+22.6 3000 150 
+20.5 2800 125 
+18.7 2500 125 
+16.9 2400 125 
+15.4 2200 100 
+14 2000 100 
+12.4 1800 75 
+11 1500 75 
+9.53 1400 75 
+8.2 1200 50 
+6.65 1000 50 
+5.23 800 50 
+3.6 600 50 
+2.4 500 50 
+ 
+ 
+ 
+  
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 30 
+ 
+ 
+D+/D- Multiplexing 
+USB D+/D- lines, which are used for the detection of BC1.2 and proprietary Travel Adaptors (TAs), can be used for data 
+communication. If an MCU handles this communication in the target system, the D+/D - lines can be connected to the 
+MAX77757 and the MCU as show in Figure 12. Switchers are required for each D+ and D- line to guarantee Hi-Z for the 
+connections to MCU to avoid wrong detections of TAs (see Figure 12). It is recommended to connect the INOKB  of the 
+MAX77757 to the MCU in this configuration so that the MAX77757 can signal the completion of the detection to the MCU. 
+Once the MCU receives a valid INOKB signal, it can switch the D+/D - lines from the MAX77757 to the MCU for data 
+communication. 
+ 
+ 
+Figure 12. D+/D- Connections in a Reference System 
+ 
+Capacitor Selection 
+All capacitors should be X5R dielectric or better. Be aware that multi -layer ceramic capacitors have large -voltage 
+coefficients. Before selecting capacitors, check the sufficient voltage rat ing and derated capacitance at max operating 
+voltage conditions. Table 5 shows proper capacitors after considering the derating and operating voltage. 
+Table 4. Capacitor Selections 
+PIN TYPE 
+CHGIN Capacitor 2.2µF/16V 
+BYP Capacitor 10µF + 22µF/16V 
+SYS Capacitor 2x10µF/10V 
+BATT Capacitor 10µF/10V 
+VDD Capacitor 2.2µF/10V 
+PVL Capacitor 2.2µF/10V 
+BST Capacitor 0.1μF/6.3V 
+ 
+MAX77757
+CC2
+CC1
+INOKB
+DP
+DN
+CHGIN
+MCU
+VBUS
+CC1
+USB TYPE-C
+CONNECTOR
+CC2
+D+
+D-
+D+
+D-
+GPIO
+GPIO
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 31 
+ 
+Non-USB Type Power Source 
+In an application where the power source is not USB, all the USB-related pins such as CC1, CC2, DP, and DN should be 
+left unconnected. In this case, the input current to MAX77757 is limited to 3A. 
+Recommended PCB Layout and Routing 
+Place all bypass capacitors for CHGIN, BYP, SYS, VDD, and BATT as close as possible to the IC. Provide a large copper 
+ground plane to allow the PGND pad to sink heat away from the device. Use wide and short traces for high current 
+connections such as CHGIN, BYP, SYS, and BATT to minimize voltage drops. The MAX77757 has two kinds of gro und 
+pins, PGND and GND. Use caution when connecting PGND since it is the switching node ground of the Charger Buck; it 
+should be tied to the ground of the SYS and BYP capacitor and connected to the ground plane directly without sharing 
+the other ground. The GND can be connected to the ground plane.  
+Figure 13 is a recommended placement and layout guide. 
+ 
+ 
+ 
+ 
+Figure 13. Recommended Placement and Layout 
+ 
+  
+CCH
+GIN
+CBYP
+CBYP
+INDUCTOR
+CBST
+CBATT
+CSYS
+CSYS
+CPVL
+RESCVDD
+RES
+THERMISTOR
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 32 
+ 
+ 
+Inductor Selection 
+The MAX77757's control scheme requires an external inductor from 0.47μH to 1μH for proper operation. 
+Table 5. Recommended Inductors 
+MANUFACTURER PART NUMBER INDUCTANCE 
+(μH) 
+ISAT(TYP) 
+(A) 
+IRMS(TYP) 
+(A) 
+DCR (TYP) 
+(mΩ) 
+SIZE (L x W x T) 
+(mm) 
+SEMCO CIGT252008LMR47MNE 0.47 5.5 4.5 24 2.5 x 2.0 x 0.8 
+SEMCO CIGT252010LMR47MNE 0.47 6 4.5 24 2.5 x 2.0 x 1.0 
+SEMCO CIGT201610EHR47MNE 0.47 5.9 5 18 2.0 x 1.6 x 1.0 
+CYNTEC HTEH25201T-R47MSR-63 0.47 6.6 5.6 16.5 2.5 x 2.0 x 1.0 
+ 
+Charger Status Outputs 
+Input Status (INOKB) 
+INOKB is an open-drain and active-low output that indicates input status. If a valid input source is inserted and the buck 
+converter starts switching, INOKB pulls low. When the reverse boost is enabled, INOKB pulls low to indicate 5V output 
+from CHGIN. 
+INOKB can be used as a logic o utput for the system processor by adding a 200kΩ pullup resistor to the system I/O 
+voltage. 
+INOKB can also be used as a LED indicator driver by adding a current limit resistor and a LED to SYS. 
+Charging Status Output (STAT) 
+STAT is an open-drain and active-low output that indicates charge status. STAT status changes as shown in Table 6. 
+Table 6. STAT Output Per Charging Status 
+CHARGING STATUS STAT LOGIC STATE CHARGE STATUS LED 
+No input High impedance High Off 
+Trickle, precharge, fast 
+charge 
+Repeat low and high impedance 
+with 1Hz, 50% duty cycle 
+After an external diode and a 
+capacitor rectifier, high 
+Blinking with 1Hz, 50% duty 
+cycle 
+Top-off and done Low Low Solid on 
+Faults High impedance High Off 
+ 
+STAT can be used as a logic output for the system processor by adding a 200kΩ pullup resistor to the system I/O voltage 
+and a rectifier (a diode and a capacitor). 
+STAT also can be used as a LED indicator driver by adding a current limit resistor and a LED to SYS. 
+  
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 33 
+ 
+Typical Application Circuit 
+ 
+ 
+ 
+Figure 14. Typical Application Circuit 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Ordering Information  
+ 
+PART NUMBER TEMP RANGE PIN-PACKAGE THM BATTERY 
+CHEMISTRY 
+BATTERY 
+TERMINATION 
+VOLTAGE (V)  
+MAX77757JEFG420+ -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) JEITA Li-ion 
+Li-polymer 4.20 
+ 
+ 
+MAX77757JEFG420+T -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) JEITA Li-ion 
+Li-polymer 4.20 
+ 
+ 
+MAX77757JEFG430+* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) JEITA Li-ion 
+Li-polymer 4.30 
+ 
+ 
+MAX77757JEFG430+T* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) JEITA Li-ion 
+Li-polymer 4.30 
+ 
+ 
+MAX77757JEFG435+ -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) JEITA Li-ion 
+Li-polymer 4.35 
+ 
+ 
+MAX77757JEFG435+T -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) JEITA Li-ion 
+Li-polymer 4.35 
+ 
+ 
+MAX77757JEFG440+ -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) JEITA Li-ion 
+Li-polymer 4.40 
+ 
+ 
+MAX77757JEFG440+T -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) JEITA Li-ion 
+Li-polymer 4.40 
+ 
+ 
+4.5V TO 13.7V/3A
+0.47µH
+2.2µF
+2x
+10µF
+CC1
+CC2
+CHGIN
+LX
+SYS
+PVL
+ENBST
+BATT
+VDD
+GND
+BST
+10µF+
+22µF
+0.1µF
+10µF
+VSYS
+INOKB
+STAT
+IFAST
+DP
+DN
+BYPCHGIN
+LX
+PGND
+BATT
+SYS
+23
+24
+1
+22
+3
+6
+7
+4
+5
+8
+1112
+9
+10
+13
+15
+16
+18
+17
+21
+20
+2.2µF
+1kΩ 1kΩ 
+14
+PGND 19
+2.2µF
+24.9kΩ 
+MCU
+VBUS
+CC2
+USB TYPE-C
+CONNECTOR
+CC1
+D+
+D-
+GPIO
+(OPEN-DRAIN
+OUTPUT)
+SYS
+ENBST
+BATTERY PACK
+3.15A
+MAX77757
+D- D+
+2
+MAX4906
+T
+THM
+VPVL
+THM
+THERMISTOR
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+ 
+www.maximintegrated.com  Maxim Integrated | 34 
+ 
+PART NUMBER TEMP RANGE PIN-PACKAGE THM BATTERY 
+CHEMISTRY 
+BATTERY 
+TERMINATION 
+VOLTAGE (V)  
+MAX77757JEFG450+* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) JEITA Li-ion 
+Li-polymer 4.50 
+ 
+ 
+MAX77757JEFG450+T* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) JEITA Li-ion 
+Li-polymer 4.50 
+ 
+ 
+MAX77757HEFG360+ -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) HOT/COLD STOP LiFePO4 3.60 
+ 
+ 
+MAX77757HEFG360+T -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) HOT/COLD STOP LiFePO4 3.60 
+ 
+ 
+MAX77757HEFG370+* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) HOT/COLD STOP LiFePO4 3.70 
+ 
+ 
+MAX77757HEFG370+T* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) HOT/COLD STOP LiFePO4 3.70 
+ 
+ 
+MAX77757HEFG420+* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) HOT/COLD STOP Li-ion 
+Li-polymer 4.20 
+ 
+ 
+MAX77757HEFG420+T* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) HOT/COLD STOP Li-ion 
+Li-polymer 4.20 
+ 
+ 
+MAX77757HEFG430+* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) HOT/COLD STOP Li-ion 
+Li-polymer 4.30 
+ 
+ 
+MAX77757HEFG430+T* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) HOT/COLD STOP Li-ion 
+Li-polymer 4.30 
+ 
+ 
+MAX77757HEFG435+* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) HOT/COLD STOP Li-ion 
+Li-polymer 4.35 
+ 
+ 
+MAX77757HEFG435+T* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) HOT/COLD STOP Li-ion 
+Li-polymer 4.35 
+ 
+ 
+MAX77757HEFG440+* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) HOT/COLD STOP Li-ion 
+Li-polymer 4.40 
+ 
+ 
+MAX77757HEFG440+T* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) HOT/COLD STOP Li-ion 
+Li-polymer 4.40 
+ 
+ 
+MAX77757HEFG450+* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) HOT/COLD STOP Li-ion 
+Li-polymer 4.50 
+ 
+ 
+MAX77757HEFG450+T* -40°C to +85°C 24 FC2QFN 
+(3mm x 3mm) HOT/COLD STOP Li-ion 
+Li-polymer 4.50 
+ 
+ 
++Denotes a lead(Pb)-free/RoHS-compliant package. 
+T = Tape and reel. 
+*Future product—contact factory for availability. 
+ 
+ 
+ 
+ 
+ 
+MAX77757  3.15A USB Type-C Autonomous Charger with 
+JEITA for 1-Cell Li-ion/LiFePO4 Batteries 
+Revision History 
+REVISION 
+NUMBER 
+REVISION 
+DATE DESCRIPTION PAGES 
+CHANGED 
+0 3/21 Initial release — 
+1 3/21 Updated Ordering Information table 33, 34 
+ 
+ 
+USB Type-C is a registered trademark of USB Implementers Forum. 
+Smart Power Selector is a trademark of Maxim Integrated Products, Inc.  
+Apple is a registered trademark of Apple Inc. 
+Samsung is a registered trademark of Samsung Electronics Co., Ltd. 
+For pricing, delivery, and ordering information, please visit Maxim Integrated’s online storefront at https://www.maximintegrated.com/en/storefront/storefront.html . 
+Maxim Integrated cannot assume responsibility for use of any circuitry other than circuitry entirely embodied in a Maxim Integrated product. No circuit patent licenses 
+are implied. Maxim Integrated reserves the right to change the circuitry and specifications without notice at any time. The p arametric values (mi n and max limits) 
+shown in the Electrical Characteristics table are guaranteed. Other parametric values quoted in this data sheet are provided for guidance. 
+Maxim Integrated and the Maxim Integrated logo are trademarks of Maxim Integrated Products, Inc. © 2021 Maxim Integrated Products, Inc. 
+ 
+ 

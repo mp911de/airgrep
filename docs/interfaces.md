@@ -1,56 +1,106 @@
 # Module interfaces
 
-All headers 2.54 mm pitch. Carrier side: Samtec SSQ sockets (8.51 mm), hand soldered. Coordinates are in `mechanical/source-geometry.json` and `mechanical/adsbee-estimate.json`.
+Connectors on the carrier and what each pin carries. Positions and mounting are in [mechanical.md](mechanical.md), the hand-fitted parts in [bom-hand-sourced.md](bom-hand-sourced.md).
 
-## Display: Seeed 100069905 (1.47-inch ESP32-S3 Plus)
-
-Four separate groups, seen from the controller (back) side. Front view is mirrored in X. Drill 0.9 mm.
-
-| Group | Pads | Carrier use |
-|---|---|---|
-| 1x8 upper left | TP3 MTDI (D14 = IMU_INT), TP4 MTDO (D13), TP5 EN, TP6 GND, TP7 MTMS (D15 = BTN_B), TP8 MTCK (D12), TP9 USB_DN, TP10 USB_DP | support only, GND connected. D14 and D15 are used internally (IMU interrupt, button B), never drive them. |
-| 1x7 upper right | TP11 VBUS, TP12 GND, TP17 3V3, TP18 GND, TP19 D11, TP20 D12, TP21 D13 | VBUS from shunt, GND, 3V3 out for gauge pull-ups, D11 = buzzer PWM, D12 = ESP UART RX from ADSBee COMMS TX (R29 1 kΩ), D13 = ESP UART TX to ADSBee COMMS RX (R30 1 kΩ). D11 to D13 are the only free exposed GPIOs (Seeed pin map, 24 Sep). |
-| 1x4 lower left | TP13 GND, TP14 3V3, TP15 SDA, TP16 SCL | I2C to gauge (MAX17048, 0x36) and barometer (BMP581, 0x46). The BMP581 sits just left of this header. |
-| 1x2 lower right | TP22 USR1, TP23 USR2 | support only |
-
-Touch and IMU already use SDA D4 / SCL D5. Buttons are D19 / D15 on board, no carrier wiring. Charger STAT and INOKB are not wired to the display (no free pin); charging state comes from the MAX17048 charge-rate register.
-Mounting holes 2.5 mm, pattern 20 × 22.5 mm at the button end. Assembly 26.4 × 51.4 × 12.6 mm, PCB 25 × 50 mm.
-
-## GNSS: SparkFun GPS-18037 (MAX-M10S)
-
-Board 38.10 × 30.48 mm, SMA on one edge, 3.302 mm holes at 33.02 × 25.40 mm. Use J5 (1x8), J3 (1x4) optional support.
-
-| J5 | Net | Carrier |
-|---|---|---|
-| 1 | GND | GND |
-| 2 | 3.3V | ADSBee GNSS 3V3 out |
-| 3 | !SAFE | NC |
-| 4 | TXO | ADSBee GNSS RX |
-| 5 | RXI | ADSBee GNSS TX |
-| 6 | PPS | ADSBee PPS |
-| 7 | INT | NC |
-| 8 | !RESET | NC |
-
-## ADSBee 1090U (Rev D schematic, geometry image-estimated)
-
-Board about 48 × 30 mm, M2.5 holes. Fit check against real hardware required before drilling.
-
-- J5 main 1x13: 5VIN, GND, TX, RX, 3.3V, IOA, IOB, IOC, CS, CLK, MOSI, MISO, GND. Carrier uses 5VIN (from shunt), both GND, and TX/RX = COMMS_UART (3.3 V, 115200 default, AT commands and GDL90/MAVLink/CSBEE output) to the display ESP32 via R29/R30. Wi-Fi then becomes optional; the ESP can also send AT commands to the ADSBee. Decided 24 Sep.
-- J4 GNSS 1x5: 3V3 (200 mA switched out), TX, RX, PPS, GND. All five to the GNSS J5 as above.
-- Keep the 5VIN reverse-polarity bypass jumper open. USB-C on the module stays accessible for programming.
+All module sockets are 2.54 mm single-row female headers. Their height is given in [mechanical.md](mechanical.md#assembly-split).
 
 ## Carrier connectors
 
-| Ref | Function | Part |
+| Ref | Function | Part | Fitted by |
+|---|---|---|---|
+| J1 | USB-C charging input | Hanbo MC-107DMS, 16P USB 2.0 (LCSC C3039295) | JLCPCB |
+| J2 | pack NTC | JST B2B-PH-K-S, 2-pin | hand |
+| J3 | battery | JST B2B-PH-K-S, 2-pin, pin 1 is + | hand |
+| J4 | pack thermostat | JST B2B-PH-K-S, 2-pin | hand |
+| J5 | GNSS socket | 1x8 | hand |
+| J6, J7, J8, J9 | display sockets | 1x8, 1x7, 1x4, 1x2 | hand |
+| J10, J11 | ADSBee sockets | 1x13, 1x5 | hand |
+| JP1 | 5 V to the display | 1x2 pin header with jumper | hand |
+| JP2 | 5 V to the ADSBee | 1x2 pin header with jumper | hand |
+| SW1 | POWER slider | C&K JS102011SAQN (LCSC C221660) | JLCPCB |
+| SW2 | MUTE slider | C&K JS102011SAQN (LCSC C221660) | JLCPCB |
+| BZ1 | piezo buzzer | Murata PKMCS0909E4000-R1 (LCSC C910763) | JLCPCB |
+
+Notes:
+
+- J3 carries the full battery current. JST rates the PH series at 2 A per contact with AWG 24 wire ([data sheet](../datasheets/jst-ph-series.pdf)). The battery currents are in [power.md](power.md#connector-and-fuse); the peaks above 2 A are an open item in [open-issues.md](open-issues.md).
+- JP1 and JP2 connect RAIL_5V to ESP_5V and ADS_5V. Remove the jumper before powering that module from its own USB port.
+- SW1 switches SW_EN between THERM_OK and GND. SW2 switches the buzzer between the driver and GND.
+- BZ1 is driven by U9 (SN74LVC1G17) through R28, 150 Ω.
+
+## Display: Seeed 100069905
+
+1.47-inch touch display with an ESP32-S3 Plus. Its four pad groups are 0.9 mm drilled test points. The table lists them in carrier pin order.
+
+| Carrier | Module pads | Carrier use |
 |---|---|---|
-| J_USB (J1) | charging input | USB-C receptacle, 16P USB 2.0, Hanbo MC-107DMS (LCSC C3039295) |
-| J_BAT | battery | pack connector, MPN pending, rated for 5 A |
-| J_NTC | pack NTC | 2-pin locking |
-| J_THERM | pack thermostat | 2-pin locking |
-| JP_PWR_ESP, JP_PWR_ADS | service shunts | Samtec TSW-102 + SNT-100 shunt |
-| SW_POWER, SW_MUTE | sliders | C&K JS102011SAQN |
-| BZ1 | piezo | Murata PKMCS0909E4000-R1 (C910763, 9 × 9 mm, 4 kHz, 65 dB), driven by SN74LVC1G17 via 150 Ω, mute slider selects PWM or GND. Replaces CPT-9019S (6 in stock). |
+| J6, 1x8 | TP3 MTDI (D14), TP4 MTDO (D13), TP5 EN, TP6 GND, TP7 MTMS (D15), TP8 MTCK (D12), TP9 USB_DN, TP10 USB_DP | support only; pin 4 is GND |
+| J7, 1x7 | TP11 VBUS, TP12 GND, TP17 3V3, TP18 GND, TP19 D11, TP20 D12, TP21 D13 | see below |
+| J8, 1x4 | TP13 GND, TP14 3V3, TP15 SDA, TP16 SCL | I2C |
+| J9, 1x2 | TP22 USR1, TP23 USR2 | support only |
+
+J7 signals:
+
+| Pin | Net | Use |
+|---|---|---|
+| 1 | ESP_5V | 5 V from JP1 into the module's VBUS |
+| 2, 4 | GND | |
+| 3 | ESP_3V3 | 3.3 V out, supplies the barometer, the buzzer driver and the I2C pull-up footprints |
+| 5 | BUZZ_PWM | D11, buzzer PWM |
+| 6 | ESP_UART_RX | D12, from ADSBee COMMS TX through R29, 1 kΩ |
+| 7 | ESP_UART_TX | D13, to ADSBee COMMS RX through R30, 1 kΩ |
+
+- D11 to D13 are the only free GPIOs the module exposes. Charger STAT and INOKB are therefore not wired to the display. The firmware reads the charging state from the fuel gauge.
+- D14 and D15 on J6 are used inside the module (IMU interrupt, button B). The carrier leaves them unconnected.
+- The I2C bus on J8 serves the fuel gauge U8 (MAX17048, 0x36) and the barometer U10 (BMP581, 0x46). The module's touch controller and IMU share the bus.
+- The I2C pull-ups are the module's own, 5.1 kΩ. R19 and R20 (4.7 kΩ) on the carrier are not fitted. The firmware therefore runs the bus at 100 kHz.
+
+## GNSS: SparkFun GPS-18037 (MAX-M10S)
+
+The carrier uses the module's 1x8 header J5, on carrier socket J5.
+
+| Pin | Module | Carrier net |
+|---|---|---|
+| 1 | GND | GND |
+| 2 | 3.3V | GNSS_3V3, from the ADSBee |
+| 3 | !SAFE | not connected |
+| 4 | TXO | GNSS_TXO, to ADSBee GNSS RX |
+| 5 | RXI | GNSS_RXI, from ADSBee GNSS TX |
+| 6 | PPS | GNSS_PPS, to ADSBee PPS |
+| 7 | INT | not connected |
+| 8 | !RESET | not connected |
+
+## ADSBee 1090U
+
+Pin names follow the manufacturer's Rev D schematic. The header positions are an image estimate, see [adsbee-estimate.md](../mechanical/adsbee-estimate.md).
+
+Main header (module J5, 1x13) on carrier socket J10:
+
+| Pin | Module | Carrier net |
+|---|---|---|
+| 1 | 5VIN | ADS_5V, from JP2 |
+| 2, 13 | GND | GND |
+| 3 | TX | ADS_COMMS_TX, to the display through R29 |
+| 4 | RX | ADS_COMMS_RX, from the display through R30 |
+| 5 to 12 | 3.3V, IOA, IOB, IOC, CS, CLK, MOSI, MISO | not connected |
+
+GNSS header (module J4, 1x5) on carrier socket J11:
+
+| Pin | Module | Carrier net |
+|---|---|---|
+| 1 | 3V3 | GNSS_3V3, switched output, 200 mA |
+| 2 | TX | GNSS_RXI |
+| 3 | RX | GNSS_TXO |
+| 4 | PPS | GNSS_PPS |
+| 5 | GND | GND |
+
+- COMMS_UART runs at 3.3 V, 115200 baud by default. It carries AT commands and the GDL90, MAVLink or CSBEE output, so the display does not need Wi-Fi to get traffic.
+- Keep the module's 5VIN reverse-polarity bypass jumper open.
 
 ## Silkscreen labels
 
-Every module header carries a short label per pin, printed perpendicular to the row. Labels use the module's own view: RX/TX on J7 are the display ESP's RX/TX, on J10/J11 the ADSBee's. J2, J3, J4 print NTC, BAT, THERM instead of their reference; only BAT has pin marks (+/−). Test points print their signal name (VBAT, VSYS, PWR_EN, THERM, VBUS, GND, 5V) alternating above and below the row. JP1/JP2 keep their reference plus ESP 5V / ADS 5V.
+- Module sockets J5 to J8, J10 and J11 carry a short label per pin. J9 has none.
+- Labels use the module's own view: RX and TX at J7 are the display's, at J10 and J11 the ADSBee's.
+- J2 and J3 print NTC and BAT on the top side, with + and - at J3. The bottom side prints NTC, BAT and THERM.
+- Test points print VBAT, VSYS, PWR_EN, THERM, USB_VBUS, GND and 5V (TP1 to TP7).
+- JP2 prints ADS 5V. JP1, SW1 and SW2 carry only their reference; the labels still to add are listed in [open-issues.md](open-issues.md).

@@ -1,0 +1,5 @@
+# tables written by running a bench by hand
+thermal/*.txt
+power/*.txt
+__pycache__/
+.venv/

@@ -2,16 +2,16 @@
   "_about": "Inputs for tools/power_budget.py. Edit values here and re-run: python3 tools/power_budget.py. Every entry carries its source; 'estimate' means no vendor figure exists and the value should be replaced by a bench measurement.",
 
   "rail_5v_v": 5.06,
-  "_rail_5v_v": "Boost output set by R14/R15 (240k/75k, VREF 1.212 V).",
+  "_rail_5v_v": "Boost output set by R14/R15 (240 kΩ / 75 kΩ) and VREF 1.204 V (TPS61088 data sheet, PWM mode; the design runs forced PWM).",
 
   "battery_nominal_v": 3.7,
   "_battery_nominal_v": "Cell nominal voltage, Soldered 333288 / 333290 datasheets. Used for energy (Wh) and for average battery current.",
 
   "usable_fraction": 0.95,
-  "_usable_fraction": "Share of rated capacity used before the TLV840 supervisor (2.9 V on VSYS) switches the load off. Rated capacity is measured down to 2.5-3.0 V at 0.2C; the last few percent below 3.0 V are lost. Estimate.",
+  "_usable_fraction": "Share of rated capacity used before the TLV840 supervisor (2.9 V on VSYS) switches the load off. Rated capacity is measured down to 2.5 to 3.0 V at 0.2 C; the last few percent below 3.0 V are lost. Estimate.",
 
   "aged_capacity_fraction": 0.8,
-  "_aged_capacity_fraction": "End-of-life capacity (cell datasheets: >= 80 % after the rated cycle count). Used for the conservative runtime column.",
+  "_aged_capacity_fraction": "End-of-life capacity (cell data sheets: at least 80 % after the rated cycle count). Used for the conservative runtime column.",
 
   "batteries": [
     {"name": "Soldered 333288", "capacity_mah": 5000, "reichelt": "AKKU SOLD333288", "cell": "FE105573", "dimensions_mm": "73 x 55 x 10.1", "max_charge_a": 5.0, "max_discharge_a": 5.0},
@@ -19,28 +19,28 @@
   ],
 
   "boost_efficiency_curve": [[0.02, 0.50], [0.05, 0.75], [0.10, 0.86], [0.20, 0.90], [0.50, 0.93], [1.00, 0.94], [2.00, 0.93], [3.00, 0.92]],
-  "_boost_efficiency_curve": "TPS61088 efficiency vs 5 V output current. TI datasheet SLVSCM8D Figure 6-2 (VIN 3.6 V, VOUT 5 V, forced PWM) minus 2 points for our ~1 MHz switching frequency and the CKST0603 inductor DCR (15.5 mOhm). Linear interpolation between points.",
+  "_boost_efficiency_curve": "TPS61088 efficiency vs 5 V output current. TI data sheet SLVSCM8D Figure 6-2 (VIN 3.6 V, VOUT 5 V, forced PWM) minus 2 points for a switching frequency of about 1 MHz and the CKST0603 inductor DCR (15.5 mΩ). Linear interpolation between points. The board switches at about 720 kHz (R16 220 kΩ), so the curve is about 1 point pessimistic. tools/power_budget.py uses it as is; hardware/sim/run_heat.py rescales the switching loss and gives the simulated efficiency.",
 
   "path_resistance_ohm": 0.07,
-  "_path_resistance_ohm": "Battery to boost input: JST-PH contacts (~2 x 10 mOhm), fuse F1 1206 3 A (~25 mOhm), MAX77757 BATT-to-SYS switch (13 mOhm typ), traces. Estimate.",
+  "_path_resistance_ohm": "Battery to boost input: JST-PH contacts (about 2 x 10 mΩ), fuse F1 Littelfuse 0466005.NRHF 5 A (11 mΩ nominal), MAX77757 BATT-to-SYS switch (20 mΩ typ), traces. Estimate.",
 
   "load_switch_ron_ohm": 0.016,
-  "_load_switch_ron_ohm": "TPS22975 on-resistance at VBIAS 5 V, TI datasheet typical.",
+  "_load_switch_ron_ohm": "TPS22975 on-resistance at VBIAS 5 V, TI data sheet typical.",
 
   "battery_side_quiescent_ma": 0.08,
-  "_battery_side_quiescent_ma": "Currents on the battery/VSYS side while running, in addition to the boost: MAX77757 battery-only 0.030 mA (typ, 0.050 max), MAX17048 active 0.023 mA, boost feedback divider 240k+75k at 5 V 0.016 mA, R10 1M thermostat 0.004 mA, TLV840 0.0002 mA, boost VIN quiescent (included in efficiency). Rounded up.",
+  "_battery_side_quiescent_ma": "Currents on the battery/VSYS side while running, in addition to the boost: MAX77757 battery-only 0.030 mA (typ, 0.050 max), MAX17048 active 0.023 mA, boost feedback divider 240 kΩ + 75 kΩ at 5 V 0.016 mA, R10 1 MΩ thermostat 0.004 mA, TLV840 0.0002 mA, boost VIN quiescent (included in efficiency). Rounded up.",
 
-  "off_state_ua": {"MAX77757 battery-only (typ)": 30, "boost feedback divider via idle boost": 11, "MAX17048 hibernate": 3, "TPS61088 shutdown": 1, "TPS22975 VBIAS shutdown": 2, "R10 thermostat pull-down 1 MOhm": 4, "TLV840 supervisor": 0.2},
+  "off_state_ua": {"MAX77757 battery-only (typ)": 30, "boost feedback divider via idle boost": 11, "MAX17048 hibernate": 3, "TPS61088 shutdown": 1, "TPS22975 VBIAS shutdown": 2, "R10 thermostat pull-down 1 MΩ": 4, "TLV840 supervisor": 0.2},
   "_off_state_ua": "Battery drain with the POWER slider off and no USB. See docs/power.md, off-state budget.",
 
   "loads_5v": [
-    {"name": "ADSBee 1090 core (RP2040, receiver, sub-GHz MCU)", "ma": 120, "wifi_on_ma": 400, "source": "ADSBee 1090 datasheet 2026-05-26, Quick Specs: 120 mA Wi-Fi disabled, ~400 mA Wi-Fi enabled at 5 V"},
-    {"name": "Display: XIAO ESP32-S3 Plus MCU, Wi-Fi off", "ma": 45, "source": "estimate: ESP32-S3 dual core 160-240 MHz without radio 40-50 mA (Espressif ESP32-S3 datasheet, active mode); onboard LDO passes current 1:1 from 5 V"},
-    {"name": "Display: 1.47 in IPS panel and touch controller", "ma": 8, "source": "estimate: LCD controller ~5 mA, capacitive touch ~2-3 mA; Seeed publishes no figure"},
-    {"name": "Display: backlight at 100 %", "ma": 30, "scales_with_brightness": true, "source": "estimate: 1.47 in IPS backlight, 2 white LEDs at ~15 mA; Seeed publishes no figure"},
-    {"name": "Carrier: green power LED D5", "ma": 6.4, "source": "(5.06 V - ~2.0 V) / 470 Ohm (R26)"},
-    {"name": "Carrier: BMP581, buzzer driver idle, I2C pull-ups", "ma": 0.1, "source": "BMP581 normal mode < 0.01 mA; 74LVC1G17 < 0.01 mA; display I2C pull-ups ~0.05 mA"},
-    {"name": "Carrier: buzzer, average", "ma": 0.2, "source": "PKMCS0909 driven 3.3 V through 150 Ohm: ~20 mA while beeping, assumed 1 % duty"}
+    {"name": "ADSBee 1090 core (RP2040, receiver, sub-GHz MCU)", "ma": 120, "wifi_on_ma": 400, "source": "ADSBee 1090 data sheet 2026-05-26, Quick Specs: 120 mA Wi-Fi disabled, about 400 mA Wi-Fi enabled at 5 V"},
+    {"name": "Display: XIAO ESP32-S3 Plus MCU, Wi-Fi off", "ma": 45, "source": "estimate: ESP32-S3 dual core at 160 to 240 MHz without radio, 40 to 50 mA (Espressif ESP32-S3 data sheet, active mode); onboard LDO passes current 1:1 from 5 V"},
+    {"name": "Display: 1.47 in IPS panel and touch controller", "ma": 8, "source": "estimate: LCD controller about 5 mA, capacitive touch about 2 to 3 mA; Seeed publishes no figure"},
+    {"name": "Display: backlight at 100 %", "ma": 30, "scales_with_brightness": true, "source": "estimate: 1.47 in IPS backlight, 2 white LEDs at about 15 mA; Seeed publishes no figure"},
+    {"name": "Carrier: green power LED D5", "ma": 6.4, "source": "(5.06 V - about 2.0 V LED forward voltage) / 470 Ω (R26)"},
+    {"name": "Carrier: BMP581, buzzer driver idle, I2C pull-ups", "ma": 0.1, "source": "BMP581 normal mode below 0.01 mA; 74LVC1G17 below 0.01 mA; display I2C pull-ups about 0.05 mA"},
+    {"name": "Carrier: buzzer, average", "ma": 0.2, "source": "PKMCS0909 driven from 3.3 V through 150 Ω: about 20 mA while beeping, assumed 1 % duty"}
   ],
 
   "gnss": {
@@ -51,18 +51,18 @@
     "breakout_led_ma": 1.5,
     "_breakout_led_ma": "SparkFun GPS-18037 power LED; PPS LED blinks only with fix. Estimate.",
     "active_antenna_ma": 10,
-    "_active_antenna_ma": "Typical active GNSS antenna LNA bias at 3.3 V (open issue 9). Set 0 for a passive antenna."
+    "_active_antenna_ma": "Typical active GNSS antenna LNA bias at 3.3 V, to be measured (docs/open-issues.md). Set 0 for a passive antenna."
   },
 
   "brightness_levels": [1.0, 0.5],
 
   "charging": {
-    "charge_current_a": 2.0,
-    "_charge_current_a": "MAX77757 IFAST resistor R6 = 14 kOhm: datasheet Table 3 gives 2.0 A (Extended part C22803). Top-off 100 mA.",
+    "charge_current_a": 1.8,
+    "_charge_current_a": "MAX77757 IFAST: R6 + R37 = 6.2 kΩ + 6.2 kΩ in series = 12.4 kΩ (1 %, Basic C4260 each); data sheet Table 3 gives 1.8 A nominal, top-off 75 mA.",
     "charger_efficiency": 0.90,
-    "_charger_efficiency": "MAX77757 1.3 MHz buck at 5 V in, ~3.8 V out, 1-2 A: about 90 % (datasheet typical operating characteristics). Estimate.",
+    "_charger_efficiency": "MAX77757 1.3 MHz buck at 5 V in, about 3.8 V out, 1 to 2 A: about 90 % (data sheet typical operating characteristics). Estimate.",
     "cv_tail_hours_per_ah": 0.12,
-    "_cv_tail_hours_per_ah": "Constant-voltage phase after the constant-current phase until termination. Rule of thumb for LiPo at 0.2-0.5C. Estimate.",
+    "_cv_tail_hours_per_ah": "Constant-voltage phase after the constant-current phase until termination. Rule of thumb for LiPo at 0.2 to 0.5 C. Estimate.",
     "cc_fraction": 0.85,
     "_cc_fraction": "Share of capacity delivered in the constant-current phase. Estimate.",
     "sources": [

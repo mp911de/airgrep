@@ -1,0 +1,80 @@
+MAX77757 buck power stage: switching ripple on VSYS from the charger
+*
+* Ideal switches, L1 with its DCR, the VSYS capacitors (C9, C10 at the charger and C13, C14
+* at the boost) with DC-bias derating, ESR and ESL. The MAX77757 control loop is internal
+* and undocumented, so the duty cycle is preset and trimmed by a slow integrator; only the
+* ripple is meaningful. The battery is on VSYS through the charger's BATT-SYS switch, which
+* is open in supplement-free charging, so it is left out.
+*
+*   ngspice -b buck_ripple.cir           (writes buck_ripple.txt into the current directory)
+
+.param vin=5.0
+.param vsys=4.2
+.param iload=1.5
+.param fsw=1.3Meg
+.param lval=1u
+.param dcr=7.4m
+* C9, C10, C13, C14: 4 x 22 uF 0805 X7R 10 V (GRM21BZ71A226ME15) at 4.2 V, -44 % DC bias
+.param cout=49u
+.param esr_out=0.8m
+.param esl_out=0.15n
+.param lloop=0.3n
+* BYP: C6 + C33, 2 x 10 uF 0805 X7R 25 V at 5 V, -40 % DC bias assumed (no curve on file)
+.param cin=12u
+.param esr_in=1.5m
+* Data sheet does not give the switch resistances; assumed
+.param ron_ls=40m
+.param ron_hs=60m
+.param tedge=5n
+.param d0={vsys/vin}
+.param idc={iload}
+
+Vbus   VBUS 0 {vin}
+Rbus   VBUS CHG_BYP 50m
+Cin    CHG_BYP CIN_X {cin}
+Resrin CIN_X 0 {esr_in}
+
+Shs    CHG_BYP CHG_SW GHS 0 SWHS
+Sls    CHG_SW 0 GLS 0 SWLS
+Dls    0 CHG_SW DBODY
+.model SWLS SW(ron={ron_ls} roff=10Meg vt=0.7 vh=0.1)
+.model SWHS SW(ron={ron_hs} roff=10Meg vt=0.7 vh=0.1)
+.model DBODY D(is=1e-12 n=1.2 rs=0.5 cjo=200p)
+
+L1     CHG_SW L1_X {lval} ic={idc}
+Rdcr   L1_X VSYS_N {dcr}
+Lloop  VSYS_N LLOOP_X {lloop}
+Rloop  LLOOP_X VSYS 3m
+Rf1a   VSYS F1A 1k
+Cf1a   F1A 0 8p
+Ef1b   F1B 0 F1A 0 1
+Rf1b   F1B F1C 1k
+Cf1b   F1C 0 8p
+Ef1c   F1D 0 F1C 0 1
+Rf1c   F1D VSYS_F 1k
+Cf1c   VSYS_F 0 8p
+Cout   VSYS COUT_X {cout} ic={vsys}
+Resr   COUT_X COUT_Y {esr_out}
+Lesl   COUT_Y 0 {esl_out}
+Iload  VSYS 0 {iload}
+
+Vsaw   SAW 0 PULSE(0 1 0 {1/fsw-2n} 2n 0 {1/fsw})
+Bpwm   PWM 0 V = V(SAW) < V(DUTY) ? 1 : 0
+Rg     PWM G 1k
+Cg     G 0 {tedge/1k}
+* main switch on above 0.8, the other on below 0.2 of the gate ramp: dead time between
+Bghs   GHS 0 V = V(G)
+Bgls   GLS 0 V = 1 - V(G)
+
+Ravg   VSYS VAVG 10k
+Cavg   VAVG 0 2n ic={vsys}
+Bint   0 INT I = (vsys - V(VAVG)) * 200u
+Cint   INT 0 1u ic={d0}
+Rint   INT 0 1G
+Bduty  DUTY 0 V = V(INT) < 0.02 ? 0.02 : (V(INT) > 0.98 ? 0.98 : V(INT))
+
+.control
+tran 1n 200u 0 2n uic
+wrdata buck_ripple.txt v(vsys) i(L1) v(chg_sw) v(vsys_f)
+.endc
+.end

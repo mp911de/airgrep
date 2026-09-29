@@ -1,58 +1,102 @@
 # Mechanical
 
-## Baseline: placement B (decided 24 Sep 2026)
+Board outline, placement, mounting and the stack behind the display. Headline figures are in [specs.md](specs.md), connectors and pin maps in [interfaces.md](interfaces.md), hand-fitted parts in [bom-hand-sourced.md](bom-hand-sourced.md).
 
-Derived from placement A (`mechanical/placement-A.png`), re-arranged after the power review. Front view, Y down. 115 × 90 mm, may grow a few mm for clearance; the 100 × 60 × 11 mm battery behind the board sets the minimum.
+## Placement
+
+![Carrier placement, front view](../mechanical/placement.png)
+
+The drawing is generated from `hardware/kicad/carrier.kicad_pcb`, which is the source for every position. Regenerate it after moving parts, from the repository root, with KiCad's Python:
 
 ```
- top edge: GNSS SMA   868 SMA   1090 SMA   (3 NPTH bulkhead mounts)
- ┌──────────────────────────────────────┐
- │ GNSS        DISPLAY        ADSBee    │  ADSBee landscape 48 × 30,
- │ 30 × 38     26 × 51        48 × 30   │  its USB-C toward the right edge
- │             (centred)                │
- │ gauge                      POWER ZONE│  charger, boost, load switch, fuse
- │ buzzer                               │
- │ MUTE ◄      test pads      ▼ ▼ ▼     │  bottom right: POWER slider, USB-C, LED
- └──────────────────────────────────────┘
+tools/kpy mechanical/draw_placement.py
 ```
 
-Hard rules:
+It writes `mechanical/placement.svg` and `mechanical/placement.png`. Coordinates are KiCad millimetres: front view, origin upper left, X right, Y down.
 
-1. All RF (GNSS, ADSBee, three bulkheads) at the top; both switching converters at the bottom right, as far from GNSS as the board allows (target 40 mm or more).
-2. POWER slider, USB-C receptacle and the bi-colour charge/power LED grouped at the bottom right, all facing down (aircraft side clearance is often poor). USB-C is Hanbo MC-107DMS (LCSC C3039295, 16P USB 2.0, 5 A, HRO TYPE-C-31-M-12 land pattern), mounted so the shell front extends 1.2 mm past the board edge; the front shell tabs stay 0.55 mm inside the edge. Place the board edge about 0.5 mm inside the case wall; with a 1.5 to 2 mm wall the receptacle face ends 0.3 to 1.3 mm behind the outer surface, which a USB-C plug reaches. Chamfer the opening.
-3. MUTE slider on the left side, next to the buzzer, for ergonomics.
-4. Display centred, glass to the front, four header groups on 8.51 mm sockets, spacers take touch force.
-5. Service shunts JP_PWR_ESP and JP_PWR_ADS reachable without unplugging a module; silk: "REMOVE BEFORE USB".
-6. Test pads for VBUS, SYS, VBAT, 5 V, EN, THERM_OK. Silk labels BAT, NTC, THERM at J3, J2, J4.
-7. Battery connector and pack fuse reachable after removing the rear cover; no pin or screw tip against the pouch.
-8. The three antenna NPTH are field-test mounts only (no enclosure yet). Keep each at least 20 mm sideways from the GNSS SMA axis (x = 19.2) so an SMA adapter or short lead fits; ADSBee uses two U.FL pigtails from its upper-left corner.
+The board is 105 x 95 mm. The 100 x 60 x 11 mm battery behind it sets the minimum size.
 
-Board is now 105 × 95 mm (drawing `mechanical/placement-B.png`, coordinates `placement-B.json`, generator `draw_placement_b.py`).
+Placement rules:
 
-Coordinate rule for CAD: the drawing is Y-down front view. KiCad is also Y-down, so coordinates transfer directly. EasyEDA Pro was Y-up; that caused the revision C mirror.
+- RF sits at the top: the GNSS module, the ADSBee and the three antenna mounts.
+- Both switching converters sit at the bottom right. The charger inductor L1 is about 37 mm from the GNSS module outline, the boost inductor L2 about 42 mm.
+- POWER slider SW1, LEDs D4 and D5 and the USB-C receptacle J1 line up on the bottom edge and face down. Side clearance in an aircraft is often poor.
+- MUTE slider SW2 is on the left edge, next to the buzzer.
+- The display sits in the middle column, glass to the front.
+- The pack connectors J2, J3, J4 and the pack fuse F1 are at the bottom, left of centre, reachable with the rear cover off.
+- Shunt JP1 is left of the display and stays reachable with the display fitted. JP2 lies under the lower right corner of the ADSBee outline.
+- The antenna mounts are MH6 (GNSS), MH7 (868 MHz) and MH8 (1090 MHz). MH6 is 20.6 mm from the GNSS SMA axis at x = 19.3, so an SMA adapter or a short lead fits.
+- The ADSBee is portrait, 30 x 48 mm. Its own USB-C faces down, above the boost converter. Its U.FL connectors are at the upper left corner.
 
-## Sockets and assembly split (decided 24 Sep)
+Module outlines in the drawing follow the socket positions. The GNSS and display outlines come from the manufacturer CAD (`mechanical/source-geometry.json`), the ADSBee outline from an image estimate ([adsbee-estimate.md](../mechanical/adsbee-estimate.md)).
 
-- Seven module sockets: through-hole female headers, 2.54 mm, single row, 8.5 mm height (Samtec SSQ or equivalent), one height for all modules. User solders.
-- Battery, NTC and thermostat connectors: through-hole, user solders.
-- Everything else SMD, JLCPCB assembled.
+### USB-C receptacle in the case
 
-## Module standoffs (decided 24 Sep)
+J1 is mounted so that the shell front extends 1.2 mm past the board edge. The front shell tabs stay about 0.5 mm inside the edge.
 
-Each module is held by its socket(s) plus 8.5 mm threaded standoffs through the carrier, screwed from the carrier underside, module screwed from the top. Carrier holes:
+Place the board edge about 0.5 mm inside the case wall. With a 1.5 to 2 mm wall the receptacle face ends 0.3 to 1.3 mm behind the outer surface, which a USB-C plug reaches. Chamfer the opening.
 
-| Module | Holes in carrier | Size | Note |
+## Assembly split
+
+- JLCPCB assembles all SMD parts. They are on the top side.
+- Hand-soldered through-hole parts: module sockets J5 to J11, pack connectors J2 to J4, shunt headers JP1 and JP2, LEDs D4 and D5. The parts are listed in [bom-hand-sourced.md](bom-hand-sourced.md).
+- All seven module sockets are 2.54 mm single-row female headers of one height, 8.5 mm.
+
+## Mounting
+
+All mounting hardware is M2.5. The carrier has nine 2.7 mm non-plated holes (KiCad stock `MountingHole_2.7mm_M2.5`) and three 6.5 mm antenna holes (stock `MountingHole_6.5mm`).
+
+| Use | References | Centres (X, Y) in mm | Basis |
 |---|---|---|---|
-| GNSS | 2, top corners (6.54, 17.54) and (31.94, 17.54) | 3.2 mm, M3 | opposite the J5 socket |
-| Display | 4, its own pattern (47.5/67.5, 41.7/64.2) | 3.2 mm, M3 | display holes are 2.5 mm: widen them to 3.2 mm at assembly, or use M2.5 screws into M3 standoffs. J6 support socket kept for the top-left corner |
-| ADSBee | 4, (75.9/98.5, 18.1/58.5) | 3.2 mm, M3 | ADSBee holes are M2.5 (image estimate); widen at assembly. Verify positions with the real board before fab |
+| Case | MH1, MH2, MH3, MH4 | (3.556, 3.556), (101.600, 3.556), (3.556, 91.440), (101.600, 91.440) | 3.40 to 3.56 mm from the edges |
+| GNSS | MH10, MH11 | (6.600, 17.531), (32.014, 17.520) | SparkFun GPS-18037 holes H2 and H1, within 0.012 mm of the module CAD |
+| Display | MH13 | (47.511, 64.195) | Seeed 100069905 hole H1, within 0.029 mm of the module CAD |
+| ADSBee | MH12, MH14 | (98.301, 18.097), (75.321, 58.561) | image estimate, see below |
+| Antenna bulkheads | MH6, MH7, MH8 | (39.878, 7.112), (61.976, 7.112), (91.948, 7.112) | 6.5 mm hole, 11 mm keepout |
 
-All 15 carrier holes are 3.2 mm (M3): five case mounts at the edges and ten module standoffs. Module holes smaller than M3 are widened at assembly. Antenna test mounts stay 6.5 mm. Decided 24 Sep.
+Notes on the module holes:
 
-## Stack (top to bottom)
+- GNSS: the two holes next to J5 are not drilled. They would sit 1.3 mm from the header row, and the header carries that edge.
+- Display: the other three module holes, at (67.53, 64.17), (67.53, 41.67) and (47.53, 41.67), are not drilled. The display rests on its four socket groups and the one standoff. The module CAD has 2.5 mm holes.
+- ADSBee: MH12 and MH14 are a diagonal pair on the 23.0 x 40.5 mm pattern of the manufacturer enclosure STEP. They sit 0.20 mm and 0.58 mm from the centres of the image estimate, inside its 0.5 mm planning allowance only for MH12.
+- Module standoffs are 8.5 mm nominal to match the sockets. Case standoff height depends on the enclosure.
 
-Front cover with screen and button openings, independent of the display. Modules on 8.51 mm sockets. Carrier PCB. Clearance plus battery tray and insulating barrier. Battery, supported by the case. Rear cover.
+Clearance around the 2.7 mm holes on the current board:
 
-## Not yet verified
+- No copper other than GND within 3 mm of any hole centre, with one exception: a GNSS_TXO track on F.Cu ends 2.66 mm from the MH11 centre, under solder mask. A 5 mm hex standoff reaches 2.89 mm at its corners, so use a round standoff or a nylon washer there.
+- The nearest courtyards are J10 at 3.2 mm from MH12, J9 at 3.6 mm from MH13 and J8 at 5.0 mm from MH14.
+- `carrier.kicad_dru` keeps copper clear of the holes.
 
-Display header stack height versus its rear controller and microSD slot. ADSBee header positions and rear shield clearance. Coax bend radius from module SMA/U.FL to bulkheads. Barometer vent if fitted. Wi-Fi antenna keepouts for ADSBee and ESP32. GNSS active antenna bias current versus the ADSBee 200 mA 3.3 V output.
+## Insulator board
+
+A plain board between the carrier and the battery keeps the through-hole pin tails off the pack. It is a separate KiCad project, `hardware/insulator/insulator.kicad_pcb`, generated from the carrier by `tools/make_insulator.py`.
+
+| Property | Value |
+|---|---|
+| Outline | same as the carrier |
+| Material | 0.8 mm FR-4, no copper |
+| Case holes | MH1 to MH4, copied from the carrier |
+| Antenna clearance | 11 mm holes at MH6 to MH8 for the bulkhead nuts and pigtails |
+| Cable slot | 15 x 7.5 mm with round ends, centred at (45.1, 80.9), between J2/J3 and J4 |
+| Silkscreen | J2, J3, J4 outlines on the carrier side, BATTERY SIDE on the other |
+
+Order it as a separate board in the same JLCPCB cart. It cannot share the four-layer panel.
+
+The standoffs between carrier and insulator must clear the longest pin tail. Trim the hand-soldered tails to about 1.5 mm and use M2.5 spacers of at least 3 mm.
+
+J2, J3 and J4 may go on either side of the carrier; both sides are labelled ([interfaces.md](interfaces.md#silkscreen-labels)). The prototype keeps them on top, with the leads around the board edge. On the back they need a larger gap: about 6 mm for the PH housing plus the mated plug. The slot size is a first guess; it is set by SLOT_W and SLOT_H in the generator.
+
+## Stack
+
+From front to back:
+
+1. Front cover with openings for the screen and the buttons, independent of the display.
+2. Modules on their sockets.
+3. Carrier board.
+4. Spacers and insulator board.
+5. Battery, supported by the case.
+6. Rear cover.
+
+## Open checks
+
+Mechanical checks that still need the delivered modules or the enclosure are listed in [open-issues.md](open-issues.md).

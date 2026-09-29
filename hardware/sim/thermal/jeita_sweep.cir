@@ -1,0 +1,22 @@
+JEITA window: THM/PVL ratio over thermistor temperature, thermostat closed
+*
+* Sweeps the pack temperature and records the THM/PVL ratio the MAX77757 sees,
+* together with the Q6 gate voltage. run_thermal.py finds the threshold crossings.
+*
+*   ngspice -b jeita_sweep.cir        (writes jeita_sweep.txt into the current directory)
+
+.include carrier_thermal.inc
+
+.param vsys=4.2
+
+Vsys    VSYS 0 {vsys}
+* Thermostat closed, slider on
+Rtherm  THERM_FEED THERM_OK 50m
+Rslider THERM_OK SW_EN 50m
+Vtc     TC 0 25
+
+.control
+dc Vtc -30 80 0.1
+wrdata jeita_sweep.txt v(ratio) v(chg_dis)
+.endc
+.end

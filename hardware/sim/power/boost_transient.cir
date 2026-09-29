@@ -1,0 +1,114 @@
+TPS61088 boost with its control loop, the TPS22975 load switch and the modules: start-up, load steps, shutdown
+*
+* Averaged model, no switching. The inductor current is the state the peak-current loop
+* commands: iL_peak = (V(COMP) - 1.4 V) / 0.08 Ohm, clamped at the ILIM setting, with the
+* COMP clamps of the data sheet (1.4 V low, ILIM high). The error amplifier (190 uA/V) works
+* against the soft-start ramp (5 uA into C17) or the 1.204 V reference, whichever is lower,
+* through the fitted compensation R18, C21, C22. The power stage passes eff * VSYS * iL into
+* BOOST_5V (power balance); the body diode of the synchronous switch pre-charges the output
+* when the boost is disabled. The TPS22975 is a slew-controlled follower (CT = C23 10 nF,
+* data sheet Table 1) with its 16 mOhm on-resistance and the 230 Ohm quick output discharge.
+* The modules draw a programmed current above 3 V (their regulators) and look resistive below.
+* PWR_EN drives EN and ON at the same time, as on the board.
+*
+*   ngspice -b boost_transient.cir       (writes boost_transient.txt into the current directory)
+
+* One .param per line: run_power.py overrides them by name.
+.param vin=3.7
+.param eff=0.9
+* Switching frequency with R16 220 kOhm at 3.7 V in (run_power.py fsw_boost)
+.param fsw=721k
+.param lval=2.2u
+* Output capacitance: C18-C20 derated, C24 behind the switch, the modules' own input capacitance
+.param cout=29.7u
+.param c24=7u
+.param cmod=40u
+* Connector and track resistance between U7 and the module terminals
+.param rmod=20m
+* TPS61088 control
+.param rsense=0.08
+.param ilim=5.84
+.param gm=190u
+.param rea=10Meg
+.param r18=6.8k
+.param c21=10n
+.param c22=100p
+.param css=47n
+.param iss=5u
+* TPS22975: 10 to 90 % rise time for the CT capacitor, on-resistance, discharge resistor
+.param ct_rise=17m
+.param ron=16m
+.param rqod=230
+* Timing: PWR_EN high from ten to toff; load i0 until t1, i1 from t1 to t2, i0 afterwards
+.param ten=0.1m
+.param toff=1
+.param i0=0.1
+.param i1=0.8
+.param t1=25m
+.param t2=35m
+.param tstop=45m
+
+.param tramp={ct_rise*5.5/4}
+
+* --- battery side
+Vbat   VBAT 0 {vin}
+Rin    VBAT VSYS 30m
+Cin    VSYS 0 60u
+
+* --- enable
+Ben    PWR_EN 0 V = (time > ten && time < toff) ? 3.3 : 0
+
+* --- soft start: 5 uA into C17 while enabled, discharged when disabled
+Css    SS 0 {css}
+Bss    SS 0 I = V(PWR_EN) > 1.2 ? -iss * min(1, max(0, (2.2 - V(SS)) * 10)) : V(SS) / 100
+Bref   REF 0 V = min(V(SS), 1.204)
+
+* --- feedback divider and error amplifier
+R14    BOOST_5V FB 240k
+R15    FB 0 75k
+Bea    COMP 0 I = V(PWR_EN) > 1.2 ? -gm * (V(REF) - V(FB)) : V(COMP) / 100
+Rea    COMP 0 {rea}
+R18    COMP CZ {r18}
+C21    CZ 0 {c21}
+C22    COMP 0 {c22}
+* COMP clamps: 1.4 V low, ILIM high
+Bclamp COMP 0 I = V(COMP) > 1.4 + ilim * rsense ? (V(COMP) - 1.4 - ilim * rsense) : (V(COMP) < 1.4 ? (V(COMP) - 1.4) : 0)
+
+* --- current loop: peak command from COMP, average = peak - ripple / 2, one-cycle lag
+Bcmd   CMD 0 V = V(PWR_EN) > 1.2 ? max(0, min(ilim, (V(COMP) - 1.4) / rsense)) : 0
+Rlag   CMD ILA 1k
+Clag   ILA 0 1n
+Bripple DI 0 V = V(VSYS) * max(0, 1 - V(VSYS) / max(V(BOOST_5V), V(VSYS))) / (lval * fsw)
+Bil    IL 0 V = V(PWR_EN) > 1.2 ? max(-1, V(ILA) - V(DI) / 2) : 0
+
+* --- power stage: draws iL from VSYS, delivers eff * VSYS * iL to the output
+Bin    VSYS 0 I = V(IL)
+Bout   0 BOOST_5V I = eff * V(VSYS) * V(IL) / max(V(BOOST_5V), 1)
+Dbody  VSYS BOOST_5V DBODY
+.model DBODY D(is=1e-9 rs=50m n=1.5)
+
+* --- output capacitors
+Cout   BOOST_5V COUT_X {cout}
+Resr   COUT_X 0 1m
+
+* --- TPS22975: gate ramp, follower with on-resistance, quick output discharge
+Cg     GATE 0 1u
+Rg     GATE 0 1G
+Bg     GATE 0 I = V(PWR_EN) > 1 ? -1u / tramp * min(1, max(0, (1.01 - V(GATE)) * 100)) : 1u / 2u * min(1, max(0, V(GATE) * 100))
+Bsw    BOOST_5V RAIL_5V I = min(V(BOOST_5V, RAIL_5V) / ron, max(0, (5.5 * V(GATE) - V(RAIL_5V)) / 0.05))
+Bqod   RAIL_5V 0 I = V(PWR_EN) > 1 ? 0 : V(RAIL_5V) / rqod
+C24    RAIL_5V C24_X {c24}
+Resr24 C24_X 0 4m
+
+* --- modules
+.include module_feeds.inc
+Bldcmd LOADCMD 0 V = (time > t1 && time < t2) ? i1 : i0
+Rld    LOADCMD LOADF 1k
+Cld    LOADF 0 10n
+
+.tran 2u {tstop} 0 10u
+.control
+run
+wrdata boost_transient.txt v(boost_5v) v(rail_5v) v(module) v(il) v(comp) v(ss) v(loadf) v(vsys) v(gate) v(ads_5v) v(esp_5v) v(module_max) v(ads_5v_d) v(esp_5v_d)
+.endc
+.end

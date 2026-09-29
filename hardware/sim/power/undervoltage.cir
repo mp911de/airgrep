@@ -1,0 +1,169 @@
+Battery, supervisor and boost: undervoltage cut-off, rebound and restart
+*
+* The battery is an open-circuit voltage source behind its internal resistance (pack with
+* its protection FETs) and the harness (lead, JST-PH contacts, F1), then the MAX77757
+* BATT-to-SYS switch (20 mOhm) into the SYS capacitors. The TLV840 monitors VSYS through
+* its propagation delay, trips below vit, releases above vit + vhys after the reset delay
+* td, and pulls PWR_EN low with its open drain against R13 100k and the 800k EN pull-down.
+* R13 is fed from VSYS through R43 1k, the closed thermostat and the closed slider. The boost, the TPS22975 and the modules are the
+* averaged model of boost_transient.cir. VOC follows a slow ramp down (discharge), holds,
+* takes a load burst, then ramps back up (restore).
+*
+*   ngspice -b undervoltage.cir          (writes undervoltage.txt into the current directory)
+
+* One .param per line: run_power.py overrides them by name.
+* Battery: open-circuit voltage profile and resistances
+.param voc0=3.25
+.param voc1=2.95
+.param voc2=3.30
+.param ta=20m
+.param tb=420m
+.param tc=620m
+.param tdn=820m
+.param rbat=100m
+.param rharn=60m
+.param rb2s=20m
+* Supervisor
+.param vit=2.9
+.param vhys=0.145
+.param td=40u
+.param tp=30u
+* Boost input UVLO (VIN falling)
+.param vin_uvlo=2.3
+* Boost and load switch, as in boost_transient.cir
+.param eff=0.9
+* Switching frequency with R16 220 kOhm at 3.0 V in (run_power.py fsw_boost)
+.param fsw=707k
+.param lval=2.2u
+.param cout=29.7u
+.param c24=7u
+.param cmod=40u
+.param rmod=20m
+.param rsense=0.08
+.param ilim=5.84
+.param gm=190u
+.param rea=10Meg
+.param r18=6.8k
+.param c21=10n
+.param c22=100p
+.param css=47n
+.param iss=5u
+.param ct_rise=17m
+.param ron=16m
+.param rqod=230
+* Load: i0 throughout, i1 from t1 to t2
+.param i0=0.8
+.param i1=1.5
+.param t1=520m
+.param t2=530m
+.param tstop=900m
+
+.param tramp={ct_rise*5.5/4}
+
+* --- battery and harness
+Bvoc   VOC 0 V = time < ta ? voc0 : (time < tb ? voc0 + (voc1 - voc0) * (time - ta) / (tb - ta) : (time < tc ? voc1 : (time < tdn ? voc1 + (voc2 - voc1) * (time - tc) / (tdn - tc) : voc2)))
+Rbat   VOC BATT_J {rbat}
+Rharn  BATT_J BATT {rharn}
+C11    BATT 0 8u
+Rb2s   BATT VSYS {rb2s}
+Cin    VSYS 0 60u
+Iq     VSYS 0 50u
+
+* --- supervisor TLV840 on VSYS
+Rp     VSYS SENSE 1k
+Cp     SENSE 0 {tp/1k}
+* state ST: 0 V asserted, 1 V released; hysteretic switch between vit and vit + vhys
+Vone   ONE 0 1
+Sst    ONE ST SENSE 0 SWSUP
+Rstl   ST 0 1k
+.model SWSUP SW(vt={vit + vhys / 2} vh={vhys / 2} ron=1 roff=1G)
+* reset delay: RC to 63 % in td while released, discharged through the diode when asserted
+Rtm    ST TMR {td / 1u}
+Ctm    TMR 0 1u
+Dtm    TMR ST DFAST
+.model DFAST D(is=1e-6 rs=1 n=1)
+Sod    PWR_EN 0 TMR 0 SWOD
+.model SWOD SW(vt=0.632 vh=0.02 ron=10Meg roff=10)
+* thermostat (closed) and slider close at 2 ms, so the latch starts clear: SW_EN = THERM_OK, fed
+* from VSYS through R43 (it limits a short of the user-made J4 lead); R10 and C31 load THERM_OK
+.param r43=1k
+R43    VSYS THFEED {r43}
+Bsl    SLC 0 V = time > 2m ? 1 : 0
+Ssl    THFEED SW_EN SLC 0 SWSL
+.model SWSL SW(vt=0.5 vh=0 ron=50m roff=1G)
+R10    SW_EN 0 1Meg
+C31    SW_EN 0 100n
+R13    SW_EN PWR_EN 100k
+Ren    PWR_EN 0 800k
+Cen    PWR_EN 0 1n
+* TPS61088 VIN UVLO: off below vin_uvlo falling, on again 200 mV higher (data sheet VIN_HYS)
+Suv    ONE UVOK VSYS 0 SWUV
+Ruv    UVOK 0 1k
+.model SWUV SW(vt={vin_uvlo + 0.1} vh=0.1 ron=1 roff=1G)
+Bon    ON 0 V = (V(PWR_EN) > 1.2 && V(UVOK) > 0.5) ? 1 : 0
+
+* --- latch (latch=1 fits it): Q7 AO3401A from HOLD to LATCH, gate on PWR_EN; Q8 2N7002 holds
+* PWR_EN low from LATCH; R40/C37 delay the hold supply from the slider (SW_EN, behind R43);
+* R41 bleeds Q7 leakage. The FETs are switches at their threshold voltages. Q9 (USB clear)
+* is not in this bench, there is no USB.
+.param latch=0
+R40    SW_EN HOLD 10k
+C37    HOLD 0 100n
+Sq7    HOLD LATCH HOLD PWR_EN SWP
+.model SWP SW(vt=0.9 vh=0.05 ron=5 roff=10Meg)
+R41    LATCH 0 100k
+Bl     LATCHC 0 V = latch * V(LATCH)
+Sq8    PWR_EN 0 LATCHC 0 SWN
+* Q8 switch point; the 2N7002 VGS(th) is 1.0 / 2.0 / 2.5 V min / typ / max (models/fets.lib)
+.param q8_vth=1.5
+.model SWN SW(vt={q8_vth} vh=0.1 ron=20 roff=10Meg)
+
+* --- soft start
+Css    SS 0 {css}
+Bss    SS 0 I = V(ON) > 0.5 ? -iss * min(1, max(0, (2.2 - V(SS)) * 10)) : V(SS) / 100
+Bref   REF 0 V = min(V(SS), 1.204)
+
+* --- feedback divider and error amplifier
+R14    BOOST_5V FB 240k
+R15    FB 0 75k
+Bea    COMP 0 I = V(ON) > 0.5 ? -gm * (V(REF) - V(FB)) : V(COMP) / 100
+Rea    COMP 0 {rea}
+R18    COMP CZ {r18}
+C21    CZ 0 {c21}
+C22    COMP 0 {c22}
+Bclamp COMP 0 I = V(COMP) > 1.4 + ilim * rsense ? (V(COMP) - 1.4 - ilim * rsense) : (V(COMP) < 1.4 ? (V(COMP) - 1.4) : 0)
+
+* --- current loop and power stage
+Bcmd   CMD 0 V = V(ON) > 0.5 ? max(0, min(ilim, (V(COMP) - 1.4) / rsense)) : 0
+Rlag   CMD ILA 1k
+Clag   ILA 0 1n
+Bripple DI 0 V = V(VSYS) * max(0, 1 - V(VSYS) / max(V(BOOST_5V), V(VSYS))) / (lval * fsw)
+Bil    IL 0 V = V(ON) > 0.5 ? max(-1, V(ILA) - V(DI) / 2) : 0
+Bin    VSYS 0 I = V(IL)
+Bout   0 BOOST_5V I = eff * V(VSYS) * V(IL) / max(V(BOOST_5V), 1)
+Dbody  VSYS BOOST_5V DBODY
+.model DBODY D(is=1e-9 rs=50m n=1.5)
+Cout   BOOST_5V COUT_X {cout}
+Resr   COUT_X 0 1m
+
+* --- TPS22975
+Cg     GATE 0 1u
+Rg     GATE 0 1G
+Bg     GATE 0 I = V(PWR_EN) > 1 ? -1u / tramp * min(1, max(0, (1.01 - V(GATE)) * 100)) : 1u / 2u * min(1, max(0, V(GATE) * 100))
+Bsw    BOOST_5V RAIL_5V I = min(V(BOOST_5V, RAIL_5V) / ron, max(0, (5.5 * V(GATE) - V(RAIL_5V)) / 0.05))
+Bqod   RAIL_5V 0 I = V(PWR_EN) > 1 ? 0 : V(RAIL_5V) / rqod
+C24    RAIL_5V C24_X {c24}
+Resr24 C24_X 0 4m
+
+* --- modules
+.include module_feeds.inc
+Bldcmd LOADCMD 0 V = (time > t1 && time < t2) ? i1 : i0
+Rld    LOADCMD LOADF 1k
+Cld    LOADF 0 10n
+
+.tran 5u {tstop} 0 20u
+.control
+run
+wrdata undervoltage.txt v(voc) v(batt_j) v(vsys) v(pwr_en) v(module) v(il) v(loadf) v(boost_5v) v(sense) v(ads_5v) v(esp_5v) v(module_max) v(ads_5v_d) v(esp_5v_d)
+.endc
+.end

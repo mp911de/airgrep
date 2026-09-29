@@ -1,0 +1,121 @@
+TPS61088 boost power stage: switching ripple at BOOST_5V, RAIL_5V and VSYS
+*
+* Ideal switches with the data sheet on-resistances, the real inductor (L2), the output
+* capacitors with DC-bias derating, ESR and ESL, the TPS22975 as its on-resistance and
+* C24 behind it. The duty cycle is preset for the operating point and trimmed by a slow
+* integrator, so the TPS61088 control loop is NOT in this bench (see run_power.py for the
+* loop). Forced PWM, dead time from the gate ramp, body diode on the synchronous switch.
+*
+*   ngspice -b boost_ripple.cir          (writes boost_ripple.txt into the current directory)
+
+* One .param per line: run_power.py overrides them by name.
+.param vin=3.7
+.param iout=0.8
+* Switching frequency with R16 220 kOhm at 3.7 V in (run_power.py fsw_boost)
+.param fsw=721k
+.param lval=2.2u
+.param dcr=15.5m
+* Output: C18, C19, C20 (3 x 22 uF 0805 X7R 10 V) at 5 V DC bias, in parallel; run_power.py
+* overrides cout with the derated value
+.param cout=36u
+.param esr_out=1m
+.param esl_out=0.2n
+* Copper between the VOUT pins, the capacitors and PGND: inductance and resistance of the
+* loop (layout, assumed; 0.3 nH is a tight layout with the capacitors at the pins)
+.param lloop=0.3n
+.param rloop=3m
+* Switch-node capacitance (TPS61088 switches, not specified; assumed)
+.param coss=300p
+* C24 10 uF behind the TPS22975 (16 mOhm), derated
+.param c24=6.5u
+.param esr24=4m
+.param esl24=0.6n
+.param ron_u7=16m
+* Input: C13, C14 (2 x 22 uF) next to U6 plus C9, C10 (2 x 22 uF) at the charger, derated
+.param cin=60u
+.param esr_in=1m
+* Source impedance of the battery path
+.param rin=30m
+.param lin=50n
+* Switches: TPS61088 11 mOhm low side, 13 mOhm rectifier, 5 ns gate ramp
+.param ron_ls=11m
+.param ron_hs=13m
+.param tedge=5n
+* Efficiency guess for the duty-cycle preset
+.param eff=0.96
+.param d0={1-eff*vin/5.057}
+.param idc={5.057*iout/(vin*eff)}
+
+Vbat   VBAT 0 {vin}
+Rin    VBAT VIN_A {rin}
+Lin    VIN_A VSYS {lin}
+Cin    VSYS CIN_X {cin}
+Resrin CIN_X 0 {esr_in}
+
+L2     VSYS L2_X {lval} ic={idc}
+Rdcr   L2_X BOOST_SW {dcr}
+
+* --- switches
+Sls    BOOST_SW 0 GLS 0 SWLS
+Shs    BOOST_SW BOOST_5V_N GHS 0 SWHS
+Dhs    BOOST_SW BOOST_5V_N DBODY
+.model SWLS SW(ron={ron_ls} roff=10Meg vt=0.7 vh=0.1)
+.model SWHS SW(ron={ron_hs} roff=10Meg vt=0.7 vh=0.1)
+.model DBODY D(is=1e-12 n=1.2 rs=0.5 cjo=100p)
+Coss   BOOST_SW COSS_X {coss}
+Rcoss  COSS_X 0 0.5
+
+* --- output capacitors through the layout loop
+Lloop  BOOST_5V_N LLOOP_X {lloop}
+Rloop  LLOOP_X BOOST_5V {rloop}
+Cout   BOOST_5V COUT_X {cout} ic=5.057
+Resr   COUT_X COUT_Y {esr_out}
+Lesl   COUT_Y 0 {esl_out}
+
+* --- TPS22975 and C24, load on RAIL_5V
+Ru7    BOOST_5V RAIL_5V {ron_u7}
+C24    RAIL_5V C24_X {c24} ic=5.057
+Resr24 C24_X C24_Y {esr24}
+Lesl24 C24_Y 0 {esl24}
+Iload  RAIL_5V 0 {iout}
+
+* --- PWM: sawtooth, comparator, gate ramp, dead time by thresholds
+Vsaw   SAW 0 PULSE(0 1 0 {1/fsw-2n} 2n 0 {1/fsw})
+Bpwm   PWM 0 V = V(SAW) < V(DUTY) ? 1 : 0
+Rg     PWM G 1k
+Cg     G 0 {tedge/1k}
+* main switch on above 0.8, the other on below 0.2 of the gate ramp: dead time between
+Bgls   GLS 0 V = V(G)
+Bghs   GHS 0 V = 1 - V(G)
+
+* --- 20 MHz bandwidth-limited views (three buffered RC stages) for the switching ripple
+Rf1a   BOOST_5V F1A 1k
+Cf1a   F1A 0 8p
+Ef1b   F1B 0 F1A 0 1
+Rf1b   F1B F1C 1k
+Cf1b   F1C 0 8p
+Ef1c   F1D 0 F1C 0 1
+Rf1c   F1D BOOST_5V_F 1k
+Cf1c   BOOST_5V_F 0 8p
+Rf2a   RAIL_5V F2A 1k
+Cf2a   F2A 0 8p
+Ef2b   F2B 0 F2A 0 1
+Rf2b   F2B F2C 1k
+Cf2b   F2C 0 8p
+Ef2c   F2D 0 F2C 0 1
+Rf2c   F2D RAIL_5V_F 1k
+Cf2c   RAIL_5V_F 0 8p
+
+* --- slow duty trim: integrator on the averaged output error
+Ravg   BOOST_5V VAVG 10k
+Cavg   VAVG 0 2n ic=5.057
+Bint   0 INT I = (5.057 - V(VAVG)) * 200u
+Cint   INT 0 1u ic={d0}
+Rint   INT 0 1G
+Bduty  DUTY 0 V = V(INT) < 0.02 ? 0.02 : (V(INT) > 0.9 ? 0.9 : V(INT))
+
+.control
+tran 1n 300u 0 2n uic
+wrdata boost_ripple.txt v(boost_5v) v(rail_5v) v(vsys) i(L2) v(boost_sw) v(boost_5v_f) v(rail_5v_f)
+.endc
+.end

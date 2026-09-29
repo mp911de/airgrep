@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Run KiCad's bundled Python (the only one that has pcbnew) with the given arguments.
+#   tools/kpy tools/fix_cpl.py
+#   tools/kpy -c 'import pcbnew; print(pcbnew.Version())'
+# Drops the wx and Fontconfig noise from stderr. Stdout and the exit code pass through.
+PY=/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3
+[ -x "$PY" ] || { echo "kpy: KiCad Python not found at $PY" >&2; exit 127; }
+export KPY=1
+NOISE='stdpbase\.cpp|create wxApp|Fontconfig|^Debug:|GetWidth.*deprecat|memory leak'
+{ "$PY" "$@" 2>&1 1>&3 3>&- | grep --line-buffered -v -E "$NOISE" >&2; exit "${PIPESTATUS[0]}"; } 3>&1

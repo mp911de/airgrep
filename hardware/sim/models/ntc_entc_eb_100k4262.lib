@@ -1,0 +1,17 @@
+* Variohm ENTC-EB-100K4262-02, 100 kOhm NTC, B25/85 = 4262 K +-0.5 %, +-0.2 degC from 0 to 70 degC
+*
+* Source: Variohm "ENTC EB Thermistor Series" data sheet 20/02 (ordering table). It gives
+* no R/T table, so the exponential B model is used with B25/85. Its deviation from the
+* real curve between -10 and 50 degC is unknown; expect up to about 1 K.
+*
+* Pins:   a b   thermistor terminals
+*         tc    control node, V(tc) = thermistor temperature in deg C (draws no current)
+* Params: r25   resistance at 25 deg C
+*         rtol  relative deviation of R25
+*         dt    interchangeability error as a temperature offset in K (+-0.2)
+*         btol  relative deviation of B (+-0.005)
+*
+.subckt NTC_ENTC_EB_100K4262 a b tc params: r25=100k rtol=0 dt=0 btol=0
+.param b25_85=4262
+Bntc a b I = V(a,b) / ({r25*(1+rtol)} * exp({b25_85*(1+btol)} * (1/(V(tc)+dt+273.15) - 1/298.15)))
+.ends NTC_ENTC_EB_100K4262

@@ -39,8 +39,8 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 0.8,
-          "height": 1.27,
+          "drill": 0.75,
+          "height": 2.286,
           "width": 1.27
         },
         "silk_line_width": 0.1524,
@@ -60,11 +60,11 @@
           "hatch_smoothing_level": 0,
           "hatch_smoothing_value": 0.1,
           "hatch_thickness": 1.0,
-          "min_clearance": 0.508,
-          "min_island_area": 9.99999999996,
-          "min_thickness": 0.254,
-          "pad_connection": 1,
-          "remove_islands": 0,
+          "min_clearance": 0.2,
+          "min_island_area": 9.999998999962,
+          "min_thickness": 0.2,
+          "pad_connection": 2,
+          "remove_islands": 2,
           "thermal_relief_gap": 0.508,
           "thermal_relief_spoke_width": 0.508
         }
@@ -117,7 +117,7 @@
         "footprint_filters_mismatch": "ignore",
         "footprint_symbol_field_mismatch": "warning",
         "footprint_symbol_mismatch": "warning",
-        "footprint_type_mismatch": "ignore",
+        "footprint_type_mismatch": "error",
         "hole_clearance": "error",
         "hole_to_hole": "error",
         "holes_co_located": "warning",
@@ -131,7 +131,7 @@
         "malformed_courtyard": "error",
         "microvia_drill_out_of_range": "error",
         "mirrored_text_on_front_layer": "warning",
-        "missing_courtyard": "ignore",
+        "missing_courtyard": "error",
         "missing_footprint": "warning",
         "missing_tuning_profile": "warning",
         "net_conflict": "warning",
@@ -158,7 +158,7 @@
         "track_segment_length": "error",
         "track_width": "error",
         "tracks_crossing": "error",
-        "tuning_profile_track_geometries": "ignore",
+        "tuning_profile_track_geometries": "warning",
         "unconnected_items": "error",
         "unresolved_variable": "error",
         "via_dangling": "warning",
@@ -306,7 +306,7 @@
       "internal_id": "",
       "mfg": "",
       "mpn": "",
-      "sch_revision": ""
+      "sch_revision": "A"
     },
     "layer_pairs": [],
     "layer_presets": [
@@ -353,6 +353,7 @@
         "layers": [
           0,
           1,
+          6,
           9,
           13,
           25,
@@ -720,15 +721,15 @@
       },
       {
         "clearance": 0.1524,
-        "diff_pair_gap": 0.127,
-        "diff_pair_width": 0.1905,
+        "diff_pair_gap": 0.254,
+        "diff_pair_width": 0.2032,
         "name": "+5V",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 7,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.3048,
+        "track_width": 0.4064,
         "tuning_profile": "",
-        "via_diameter": 0.6096,
+        "via_diameter": 0.8128,
         "via_drill": 0.3048
       },
       {
@@ -824,7 +825,7 @@
     "netclass_assignments": null,
     "netclass_patterns": [
       {
-        "netclass": "power",
+        "netclass": "+5V",
         "pattern": "USB_VBUS"
       },
       {
@@ -836,11 +837,11 @@
         "pattern": "CHG_SW"
       },
       {
-        "netclass": "power",
+        "netclass": "+5V",
         "pattern": "VSYS"
       },
       {
-        "netclass": "power",
+        "netclass": "+5V",
         "pattern": "VBAT"
       },
       {
@@ -856,15 +857,15 @@
         "pattern": "BOOST_5V"
       },
       {
-        "netclass": "power",
+        "netclass": "+5V",
         "pattern": "RAIL_5V"
       },
       {
-        "netclass": "power",
+        "netclass": "+5V",
         "pattern": "ADS_5V"
       },
       {
-        "netclass": "power",
+        "netclass": "+5V",
         "pattern": "ESP_5V"
       }
     ]
@@ -873,7 +874,7 @@
     "last_paths": {
       "idf": "",
       "netlist": "./",
-      "plot": "",
+      "plot": "export/",
       "specctra_dsn": "",
       "step": "",
       "vrml": ""
@@ -998,6 +999,14 @@
     "meta": {
       "version": 1
     },
+    "ngspice": {
+      "fix_include_paths": true,
+      "meta": {
+        "version": 0
+      },
+      "model_mode": 4,
+      "workbook_filename": ""
+    },
     "page_layout_descr_file": "",
     "plot_directory": "",
     "reuse_designators": true,
@@ -1010,7 +1019,7 @@
         "uuid": "1d76d2ec-7795-4c71-8167-b1182c3ebc1d"
       }
     ],
-    "used_designators": "",
+    "used_designators": "U1-2,J5-11,#PWR64-82,#PWR101-102,C2-4,C25,R1-5,R7,JP1-2,#FLG8-11",
     "variants": []
   },
   "sheets": [
@@ -1032,7 +1041,7 @@
     ],
     [
       "ca5da11d-56a4-4cac-94d5-ee3030474f4d",
-      "Charger BQ25606"
+      "Charger MAX77757"
     ],
     [
       "3f53ac70-9f38-49d5-b028-e652ebac7ccc",

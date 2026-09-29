@@ -18,7 +18,9 @@ Model, per scenario:
 Charging: with the device off the full charge current applies (limited by the
 input current limit and charger efficiency); with the device on, the system
 power is taken from the charger first and only the remainder charges the cell.
-Only the standard library is used.
+
+This is a budget estimate. The simulated losses on the routed board are in
+hardware/sim/heat/results.md. Only the standard library is used.
 """
 
 import json
@@ -42,49 +44,43 @@ def interpolate(curve, x):
     return curve[-1][1]
 
 
-def gnss_ma(p, fix):
-    g = p["gnss"]
-    module = g["module_tracking_ma"] if fix else g["module_acquisition_ma"]
-    return module + g["breakout_led_ma"] + g["active_antenna_ma"]
-
-
 def rail_loads(p, wifi, fix, brightness):
-    """Return [(name, mA at 5 V)] for one scenario."""
+    """Return [(name, mA at 5 V, source)] for one scenario."""
     rows = []
     for load in p["loads_5v"]:
-        ma = load["ma"]
-        if wifi and "wifi_on_ma" in load:
-            ma = load["wifi_on_ma"]
+        ma = load["wifi_on_ma"] if wifi and "wifi_on_ma" in load else load["ma"]
         if load.get("scales_with_brightness"):
             ma *= brightness
-        rows.append((load["name"], ma))
-    rows.append(("GNSS: MAX-M10S, breakout LED, active antenna (" + ("tracking" if fix else "acquisition, no fix") + ")", gnss_ma(p, fix)))
+        rows.append((load["name"], ma, load["source"]))
+    g = p["gnss"]
+    module = g["module_tracking_ma"] if fix else g["module_acquisition_ma"]
+    rows.append((f"GNSS: MAX-M10S, breakout LED, active antenna ({'tracking' if fix else 'acquisition, no fix'})",
+                 module + g["breakout_led_ma"] + g["active_antenna_ma"],
+                 g["_module"] + "; " + g["_active_antenna_ma"]))
     return rows
 
 
 def battery_power(p, i5_ma):
-    """Battery power (W) and battery current (A) for a 5 V rail current in mA."""
-    v5 = p["rail_5v_v"]
+    """Battery power (W), battery current (A) and boost efficiency for a 5 V rail current in mA."""
     i5 = i5_ma / 1000.0
-    p_out = v5 * i5 + i5 * i5 * p["load_switch_ron_ohm"]
     eff = interpolate(p["boost_efficiency_curve"], i5)
-    p_boost_in = p_out / eff
+    p_boost_in = (p["rail_5v_v"] * i5 + i5 * i5 * p["load_switch_ron_ohm"]) / eff
     vb = p["battery_nominal_v"]
     iq = p["battery_side_quiescent_ma"] / 1000.0
-    ib = (p_boost_in / vb) + iq
+    ib = p_boost_in / vb + iq
     for _ in range(20):  # solve for the I^2 R loss of the battery path
         p_batt = p_boost_in + iq * vb + ib * ib * p["path_resistance_ohm"]
         ib = p_batt / vb
     return p_batt, ib, eff
 
 
-def scenario_table(p):
+def scenarios(p):
+    """One dict per combination of backlight, Wi-Fi and GNSS fix."""
     out = []
     for brightness in p["brightness_levels"]:
         for wifi in (False, True):
             for fix in (True, False):
-                rows = rail_loads(p, wifi, fix, brightness)
-                i5 = sum(ma for _, ma in rows)
+                i5 = sum(ma for _, ma, _ in rail_loads(p, wifi, fix, brightness))
                 p_batt, ib, eff = battery_power(p, i5)
                 out.append({"brightness": brightness, "wifi": wifi, "fix": fix, "i5_ma": i5,
                             "p5_w": p["rail_5v_v"] * i5 / 1000.0, "eff": eff,
@@ -99,125 +95,131 @@ def runtime_h(p, battery, p_batt_w, aged=False):
     return cap * p["battery_nominal_v"] / p_batt_w
 
 
-def charge_hours(p, battery, system_w):
-    """Charge time from empty and the charge current, for each source."""
+def charge(p, battery, src, system_w):
+    """Charge current (A) and time from empty (h, None if it does not charge) for one source."""
     c = p["charging"]
+    p_for_cell = c["input_v"] * src["input_limit_a"] * c["charger_efficiency"] - system_w
+    i_chg = min(c["charge_current_a"], max(0.0, p_for_cell / p["battery_nominal_v"]))
+    if i_chg <= 0.05:
+        return i_chg, None
     cap = battery["capacity_mah"] / 1000.0
-    res = []
-    for src in c["sources"]:
-        p_avail = c["input_v"] * src["input_limit_a"] * c["charger_efficiency"]
-        p_for_cell = p_avail - system_w
-        i_chg = min(c["charge_current_a"], max(0.0, p_for_cell / p["battery_nominal_v"]))
-        if i_chg <= 0.05:
-            res.append((src, i_chg, None))
-            continue
-        t = cap * c["cc_fraction"] / i_chg + cap * c["cv_tail_hours_per_ah"]
-        res.append((src, i_chg, t))
-    return res
+    return i_chg, cap * c["cc_fraction"] / i_chg + cap * c["cv_tail_hours_per_ah"]
 
 
-def fmt_h(h):
-    if h is None:
+def pct(fraction, digits=0):
+    return f"{fraction * 100:.{digits}f} %"
+
+
+def fmt_charge(i_chg, hours):
+    if hours is None:
         return "does not charge"
-    hours = int(h)
-    minutes = int(round((h - hours) * 60))
-    if minutes == 60:
-        hours, minutes = hours + 1, 0
-    return f"{hours} h {minutes:02d} min"
-
-
-def label(s):
-    return f"Wi-Fi {'on' if s['wifi'] else 'off'}, GNSS {'fix' if s['fix'] else 'no fix'}"
+    h, m = divmod(round(hours * 60), 60)
+    return f"{h} h {m:02d} min ({i_chg:.2f} A)"
 
 
 def render(p):
-    lines = []
-    scen = scenario_table(p)
+    scen = scenarios(p)
     bats = p["batteries"]
-    ref = next(s for s in scen if s["brightness"] == p["brightness_levels"][0] and not s["wifi"] and s["fix"])
+    full, dimmed = p["brightness_levels"][0], p["brightness_levels"][-1]
+    vb = p["battery_nominal_v"]
 
-    lines.append("### Usage matrix and runtime")
-    lines.append("")
-    lines.append(f"Runtime from a full charge to supervisor cut-off, {int(p['usable_fraction']*100)} % of rated capacity usable; the aged column assumes {int(p['aged_capacity_fraction']*100)} % remaining capacity. Display Wi-Fi off in all cases (the display talks to the ADSBee over UART).")
-    lines.append("")
+    def baseline(brightness):  # Wi-Fi off, GNSS fix
+        return next(s for s in scen if s["brightness"] == brightness and not s["wifi"] and s["fix"])
+
+    lines = [
+        "### Usage matrix and runtime",
+        "",
+        f"Runtime from a full charge to the supervisor cut-off, with {pct(p['usable_fraction'])} of the rated capacity usable. "
+        f"The aged column assumes {pct(p['aged_capacity_fraction'])} remaining capacity. "
+        "The display's Wi-Fi is off in all cases; the display talks to the ADSBee over UART.",
+        "",
+        "The boost efficiency is a budget estimate from the TI data sheet curve, derated for about 1 MHz. "
+        "The heat model simulates the board at about 720 kHz and gives about 1 point more at the typical load (`hardware/sim/heat/results.md`).",
+        "",
+    ]
     for brightness in p["brightness_levels"]:
-        lines.append(f"**Backlight {int(brightness*100)} %**")
-        lines.append("")
-        head = "| Scenario | 5 V rail | Boost eff. | Battery power | " + " | ".join(f"{b['capacity_mah']} mAh (new / aged)" for b in bats) + " |"
-        lines.append(head)
-        lines.append("|---|---|---|---|" + "---|" * len(bats))
+        lines += [
+            f"**Backlight {pct(brightness)}**",
+            "",
+            "| Scenario | 5 V rail | Boost eff. | Battery power | " + " | ".join(f"{b['capacity_mah']} mAh (new / aged)" for b in bats) + " |",
+            "|---|---|---|---|" + "---|" * len(bats),
+        ]
         for s in scen:
             if s["brightness"] != brightness:
                 continue
-            rts = " | ".join(f"{runtime_h(p, b, s['p_batt_w']):.1f} h / {runtime_h(p, b, s['p_batt_w'], aged=True):.1f} h" for b in bats)
-            lines.append(f"| {label(s)} | {s['i5_ma']:.0f} mA, {s['p5_w']:.2f} W | {s['eff']*100:.0f} % | {s['p_batt_w']:.2f} W ({s['i_batt_a']*1000:.0f} mA at {p['battery_nominal_v']} V) | {rts} |")
+            runtimes = " | ".join(f"{runtime_h(p, b, s['p_batt_w']):.1f} h / {runtime_h(p, b, s['p_batt_w'], aged=True):.1f} h" for b in bats)
+            lines.append(f"| Wi-Fi {'on' if s['wifi'] else 'off'}, GNSS {'fix' if s['fix'] else 'no fix'} "
+                         f"| {s['i5_ma']:.0f} mA, {s['p5_w']:.2f} W | {pct(s['eff'])} "
+                         f"| {s['p_batt_w']:.2f} W ({s['i_batt_a']*1000:.0f} mA at {vb} V) | {runtimes} |")
         lines.append("")
 
-    lines.append("### Component breakdown (backlight 100 %, Wi-Fi off, GNSS fix)")
-    lines.append("")
-    lines.append("| Load on the 5 V rail | Current | Source |")
-    lines.append("|---|---|---|")
-    srcs = {l["name"]: l["source"] for l in p["loads_5v"]}
-    for name, ma in rail_loads(p, False, True, p["brightness_levels"][0]):
-        src = srcs.get(name, p["gnss"]["_module"] + "; " + p["gnss"]["_active_antenna_ma"])
-        lines.append(f"| {name} | {ma:.1f} mA | {src} |")
-    lines.append(f"| **Total at {p['rail_5v_v']} V** | **{ref['i5_ma']:.0f} mA** | |")
-    lines.append("")
-    lines.append(f"Wi-Fi on raises the ADSBee from {p['loads_5v'][0]['ma']} mA to {p['loads_5v'][0]['wifi_on_ma']} mA. No GNSS fix raises the GNSS draw by {p['gnss']['module_acquisition_ma']-p['gnss']['module_tracking_ma']:.1f} mA (continuous acquisition), which is below 1 % of the total.")
-    lines.append("")
+    adsbee, gnss = p["loads_5v"][0], p["gnss"]
+    lines += [
+        f"### Component breakdown (backlight {pct(full)}, Wi-Fi off, GNSS fix)",
+        "",
+        "| Load on the 5 V rail | Current | Source |",
+        "|---|---|---|",
+        *(f"| {name} | {ma:.1f} mA | {source} |" for name, ma, source in rail_loads(p, False, True, full)),
+        f"| **Total at {p['rail_5v_v']} V** | **{baseline(full)['i5_ma']:.0f} mA** | |",
+        "",
+        f"Wi-Fi on raises the ADSBee from {adsbee['ma']} mA to {adsbee['wifi_on_ma']} mA. "
+        f"Without a fix the GNSS receiver stays in acquisition and draws {gnss['module_acquisition_ma'] - gnss['module_tracking_ma']:.1f} mA more, below 1 % of the total.",
+        "",
+    ]
 
-    off_ua = sum(p["off_state_ua"].values())
-    lines.append("### Standby (POWER slider off, no USB)")
-    lines.append("")
-    lines.append("| Source | Current |")
-    lines.append("|---|---|")
-    for k, v in p["off_state_ua"].items():
-        lines.append(f"| {k} | {v:g} µA |")
-    lines.append(f"| **Total** | **{off_ua:.0f} µA** |")
-    lines.append("")
+    off_ma = sum(p["off_state_ua"].values()) / 1000.0
+    lines += [
+        "### Standby (POWER slider off, no USB)",
+        "",
+        "| Source | Current |",
+        "|---|---|",
+        *(f"| {name} | {ua:g} µA |" for name, ua in p["off_state_ua"].items()),
+        f"| **Total** | **{off_ma * 1000:.0f} µA** |",
+        "",
+    ]
     for b in bats:
-        months = b["capacity_mah"] / (off_ua / 1000.0) / 24 / 30.4
-        pct = off_ua / 1000.0 * 24 * 30.4 / b["capacity_mah"] * 100
-        lines.append(f"- {b['capacity_mah']} mAh: {pct:.1f} % per month from the circuit; a full pack would last about {months/12:.0f} years (cell self-discharge dominates).")
+        hours = b["capacity_mah"] / off_ma
+        lines.append(f"- {b['capacity_mah']} mAh: the circuit takes {pct(24 * 30.4 / hours, 1)} per month. "
+                     f"A full pack would last about {hours / 24 / 30.4 / 12:.0f} years, so cell self-discharge dominates.")
     lines.append("")
 
-    typ = next(s for s in scen if s["brightness"] == p["brightness_levels"][-1] and not s["wifi"] and s["fix"])
-    lines.append("### Charging time from empty")
-    lines.append("")
-    lines.append(f"Charge current is limited to {p['charging']['charge_current_a']} A (IFAST) and by the source's input limit. \"Device on\" uses the typical scenario (Wi-Fi off, GNSS fix, backlight {int(p['brightness_levels'][-1]*100)} %, {typ['p_batt_w']:.2f} W); the charger powers the system first and only the rest charges the cell. Charge temperature window 0 to 45 °C (NTC, MAX77757 JEITA thresholds; see docs/power.md).")
-    lines.append("")
-    head = "| Source | Input limit | " + " | ".join(f"{b['capacity_mah']} mAh off / on" for b in bats) + " |"
-    lines.append(head)
-    lines.append("|---|---|" + "---|" * len(bats))
-    for i, src in enumerate(p["charging"]["sources"]):
-        cells = []
-        for b in bats:
-            off = charge_hours(p, b, 0.0)[i]
-            on = charge_hours(p, b, typ["p_batt_w"])[i]
-            cells.append(f"{fmt_h(off[2])} ({off[1]:.2f} A) / {fmt_h(on[2])} ({on[1]:.2f} A)")
-        lines.append(f"| {src['name']} | {src['input_limit_a']:.2f} A | " + " | ".join(cells) + " |")
-    lines.append("")
-    lines.append("With Wi-Fi on the system needs more than a PC port can supply: the battery then supplements the input and slowly discharges.")
-    lines.append("")
-    lines.append(f"Parameters: `specs/power_params.json`. Regenerate with `python3 tools/power_budget.py`.")
+    typ = baseline(dimmed)
+    lines += [
+        "### Charging time from empty",
+        "",
+        f"The charge current is limited to {p['charging']['charge_current_a']} A (IFAST) and by the input limit of the source. "
+        "The charger powers the system first; only the rest charges the cell. "
+        f"\"On\" is the typical scenario: Wi-Fi off, GNSS fix, backlight {pct(dimmed)}, {typ['p_batt_w']:.2f} W.",
+        "",
+        "| Source | Input limit | " + " | ".join(f"{b['capacity_mah']} mAh off / on" for b in bats) + " |",
+        "|---|---|" + "---|" * len(bats),
+    ]
+    for src in p["charging"]["sources"]:
+        cells = " | ".join(f"{fmt_charge(*charge(p, b, src, 0.0))} / {fmt_charge(*charge(p, b, src, typ['p_batt_w']))}" for b in bats)
+        lines.append(f"| {src['name']} | {src['input_limit_a']:.2f} A | {cells} |")
+    lines += [
+        "",
+        "With Wi-Fi on the system needs more than a PC port can supply. The battery then supplements the input and slowly discharges.",
+        "",
+        "Parameters: `specs/power_params.json`. Regenerate with `python3 tools/power_budget.py`.",
+    ]
     return "\n".join(lines)
 
 
 def update_doc(text):
-    with open(SPECS_DOC) as f:
+    with open(SPECS_DOC, encoding="utf-8") as f:
         doc = f.read()
     if BEGIN not in doc or END not in doc:
         sys.exit(f"markers not found in {SPECS_DOC}")
     head, rest = doc.split(BEGIN, 1)
-    _, tail = rest.split(END, 1)
-    with open(SPECS_DOC, "w") as f:
+    tail = rest.split(END, 1)[1]
+    with open(SPECS_DOC, "w", encoding="utf-8") as f:
         f.write(head + BEGIN + "\n" + text + "\n" + END + tail)
 
 
 def main():
-    with open(PARAMS) as f:
-        p = json.load(f)
-    text = render(p)
+    with open(PARAMS, encoding="utf-8") as f:
+        text = render(json.load(f))
     print(text)
     if "--print" not in sys.argv:
         update_doc(text)

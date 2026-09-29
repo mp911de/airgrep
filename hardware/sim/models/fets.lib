@@ -1,0 +1,31 @@
+* Small-signal MOSFET models for the thermostat charge cut-off, ngspice VDMOS.
+*
+* These are data sheet fits, not vendor models. The threshold is a parameter so the
+* benches can run the data sheet minimum, typical and maximum:
+*
+*   q2_vth   AO3401A  |VGS(th)| at |ID| = 250 uA   0.5 / 0.9 / 1.3 V   datasheets/ao3401a.pdf
+*   q6_vth   2N7002    VGS(th)  at  ID  = 250 uA   1.0 / 2.0 / 2.5 V   datasheets/2n7002-nexperia.pdf
+*
+* The carrier fits the JSCJ 2N7002 (LCSC C8545). Its data sheet was not available, the
+* Nexperia limits are used instead.
+*
+* Assumptions:
+*   - Subthreshold swing 90 mV/decade at 25 deg C (ksubthres = 0.078). Neither data sheet
+*     guarantees it. It decides how much gate voltage below VGS(th) still lets Q6 load
+*     the 140 kOhm thermistor divider.
+*   - vto is offset from the data sheet threshold so that the model carries 250 uA at
+*     exactly that gate voltage (checked by thermal/fet_check.cir).
+*   - Off-state leakage (IDSS) is not part of the model. The benches add it as a
+*     current source so it can be set to the data sheet limit.
+*   - 25 deg C parameters. VGS(th) falls by about 2 to 4 mV/K and leakage rises with
+*     temperature; neither is modelled.
+*
+* The including deck defines q2_vth and q6_vth.
+
+* AO3401A, P-channel: RDS(on) 47 mOhm typ at -4.5 V, Ciss 645 pF, Coss 80 pF, Crss 55 pF
+.model Q_AO3401A VDMOS(pchan vto={-(q2_vth+0.194)} kp=13 rd=20m rs=5m ksubthres=0.078
++ cgs=590p cgdmin=20p cgdmax=55p cjo=60p is=1e-13)
+
+* 2N7002, N-channel: RDS(on) 3.8 Ohm typ at 4.5 V, Ciss 31 pF, Coss 6.8 pF, Crss 3.5 pF
+.model Q_2N7002 VDMOS(nchan vto={q6_vth+0.008} kp=0.2 rd=1.5 rs=0.1 ksubthres=0.078
++ cgs=28p cgdmin=1p cgdmax=3.5p cjo=5p is=1e-13)

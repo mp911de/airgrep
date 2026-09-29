@@ -1,0 +1,24 @@
+Model check: FET models against the data sheet points they are fitted to
+*
+* Both FETs are diode-connected (VDS = VGS) as in the VGS(th) test condition.
+* run_thermal.py checks the gate voltage at 250 uA and the subthreshold swing.
+*
+*   ngspice -b fet_check.cir          (writes fet_check.txt into the current directory)
+
+.param q2_vth=0.9
+.param q6_vth=2.0
+.include ../models/fets.lib
+
+Vn   GN 0 0
+MQ6  GN GN 0 Q_2N7002
+* P-channel: source at 0 V, gate and drain swept negative by the same source
+Ep   GP 0 GN 0 -1
+MQ2  GP GP 0 Q_AO3401A
+
+.control
+dc Vn 0 3 1m
+let id_q6 = -i(Vn)
+let id_q2 = i(Ep)
+wrdata fet_check.txt id_q6 id_q2
+.endc
+.end

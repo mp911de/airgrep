@@ -1,0 +1,27 @@
+Thermostat trip: contact opens at 10 ms and closes again at 600 ms
+*
+* Records THERM_OK, CHG_DIS, the THM/PVL ratio and PWR_EN. run_thermal.py measures
+* the delays to "charger disabled" and "loads off" and the steady states.
+*
+*   ngspice -b thermostat_trip.cir    (writes thermostat_trip.txt into the current directory)
+
+.include carrier_thermal.inc
+
+.param vsys=4.2
+* Thermistor temperature during the trip
+.param tntc=25
+
+Vsys    VSYS 0 {vsys}
+Vtc     TC 0 {tntc}
+* Thermostat: closed while V(CTL) > 0.5 V
+Vctl    CTL 0 PWL(0 1 10m 1 10.001m 0 600m 0 600.001m 1)
+Stherm  THERM_FEED THERM_OK CTL 0 THERMOSTAT
+.model THERMOSTAT SW(vt=0.5 vh=0 ron=50m roff=1G)
+* Slider on
+Rslider THERM_OK SW_EN 50m
+
+.control
+tran 50u 900m 0 50u
+wrdata thermostat_trip.txt v(therm_ok) v(chg_dis) v(ratio) v(pwr_en)
+.endc
+.end

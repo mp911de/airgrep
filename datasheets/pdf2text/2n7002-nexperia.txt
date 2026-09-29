@@ -1,0 +1,658 @@
+1. Product profile
+1.1 General description
+N-channel enhancement mode Field-Effect Transistor (FET) in a plastic package using 
+Trench MOSFET technology.
+1.2 Features and benefits
+ Suitable for logic level gate drive
+sources
+ V
+ery fast switching
+ Surface-mounted package
+ Trench MOSFET technology
+1.3 Applications
+ Logic level translators  High-speed line drivers
+1.4 Quick reference data
+ 
+2. Pinning information
+ 
+2N7002
+60 V, 300 mA N-channel Trench MOSFET
+Rev. 7 — 8 September 2011 Product data sheet
+Table 1. Quick reference data
+Symbol Parameter Conditions Min Typ Max Unit
+VDS drain-source voltage 25 °C ≤ Tj ≤ 1 5 0 ° C --6 0 V
+ID drain current VGS =1 0V ;  Tsp =2 5° C ;  s e e  Figure 1; 
+see Figure 3
+- - 300 mA
+Ptot total power dissipation T sp =2 5° C ;  s e e  Figure 2 --0 . 8 3 W
+Static characteristics
+RDSon drain-source on-state 
+resistance
+VGS =1 0V ;  ID =5 0 0m A ;  Tj =2 5° C ;  
+see Figure 6; see Figure 8
+-2 . 8 5 Ω
+Table 2. Pinning information
+Pin Symbol Description Simplified outline Graphic symbol
+1 G gate
+SOT23 (TO-236AB)
+2Ss o u r c e
+3 D drain
+12
+3
+S
+D
+G
+mbb076
+
+© Nexperia B.V. 2017. All rights reserved
+2N7002 All information provided in this document is subject to legal disclaimers.
+Product data sheet Rev. 7 — 8 September 2011 2 of 13
+Nexperia 2N7002
+60 V, 300 mA N-channel Trench MOSFET
+3. Ordering information
+ 
+4. Marking
+ 
+[1] % = placeholder for manufacturing site code
+5. Limiting values
+ 
+Table 3. Ordering information
+Type number Package
+Name Description Version
+2N7002 TO-236AB plastic surface-mounted package; 3 leads SOT23
+Table 4. Marking codes
+Type number Marking code[1]
+2N7002 12%
+Table 5. Limiting values
+In accordance with the Absolute Maximum Rating System (IEC 60134).
+Symbol Parameter Conditions Min Max Unit
+VDS drain-source voltage 25 °C ≤ Tj ≤ 150 °C - 60 V
+VDGR drain-gate voltage 25 °C ≤ Tj ≤ 150 °C; RGS =2 0k Ω -6 0 V
+VGS gate-source voltage -30 30 V
+VGSM peak gate-source voltage pulsed; t p ≤ 50 µs; δ = 0.25 -40 40 V
+ID drain current VGS =1 0V ;  Tsp =2 5° C ;  s e e  Figure 1; 
+see Figure 3
+- 300 mA
+VGS =1 0V ;  Tsp = 100 °C; see Figure 1 - 190 mA
+IDM peak drain current pulsed; tp ≤ 10 µs; Tsp =2 5° C ;  s e e  
+Figure 3
+-1 . 2 A
+Ptot total power dissipation T sp =2 5° C ;  s e e  Figure 2 -0 . 8 3 W
+Tj junction temperature -65 150 °C
+Tstg storage temperature -65 150 °C
+Source-drain diode
+IS source current Tsp = 25 °C - 300 mA
+ISM peak source current pulsed; tp ≤ 10 µs; Tsp =2 5° C - 1 . 2 A
+
+© Nexperia B.V. 2017. All rights reserved
+2N7002 All information provided in this document is subject to legal disclaimers.
+Product data sheet Rev. 7 — 8 September 2011 3 of 13
+Nexperia 2N7002
+60 V, 300 mA N-channel Trench MOSFET
+Fig 1. Normalized continuous drain current as a 
+function of solder point temperature
+Fig 2. Normalized total power dissipation as a 
+function of solder point temperature
+Fig 3. Safe operating area; continous and peak drai n currents as a function of drain-source voltage
+Tsp (°C)
+0 200 15050 100
+03aa25
+40
+80
+120
+Ider
+(%)
+0
+Tsp (°C)
+0 200 15050 100
+03aa17
+40
+80
+120
+Pder
+(%)
+0
+003aab350
+10-2
+10-1
+      1
+    10
+   1   10  10 2
+VDS (V)
+ID
+(A)
+DC
+1 ms
+100 µs
+Limit RDSon = VDS / ID
+10 ms
+100 ms
+10 µstp =
+
+© Nexperia B.V. 2017. All rights reserved
+2N7002 All information provided in this document is subject to legal disclaimers.
+Product data sheet Rev. 7 — 8 September 2011 4 of 13
+Nexperia 2N7002
+60 V, 300 mA N-channel Trench MOSFET
+6. Thermal characteristics
+ 
+Table 6. Thermal characteristics
+Symbol Parameter Conditions Min Typ Max Unit
+Rth(j-a) thermal resistance 
+from junction to 
+ambient
+Mounted on a printed-circuit board; 
+minimum footprint ; vertical in still air
+- - 350 K/W
+Rth(j-sp) thermal resistance 
+from junction to solder 
+point
+see Figure 4 - - 150 K/W
+Fig 4. Transient thermal impedance from junction to solder point as a function of pulse duration
+003aab351
+      1
+    10
+  102
+  103
+10-5 10-4 10-3 10-2 10-1    1   10
+tp (s)
+Zth(j-sp)
+ (K/W)
+single pulse
+0.2
+0.1
+0.05
+δ = 0.5
+0.02
+tp
+T
+P
+t
+tp
+Tδ =
+
+© Nexperia B.V. 2017. All rights reserved
+2N7002 All information provided in this document is subject to legal disclaimers.
+Product data sheet Rev. 7 — 8 September 2011 5 of 13
+Nexperia 2N7002
+60 V, 300 mA N-channel Trench MOSFET
+7. Characteristics
+ 
+Table 7. Characteristics
+Symbol Parameter Conditions Min Typ Max Unit
+Static characteristics
+V(BR)DSS drain-source 
+breakdown voltage
+ID =1 0µ A ;  VGS =0V ;  Tj = 2 5 ° C 6 0 --V
+ID =1 0µ A ;  VGS =0V ;  Tj = -55 °C 55 - - V
+VGSth gate-source threshold 
+voltage
+ID =0 . 2 5m A ;  VDS =V GS; Tj =2 5° C ;  
+see Figure 9; see Figure 10
+122 . 5 V
+ID =0 . 2 5m A ;  VDS =V GS; Tj =1 5 0° C ;  
+see Figure 9; see Figure 10
+0 . 6 --V
+ID =0 . 2 5m A ;  VDS =V GS; Tj =- 5 5° C ;  
+see Figure 9; see Figure 10
+--2 . 7 5 V
+IDSS drain leakage current V DS =4 8V ;  VGS =0V ;  Tj = 25 °C - 0.01 1 µA
+VDS =4 8V ;  VGS =0V ;  Tj = 1 5 0 ° C --1 0 µ A
+IGSS gate leakage current V GS =1 5V ;  VDS =0V ;  Tj = 25 °C - 10 100 nA
+VGS =- 1 5V ;  VDS =0V ;  Tj = 25 °C - 10 100 nA
+RDSon drain-source on-state 
+resistance
+VGS =1 0V ;  ID =5 0 0m A ;  Tj =2 5° C ;  
+see Figure 6; see Figure 8
+-2 . 8 5 Ω
+VGS =1 0V ;  ID =5 0 0m A ;  Tj = 150 °C; 
+see Figure 6; see Figure 8
+--9 . 2 5 Ω
+VGS =4 . 5V ;  ID =7 5m A ;  Tj =2 5° C ;  s e e  
+Figure 6; see Figure 8
+-3 . 8 5 . 3 Ω
+Dynamic characteristics
+Ciss input capacitance V DS =1 0V ;  f=1M H z ;  VGS =0V ;  
+Tj =2 5° C
+- 3 15 0p F
+Coss output capacitance - 6.8 30 pF
+Crss reverse transfer 
+capacitance
+- 3.5 10 pF
+ton turn-on time VGS =1 0V ;  VDS =5 0V ;  RL = 250 Ω; 
+RG(ext) =5 0 Ω; RGS =5 0 Ω
+- 2.5 10 ns
+toff turn-off time - 11 15 ns
+Source-drain diode
+VSD source-drain voltage I S =3 0 0m A ;  VGS =0V ;  Tj =2 5° C ;  s e e  
+Figure 11
+- 0.85 1.5 V
+Qr recovered charge V GS =0V ;  IS = 300 mA; 
+dIS/dt = -100 A/µs
+-3 0 -n C
+trr reverse recovery time - 30 - ns
+
+© Nexperia B.V. 2017. All rights reserved
+2N7002 All information provided in this document is subject to legal disclaimers.
+Product data sheet Rev. 7 — 8 September 2011 6 of 13
+Nexperia 2N7002
+60 V, 300 mA N-channel Trench MOSFET
+Fig 5. Output characteristics: drain current as a 
+function of drain-source voltage; typical values
+Fig 6. Drain-source on-state resistance as a function 
+of drain current; typical values
+Fig 7. Transfer characteristics: drain current as a 
+function of gate-source voltage; typical values
+Fig 8. Normalized drain-source on-state resistance 
+factor as a function of junction temperature
+003aab352
+0
+0.2
+0.4
+0.6
+0.8
+1
+01234
+VDS (V)
+ID
+(A)
+10 5
+4.5
+4
+3.5VGS (V) =
+003aab353
+0
+2000
+4000
+6000
+8000
+10000
+0 0.2 0.4 0.6 0.8 1
+ID (A)
+RDSon
+(mΩ)
+4
+5
+4.5
+10
+VGS (V) =
+003aab354
+0
+0.2
+0.4
+0.6
+0.8
+1
+0246
+VGS (V)
+ID
+(A)
+Tj = 150 °C 25 °C
+Tj (°C)
+−60 18012006 0
+03aa28
+1.2
+0.6
+1.8
+2.4
+a
+0
+
+© Nexperia B.V. 2017. All rights reserved
+2N7002 All information provided in this document is subject to legal disclaimers.
+Product data sheet Rev. 7 — 8 September 2011 7 of 13
+Nexperia 2N7002
+60 V, 300 mA N-channel Trench MOSFET
+Fig 9. Gate-source threshold voltage as a function of 
+junction temperature
+Fig 10. Sub-threshold drain current as a function of 
+gate-source voltage
+Fig 11. Source current as a function of source-drain 
+voltage; typical values
+Fig 12. Input, output and reverse transfer capacitances 
+as a function of drain-source voltage; typical 
+values
+003aab101
+0
+1
+2
+3
+-60 0 60 120 180
+Tj (°C)
+VGS(th)
+(V)
+min
+typ
+max
+003aab100
+10-6
+10-5
+10-4
+10-3
+0123
+VGS (V)
+ID
+(A)
+min typ max
+003aab356
+0
+0.2
+0.4
+0.6
+0.8
+1
+0.2 0.4 0.6 0.8 1
+VSD (V)
+IS
+(A)
+Tj = 25 °C150 °C
+003aab357
+      1
+    10
+  102
+10-1    1   10  102
+VDS (V)
+C 
+(pF) Ciss
+Crss
+Coss
+
+© Nexperia B.V. 2017. All rights reserved
+2N7002 All information provided in this document is subject to legal disclaimers.
+Product data sheet Rev. 7 — 8 September 2011 8 of 13
+Nexperia 2N7002
+60 V, 300 mA N-channel Trench MOSFET
+8. Package outline
+Fig 13. Package outline SOT23 (TO-236AB)
+UNIT A1
+max. bp cD E e1 HE Lp Qw v
+ REFERENCESOUTLINE
+VERSION
+EUROPEAN
+PROJECTION ISSUE DATE
+04-11-04
+06-03-16
+ IEC  JEDEC  JEITA
+mm 0.1 0.48
+0.38
+0.15
+0.09
+3.0
+2.8
+1.4
+1.2 0.95
+e
+1.9 2.5
+2.1
+0.55
+0.45 0.10.2
+DIMENSIONS (mm are the original dimensions)
+0.45
+0.15
+ SOT23 TO-236AB
+bp
+D
+e1
+e
+A
+A1
+Lp
+Q
+detail X
+HE
+E
+w M
+v M A
+B
+AB
+0 1 2 mm
+scale
+A
+1.1
+0.9
+c
+X
+12
+3
+Plastic surface-mounted package; 3 leads SOT23
+
+© Nexperia B.V. 2017. All rights reserved
+2N7002 All information provided in this document is subject to legal disclaimers.
+Product data sheet Rev. 7 — 8 September 2011 9 of 13
+Nexperia 2N7002
+60 V, 300 mA N-channel Trench MOSFET
+9. Soldering
+Fig 14. Reflow soldering footprint for SOT23 (TO-236AB)
+Fig 15. Wave soldering footprint for SOT23 (TO-236AB)
+solder lands
+solder resist
+occupied area
+solder paste
+sot023_fr
+0.5
+(3×)
+0.6
+(3×)
+0.6
+(3×)
+0.7
+(3×)
+3
+1
+3.3
+2.9
+1.7
+1.9
+2
+Dimensions in mm
+solder lands
+solder resist
+occupied area
+preferred transport direction during soldering
+sot023_fw
+2.8
+4.5
+1.4
+4.6
+1.4
+(2×)
+1.2
+(2×)
+2.2
+2.6
+Dimensions in mm
+
+© Nexperia B.V. 2017. All rights reserved
+2N7002 All information provided in this document is subject to legal disclaimers.
+Product data sheet Rev. 7 — 8 September 2011 10 of 13
+Nexperia 2N7002
+60 V, 300 mA N-channel Trench MOSFET
+10. Revision history
+ 
+Table 8. Revision history
+Document ID Release date Data sheet status Change notice Supersedes
+2N7002 v.7 20110908 Product data sheet - 2N7002 v.6
+Modifications: •The format of this data sheet has been redesigned to comply with the new identity guidelines 
+of NXP Semiconductors.
+• Legal texts have been adapted to the new company name where appropriate.
+2N7002 v.6 20060428 Product data sheet 2N7002 v.5
+2N7002 v.5 20051115 Product data sheet 2N7002 v.4
+2N7002 v.4 20050426 Product data sheet 2N7002 v.3
+2N7002 v.3 20000727 Product specification HZG336 2N7002 v.2
+2N7002 v.2 19970617 Product specification 2N7002 v.1
+2N7002 v.1 19901031 Product specification - -
+
+© Nexperia B.V. 2017. All rights reserved
+2N7002 All information provided in this document is subject to legal disclaimers.
+Product data sheet Rev. 7 — 8 September 2011 11 of 13
+Nexperia 2N7002
+60 V, 300 mA N-channel Trench MOSFET
+11. Legal information
+11.1 Data sheet status
+[1] Please consult the most recently issued document before initiating or completing a design.
+[2] The term 'short data sheet' is explained in section "Definitions".
+[3] The product status of device(s) described in this document may have changed since this document was published and may differ  in case of multiple devices. The latest product 
+status information is available on the Internet at URL http://www.nexperia.com.
+11.2 Definitions
+Preview — The document is a preview version only. The document is still 
+subject to formal approval, which may result in modifications or additions. 
+Nexperia does not give any representations or warranties as to 
+the accuracy or completeness of information included herein and shall have 
+no liability for the consequences of use of such information.
+Draft — The document is a draft version only. The content is still under 
+internal review and subject to formal approval, which may result in 
+modifications or additions. Nexperia  does not give any 
+representations or warranties as to the accuracy or completeness of 
+information included herein and shall have no liability for the consequences of 
+use of such information.
+Short data sheet — A short data sheet is an extract from a full data sheet 
+with the same product type number(s) and title. A short data sheet is intended 
+for quick reference only and should not be relied upon to contain detailed and 
+full information. For detailed and full information see the relevant full data 
+sheet, which is available on request via the local Nexperia sales 
+office. In case of any inconsistency or conflict with the short data sheet, the 
+full data sheet shall prevail.
+Product specification — The information and data provided in a Product 
+data sheet shall define the specification of the product as agreed between 
+Nexperia and its customer, unless Nexperia and 
+customer have explicitly agreed otherwise in writing. In no event however, 
+shall an agreement be valid in which the Nexperia product is 
+deemed to offer functions and qualities beyond those described in the 
+Product data sheet.
+11.3 Disclaimers
+Limited warranty and liability — Information in this document is believed to 
+be accurate and reliable. However, Nexperia does not give any 
+representations or warranties, expressed or implied, as to the accuracy or 
+completeness of such information and shall have no liability for the 
+consequences of use of such information.
+ In no event shall Nexperia be liable for any indirect, incidental, 
+punitive, special or consequential damages (including - without limitation - lost 
+profits, lost savings, business interruption, costs related to the removal or 
+replacement of any products or rework charges) whether or not such 
+damages are based on tort (including negligence), warranty, breach of 
+contract or any other legal theory.
+Notwithstanding any damages that customer might incur for any reason 
+whatsoever, Nexperia’s aggregate and cumulative liability towards 
+customer for the products described herein shall be limited in accordance 
+with the Terms and conditions of commercial sale of Nexperia.
+Right to make changes — Nexperia reserves the right to make 
+changes to information published in this document, including without 
+limitation specifications and product descriptions, at any time and without 
+notice. This document supersedes and replaces all information supplied prior 
+to the publication hereof.
+Suitability for use — Nexperia products are not designed, 
+authorized or warranted to be suitable for use in life support, life-critical or 
+safety-critical systems or equipment, nor in applications where failure or 
+malfunction of a Nexperia  product can reasonably be expected 
+to result in personal injury, death or severe property or environmental 
+damage. Nexperia accepts no liability for inclusion and/or use of 
+Nexperia products in such equipment or applications and 
+therefore such inclusion and/or use is at the customer’s own risk.
+Quick reference data — The Quick reference data is an extract of the 
+product data given in the Limiting values and Characteristics sections of this 
+document, and as such is not complete, exhaustive or legally binding.
+Applications — Applications that are described herein for any of these 
+products are for illustrative purpos es only. Nexperia makes no 
+representation or warranty that such applications will be suitable for the 
+specified use without further testing or modification.
+Customers are responsible for the design and operation of their applications 
+and products using Nexperia products, and Nexperia 
+accepts no liability for any assistance with applications or customer product 
+design. It is customer’s sole responsibility to determine whether the Nexperia 
+product is suitable and fit for the customer’s applications and 
+products planned, as well as for the planned application and use of 
+customer’s third party customer(s). Customers should provide appropriate 
+design and operating safeguards to minimize the risks associated with their 
+applications and products.
+Nexperia does not accept any liability related to any default, 
+damage, costs or problem which is based on any weakness or default in the 
+customer’s applications or products, or the application or use by customer’s 
+third party customer(s). Customer is responsible for doing all necessary 
+testing for the customer’s applications and products using Nexperia  
+products in order to avoid a default of the applications and 
+the products or of the application or use by customer’s third party 
+customer(s). Nexperia does not accept  any liability in this respect.
+Limiting values — Stress above one or more limiting values (as defined in 
+the Absolute Maximum Ratings System of IEC 60134) will cause permanent 
+damage to the device. Limiting values are stress ratings only and (proper) 
+operation of the device at these or any other conditions above those given in 
+the Recommended operating conditions section (if present) or the 
+Characteristics sections of this document is not warranted. Constant or 
+repeated exposure to limiting values will permanently and irreversibly affect 
+the quality and reliability of the device.
+ Document status [1] [2]  Product status [3]  Definition 
+ Objective [short] data sheet  Development  This document contai ns data from the objective specification for product development. 
+ Preliminary [short] data sheet  Qua lification  This document contains data  from the preliminary specification. 
+ Product [short] data sheet  Production  This doc ument contains the product specification. 
+
+© Nexperia B.V. 2017. All rights reserved
+2N7002 All information provided in this document is subject to legal disclaimers.
+Product data sheet Rev. 7 — 8 September 2011 12 of 13
+Nexperia 2N7002
+60 V, 300 mA N-channel Trench MOSFET
+Terms and conditions of commercial sale — Nexperia 
+products are sold subject to the general terms and conditions of commercial 
+sale, as published at http://www.nexperia.com/profile/terms, unless 
+otherwise agreed in a valid written individual agreement. In case an 
+individual agreement is concluded only the terms  and conditions of the 
+respective agreement shall apply. Nexperia hereby expressly objects to 
+applying the customer’s general terms and conditions with regard to the 
+purchase of Nexperia products by c ustomer.
+No offer to sell or license — Nothing in this document may be interpreted or 
+construed as an offer to sell products that is open for acceptance or the grant, 
+conveyance or implication of any license under any copyrights, patents or 
+other industrial or intellectual property rights.
+Export control — This document as well as the item(s) described herein may 
+be subject to export control regulations. Export might require a prior 
+authorization from national authorities.
+Non-automotive qualified products — Unless this data sheet expressly 
+states that this specific Nexperia product is automotive qualified, 
+the product is not suitable for automotive use. It is neither qualified nor tested 
+in accordance with automotive testing or application requirements. Nexperia 
+accepts no liability for inclusion and/or use of 
+non-automotive qualified products in automotive equipment or applications.
+In the event that customer uses the product for design-in and use in 
+automotive applications to automotive specifications and standards, customer 
+(a) shall use the product without Nexperia’s warranty of the 
+product for such automotive applications, use and specifications, and (b) 
+whenever customer uses the product for automotive applications beyond 
+Nexperia’s specifications such use shall be solely at customer’s 
+own risk, and (c) customer fully indemnifies Nexperia for any 
+liability, damages or failed product claims resulting from customer design and 
+use of the product for automotive applications beyond Nexperia’s 
+standard warranty and Nexperia’s product specifications .
+11.4 Trademarks
+Notice: All referenced brands, product names, service names and trademarks 
+are the property of their respective owners.
+12. Contact information
+For more information, please visit: http://www.nexperia.com
+For sales office addresses, please send an email to: salesaddresses@nexperia.com
+
+Nexperia 2N7002
+60 V, 300 mA N-channel Trench MOSFET
+13. Contents
+1 Product profile . . . . . . . . . . . . . . . . . . . . . . . . . . .1
+1.1 General description  . . . . . . . . . . . . . . . . . . . . . .1
+1.2 Features and benefits. . . . . . . . . . . . . . . . . . . . .1
+1.3 Applications  . . . . . . . . . . . . . . . . . . . . . . . . . . . .1
+1.4 Quick reference data  . . . . . . . . . . . . . . . . . . . . .1
+2 Pinning information. . . . . . . . . . . . . . . . . . . . . . .1
+3 Ordering information. . . . . . . . . . . . . . . . . . . . . .2
+4 Marking . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .2
+5 Limiting values. . . . . . . . . . . . . . . . . . . . . . . . . . .2
+6 Thermal characteristics  . . . . . . . . . . . . . . . . . . .4
+7 Characteristics. . . . . . . . . . . . . . . . . . . . . . . . . . .5
+8 Package outline . . . . . . . . . . . . . . . . . . . . . . . . . .8
+9 Soldering  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .9
+10 Revision history. . . . . . . . . . . . . . . . . . . . . . . . .10
+11 Legal information. . . . . . . . . . . . . . . . . . . . . . . .11
+11.1 Data sheet status . . . . . . . . . . . . . . . . . . . . . . . 11
+11.2 Definitions. . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11
+11.3 Disclaimers . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11
+11.4 Trademarks. . . . . . . . . . . . . . . . . . . . . . . . . . . .12
+12 Contact information. . . . . . . . . . . . . . . . . . . . . .12
+© Nexperia B.V. 2017. All rights reserved
+For more information, please visit: http://www.nexperia.com
+For sales office addresses, please send an email to: salesaddresses@nexperia.com 
+Date of release: 
+08 September 2011

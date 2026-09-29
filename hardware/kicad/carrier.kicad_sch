@@ -4,15 +4,435 @@
 	(generator_version "10.0")
 	(uuid "1d76d2ec-7795-4c71-8167-b1182c3ebc1d")
 	(paper "A4")
+	(title_block
+		(title "Airfrep carrier")
+		(rev "A")
+	)
 	(lib_symbols)
+	(text "I2C"
+		(exclude_from_sim no)
+		(at 228.6 92.96 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify bottom)
+		)
+		(uuid "1ea8fcf7-c5e7-492d-bc84-148fcf687859")
+	)
+	(text "TPS61088 boost to 5 V\nTPS22975 load switch\nenabled by PWR_EN"
+		(exclude_from_sim no)
+		(at 181.61 53.34 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "261cab37-fd58-41b7-8661-135b40da75ce")
+	)
+	(text "Piezo, Schmitt driver, mute switch\nBMP581 barometer on I2C"
+		(exclude_from_sim no)
+		(at 234.95 109.22 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "31313afe-6880-48cd-909f-38584a161eff")
+	)
+	(text "MAX77757\n1-cell Li-ion charger with\nUSB-C CC detect\nSYS power path, NTC via BAT_TS"
+		(exclude_from_sim no)
+		(at 74.93 53.34 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "46617acf-7872-40b5-bb87-d81cfe33a531")
+	)
+	(text "Airfrep carrier"
+		(exclude_from_sim no)
+		(at 20.32 33.02 0)
+		(effects
+			(font
+				(size 3 3)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+		(uuid "46a50a94-e492-4020-a261-0c9837dc83d5")
+	)
+	(text "VBAT, VSYS"
+		(exclude_from_sim no)
+		(at 119.38 65.04 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify bottom)
+		)
+		(uuid "47cc7ee4-19e2-408d-aaec-99942202325f")
+	)
+	(text "ESP_3V3, I2C, BUZZ_PWM"
+		(exclude_from_sim no)
+		(at 268.2 94.48 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "6b13a3df-73f8-42e4-8c73-8ea48b02bc71")
+	)
+	(text "VBAT, charger status"
+		(exclude_from_sim no)
+		(at 161.52 94.48 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "749d7bd0-584a-4726-bdcc-55de2204bfe5")
+	)
+	(text "Sockets: ESP32, ADSBee 1090, GNSS\nLM66100 ideal diode and jumper\nper 5 V feed, UART cross-link"
+		(exclude_from_sim no)
+		(at 234.95 53.34 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "81816c67-8572-4a1b-9fdd-b66a5d615827")
+	)
+	(text "Battery in, 5 A fuse\n60 C thermostat interlock\nON switch, 2.9 V supervisor\nunder-voltage latch, USB wake"
+		(exclude_from_sim no)
+		(at 128.27 53.34 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "947c5553-16b7-41ad-a75c-a2cbd39bcf07")
+	)
+	(text "USB_VBUS 5 V"
+		(exclude_from_sim no)
+		(at 66.04 65.04 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify bottom)
+		)
+		(uuid "b58088e7-8cbd-4260-bbaa-3a958abc8f6b")
+	)
+	(text "RAIL_5V 5 V"
+		(exclude_from_sim no)
+		(at 226.06 65.04 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify bottom)
+		)
+		(uuid "ce323aab-7717-4b99-b3fa-ffe2c254722f")
+	)
+	(text "USB-C receptacle\n5 V in, CC and D+/D- to charger\nTVS on VBUS, ESD on CC and data"
+		(exclude_from_sim no)
+		(at 21.59 53.34 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "d6cfbc86-017f-477d-8710-aba3bb20d927")
+	)
+	(text "MAX17048 fuel gauge on I2C\nCharging and full LEDs\n5 V rail LED (DNP)"
+		(exclude_from_sim no)
+		(at 128.27 109.22 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "da809558-a699-46e4-aead-abb880a88330")
+	)
+	(text "VSYS, PWR_EN"
+		(exclude_from_sim no)
+		(at 172.72 65.04 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify bottom)
+		)
+		(uuid "db3fab7e-ed94-4926-a7c4-0e37aed72022")
+	)
+	(text "Li-ion powered carrier for ESP32, ADSBee 1090 and GNSS modules"
+		(exclude_from_sim no)
+		(at 20.32 37.59 0)
+		(effects
+			(font
+				(size 1.6 1.6)
+			)
+			(justify left bottom)
+		)
+		(uuid "fdfe5fd3-67e8-424e-b35c-d4736d439ac2")
+	)
+	(polyline
+		(pts
+			(xy 178.84 67.04) (xy 180.34 66.04)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "0901e332-7b54-444a-86b2-4a63267a23b6")
+	)
+	(polyline
+		(pts
+			(xy 218.44 66.04) (xy 233.68 66.04)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "15316c40-efc5-4e2e-a9a6-5c450d70b6ea")
+	)
+	(polyline
+		(pts
+			(xy 58.42 66.04) (xy 73.66 66.04)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "218d4f3f-d4c1-4211-9b55-6b661f7c9b47")
+	)
+	(polyline
+		(pts
+			(xy 72.16 67.04) (xy 73.66 66.04)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "2a688d8a-de6c-4ed3-9965-81a27faba649")
+	)
+	(polyline
+		(pts
+			(xy 266.7 81.28) (xy 266.7 106.68)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "3750a43b-9fe6-41fe-a85d-4049a405ee37")
+	)
+	(polyline
+		(pts
+			(xy 205.74 93.98) (xy 251.46 93.98)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "38555b73-ab14-4d02-b1d2-afe23e9fafff")
+	)
+	(polyline
+		(pts
+			(xy 125.5 67.04) (xy 127 66.04)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "4684e2fe-4a28-400b-bc11-641f0d2b99e3")
+	)
+	(polyline
+		(pts
+			(xy 252.46 82.78) (xy 251.46 81.28)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "4e1dc52a-d3f7-46ba-ac91-69dd0a225640")
+	)
+	(polyline
+		(pts
+			(xy 265.7 105.18) (xy 266.7 106.68)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "4f2bf028-33b7-454b-a684-b0f0c1853a0d")
+	)
+	(polyline
+		(pts
+			(xy 159.02 105.18) (xy 160.02 106.68)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "50b431e6-a158-460c-9d9b-97ae78a62451")
+	)
+	(polyline
+		(pts
+			(xy 267.7 105.18) (xy 266.7 106.68)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "5acd2feb-bed9-4c80-94d4-d5467903ae0a")
+	)
+	(polyline
+		(pts
+			(xy 165.1 111.76) (xy 205.74 111.76)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "5c55e6a3-3786-473c-b56a-ad0c4909d219")
+	)
+	(polyline
+		(pts
+			(xy 232.18 65.04) (xy 233.68 66.04)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "61831ab6-e3a4-48b4-b67d-1da76967dcef")
+	)
+	(polyline
+		(pts
+			(xy 161.02 105.18) (xy 160.02 106.68)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "8dfc3a6e-91d7-4d20-bd06-638732331f51")
+	)
+	(polyline
+		(pts
+			(xy 251.46 93.98) (xy 251.46 81.28)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "bd7db12e-7549-4419-afe7-3829b83ee759")
+	)
+	(polyline
+		(pts
+			(xy 178.84 65.04) (xy 180.34 66.04)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "c04ca7a0-4b78-482c-9455-eea0ad88466a")
+	)
+	(polyline
+		(pts
+			(xy 232.18 67.04) (xy 233.68 66.04)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "c5ef6630-948d-4dd3-9685-6f8ccbd8bbe9")
+	)
+	(polyline
+		(pts
+			(xy 250.46 82.78) (xy 251.46 81.28)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "c75db7e3-97a1-4001-9f13-0332ad0f623b")
+	)
+	(polyline
+		(pts
+			(xy 165.1 66.04) (xy 180.34 66.04)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "ca1fe17a-cb2d-45fc-ab58-b74d2cd0a843")
+	)
+	(polyline
+		(pts
+			(xy 111.76 66.04) (xy 127 66.04)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "dc9e06a7-c996-49e7-8afd-f52eb01f6d18")
+	)
+	(polyline
+		(pts
+			(xy 205.74 111.76) (xy 205.74 93.98)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "e568deb1-83bc-47b1-bf10-c2600dd4b09d")
+	)
+	(polyline
+		(pts
+			(xy 125.5 65.04) (xy 127 66.04)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "ee84afa7-7807-4c27-9d3c-8bacf3fec637")
+	)
+	(polyline
+		(pts
+			(xy 72.16 65.04) (xy 73.66 66.04)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "f1d37b97-329d-4539-a957-9292fbb5cd13")
+	)
+	(polyline
+		(pts
+			(xy 160.02 81.28) (xy 160.02 106.68)
+		)
+		(stroke
+			(width 0.254)
+			(type default)
+		)
+		(uuid "f25a5599-b459-48ea-922a-eb6691dce11d")
+	)
 	(sheet
-		(at 100 70)
-		(size 60 30)
+		(at 233.68 50.8)
+		(size 38.1 30.48)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(stroke
 			(width 0.0006)
 			(type solid)
@@ -22,7 +442,7 @@
 		)
 		(uuid "3f53ac70-9f38-49d5-b028-e652ebac7ccc")
 		(property "Sheetname" "Modules and service shunts"
-			(at 102.54 68.73 0)
+			(at 233.68 50.04 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -33,14 +453,14 @@
 			)
 		)
 		(property "Sheetfile" "modules.kicad_sch"
-			(at 102.54 101.27 0)
+			(at 233.68 82.04 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left bottom)
+				(justify left top)
 			)
 		)
 		(instances
@@ -52,13 +472,12 @@
 		)
 	)
 	(sheet
-		(at 180 20)
-		(size 60 30)
+		(at 127 50.8)
+		(size 38.1 30.48)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(stroke
 			(width 0.0006)
 			(type solid)
@@ -68,7 +487,7 @@
 		)
 		(uuid "70bb31ad-859e-4aa6-9d27-4818f29c93a4")
 		(property "Sheetname" "Battery, thermal, power control"
-			(at 182.54 18.73 0)
+			(at 127 50.04 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -79,14 +498,14 @@
 			)
 		)
 		(property "Sheetfile" "battery_control.kicad_sch"
-			(at 182.54 51.27 0)
+			(at 127 82.04 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left bottom)
+				(justify left top)
 			)
 		)
 		(instances
@@ -98,13 +517,12 @@
 		)
 	)
 	(sheet
-		(at 20 70)
-		(size 60 30)
+		(at 180.34 50.8)
+		(size 38.1 30.48)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(stroke
 			(width 0.0006)
 			(type solid)
@@ -114,7 +532,7 @@
 		)
 		(uuid "813d6342-6820-4479-ab2d-8f2e0246f11a")
 		(property "Sheetname" "5V boost and load switch"
-			(at 22.54 68.73 0)
+			(at 180.34 50.04 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -125,14 +543,14 @@
 			)
 		)
 		(property "Sheetfile" "boost_switch.kicad_sch"
-			(at 22.54 101.27 0)
+			(at 180.34 82.04 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left bottom)
+				(justify left top)
 			)
 		)
 		(instances
@@ -144,13 +562,12 @@
 		)
 	)
 	(sheet
-		(at 20 120)
-		(size 60 30)
+		(at 233.68 106.68)
+		(size 38.1 30.48)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(stroke
 			(width 0.0006)
 			(type solid)
@@ -160,7 +577,7 @@
 		)
 		(uuid "85e779da-b238-4408-b509-099899e823d5")
 		(property "Sheetname" "Buzzer and barometer"
-			(at 22.54 118.73 0)
+			(at 233.68 105.92 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -171,14 +588,14 @@
 			)
 		)
 		(property "Sheetfile" "buzzer_baro.kicad_sch"
-			(at 22.54 151.27 0)
+			(at 233.68 137.92 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left bottom)
+				(justify left top)
 			)
 		)
 		(instances
@@ -190,13 +607,12 @@
 		)
 	)
 	(sheet
-		(at 20 20)
-		(size 60 30)
+		(at 20.32 50.8)
+		(size 38.1 30.48)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(stroke
 			(width 0.0006)
 			(type solid)
@@ -206,7 +622,7 @@
 		)
 		(uuid "8d582056-b074-472b-a300-fd21b59a9139")
 		(property "Sheetname" "USB input"
-			(at 22.54 18.73 0)
+			(at 20.32 50.04 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -217,14 +633,14 @@
 			)
 		)
 		(property "Sheetfile" "usb_input.kicad_sch"
-			(at 22.54 51.27 0)
+			(at 20.32 82.04 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left bottom)
+				(justify left top)
 			)
 		)
 		(instances
@@ -236,13 +652,12 @@
 		)
 	)
 	(sheet
-		(at 100 20)
-		(size 60 30)
+		(at 73.66 50.8)
+		(size 38.1 30.48)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(stroke
 			(width 0.0006)
 			(type solid)
@@ -252,7 +667,7 @@
 		)
 		(uuid "ca5da11d-56a4-4cac-94d5-ee3030474f4d")
 		(property "Sheetname" "Charger MAX77757"
-			(at 102.54 18.73 0)
+			(at 73.66 50.04 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -263,14 +678,14 @@
 			)
 		)
 		(property "Sheetfile" "charger.kicad_sch"
-			(at 102.54 51.27 0)
+			(at 73.66 82.04 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left bottom)
+				(justify left top)
 			)
 		)
 		(instances
@@ -282,13 +697,12 @@
 		)
 	)
 	(sheet
-		(at 180 70)
-		(size 60 30)
+		(at 127 106.68)
+		(size 38.1 30.48)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(stroke
 			(width 0.0006)
 			(type solid)
@@ -298,7 +712,7 @@
 		)
 		(uuid "f622a697-5a21-4794-a4ab-94e63edd90cd")
 		(property "Sheetname" "Gauge and status"
-			(at 182.54 68.73 0)
+			(at 127 105.92 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -309,14 +723,14 @@
 			)
 		)
 		(property "Sheetfile" "gauge_status.kicad_sch"
-			(at 182.54 101.27 0)
+			(at 127 137.92 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left bottom)
+				(justify left top)
 			)
 		)
 		(instances

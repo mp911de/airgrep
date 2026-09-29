@@ -3,6 +3,8 @@
 .logs/
 logs/
 archive/
+analysis/
 export/
 carrier_drc_violations.json
 ~*.*
+*.rpt

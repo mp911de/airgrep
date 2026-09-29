@@ -1,43 +1,102 @@
 # Open issues
 
-Ordered by what blocks the next step.
+Open work only, ordered by what blocks the next step. The design itself is described in [power.md](power.md), [mechanical.md](mechanical.md) and [interfaces.md](interfaces.md); closed items are in git.
 
-## Before schematic release
+The three modules are ordered. The carrier board is not.
 
-0. 29 Sep: charger changed from the BQ25606 to the MAX77757JEFG420 (C7454852, Extended, about $8, 100 in JLCPCB stock). Reason: the BQ25606 applies its ILIM resistor only to sources it cannot identify and draws 2.4 A from any source with a DCP signature regardless of the Type-C advertisement; the MAX77757 reads CC and D+/D- itself and applies the lower of the two without firmware (docs/power.md). Schematic converted, ERC 0 errors, netlist checked pin by pin. Board: U4 footprint swapped in place (FC2QFN-24 3 × 3 mm, 0.4 mm pitch, land pattern taken from the LCSC/JLCPCB library entry, no exposed pad), U1, U2, U3, Q1, Q5, R1 to R5, R7, R32, R35, C2 to C4, C32 removed, C33, C34, R36, Q6 dropped onto freed spots, the nine U4 thermal vias and every track that ended on a pad whose net changed removed, zones refilled. The charger area needs re-placing and re-routing per datasheet Figure 13 (CHGIN, BYP, SYS, VDD, BATT capacitors at the pins, PGND returned through the SYS/BYP capacitor ground): 35 unconnected items in DRC, no other errors. Still open from before: boost values (R16, R17, R18, C21, C22, C23) are revision C initial values, not validated. Slider common = terminal 2, verified.
-0a. Done 29 Sep: MAX77757 JEITA window fitted to the pack's 0 to 45 °C by changing the NTC to the TDK B57164K0104 (100 kΩ, B25/100 4600 K) with R8 130 kΩ: 0.0 / 7.7 / 34.7 / 45.2 °C from the datasheet R/T table (docs/power.md). The Variohm 10 kΩ / 3435 K type cannot fit both ends with any bias value. The BOM entry in docs/bom-hand-sourced.md is updated; do not order the Variohm.
-0b. MAX77757 input: 13.7 V over-voltage lockout, 16 V absolute maximum (BQ25606: 22 V). The SMAJ12A (breakdown 13.3 V min, clamp 19.9 V at 20.8 A) is kept; a USB-C source never delivers more than 5 V without a PD negotiation the device does not do. Consider SMAJ10A if 12 V adapters need not be tolerated.
-0c. Charge current 2.0 A from R6 14 kΩ (Extended, C22803; decided 29 Sep, one more feeder fee). Pack lead rated 2 A per contact.
-0d. Charger indication changed (docs/power.md): red = USB input valid, green blinking = charging, green solid = charged. The 1 Hz blink is the MAX77757 STAT encoding and cannot be filtered into a steady colour without extra parts. specs.md updated.
+## Before ordering the board
 
-1. Battery pack verified (Soldered 333290, FE1160100). Carrier connector JST-PH 2 mm (decided), 2 A per contact; pack fuse 3 A.
-2. Done 25 Sep: TS set for the pack's 0 to 45 °C charge rating (R8 10 kΩ, R9 removed, Variohm 10k/3435 NTC): hot stop 43.3 °C nominal, 44.6 °C worst case. Superseded 29 Sep by the MAX77757 THM thresholds (0a).
-3. TPS61088 compensation, inductor and current limit for 5 V / 2.5 A. Revision C values are unvalidated.
-4. Done 25 Sep: thermostat Limitor LIM-P-82-60 (60 °C NC, auto reset) from Reichelt and the NTC (since 29 Sep the TDK B57164K0104, see 0a), taped to the pack, user-made JST-PH harnesses to J4 and J2.
-5f. Done 25 Sep: D4 is the Kingbright L-115WEGW (red charging, green charged, common cathode), D5 the Kingbright L-7104GD green, both from Reichelt, user-soldered.
-5g. Connection review 24 Sep (all parts checked against datasheets, board nets = schematic nets). Fixed: J6 carried the UART on D14/D15 (removed, J6 is GND only); TPS61088 FSW resistor R16 went to GND instead of SW; TPS61088 NC pins 11/12 now GND per TI; SMAJ12A drawn as bidirectional with the cathode on GND (would have shorted VBUS), now cathode on VBUS; STAT LED resistor 470 Ω exceeded the 6 mA STAT sink rating, now 1 kΩ; full-indicator transistor Q3 changed to 2N7002 so the charging colour cannot glow when full.
-5k. Silkscreen tidied 25 Sep: every visible reference sits next to its own part (closer to it than to any neighbour), clear of pads, other silkscreen and the board edge; tight spots use 0.8 mm text (JLCPCB minimum). Six references have no room and are on the fab layer only (assembly drawing and pick-and-place): U7, C11, C12, Q3, R13, R18. SW1, SW2 and J1 outline segments that ran over the board edge were moved to the fab layer.
-5j. Done 25 Sep: D4 reworked to common cathode for the Kingbright L-115WEGW (Reichelt KBT L-115WEGW; its product page wrongly says common anode). Q4 is now a 2N7002, R34 removed, Q5 MMBT3904 and R35 10 kΩ added.
-5i. 25 Sep: barometer BMP581 (C5362283, Extended, about $2.8) now fitted, moved next to the display I2C header J8 with C29/C30; track/via keepout under the sensor per Bosch. I2C pull-ups R19/R20 carry the real DNP flag (the display already pulls the bus up); fit them only if the bus is run without the display.
-5h. Done 25 Sep: U1 changed from XC6206 (6 V operating, 7 V absolute) to TI TPS70933DBVR (LCSC C89347, 30 V input, 1.4 µA, SOT-23-5). EN left open (internal 300 nA pull-up; EN is limited to 6.5 V, never tie it to VIN). C2 raised to 4.7 µF 25 V 0805 (TPS709 needs 1.5 µF effective), C32 1 µF 50 V added at U1's input. 29 Sep: U1 removed again with the TUSB320; on VBUS remain the MAX77757 (16 V absolute maximum, open issue 0b), D3, C1 and C5. Remaining exposure: MAX77757 CC1/CC2 and DP/DN are rated 6 V and face the connector through the H5VLD3B ESD diodes only.
-5. Done 25 Sep: USB-C receptacle is Hanbo MC-107DMS, 5 A, JLCPCB C3039295 (Extended, about 188k in stock).
+- [ ] **Reverse-polarity protection at J3.** CSD25404Q3 (LCSC C2865523) selected; design and validate the bidirectional protection stage, including USB-powered reversed-pack insertion and depleted-pack recovery. Coordinate with the planned off-state battery disconnect. No indicator LED; see [issue 0002](../issues/0002-battery-reverse-polarity-protection.md).
+- [ ] **Silkscreen.** Labels on the top side:
+  - Update the revision text; the board reads "Rev A 2026-09-30".
+  - Add "ESP 5V" at JP1. ("REMOVE BEFORE USB" is on the board at JP1 and JP2 since 6 Oct.)
+  - Add "THERM" at J4, which is labelled on the bottom only.
+  - Add POWER at SW1 and MUTE at SW2.
+- [ ] **Battery connector rating.** J3 is JST-PH, rated 2 A per contact. The battery current is about 1.9 A at the 1 A load peak and about 3 A at the 1.5 A headroom near empty, and F1 is 5 A. Accept this for short peaks or change the connector ([interfaces.md](interfaces.md#carrier-connectors)).
+- [ ] **Production files.** The set in `hardware/kicad/jlcpcb/` is older than the board: BOM and CPL lack R43, the CPL has outdated positions for R6, R8 and F1, and L1 is exported with the footprint `IND-SMD_L7.4-W6.6` instead of `IND-SMD_L7.0-W6.6_FXL0630`. Export again:
+  - Fill all zones, save, run DRC with schematic parity.
+  - Export Gerbers, BOM and CPL.
+  - Run `tools/kpy tools/fix_cpl.py` after every CPL export. It corrects rotation and position of the parts whose JLCPCB model origin differs from the footprint; see the script header.
+  - Record the JLCPCB class (Basic or Extended) per part; the project does not hold it yet.
+  - Select stackup JLC04161H-2116C in the order.
+- [ ] **Schematic print.** `hardware/kicad/carrier-schematic.pdf` is older than four of the sheets. Print it again.
+- [ ] **Insulator board.** Order `hardware/insulator/` together with the carrier ([mechanical.md](mechanical.md#insulator-board)).
 
-## Before layout release
+## Checks when the modules arrive
 
-5a. Done 25 Sep: USB-C changed from GCT USB4105-GF-A-120 (EasyEDA footprint, pads 0.14 mm from the peg holes, low stock) to Hanbo MC-107DMS (C3039295) on a footprint copied from KiCad's HRO TYPE-C-31-M-12 with the front shell slots lengthened to 1.4 mm per the Hanbo drawing. Pads now 0.40 mm from the peg holes. ESD diodes D6 to D9 moved into two rows above the connector. Needs routing.
-5b. Done 25 Sep: thermal vias in the exposed pads of U6 (4 × 3) and U7 (2), 0.7112/0.3048 mm since 29 Sep, into the bottom GND plane; the nine U4 vias went on 29 Sep with the BQ25606 (the MAX77757 FC2QFN has no exposed pad, its PGND pins return through the SYS/BYP capacitor ground); exposed pads and U6 GND pins use solid pour connection. Vias are not plugged (JLCPCB via plugging optional).
-5e. Routed 25 Sep. Boost re-placed per TI layout: U6 rotated 180° (SW pins face L2, VOUT faces U7), L2 moved up 1.5 mm, C16 (boot) above BOOT/SW pins, C18 to C20 in a column left of the VOUT-to-U7 path, R14 beside C15, FB/COMP/ILIM exits hand-drawn. R7/R8 moved below the VBAT path. Hand-drawn power paths (widths): BAT_IN 1.2, VBAT 1.0 to 1.2 (0.8 riser), VSYS 1.2, CHG_SW 1.0, BOOST_SW 0.8 to 1.0, BOOST_5V 1.0, USB_VBUS 1.0 (J1 to charger on the bottom layer, two 0.8/0.4 vias each end). Remaining narrow runs: RAIL_5V to the module shunts mostly 0.4 mm over about 70 mm (about 45 mV drop at 0.5 A, 130 mV at 1.5 A), ADS_5V/ESP_5V 0.4 to 0.8 mm. Track keepouts: 0.6 mm board-edge band, mounting holes, BMP581 centre (no tracks, vias or pour under the sensor).
-5d. D3 (SMAJ12A VBUS TVS) sits at the charger input (61, 64.8), about 30 mm from the USB-C; the four H5VLD3B ESD diodes sit at the connector. Acceptable for a 5 V input; move D3 closer if the bottom-right strip is re-arranged.
-5c. Done 24 Sep: U6 footprint checked against TI RHL0020A land pattern (pin order, pitch, rotation match; exposed pad simplified to a 3.0 × 2.1 mm rectangle without the PGND tabs, same net).
+These decide whether the board can be ordered as drawn.
 
-6. ADSBee real header coordinates (image estimate ±0.5 mm now). Needs a 1:1 template or the board.
-7. Display socket height versus rear components.
-8. MAX17048 TDFN land pattern per Analog Devices 90-0065 and JLCPCB clearance rule.
-9. Antenna bulkhead models, hole sizes, coax routing. GNSS active antenna bias current must fit the ADSBee 200 mA 3.3 V output.
-10. Copper for power paths: done 25 Sep (see 5e). Converter loops are short (boost SW node 6.8 mm, boost output to U7 9.4 mm, charger SW node 6.4 mm, no vias in these paths).
+- [ ] **ADSBee geometry.** The sockets and holes rest on an image estimate ([adsbee-estimate.md](../mechanical/adsbee-estimate.md)). Measure on the module:
+  - Position and pin count of both header rows (J10, J11) and the offset between them.
+  - Hole positions against the header rows. MH14 lies outside the 0.5 mm allowance of the estimate ([mechanical.md](mechanical.md#mounting)).
+  - Clearance under the rear shield.
+  - Access to JP2, which lies under the estimated module outline, and room for a USB plug above the boost converter.
+- [ ] **Display fit.**
+  - The 8.5 mm socket stack against the controller and the microSD slot on the back of the display.
+  - An M2.5 screw in the module hole at MH13.
+  - One standoff plus four header groups against the touch force.
+- [ ] **GNSS standoff at MH11.** A track passes close to the hole ([mechanical.md](mechanical.md#mounting)). Check the standoff and the screw head on the real hardware.
 
-## Before bring-up
+## Assumptions to measure
 
-11. FLARM 868 MHz decoding on ADSBee firmware is unproven.
-12. Display firmware: gauge readout, Wi-Fi traffic feed, buzzer PWM on D11.
-13. Bench tests: supplement mode with 0.5 / 1 / 2 / 3 A sources, switch off with USB present, thermostat trip, no backfeed, input current with a 1.5 A Type-C source that also shorts D+/D- (must stay at 1.5 A), dead-battery attach to a Type-C source (CC clamp, then Rd within 15 ms), LED pattern per docs/power.md.
+The simulations rest on these. Each one changes a result if it is far off.
+
+- [ ] **Module input capacitance on the 5 V rail** (assumed 40 µF) and the modules' input voltage window (assumed 4.75 to 5.25 V, 5.5 V absolute). The diode-inclusive load-step model leaves only 42 mV above the lower limit at maximum LM73100 drop. Measure each branch's capacitance and load share as well as the voltage window; they set the load-step and start-up results.
+- [ ] **Peak 5 V current**, in particular ADSBee Wi-Fi bursts (assumed 1.0 A peak, 1.5 A short-term headroom).
+- [ ] **Battery pack DC resistance** near empty, new and aged, warm and cold (assumed 50 to 150 mΩ), and harness resistance (assumed 60 to 100 mΩ). They set the voltage at which the undervoltage latch trips.
+- [ ] **Boost switch-node ringing** near 1 GHz against the 1090 MHz receiver. The snubber R39/C36 has footprints but is not fitted (start with 2.2 Ω and 1 nF).
+- [ ] **Charger and boost temperature** at the intended load, in the enclosure, with the heatsink on U4 (thermocouple on the sink base). Compare against `hardware/sim/heat/results.md`.
+- [ ] **GNSS antenna bias current.** It must fit the ADSBee's 200 mA 3.3 V output.
+
+## Bench tests at bring-up
+
+- [ ] **Before first power-up.**
+  - Inspect the U6 and U7 solder joints. The exposed pads have unfilled thermal vias next to the paste windows.
+  - Confirm the pack lead polarity at J3 (pin 1, square pad, is plus).
+  - Check the GNSS module's position in J5. The socket is not keyed; the silkscreen is the only guard.
+- [ ] **Charger.**
+  - Supplement mode with 0.5, 1, 2 and 3 A sources.
+  - Input current with a 1.5 A Type-C source that also shorts D+ and D-. It must stay at 1.5 A.
+  - Dead-battery attach to a Type-C source.
+  - LED pattern as described in [power.md](power.md#indication).
+  - Charging from a weak source may hit the safety timer. This is accepted.
+- [ ] **Thermal cut-off.**
+  - Sweep the resistance at J2 through all THM transitions.
+  - NTC open and shorted.
+  - Thermostat trip.
+  - Switch off with USB present; no backfeed.
+- [ ] **5 V rail.** Start-up, load steps between 0.1 and 0.8 A and between 0.8 and 1 A at the module terminals, boost ripple. Compare against `hardware/sim/power/results.md`.
+- [ ] **Undervoltage.** Discharge to cut-off under load. The latch must hold the system off while the battery voltage recovers. Clear it with the slider and with USB. Measure the latched current (about 60 µA expected).
+- [ ] **GNSS reception next to the charger.** L1 is closer to the GNSS module than the 40 mm planning target ([mechanical.md](mechanical.md#placement)). Compare reception with and without charging.
+
+## Firmware
+
+- [ ] FLARM 868 MHz decoding is not demonstrated in the ADSBee firmware.
+- [ ] Display firmware: gauge readout, Wi-Fi traffic feed, buzzer PWM on D11.
+- [ ] BMP581: keep the interrupt output disabled; the INT pin is tied to GND.
+- [ ] Load shedding at low state of charge (MAX17048): Wi-Fi off and backlight down. This lowers the battery current near cut-off and moves the cut-off to a lower cell voltage.
+
+## Enclosure
+
+The enclosure is not designed yet. The carrier does not depend on these, the finished device does.
+
+- [ ] **Vents.** In a closed, unvented case the pack reaches the thermostat's opening range at 0.8 A load and 25 °C ambient, and two heat checks fail (`hardware/sim/heat/results.md`). Size the vents with `hardware/sim/vent_model.py` once its constants are current (see below), then check the limits in [specs.md](specs.md#limits-of-the-operating-range) against the result.
+- [ ] **Antenna parts.** Confirm the bulkhead cables from the BOM in the 6.5 mm holes MH6 to MH8, the coax bend radius and the routing.
+- [ ] **Barometer vent and Wi-Fi antennas.** The case needs an opening for the BMP581 and no metal near the module antennas.
+
+## Optional improvements
+
+- [ ] **Lower battery path resistance** to delay the undervoltage cut-off: a connector with two contacts per pole or JST-XH, and AWG 22 leads. The same change settles the connector rating above.
+- [ ] **SMAJ10A instead of SMAJ12A** for D3 if 12 V adapters need not be tolerated. The charger locks out at 13.7 V and withstands 16 V.
+
+## Housekeeping outside the docs
+
+Small corrections in scripts, parameters and project files. None changes the board.
+
+- [ ] `hardware/sim/power/undervoltage.cir` has defaults that differ from what `run_power.py` passes (`vin_uvlo`, `voc0`, `tc`, `tdn`, `tstop`). A standalone ngspice run is a different scenario from the report.
+- [ ] `R_BOARD` in `run_power.py` and the constants in `vent_model.py` are copied by hand from the heat model. `test_heat.py` catches drift in the vent model; nothing checks `R_BOARD`.
+- [ ] `tools/power_budget.py` uses its own efficiency estimates: boost 90 and 93 % (heat model: 91.4 % at the typical load) and charger 90 % (heat model: about 87 %). The charger figure affects only the PC-port rows of the charge-time table.
+- [ ] `mechanical/antenna-mounts.json` holds positions from an early study and nothing reads it. Remove it or update it from the board.
+- [ ] The L1 symbol uses the library symbol of the L2 part. Value and footprint are correct, so this is cosmetic.
+- [ ] Data sheets are missing for L1, D3, D4, D5, BZ1 and the thermostat; nine PDFs have no text extraction. See [datasheets/README.md](../datasheets/README.md).
+- [ ] The product name differs between places: "Flybee" in `specs.md`, "Airfrep" in the board title block, "airgrep" on the silkscreen. Pick one.

@@ -1,12 +1,13 @@
 [
   {
-    "file": "bq25895.pdf",
-    "manufacturer_url": "https://www.ti.com/lit/ds/symlink/bq25895.pdf",
-    "download_url": "https://www.ti.com/lit/ds/symlink/bq25895.pdf",
-    "downloaded": "2026-09-24",
-    "pages": 65,
-    "bytes": 2681280,
-    "sha256": "2667a8d185cbf9138aed63f47616d35c0d0d29da877702b32b301caa55f8d404"
+    "file": "max77757.pdf",
+    "manufacturer_url": "https://www.analog.com/media/en/technical-documentation/data-sheets/MAX77757.pdf",
+    "download_url": "https://docs.rs-online.com/1bdf/A700000007829174.pdf",
+    "downloaded": "2026-09-30",
+    "pages": 35,
+    "bytes": 726655,
+    "sha256": "6a825dfc6163fe0c97326fedab458ada86e4dbe7e216b525b8572dcd6e5d1175",
+    "note": "U4 charger. Analog Devices timed out; Maxim document from the RS Components document server"
   },
   {
     "file": "tps61088.pdf",
@@ -15,7 +16,8 @@
     "downloaded": "2026-09-24",
     "pages": 33,
     "bytes": 1847930,
-    "sha256": "9806d6caa5e6f6d5ae01e10359ff86bf27fac85e383d0a471e29f6d25d6acc53"
+    "sha256": "9806d6caa5e6f6d5ae01e10359ff86bf27fac85e383d0a471e29f6d25d6acc53",
+    "note": "U6 boost"
   },
   {
     "file": "tps22975.pdf",
@@ -24,7 +26,14 @@
     "downloaded": "2026-09-24",
     "pages": 29,
     "bytes": 1862409,
-    "sha256": "5405dc9d901f39b4597c8c0d5e8e52d4caf43cd4e207dbc5be3be8aa9ca4af63"
+    "sha256": "5405dc9d901f39b4597c8c0d5e8e52d4caf43cd4e207dbc5be3be8aa9ca4af63",
+    "note": "U7 load switch"
+  },
+  {
+    "file": "tlv840.pdf",
+    "manufacturer_url": "https://www.ti.com/lit/ds/symlink/tlv840.pdf",
+    "download_url": "https://www.ti.com/lit/ds/symlink/tlv840.pdf",
+    "note": "U5 undervoltage supervisor"
   },
   {
     "file": "max17048.pdf",
@@ -33,52 +42,17 @@
     "downloaded": "2026-09-24",
     "pages": 19,
     "bytes": 1109267,
-    "sha256": "70dc8eef0e012276dcdc58b6dce64af08258304bcf865ceace64e856b8029330"
+    "sha256": "70dc8eef0e012276dcdc58b6dce64af08258304bcf865ceace64e856b8029330",
+    "note": "U8 fuel gauge"
   },
   {
-    "file": "bmp390.pdf",
-    "manufacturer_url": "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp390-ds002.pdf",
-    "download_url": "https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp390-ds002.pdf",
-    "downloaded": "2026-09-24",
-    "pages": 59,
-    "bytes": 1930878,
-    "sha256": "8dcf0f74449cb1627e865c7f24d328b76c204d8b9621091ede8c6869fb393e48"
-  },
-  {
-    "file": "mmbt3904.pdf",
-    "manufacturer_url": "https://www.diodes.com/datasheet/download/MMBT3904.pdf",
-    "download_url": "https://www.diodes.com/datasheet/download/MMBT3904.pdf",
-    "downloaded": "2026-09-24",
-    "pages": 7,
-    "bytes": 349108,
-    "sha256": "483284b10e2a58c8ddafea3c1c3f77388edf9efd394ca30f9559e605f644f2dc"
-  },
-  {
-    "file": "semitec-at.pdf",
-    "manufacturer_url": "https://www.semitec-global.com/uploads/2022/01/P12-13-AT-Thermistor.pdf",
-    "download_url": "https://www.semitec-global.com/uploads/2022/01/P12-13-AT-Thermistor.pdf",
-    "downloaded": "2026-09-24",
-    "pages": 2,
-    "bytes": 102736,
-    "sha256": "389dc527ed8d783cbbf94db460504e26d17993020d8d3627056499a9264b3262"
-  },
-  {
-    "file": "sensata-6700.pdf",
-    "manufacturer_url": "https://www.sensata.com/sites/default/files/a/sensata-6700-series-subminiature-bimetal-disc-thermostats-datasheet.pdf",
-    "download_url": "https://irp.cdn-website.com/e7a7b959/files/uploaded/6700-series-datasheet-Sensata.pdf",
-    "downloaded": "2026-09-24",
-    "pages": 5,
-    "bytes": 287558,
-    "sha256": "18523935734291a38c36385de592161adfd64672ebfb8d474e9a2a043c02e9b4"
-  },
-  {
-    "file": "sn74lvc1g08.pdf",
-    "manufacturer_url": "https://www.ti.com/lit/ds/symlink/sn74lvc1g08.pdf",
-    "download_url": "https://www.ti.com/lit/ds/symlink/sn74lvc1g08.pdf",
-    "downloaded": "2026-09-24",
-    "pages": 50,
-    "bytes": 2837825,
-    "sha256": "30b963cc44233cf3ca35c891ff987c8323a2244ecc765e23296ec96ca4b42666"
+    "file": "sn74lvc1g17.pdf",
+    "manufacturer_url": "https://www.ti.com/lit/ds/symlink/sn74lvc1g17.pdf",
+    "download_url": "https://www.ti.com/lit/ds/symlink/sn74lvc1g17.pdf",
+    "pages": 53,
+    "bytes": 3015318,
+    "sha256": "c76fa723fac4502423967a1aa087dd669106b52b8de620c024b26e56f5d59309",
+    "note": "U9 buffer; moved from sources/ on 1 Oct"
   },
   {
     "file": "bst-bmp581-ds004.pdf",
@@ -87,7 +61,28 @@
     "downloaded": "2026-09-24",
     "pages": 75,
     "bytes": 2816457,
-    "sha256": "ddcf4202c4fdf2ab6ad86f22b67ba4d2471d76b9ce510397cacfe398400ab439"
+    "sha256": "ddcf4202c4fdf2ab6ad86f22b67ba4d2471d76b9ce510397cacfe398400ab439",
+    "note": "U10 barometer"
+  },
+  {
+    "file": "ao3401a.pdf",
+    "manufacturer_url": "https://www.aosmd.com/pdfs/datasheet/AO3401A.pdf",
+    "download_url": "https://www.aosmd.com/pdfs/datasheet/AO3401A.pdf",
+    "downloaded": "2026-09-30",
+    "pages": 5,
+    "bytes": 326568,
+    "sha256": "0d8e3261ae280e007b5837fff60c55142f2d92af71edc4d02aee6f7a760a785c",
+    "note": "Q2, Q3, Q4, Q7"
+  },
+  {
+    "file": "2n7002-nexperia.pdf",
+    "manufacturer_url": "https://assets.nexperia.com/documents/data-sheet/2N7002.pdf",
+    "download_url": "https://assets.nexperia.com/documents/data-sheet/2N7002.pdf",
+    "downloaded": "2026-09-30",
+    "pages": 13,
+    "bytes": 871278,
+    "sha256": "cc9c275457670c3cbbf2e56f5a75c800d3b5f0b396fabc798cf18cb639646475",
+    "note": "Q6, Q8, Q9. Nexperia 2N7002; the carrier fits the JSCJ part (LCSC C8545), whose data sheet could not be downloaded"
   },
   {
     "file": "cenker-ckst-series.pdf",
@@ -96,16 +91,50 @@
     "downloaded": "2026-09-24",
     "pages": 22,
     "bytes": 558913,
-    "sha256": "2e6475e8cba9ad3f1b81807024ca8d297e58e297500951ae1fe0f1bbdfb8a6f7"
+    "sha256": "2e6475e8cba9ad3f1b81807024ca8d297e58e297500951ae1fe0f1bbdfb8a6f7",
+    "note": "L2 boost inductor"
   },
   {
-    "file": "molex-43650-0200-drawing.pdf",
-    "manufacturer_url": "https://www.molex.com/content/dam/molex/molex-dot-com/products/automated/en-us/salesdrawingpdf/436/43650/436500200_sd.pdf",
-    "download_url": "https://cdn.ozdisan.com/public/product/assets/MOLEX-436500200.pdf",
+    "file": "murata-grm21bz71a226.pdf",
+    "manufacturer_url": "https://www.murata.com/en-us/products/productdetail?partno=GRM21BZ71A226ME15%23",
+    "download_url": "https://atta.szlcsc.com/upload/public/pdf/source/20201022/C907991_FDD26F97C89A3C2FF3DDCDE25DF37A4B.pdf",
+    "downloaded": "2026-10-01",
+    "pages": 4,
+    "bytes": 611019,
+    "sha256": "8b28a03e111fe58264cfeed712b51148db582cbf6b4bfaa396aa97dbc9439259",
+    "note": "GRM21BZ71A226ME15L (22 uF 10 V X7R 0805, LCSC C907991; C9, C10, C13, C14, C18-C20) Murata data sheet with characteristic curves, Chinese edition from LCSC. DC bias about -52 % at 5 V, used by hardware/sim/run_power.py."
+  },
+  {
+    "file": "hanbo-mc107dms.pdf",
+    "note": "J1 USB-C receptacle"
+  },
+  {
+    "file": "ck-js-switches.pdf",
+    "download_url": "https://www.ic-components.pt/files/bd/JS102011SAQN.pdf",
     "downloaded": "2026-09-24",
-    "pages": 5,
-    "bytes": 69137,
-    "sha256": "812ccaba101541cd4b253d16ae41757ea4663fb1cef7f0c57633d055fe90b6fe"
+    "bytes": 1625625,
+    "sha256": "e5141b487dae3f9b4e7127a983e443b95be180d0120e60d55770402533fb3fd3",
+    "note": "SW1, SW2. Manufacturer drawing; C&K PDF hosted by distributor mirror"
+  },
+  {
+    "file": "littelfuse-466.pdf",
+    "manufacturer_url": "https://www.littelfuse.com/products/fuses-overcurrent-protection/fuses/surface-mount-fuses/thin-film-fuses/466",
+    "download_url": "https://static.chipdip.ru/lib/353/DOC012353712.pdf",
+    "downloaded": "2026-10-02",
+    "pages": 4,
+    "bytes": 712976,
+    "sha256": "908502ffc65a814ce41a22a85e62aa49722138b5a6f7651779efff9d1774d6d8",
+    "note": "Littelfuse 466 series 1206 very fast-acting fuse, revised 12/17/18 (F1 0466005.NRHF, 5 A, 11 mOhm nominal cold resistance), distributor mirror."
+  },
+  {
+    "file": "hongjiacheng-h5vld3b.pdf",
+    "manufacturer_url": "",
+    "download_url": "https://datasheet.lcsc.com/datasheet/pdf/5ab1431ae247ab24d0e0cff6cef07ef4.pdf?productCode=C20615805",
+    "downloaded": "2026-10-03",
+    "pages": 3,
+    "bytes": 226701,
+    "sha256": "cadb620421802a2fc3434d451f4e59b46699ceaa53319a83ff1c99dae5e5afc8",
+    "note": "Zhuhai Hongjiacheng (R+O) H5VLD3B rev 2.0, bidirectional 5 V ESD diode, SOD-323 (D6 to D9, LCSC C20615805): VRWM 5 V, VBR 6 to 9 V at 1 mA, VC 8 V at 1 A and 12 V at 8 A (8/20 us), CJ 15 pF max, IR 0.05 uA at 5 V, IEC 61000-4-2 +/-30 kV contact. LCSC mirror; no manufacturer page found."
   },
   {
     "file": "jst-ph-series.pdf",
@@ -114,7 +143,8 @@
     "downloaded": "2026-09-24",
     "pages": 5,
     "bytes": 103369,
-    "sha256": "447624f4f2f7d37c58c1eaa7ee314ad757fe7aff48f6186491ef6f69fbc00b96"
+    "sha256": "447624f4f2f7d37c58c1eaa7ee314ad757fe7aff48f6186491ef6f69fbc00b96",
+    "note": "J2, J3, J4 battery, NTC and thermostat connectors"
   },
   {
     "file": "samtec-ssq-drawing.pdf",
@@ -122,7 +152,7 @@
     "downloaded": "2026-09-24",
     "bytes": 368190,
     "sha256": "3609be190ef021cc260abf423296449d797dd474fe1618dcf0fec719e2a05141",
-    "note": "Manufacturer drawing or catalog"
+    "note": "Module sockets (hand-fitted, docs/interfaces.md)"
   },
   {
     "file": "samtec-ssq-footprint.pdf",
@@ -130,7 +160,7 @@
     "downloaded": "2026-09-24",
     "bytes": 25534,
     "sha256": "22412225a71a963f7337ba8057011971d161901832198f98770636aa7912b19c",
-    "note": "Manufacturer drawing or catalog"
+    "note": "Module sockets"
   },
   {
     "file": "samtec-ssq-catalog.pdf",
@@ -138,7 +168,7 @@
     "downloaded": "2026-09-24",
     "bytes": 471452,
     "sha256": "6d89f5c186a49e0f52f37d7bf7b5095081aff8f98e5ba18a85b0811caaf6f509",
-    "note": "Manufacturer drawing or catalog"
+    "note": "Module sockets"
   },
   {
     "file": "samtec-snt-drawing.pdf",
@@ -146,14 +176,48 @@
     "downloaded": "2026-09-24",
     "bytes": 158902,
     "sha256": "04b812db965b8acb0f031f0b10a77f18371c8836cdd27e10da5a947c97cbd34f",
-    "note": "Manufacturer drawing or catalog"
+    "note": "JP_PWR_ESP, JP_PWR_ADS shunts"
   },
   {
-    "file": "ck-js-switches.pdf",
-    "download_url": "https://www.ic-components.pt/files/bd/JS102011SAQN.pdf",
-    "downloaded": "2026-09-24",
-    "bytes": 1625625,
-    "sha256": "e5141b487dae3f9b4e7127a983e443b95be180d0120e60d55770402533fb3fd3",
-    "note": "Manufacturer drawing; C&K PDF hosted by distributor mirror"
+    "file": "variohm-entc-eb.pdf",
+    "manufacturer_url": "https://www.variohm.com/products/temperature-sensors/ntc-thermistor-temperature-sensors/entc-eb-series-",
+    "download_url": "https://pitch-technologies.fr/wp-content/uploads/2020/02/Sonde_thermique_ENTC-EB_2002_A.pdf",
+    "downloaded": "2026-09-30",
+    "pages": 1,
+    "bytes": 838254,
+    "sha256": "db1cc012ef75ee1e0a67da484517967009286f2c762a45c48d8a847d8ad55726",
+    "note": "Pack thermistor ENTC-EB-100K4262-02. Series data sheet 20/02 from a distributor mirror; the ordering table ends at 50 kOhm, the 100K4262 part shares the 4262 K curve. No R/T table."
+  },
+  {
+    "file": "AKKU_SOLD333290_DB-EN.pdf",
+    "note": "Battery pack 10 Ah (Fullest Energy FE1160100) specification, via reichelt"
+  },
+  {
+    "file": "AKKU_SOLD333290_SDB-EN.pdf",
+    "note": "Battery pack 10 Ah MSDS, via reichelt"
+  },
+  {
+    "file": "AKKU_SOLD_UN38.3-EN.pdf",
+    "note": "Battery UN38.3 test report, via reichelt"
+  },
+  {
+    "file": "AKKU_SOLD333288_DB-EN.pdf",
+    "note": "Battery pack 5 Ah option (runtime tables in docs/specs.md), via reichelt"
+  },
+  {
+    "file": "datasheet_adsbee_1090.pdf",
+    "note": "ADSBee 1090U receiver module"
+  },
+  {
+    "file": "max-m10s.pdf",
+    "note": "u-blox MAX-M10S on the SparkFun GPS-18037 GNSS module"
+  },
+  {
+    "file": "100069905.pdf",
+    "note": "Seeed XIAO 1.47 inch IPS touch display (ESP32-S3), SKU 100069905"
+  },
+  {
+    "file": "FTD-116-FLARM-FAMP-Public-Protocol-v1.02.pdf",
+    "note": "FLARM FAMP public protocol, firmware reference"
   }
 ]
