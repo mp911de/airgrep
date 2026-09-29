@@ -184,7 +184,7 @@ def render(p):
     typ = next(s for s in scen if s["brightness"] == p["brightness_levels"][-1] and not s["wifi"] and s["fix"])
     lines.append("### Charging time from empty")
     lines.append("")
-    lines.append(f"Charge current is limited to {p['charging']['charge_current_a']} A (ICHG) and by the source's input limit. \"Device on\" uses the typical scenario (Wi-Fi off, GNSS fix, backlight {int(p['brightness_levels'][-1]*100)} %, {typ['p_batt_w']:.2f} W); the charger powers the system first and only the rest charges the cell. Charge temperature window 0.0 to 43.3 °C (NTC).")
+    lines.append(f"Charge current is limited to {p['charging']['charge_current_a']} A (IFAST) and by the source's input limit. \"Device on\" uses the typical scenario (Wi-Fi off, GNSS fix, backlight {int(p['brightness_levels'][-1]*100)} %, {typ['p_batt_w']:.2f} W); the charger powers the system first and only the rest charges the cell. Charge temperature window 0 to 45 °C (NTC, MAX77757 JEITA thresholds; see docs/power.md).")
     lines.append("")
     head = "| Source | Input limit | " + " | ".join(f"{b['capacity_mah']} mAh off / on" for b in bats) + " |"
     lines.append(head)

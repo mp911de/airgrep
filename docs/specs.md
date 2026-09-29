@@ -17,7 +17,7 @@ Portable traffic-awareness receiver for gliders and general aviation. It receive
 | Barometer | Bosch BMP581 on the carrier |
 | Audio | piezo buzzer 4 kHz, mute slider |
 | Controls | POWER slider, MUTE slider, display touch and two buttons |
-| Indicators | green LED: running; two-colour LED: charging / charged (blinks alternately on a charger fault) |
+| Indicators | green LED: running; two-colour LED: red = USB power present, green blinking = charging, green solid = charged, red alone = not charging (temperature, thermostat or timer) |
 | Weight, enclosure dimensions | to be determined |
 
 ## Radio equipment
@@ -37,15 +37,15 @@ Maximum transmit power and the module-level radio test reports (EN 300 328) must
 | Item | Value |
 |---|---|
 | Charging port | USB Type-C receptacle (Hanbo MC-107DMS), USB 2.0, sink only |
-| Input voltage | 5 V (USB); protected up to 20 V by a TVS diode and 30 V-rated regulator; the charger itself tolerates 22 V |
-| Input current | 0.5 A (PC port), 1.45 A (unknown or 1.5 A USB-C source), 2.3 A (3 A USB-C source), 2.4 A (USB-A charger, BC1.2) |
-| Charging power | 2.5 W minimum (charges slowly) to 12 W maximum |
+| Input voltage | 5 V (USB); the charger accepts 4.5 to 13.7 V and withstands 16 V; 12 V TVS diode on the input |
+| Input current | set by the charger from the USB-C advertisement and BC1.2, the lower of the two: 0.5 A (PC port, default-current USB-C), 1.5 A (1.5 A USB-C source, USB-A BC1.2 charger), 2.4 A (Apple-signature USB-A charger), 3.0 A (3 A USB-C source) |
+| Charging power | 2.5 W minimum (charges slowly) to 15 W maximum |
 | Fast-charging protocols | none: no USB Power Delivery, no Quick Charge; the device never requests more than 5 V |
-| Charge current | 2.05 A constant current, then constant voltage to 4.208 V |
-| Charge temperature window | 0.0 to 43.3 °C at the battery (NTC); half current below 6 °C, 4.05 V limit above 30.8 °C |
+| Charge current | 2.0 A constant current, then constant voltage to 4.20 V; 6 h safety timer |
+| Charge temperature window | 0 to 45 °C at the battery (100 kΩ NTC, JEITA); half current below 8 °C, 4.05 V limit above 35 °C |
 | Over-temperature cut-off | bimetal thermostat on the battery, 60 °C ± 5 K: switches the device off and blocks charging |
 | Low-battery cut-off | supervisor switches the 5 V rail off below 2.9 V; the pack's own protection disconnects at 2.5 V |
-| Other protection | 3 A fuse in the battery lead, 12 V TVS and ESD diodes on the USB lines, charger input over-voltage and thermal shutdown, charge safety timer, load switch |
+| Other protection | 3 A fuse in the battery lead, 12 V TVS and ESD diodes on the USB lines, charger input over-voltage lockout at 13.7 V, 6 A battery discharge cut-off, thermal foldback, 6 h charge safety timer, load switch |
 | Operating the device while charging | supported; the charger supplies the system first and charges with the remainder |
 
 ## Battery
@@ -64,7 +64,7 @@ User-replaceable lithium-ion polymer pack behind the rear cover, JST-PH 2-pin co
 | Built-in protection | over-charge, over-discharge, short circuit | same |
 | Transport | UN38.3 tested (vendor report) | same |
 
-Temperature sensors, user-assembled and taped to the pack: NTC Variohm ENTC-G1B-10k3435-1 (Reichelt ENTC-10K3435-1) on J2, thermostat Limitor LIM-P-82-60 (Reichelt LIM-P-82-60) on J4.
+Temperature sensors, user-assembled and taped to the pack: NTC TDK B57164K0104 (100 kΩ, 4600 K) on J2, thermostat Limitor LIM-P-82-60 (Reichelt LIM-P-82-60) on J4.
 
 ## Operating conditions
 
@@ -88,17 +88,17 @@ Runtime from a full charge to supervisor cut-off, 95 % of rated capacity usable;
 |---|---|---|---|---|---|
 | Wi-Fi off, GNSS fix | 230 mA, 1.17 W | 90 % | 1.30 W (352 mA at 3.7 V) | 13.5 h / 10.8 h | 27.0 h / 21.6 h |
 | Wi-Fi off, GNSS no fix | 232 mA, 1.18 W | 90 % | 1.31 W (355 mA at 3.7 V) | 13.4 h / 10.7 h | 26.8 h / 21.4 h |
-| Wi-Fi on, GNSS fix | 510 mA, 2.58 W | 93 % | 2.83 W (764 mA at 3.7 V) | 6.2 h / 5.0 h | 12.4 h / 10.0 h |
-| Wi-Fi on, GNSS no fix | 512 mA, 2.59 W | 93 % | 2.84 W (767 mA at 3.7 V) | 6.2 h / 5.0 h | 12.4 h / 9.9 h |
+| Wi-Fi on, GNSS fix | 510 mA, 2.58 W | 93 % | 2.82 W (763 mA at 3.7 V) | 6.2 h / 5.0 h | 12.5 h / 10.0 h |
+| Wi-Fi on, GNSS no fix | 512 mA, 2.59 W | 93 % | 2.83 W (766 mA at 3.7 V) | 6.2 h / 5.0 h | 12.4 h / 9.9 h |
 
 **Backlight 50 %**
 
 | Scenario | 5 V rail | Boost eff. | Battery power | 5000 mAh (new / aged) | 10000 mAh (new / aged) |
 |---|---|---|---|---|---|
-| Wi-Fi off, GNSS fix | 216 mA, 1.09 W | 90 % | 1.22 W (329 mA at 3.7 V) | 14.4 h / 11.5 h | 28.8 h / 23.1 h |
+| Wi-Fi off, GNSS fix | 216 mA, 1.09 W | 90 % | 1.22 W (329 mA at 3.7 V) | 14.4 h / 11.5 h | 28.9 h / 23.1 h |
 | Wi-Fi off, GNSS no fix | 218 mA, 1.10 W | 90 % | 1.23 W (332 mA at 3.7 V) | 14.3 h / 11.4 h | 28.6 h / 22.9 h |
 | Wi-Fi on, GNSS fix | 496 mA, 2.51 W | 93 % | 2.74 W (741 mA at 3.7 V) | 6.4 h / 5.1 h | 12.8 h / 10.3 h |
-| Wi-Fi on, GNSS no fix | 498 mA, 2.52 W | 93 % | 2.75 W (744 mA at 3.7 V) | 6.4 h / 5.1 h | 12.8 h / 10.2 h |
+| Wi-Fi on, GNSS no fix | 498 mA, 2.52 W | 93 % | 2.75 W (743 mA at 3.7 V) | 6.4 h / 5.1 h | 12.8 h / 10.2 h |
 
 ### Component breakdown (backlight 100 %, Wi-Fi off, GNSS fix)
 
@@ -120,28 +120,28 @@ Wi-Fi on raises the ADSBee from 120 mA to 400 mA. No GNSS fix raises the GNSS dr
 
 | Source | Current |
 |---|---|
-| BQ25606 battery-only (typ) | 58 µA |
+| MAX77757 battery-only (typ) | 30 µA |
 | boost feedback divider via idle boost | 11 µA |
 | MAX17048 hibernate | 3 µA |
 | TPS61088 shutdown | 1 µA |
 | TPS22975 VBIAS shutdown | 2 µA |
 | R10 thermostat pull-down 1 MOhm | 4 µA |
 | TLV840 supervisor | 0.2 µA |
-| **Total** | **79 µA** |
+| **Total** | **51 µA** |
 
-- 5000 mAh: 1.2 % per month from the circuit; a full pack would last about 7 years (cell self-discharge dominates).
-- 10000 mAh: 0.6 % per month from the circuit; a full pack would last about 14 years (cell self-discharge dominates).
+- 5000 mAh: 0.7 % per month from the circuit; a full pack would last about 11 years (cell self-discharge dominates).
+- 10000 mAh: 0.4 % per month from the circuit; a full pack would last about 22 years (cell self-discharge dominates).
 
 ### Charging time from empty
 
-Charge current is limited to 2.05 A (ICHG) and by the source's input limit. "Device on" uses the typical scenario (Wi-Fi off, GNSS fix, backlight 50 %, 1.22 W); the charger powers the system first and only the rest charges the cell. Charge temperature window 0.0 to 43.3 °C (NTC).
+Charge current is limited to 2.0 A (IFAST) and by the source's input limit. "Device on" uses the typical scenario (Wi-Fi off, GNSS fix, backlight 50 %, 1.22 W); the charger powers the system first and only the rest charges the cell. Charge temperature window 0 to 45 °C (NTC, MAX77757 JEITA thresholds; see docs/power.md).
 
 | Source | Input limit | 5000 mAh off / on | 10000 mAh off / on |
 |---|---|---|---|
-| USB-C charger 3 A (TUSB320 enables ILIM2) | 2.30 A | 2 h 40 min (2.05 A) / 2 h 40 min (2.05 A) | 5 h 21 min (2.05 A) / 5 h 21 min (2.05 A) |
-| USB-A charger, BC1.2 DCP | 2.40 A | 2 h 40 min (2.05 A) / 2 h 40 min (2.05 A) | 5 h 21 min (2.05 A) / 5 h 21 min (2.05 A) |
-| USB-C charger 1.5 A or default | 1.45 A | 3 h 01 min (1.76 A) / 3 h 34 min (1.43 A) | 6 h 01 min (1.76 A) / 7 h 08 min (1.43 A) |
-| PC USB 2.0 port (SDP) | 0.50 A | 7 h 35 min (0.61 A) / 15 h 51 min (0.28 A) | 15 h 11 min (0.61 A) / 31 h 42 min (0.28 A) |
+| USB-C charger 3 A | 3.00 A | 2 h 44 min (2.00 A) / 2 h 44 min (2.00 A) | 5 h 27 min (2.00 A) / 5 h 27 min (2.00 A) |
+| USB-A charger, Apple 2.4 A signature | 2.40 A | 2 h 44 min (2.00 A) / 2 h 44 min (2.00 A) | 5 h 27 min (2.00 A) / 5 h 27 min (2.00 A) |
+| USB-C charger 1.5 A, or USB-A charger with BC1.2 DCP | 1.50 A | 2 h 56 min (1.82 A) / 3 h 27 min (1.50 A) | 5 h 52 min (1.82 A) / 6 h 53 min (1.50 A) |
+| PC USB 2.0 port (SDP), or default-current USB-C | 0.50 A | 7 h 35 min (0.61 A) / 15 h 50 min (0.28 A) | 15 h 11 min (0.61 A) / 31 h 41 min (0.28 A) |
 
 With Wi-Fi on the system needs more than a PC port can supply: the battery then supplements the input and slowly discharges.
 
@@ -163,7 +163,7 @@ What a CE-marked product of this kind has to address, for planning:
 |---|---|---|
 | Radio, EMC and safety | Radio Equipment Directive 2014/53/EU | Wi-Fi transmitters make RED apply; harmonised standards: EN 62368-1 (safety), EN 301 489-1/-17/-19 (EMC), EN 300 328 (2.4 GHz), EN 303 413 (GNSS receiver) |
 | Cybersecurity of connected radio equipment | RED delegated act (EU) 2022/30, EN 18031-1 | applies because the device joins or opens Wi-Fi networks: no default passwords, secure updates, configuration protection |
-| Common charger | Directive (EU) 2022/2380 (amends RED) | USB-C port: done. Must state the charging power range (2.5 to 12 W) and that USB PD is not supported, with the pictogram on the packaging |
+| Common charger | Directive (EU) 2022/2380 (amends RED) | USB-C port: done. Must state the charging power range (2.5 to 15 W) and that USB PD is not supported, with the pictogram on the packaging |
 | Batteries | Battery Regulation (EU) 2023/1542 | user-replaceable pack: done; capacity and chemistry marking, collection symbol, safety and disposal information in the manual |
 | Hazardous substances | RoHS 2011/65/EU | JLCPCB assembly with RoHS parts; hand-fitted parts must be RoHS too |
 | Disposal | WEEE 2012/19/EU | crossed-out bin symbol, producer registration in the sales country |

@@ -20,7 +20,7 @@ Settled with the user, 23 to 24 Sep 2026. Change only with the user.
 6. No battery current may flow back into the USB port.
 7. The charger is standalone. The ESP has no role in charging. It only reads state of charge from the gauge.
 8. One maintained POWER slider turns the whole device on and off, including when USB is present. Charging continues with the device off. The slider carries control current only.
-9. Battery temperature: NTC thermistor on the pack lets the charger suspend charging below 0 °C and above 60 °C. A separate thermostat contact on the pack cuts charging and all loads above 60 °C nominal, without firmware.
+9. Battery temperature: NTC thermistor on the pack lets the charger suspend charging when the pack is too cold or too hot (JEITA profile of the MAX77757 with the 100 kΩ NTC: 0 to 45 °C, see docs/power.md). A separate thermostat contact on the pack cuts charging and all loads above 60 °C nominal, without firmware.
 11. Undervoltage: loads switch off when SYS drops below about 3.1 V, in hardware. Device still runs from USB with an empty or missing battery.
 10. Fuel gauge MAX17048 on the carrier, I2C to the display.
 

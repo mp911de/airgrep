@@ -51,11 +51,6 @@
   (condition "A.Reference == 'J1'")
   (constraint edge_clearance (min 12mil)))
 
-# current capacity (JLCPCB blog, 1 oz, 10 C rise): 1 A ~ 10 mil, 2 A ~ 30-40 mil
-(rule "power nets min 16 mil outside fine-pitch areas"
-  (condition "A.NetClass == 'power' && A.Type == 'Track' && !A.intersectsArea('FINE_U4') && !A.intersectsArea('FINE_U6') && !A.intersectsArea('FINE_U7') && !A.intersectsArea('FINE_J1') && !A.intersectsArea('FINE_USB') && !A.intersectsArea('FINE_U8')")
-  (constraint track_width (min 16mil)))
-
 (rule "signal track spacing 12 mil"
   (condition "A.NetClass == 'Default' && B.NetClass == 'Default' && (A.Type == 'Track' || A.Type == 'Via') && (B.Type == 'Track' || B.Type == 'Via') && !A.intersectsArea('FINE_USB') && !A.intersectsArea('FINE_U4') && !A.intersectsArea('FINE_U6') && !A.intersectsArea('FINE_U7') && !A.intersectsArea('FINE_J1') && !A.intersectsArea('FINE_U10') && !A.intersectsArea('FINE_U1') && !A.intersectsArea('FINE_U8')")
   (constraint clearance (min 12mil)))

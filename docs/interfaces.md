@@ -13,7 +13,7 @@ Four separate groups, seen from the controller (back) side. Front view is mirror
 | 1x4 lower left | TP13 GND, TP14 3V3, TP15 SDA, TP16 SCL | I2C to gauge (MAX17048, 0x36) and barometer (BMP581, 0x46). The BMP581 sits just left of this header. |
 | 1x2 lower right | TP22 USR1, TP23 USR2 | support only |
 
-Touch and IMU already use SDA D4 / SCL D5. Buttons are D19 / D15 on board, no carrier wiring. Charger STAT and PG are not wired to the display (no free pin); charging state comes from the MAX17048 charge-rate register.
+Touch and IMU already use SDA D4 / SCL D5. Buttons are D19 / D15 on board, no carrier wiring. Charger STAT and INOKB are not wired to the display (no free pin); charging state comes from the MAX17048 charge-rate register.
 Mounting holes 2.5 mm, pattern 20 × 22.5 mm at the button end. Assembly 26.4 × 51.4 × 12.6 mm, PCB 25 × 50 mm.
 
 ## GNSS: SparkFun GPS-18037 (MAX-M10S)

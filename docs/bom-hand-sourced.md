@@ -17,7 +17,7 @@ Everything that JLCPCB does not assemble, per board, with order sources. Status 
 | Qty | Part | Description | Where | Approx. price |
 |---|---|---|---|---|
 | 1 | Soldered 333288 (5000 mAh) **or** Soldered 333290 (10000 mAh) | Li-ion polymer pack, 3.7 V, JST-PH 2-pin plug fitted, built-in protection | Reichelt [AKKU SOLD333288](https://www.reichelt.com/de/en/shop/product/lithium-ion_battery_soldered_333288_5000_mah_3_7_v-373552) / AKKU SOLD333290 | €14.95 (5000 mAh) |
-| 1 | Variohm ENTC-G1B-10k3435-1 | NTC 10 kΩ, B25/85 3435 K, glass bead; taped to the pack, plugs into J2 | Reichelt [ENTC-10K3435-1](https://www.reichelt.com/de/en/shop/product/thermistor_ntc_-40_to_250_c_-350473) | €2.24 |
+| 1 | TDK (EPCOS) B57164K0104K000 or J000 | NTC 100 kΩ, B25/100 4600 K (R/T curve 2005), lacquered disk, 5 mm lead spacing; taped to the pack, plugs into J2. Changed 29 Sep from the Variohm 10 kΩ / 3435 K: with the MAX77757 only this B value fits the 0 to 45 °C window (R8 130 kΩ). Reichelt lists the EPCOS B57164K series as "NTC-0,2"; else Bürklin 80E6452 or RS 1912314 | Bürklin [80E6452](https://buerklin.com/en/p/epcos/ntc-thermistors/b57164k0104j000/80E6452) or RS [1912314](https://uk.rs-online.com/web/p/thermistor-ics/1912314P) | about €0.50 |
 | 1 | Limitor LIM-P-82-60-5-100-10A | Thermostat 60 °C, normally closed, auto reset, flat 14.5 × 8 × 3.6 mm, wire leads; taped to the pack, plugs into J4 | Reichelt [LIM-P-82-60](https://www.reichelt.com/de/en/shop/product/temperature_limiter_60_c_nc_250_v_-351657) | €3.60 |
 
 ## Through-hole parts on the carrier (hand-soldered)
@@ -26,7 +26,7 @@ Everything that JLCPCB does not assemble, per board, with order sources. Status 
 |---|---|---|---|---|---|
 | 3 | J2, J3, J4 | JST B2B-PH-K-S | JST-PH 2-pin header, vertical, 2 mm | Reichelt [JST PH2P ST](https://www.reichelt.com/de/en/shop/product/jst_pin_header_straight_1x2-pin_ph-185049) | €0.16 each |
 | 1 | D5 | Kingbright L-7104GD | LED 3 mm green, diffused, 20 mcd, 40° (power) | Reichelt [KBT L-7104GD](https://www.reichelt.com/de/en/led-3-mm-leaded-green-20-mcd-40--kbt-l-7104gd-p230824.html) | €0.10 |
-| 1 | D4 | Kingbright L-115WEGW | LED 3 mm red/green, 3-pin, **common cathode**, diffused, 60° (red charging, green charged) | Reichelt [KBT L-115WEGW](https://www.reichelt.com/de/en/shop/product/led_3_mm_tht_3-pin_red_green_627_565_nm_40_40_mcd_60_-231039) | €0.28 |
+| 1 | D4 | Kingbright L-115WEGW | LED 3 mm red/green, 3-pin, **common cathode**, diffused, 60° (red USB power, green charging or charged) | Reichelt [KBT L-115WEGW](https://www.reichelt.com/de/en/shop/product/led_3_mm_tht_3-pin_red_green_627_565_nm_40_40_mcd_60_-231039) | €0.28 |
 | 3 | J5 to J11 | Female header 2.54 mm, 1 × 20, straight, 8.5 mm high, cut to length | Module sockets: 8 + 8 + 7 + 4 + 2 + 13 + 5 = 47 positions; cutting costs one position per cut, 3 strips are enough | Reichelt [BL 1X20G8 2,54](https://www.reichelt.com/de/en/20-pin-socket-terminal-strip-straight-rm-2-54-h-8-5-mm-bl-1x20g8-2-54-p51827.html) | about €1 each |
 | 1 | JP1, JP2 | Pin header 2.54 mm, 1 × 40, straight, cut to 2 × 2 pins | Power shunts ESP 5V / ADS 5V; the rest of the strip serves as module pins (below) | Reichelt [SL 1X40G 2,54](https://reichelt.com/de/en/40-pin-header-straight-pitch-2-54-sl-1x40g-2-54-p19506.html) | about €0.30 |
 | 2 | JP1, JP2 | Jumper 2.54 mm, closed, with grip | Shunts; remove for USB service of a module | Reichelt [Jumper 2.54 mm closed with handle](https://www.reichelt.com/de/en/shop/product/jumper_2_54_mm_closed_with_handle_black-119938) | €0.10 each |

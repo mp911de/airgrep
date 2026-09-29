@@ -314,6 +314,43 @@
         "activeLayer": -2,
         "flipBoard": false,
         "layers": [
+          2,
+          3,
+          11,
+          15,
+          25,
+          29
+        ],
+        "name": "B.Route",
+        "renderLayers": [
+          "vias",
+          "footprint_text",
+          "footprint_anchors",
+          "ratsnest",
+          "grid",
+          "footprints_front",
+          "footprints_back",
+          "footprint_values",
+          "footprint_references",
+          "tracks",
+          "drc_errors",
+          "drawing_sheet",
+          "bitmaps",
+          "pads",
+          "zones",
+          "drc_warnings",
+          "drc_exclusions",
+          "locked_item_shadows",
+          "conflict_shadows",
+          "shapes",
+          "board_outline_area",
+          "ly_points"
+        ]
+      },
+      {
+        "activeLayer": -2,
+        "flipBoard": false,
+        "layers": [
           0,
           1,
           9,
