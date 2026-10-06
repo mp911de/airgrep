@@ -8,18 +8,16 @@ The three modules are ordered. The carrier board is not.
 
 - [ ] **Reverse-polarity protection at J3.** CSD25404Q3 (LCSC C2865523) selected; design and validate the bidirectional protection stage, including USB-powered reversed-pack insertion and depleted-pack recovery. Coordinate with the planned off-state battery disconnect. No indicator LED; see [issue 0002](../issues/0002-battery-reverse-polarity-protection.md).
 - [ ] **Silkscreen.** Labels on the top side:
-  - Update the revision text; the board reads "Rev A 2026-09-30".
   - Add "ESP 5V" at JP1. ("REMOVE BEFORE USB" is on the board at JP1 and JP2 since 6 Oct.)
   - Add "THERM" at J4, which is labelled on the bottom only.
-  - Add POWER at SW1 and MUTE at SW2.
 - [ ] **Battery connector rating.** J3 is JST-PH, rated 2 A per contact. The battery current is about 1.9 A at the 1 A load peak and about 3 A at the 1.5 A headroom near empty, and F1 is 5 A. Accept this for short peaks or change the connector ([interfaces.md](interfaces.md#carrier-connectors)).
-- [ ] **Production files.** The set in `hardware/kicad/jlcpcb/` is older than the board: BOM and CPL lack R43, the CPL has outdated positions for R6, R8 and F1, and L1 is exported with the footprint `IND-SMD_L7.4-W6.6` instead of `IND-SMD_L7.0-W6.6_FXL0630`. Export again:
+- [ ] **K3-1280S-F1 fit and assembly placement.** Compare a real C92658 F1 sample with the manufacturer-derived footprint, including its 0.90 mm peg holes and 3.075 mm peg-to-terminal-row offset. The supplier CAD mixes F2/K1 names and uses 3.406 mm; its 3D model is not trusted. Verify SW1-SW3 orientation and seating in the JLCPCB preview before ordering. Details in [physical controls](../workflows/physical-controls.md).
+- [ ] **Production files.** The set in `hardware/kicad/jlcpcb/` is older than the board: BOM and CPL lack R43, the CPL has outdated positions for R6, R8 and F1, and L1 is exported with the footprint `IND-SMD_L7.4-W6.6` instead of `IND-SMD_L7.0-W6.6_FXL0630`. The control change also replaces SW1/SW2 and adds SW3, U13, C40 and R48-R55; J12 is hand-fitted. Export again:
   - Fill all zones, save, run DRC with schematic parity.
   - Export Gerbers, BOM and CPL.
   - Run `tools/kpy tools/fix_cpl.py` after every CPL export. It corrects rotation and position of the parts whose JLCPCB model origin differs from the footprint; see the script header.
   - Record the JLCPCB class (Basic or Extended) per part; the project does not hold it yet.
   - Select stackup JLC04161H-2116C in the order.
-- [ ] **Schematic print.** `hardware/kicad/carrier-schematic.pdf` is older than four of the sheets. Print it again.
 - [ ] **Insulator board.** Order `hardware/insulator/` together with the carrier ([mechanical.md](mechanical.md#insulator-board)).
 
 ## Checks when the modules arrive
@@ -67,14 +65,16 @@ The simulations rest on these. Each one changes a result if it is far off.
   - Switch off with USB present; no backfeed.
 - [ ] **5 V rail.** Start-up, load steps between 0.1 and 0.8 A and between 0.8 and 1 A at the module terminals, boost ripple. Compare against `hardware/sim/power/results.md`.
 - [ ] **Undervoltage.** Discharge to cut-off under load. The latch must hold the system off while the battery voltage recovers. Clear it with the slider and with USB. Measure the latched current (about 60 µA expected).
+- [ ] **Physical controls.** Verify U13 address 0x20 alongside all other I2C devices, 100 kHz bus rise time, both slider positions, startup silence, debounce, last-known-state behavior on a disconnected expander, and Wi-Fi command acknowledgment. Check all six J12 inputs with contacts to GND. Measure added current; the budget is an estimate.
 - [ ] **GNSS reception next to the charger.** L1 is closer to the GNSS module than the 40 mm planning target ([mechanical.md](mechanical.md#placement)). Compare reception with and without charging.
 
 ## Firmware
 
 - [ ] FLARM 868 MHz decoding is not demonstrated in the ADSBee firmware.
-- [ ] Display firmware: gauge readout, Wi-Fi traffic feed, buzzer PWM on D11.
+- [ ] Display firmware: gauge readout, traffic input and buzzer PWM on D11; poll and debounce U13 at 0x20. Apply both sliders at startup, keep PWM silent until mute is read, and retain both last known states on read failure. Show the shared failure icon for expander, gauge or BMP faults.
+- [ ] Custom ADSBee firmware: add Wi-Fi command/response support to the existing COMMS_UART alongside traffic output. Stock AT intake on this port is not established.
 - [ ] BMP581: keep the interrupt output disabled; the INT pin is tied to GND.
-- [ ] Load shedding at low state of charge (MAX17048): Wi-Fi off and backlight down. This lowers the battery current near cut-off and moves the cut-off to a lower cell voltage.
+- [ ] Low state of charge: warning and optional backlight dimming. Do not override the Wi-Fi slider.
 
 ## Enclosure
 

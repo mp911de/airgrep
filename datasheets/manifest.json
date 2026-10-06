@@ -219,5 +219,21 @@
   {
     "file": "FTD-116-FLARM-FAMP-Public-Protocol-v1.02.pdf",
     "note": "FLARM FAMP public protocol, firmware reference"
+  },
+  {
+    "file": "hro-k3-1280s.pdf",
+    "download_url": "https://datasheet.lcsc.com/datasheet/pdf/8f01ffa7ddaffda568b684fff6359f90.pdf?productCode=C92658",
+    "downloaded": "2026-10-06",
+    "bytes": 60418,
+    "sha256": "d0c6e89845b0a5abe66c052244db964d4f87901785d5c20a9ea0279cd2d06ccb",
+    "note": "SW1-SW3 K3-1280S-F1; manufacturer drawing, includes recommended land pattern"
+  },
+  {
+    "file": "tca9534.pdf",
+    "download_url": "https://www.ti.com/lit/ds/symlink/tca9534.pdf",
+    "downloaded": "2026-10-06",
+    "bytes": 1475976,
+    "sha256": "aab050b47942f0c4a0551926b62bc85a5663f74682d4205f4980cca4871a9be1",
+    "note": "U13 input expander"
   }
 ]

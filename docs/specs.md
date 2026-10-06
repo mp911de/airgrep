@@ -19,8 +19,8 @@ It is an awareness aid, not certified avionics. It must not be the primary means
 | ADS-B receiver | ADSBee 1090U (RP2040, ESP32-S3 for Wi-Fi, TI CC1312 sub-GHz) |
 | GNSS receiver | SparkFun GPS-18037 with u-blox MAX-M10S, SMA antenna connector |
 | Barometer | Bosch BMP581 on the carrier |
-| Audio | piezo buzzer, 4 kHz, with MUTE slider |
-| Controls | POWER slider, MUTE slider, display touch, two display buttons |
+| Audio | piezo buzzer, 4 kHz; maintained MUTE slider read by firmware |
+| Controls | independent POWER slider; MUTE and Wi-Fi sliders on TCA9534 I2C inputs; six spare inputs on J12; display touch and two display buttons |
 | Indicators | one green LED, one red/green LED |
 | Weight, enclosure dimensions | to be determined |
 
@@ -174,19 +174,19 @@ The boost efficiency is a budget estimate from the TI data sheet curve, derated 
 
 | Scenario | 5 V rail | Boost eff. | Battery power | 5000 mAh (new / aged) | 10000 mAh (new / aged) |
 |---|---|---|---|---|---|
-| Wi-Fi off, GNSS fix | 230 mA, 1.17 W | 90 % | 1.30 W (352 mA at 3.7 V) | 13.5 h / 10.8 h | 27.0 h / 21.6 h |
-| Wi-Fi off, GNSS no fix | 232 mA, 1.18 W | 90 % | 1.31 W (355 mA at 3.7 V) | 13.4 h / 10.7 h | 26.8 h / 21.4 h |
-| Wi-Fi on, GNSS fix | 510 mA, 2.58 W | 93 % | 2.82 W (763 mA at 3.7 V) | 6.2 h / 5.0 h | 12.5 h / 10.0 h |
-| Wi-Fi on, GNSS no fix | 512 mA, 2.59 W | 93 % | 2.83 W (766 mA at 3.7 V) | 6.2 h / 5.0 h | 12.4 h / 9.9 h |
+| Wi-Fi off, GNSS fix | 231 mA, 1.17 W | 90 % | 1.30 W (352 mA at 3.7 V) | 13.5 h / 10.8 h | 27.0 h / 21.6 h |
+| Wi-Fi off, GNSS no fix | 233 mA, 1.18 W | 90 % | 1.31 W (355 mA at 3.7 V) | 13.4 h / 10.7 h | 26.8 h / 21.4 h |
+| Wi-Fi on, GNSS fix | 511 mA, 2.58 W | 93 % | 2.82 W (763 mA at 3.7 V) | 6.2 h / 5.0 h | 12.5 h / 10.0 h |
+| Wi-Fi on, GNSS no fix | 513 mA, 2.59 W | 93 % | 2.83 W (766 mA at 3.7 V) | 6.2 h / 5.0 h | 12.4 h / 9.9 h |
 
 **Backlight 50 %**
 
 | Scenario | 5 V rail | Boost eff. | Battery power | 5000 mAh (new / aged) | 10000 mAh (new / aged) |
 |---|---|---|---|---|---|
-| Wi-Fi off, GNSS fix | 216 mA, 1.09 W | 90 % | 1.22 W (329 mA at 3.7 V) | 14.4 h / 11.5 h | 28.9 h / 23.1 h |
+| Wi-Fi off, GNSS fix | 216 mA, 1.09 W | 90 % | 1.22 W (329 mA at 3.7 V) | 14.4 h / 11.5 h | 28.8 h / 23.1 h |
 | Wi-Fi off, GNSS no fix | 218 mA, 1.10 W | 90 % | 1.23 W (332 mA at 3.7 V) | 14.3 h / 11.4 h | 28.6 h / 22.9 h |
 | Wi-Fi on, GNSS fix | 496 mA, 2.51 W | 93 % | 2.74 W (741 mA at 3.7 V) | 6.4 h / 5.1 h | 12.8 h / 10.3 h |
-| Wi-Fi on, GNSS no fix | 498 mA, 2.52 W | 93 % | 2.75 W (743 mA at 3.7 V) | 6.4 h / 5.1 h | 12.8 h / 10.2 h |
+| Wi-Fi on, GNSS no fix | 498 mA, 2.52 W | 93 % | 2.75 W (744 mA at 3.7 V) | 6.4 h / 5.1 h | 12.8 h / 10.2 h |
 
 ### Component breakdown (backlight 100 %, Wi-Fi off, GNSS fix)
 
@@ -198,9 +198,10 @@ The boost efficiency is a budget estimate from the TI data sheet curve, derated 
 | Display: backlight at 100 % | 30.0 mA | estimate: 1.47 in IPS backlight, 2 white LEDs at about 15 mA; Seeed publishes no figure |
 | Carrier: green power LED D5 | 6.4 mA | (5.06 V - about 2.0 V LED forward voltage) / 470 Ω (R26) |
 | Carrier: BMP581, buzzer driver idle, I2C pull-ups | 0.1 mA | BMP581 normal mode below 0.01 mA; 74LVC1G17 below 0.01 mA; display I2C pull-ups about 0.05 mA |
+| Carrier: control inputs, both sliders low | 0.1 mA | TCA9534: at most 4 uA standby at 3.6 V plus 2 x 33 uA in 100 kOhm pulls at 3.3 V; rounded to 0.1 mA for polling. Each additional grounded spare input adds 33 uA. Estimate, through display LDO. |
 | Carrier: buzzer, average | 0.2 mA | PKMCS0909 driven from 3.3 V through 150 Ω: about 20 mA while beeping, assumed 1 % duty |
 | GNSS: MAX-M10S, breakout LED, active antenna (tracking) | 20.8 mA | u-blox MAX-M10S data sheet UBX-20035208 R02, Table 13, GPS+GAL+GLO: tracking 7.0 + 2.3 mA (VCC + V_IO), acquisition 9.0 + 2.3 mA at 3.0 V; Typical active GNSS antenna LNA bias at 3.3 V, to be measured (docs/open-issues.md). Set 0 for a passive antenna. |
-| **Total at 5.06 V** | **230 mA** | |
+| **Total at 5.06 V** | **231 mA** | |
 
 Wi-Fi on raises the ADSBee from 120 mA to 400 mA. Without a fix the GNSS receiver stays in acquisition and draws 2.0 mA more, below 1 % of the total.
 
@@ -228,8 +229,8 @@ The charge current is limited to 1.8 A (IFAST) and by the input limit of the sou
 |---|---|---|---|
 | USB-C charger 3 A | 3.00 A | 2 h 58 min (1.80 A) / 2 h 58 min (1.80 A) | 5 h 55 min (1.80 A) / 5 h 55 min (1.80 A) |
 | USB-A charger, Apple 2.4 A signature | 2.40 A | 2 h 58 min (1.80 A) / 2 h 58 min (1.80 A) | 5 h 55 min (1.80 A) / 5 h 55 min (1.80 A) |
-| USB-C charger 1.5 A, or USB-A charger with BC1.2 DCP | 1.50 A | 2 h 58 min (1.80 A) / 3 h 27 min (1.50 A) | 5 h 55 min (1.80 A) / 6 h 53 min (1.50 A) |
-| PC USB 2.0 port (SDP), or default-current USB-C | 0.50 A | 7 h 35 min (0.61 A) / 15 h 50 min (0.28 A) | 15 h 11 min (0.61 A) / 31 h 41 min (0.28 A) |
+| USB-C charger 1.5 A, or USB-A charger with BC1.2 DCP | 1.50 A | 2 h 58 min (1.80 A) / 3 h 27 min (1.49 A) | 5 h 55 min (1.80 A) / 6 h 53 min (1.49 A) |
+| PC USB 2.0 port (SDP), or default-current USB-C | 0.50 A | 7 h 35 min (0.61 A) / 15 h 51 min (0.28 A) | 15 h 11 min (0.61 A) / 31 h 42 min (0.28 A) |
 
 With Wi-Fi on the system needs more than a PC port can supply. The battery then supplements the input and slowly discharges.
 

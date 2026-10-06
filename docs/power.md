@@ -250,7 +250,7 @@ U6 TPS61088RHLR (LCSC C87357) converts SYS (3.1 to 4.4 V) to 5.06 V. The load is
 - MODE is tied to GND (forced PWM, fixed frequency).
 - PWR_EN enables U6 and U7 together. The load switch rises slower than the boost soft start, so rail inrush does not reach the boost current limit.
 - BOOST_5V stays charged behind the open load switch after shutdown.
-- SW1 (C&K JS102011SAQN, LCSC C221660) carries control current only. Terminal 2, the middle pad, is the common.
+- SW1 (HRO K3-1280S-F1, LCSC C92658) carries control current only. Terminal 2, the middle pad, is the common.
 - Fit the snubber only if the bench shows switch-edge ringing in the receiver bands. The model shows ringing near 1 GHz; its real amplitude depends on the layout.
 - L1 and L2 are 13 mm apart, centre to centre. Simulated magnetic pickup is at most 0.08 mV into the THM network and 0.03 mV between the inductors.
 
@@ -371,10 +371,10 @@ Two 3 mm through-hole LEDs next to the USB port, fitted by the user. What the us
 
 Passives use JLCPCB Basic stock where a Basic value exists. Expected outside Basic stock:
 
-- the ICs U4 to U10
+- the ICs U4 to U13
 - the X7R bulk capacitors
 - R8 154 kΩ (C22881)
 - L1, L2, F1, D3, D6 to D9
-- J1, SW1, SW2, BZ1
+- J1, SW1, SW2, SW3, BZ1
 
 The JLCPCB class of each part is not recorded in the project and is not verified here. Check it at the BOM export. Hand-fitted parts are in [bom-hand-sourced.md](bom-hand-sourced.md).

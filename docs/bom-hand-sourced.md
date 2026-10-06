@@ -22,7 +22,7 @@ Everything that JLCPCB does not assemble, per board, with order sources and orde
 
 ## Through-hole parts on the carrier (hand-soldered)
 
-D4, D5, J2 to J11, JP1 and JP2 are marked DNP, so the assembly BOM and position files leave them out. Their footprints are on the board; fit the parts below by hand. The mounting holes (MH1 to MH4, MH6 to MH8, MH10 to MH14) are board-only footprints and are excluded from the assembly files as well.
+D4, D5, J2 to J12, JP1 and JP2 are marked DNP, so the assembly BOM and position files leave them out. Their footprints are on the board; fit the parts below by hand. The mounting holes (MH1 to MH4, MH6 to MH8, MH10 to MH14) are board-only footprints and are excluded from the assembly files as well.
 
 | Qty | Ref | Part | Description | Where | Approx. price |
 |---|---|---|---|---|---|
@@ -31,6 +31,7 @@ D4, D5, J2 to J11, JP1 and JP2 are marked DNP, so the assembly BOM and position 
 | 1 | D4 | Kingbright L-115WEGW | LED 3 mm red/green, 3-pin, **common cathode**, diffused, 60° (red USB power, green charging or charged) | Reichelt [KBT L-115WEGW](https://www.reichelt.com/de/en/shop/product/led_3_mm_tht_3-pin_red_green_627_565_nm_40_40_mcd_60_-231039) | €0.28 |
 | 3 | J5 to J11 | Female header 2.54 mm, 1x20, straight, 8.5 mm high, cut to length | Module sockets: 8 + 8 + 7 + 4 + 2 + 13 + 5 = 47 positions; cutting costs one position per cut, 3 strips are enough | Reichelt [BL 1X20G8 2,54](https://www.reichelt.com/de/en/20-pin-socket-terminal-strip-straight-rm-2-54-h-8-5-mm-bl-1x20g8-2-54-p51827.html) | about €1 each |
 | 1 | JP1, JP2 | Pin header 2.54 mm, 1x40, straight, two 1x2 pieces cut off | Power shunts ESP 5V / ADS 5V; the rest of the strip serves as module pins (below) | Reichelt [SL 1X40G 2,54](https://reichelt.com/de/en/40-pin-header-straight-pitch-2-54-sl-1x40g-2-54-p19506.html) | about €0.30 |
+| 2 pieces | J12 | Pin header 2.54 mm, 1x4, straight, cut from the SL 1X40G strip | Fit side by side in the 2x4 footprint; six dry-contact inputs and two grounds. Eight additional pins from the existing strips. | Reichelt SL 1X40G 2,54 (link above) | included in strip |
 | 2 | JP1, JP2 | Jumper 2.54 mm, closed, with grip | Shunts; remove for USB service of a module | Reichelt [Jumper 2.54 mm closed with handle](https://www.reichelt.com/de/en/shop/product/jumper_2_54_mm_closed_with_handle_black-119938) | €0.10 each |
 | 1 | U4 | Fischer ICK S 10 x 10 x 6.5 (or ICK BGA 10 x 10 x 6) heatsink, a 2.5 x 2.5 x 1.5 mm copper spacer and thermal epoxy (two layers, about 0.1 mm each) | Heatsink on the MAX77757 charger; the spacer lifts it above the neighbouring capacitors. See [power.md](power.md#heatsink) | RS 674-4784 / Bürklin (ICK S), RS 057-7631, DigiKey, Farnell (ICK BGA); spacer cut from 1.5 mm copper sheet | about €2 |
 

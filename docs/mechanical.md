@@ -21,7 +21,7 @@ Placement rules:
 - RF sits at the top: the GNSS module, the ADSBee and the three antenna mounts.
 - Both switching converters sit at the bottom right. The charger inductor L1 is about 37 mm from the GNSS module outline, the boost inductor L2 about 42 mm.
 - POWER slider SW1, LEDs D4 and D5 and the USB-C receptacle J1 line up on the bottom edge and face down. Side clearance in an aircraft is often poor.
-- MUTE slider SW2 is on the left edge, next to the buzzer.
+- MUTE slider SW2 is on the left edge, next to the buzzer. Wi-Fi slider SW3 is above it on the same edge.
 - The display sits in the middle column, glass to the front.
 - The pack connectors J2, J3, J4 and the pack fuse F1 are at the bottom, left of centre, reachable with the rear cover off.
 - Shunt JP1 is left of the display and stays reachable with the display fitted. JP2 lies under the lower right corner of the ADSBee outline.
@@ -29,6 +29,23 @@ Placement rules:
 - The ADSBee is portrait, 30 x 48 mm. Its own USB-C faces down, above the boost converter. Its U.FL connectors are at the upper left corner.
 
 Module outlines in the drawing follow the socket positions. The GNSS and display outlines come from the manufacturer CAD (`mechanical/source-geometry.json`), the ADSBee outline from an image estimate ([adsbee-estimate.md](../mechanical/adsbee-estimate.md)).
+
+### Control sliders
+
+SW1 to SW3 use HRO K3-1280S-F1, C92658, with the local `carrier:SW-SMD_K3-1280S-F1` footprint. It follows the [manufacturer drawing](../datasheets/hro-k3-1280s.pdf): 2.50 mm terminal pitch, 1.20 x 2.45 mm solder lands, two 0.90 mm holes spaced 6.80 mm, and 3.075 mm from the terminal-row centre to the peg line. The body is 9.10 x 3.50 mm in that drawing, 3.50 mm high, with a 2 mm F1 actuator and 2 mm travel.
+
+Footprint origins are the middle terminal. Board coordinates are integer mil:
+
+| Ref | X | Y | KiCad rotation | Access |
+|---|---|---|---|---|
+| SW1 | 2420 | 3567 | 0 degrees | bottom |
+| SW2 | 190 | 2590 | 270 degrees | left |
+| SW3 | 190 | 1850 | 270 degrees | left |
+| J12 pin 1 | 1080 | 3080 | 0 degrees | front, inside enclosure |
+
+SW2 and SW3 bodies end approximately at the left board edge; their actuators extend about 79 mil beyond it. SW1's body overhangs the lower edge by about 17 mil, with a further 79 mil actuator extension. This keeps its new courtyard clear of the existing circuitry. Include the full actuator travel and housing tolerance when designing the case.
+
+The supplier CAD has inconsistent F2/K1 names and a different peg offset. Use the manufacturer-derived footprint, and check an actual F1 sample and the JLCPCB assembly preview before ordering. No verified F1 3D model is assigned. See [physical controls](../workflows/physical-controls.md) for the comparison.
 
 ### USB-C receptacle in the case
 
@@ -39,7 +56,7 @@ Place the board edge about 0.5 mm inside the case wall. With a 1.5 to 2 mm wall 
 ## Assembly split
 
 - JLCPCB assembles all SMD parts. They are on the top side.
-- Hand-soldered through-hole parts: module sockets J5 to J11, pack connectors J2 to J4, shunt headers JP1 and JP2, LEDs D4 and D5. The parts are listed in [bom-hand-sourced.md](bom-hand-sourced.md).
+- Hand-soldered through-hole parts: module sockets J5 to J11, pack connectors J2 to J4, shunt headers JP1 and JP2, expansion header J12, LEDs D4 and D5. The parts are listed in [bom-hand-sourced.md](bom-hand-sourced.md).
 - All seven module sockets are 2.54 mm single-row female headers of one height, 8.5 mm.
 
 ## Mounting

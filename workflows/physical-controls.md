@@ -1,126 +1,120 @@
 # Physical mute and Wi-Fi controls
 
-Status: hardware requirements agreed. Component selection and electrical design
-remain to be completed before schematic and PCB implementation.
+Status: schematic and PCB implemented for revision 1. Firmware and physical
+bring-up remain open. The hardware is not a fabrication release.
 
-## Purpose
+## Agreed behavior
 
-Operate frequently used functions without navigating the small touchscreen.
-The ADSBee Wi-Fi feed serves the EFB; switching Wi-Fi off also saves battery
-power. Physical controls must be included in the first carrier revision.
+- SW1 remains an independent maintained POWER switch and the recovery control
+  if firmware hangs.
+- SW2 remains a maintained MUTE slider. The ESP reads it through the expander
+  and decides whether to generate buzzer PWM on D11.
+- SW3 is a maintained Wi-Fi slider on the left edge, included in revision 1.
+  It controls ADSBee Wi-Fi, primarily the EFB feed and secondarily battery use.
+- Both slider positions determine requested state from startup. Keep PWM silent
+  until the first valid mute read. The touchscreen displays the states without
+  overriding them.
+- Low battery does not override Wi-Fi ON. Show a warning; backlight dimming may
+  remain.
+- If an expander read fails, retain both last known control states.
+- Future ESP firmware shows a shared system-failure icon for expander, gauge
+  and BMP faults. Polling, debounce, fault detection/recovery and startup
+  sequencing belong to that firmware work.
 
-## Agreed scope
+## Implemented circuit
 
-- Retain the maintained MUTE slider, SW2.
-- Change mute to a firmware-controlled function. The ESP32 already generates
-  buzzer PWM and will decide whether to generate it from the slider input.
-- An independent hardware mute guarantee is not required. The POWER slider
-  provides the user's recovery path if firmware hangs.
-- Add a second maintained slider on the left side for ADSBee Wi-Fi.
-- Provide input expansion so additional controls can be connected later.
-- Both slider positions determine the requested state from startup onward.
-  Keep the buzzer silent until its position has been read. The touchscreen
-  displays state and does not override either slider.
-- Low battery must not automatically disable Wi-Fi while its slider is ON.
-  Show a low-battery warning; automatic backlight dimming may remain.
-- Six inputs total are sufficient: two sliders and at least four spare inputs.
-  Optimize for power consumption, available assembly stock and assembled cost.
-  Eight inputs are acceptable if that is the better practical choice.
-- Custom ADSBee firmware is already planned for FLARM support. Add wired Wi-Fi
-  control to that firmware over the existing display-to-ADSBee UART.
-- If the expander becomes unavailable, disregard unavailable input and retain
-  the last known state of both controls. A read failure must not change mute or
-  Wi-Fi state.
+- U13: TI TCA9534PWR, C783615, TSSOP-16, supplied by ESP_3V3. A0-A2 are grounded
+  for address 0x20. C40 is 100 nF local decoupling. Its ground uses an explicit
+  trace and via rather than a zone thermal connection.
+- Existing 100 kHz I2C bus; no extra bus pull-ups. R19/R20 remain DNP. INT is
+  unconnected because the exposed display GPIOs are already allocated.
+- P0 is BUZZ_ENABLE from SW2; P1 is WIFI_ENABLE from SW3. Common pin 2 goes to
+  the input, pin 3 to GND, and pin 1 is unconnected. Low means muted or Wi-Fi
+  off; high permits buzzer output or requests Wi-Fi on.
+- R48-R55 are 100 kOhm pull-ups to ESP_3V3, one per P0-P7. All inputs therefore
+  have defined levels, including unused expansion inputs.
+- J12 is a hand-fitted 2x4, 2.54 mm header: pins 1-6 are P2-P7; pins 7 and 8
+  are GND. It provides six spare inputs for short enclosure wiring and dry
+  contacts to ground. It is DNP and excluded from assembly BOM/CPL.
+- D11 -> U9 -> R28 (150 Ohm) -> BZ1 is now direct. BUZZ_LIM reaches BZ1;
+  BUZZ_PLUS and the hard mute connection have been removed.
+- SW1-SW3 all use HRO K3-1280S-F1, C92658, and the new local footprint.
 
-## Proposed implementation basis
+The shared addresses are 0x20 (TCA9534), 0x36 (MAX17048), 0x46 (BMP581),
+0x63 (AXS5106L touch), and 0x6A (LSM6DS3 IMU). Seeed documents the two display
+addresses in its [peripheral guide](https://wiki.seeedstudio.com/function_1.47_inch_touch_display_esp32s3/).
+Validate the assembled bus and its rise time at bring-up.
 
-An I2C GPIO expander on the existing display bus reads the controls. Retain
-buzzer PWM on D11 and the direct display-to-ADSBee UART. Expect polling because
-the currently available display GPIOs are occupied. Part, address, connector
-arrangement and layout remain open.
+The [TI datasheet](../datasheets/tca9534.pdf) specifies at most 4 uA standby at
+3.6 V with inputs low, or 2.2 uA with inputs high. Each grounded 100 kOhm input
+adds 33 uA at 3.3 V. The power model allows 0.1 mA for the IC and two grounded
+sliders, including an estimated polling allowance. Each grounded spare adds
+another 33 uA; all eight pulls would draw 264 uA. Measure polling current and
+bus loading on the prototype.
 
-The existing UART is not a demonstrated control transport with stock firmware.
-The carrier documentation claims AT commands over COMMS_UART, but the local
-ADSBee datasheet describes AT commands over CONSOLE. Upstream source inspected
-on 2026-10-06 enables USB console and disables UART stdio; its AT parser reads
-stdio and network-console input, with no COMMS_UART AT intake found.
+## Component selection
 
-Keep the current carrier UART wiring. The planned custom ADSBee firmware must
-add command intake and responses alongside traffic output. This is an accepted
-firmware dependency; it has not been implemented or verified on hardware.
+Eight channels satisfy the requirement for at least six total. TCA9534PWR
+provides low standby current in TSSOP-16 and was the preferred stocked assembly
+option in the comparison. TI PCA9534PWR (C133803) had no verified price advantage.
+PCF8574T/3,518 (C7605) was less attractive because each grounded quasi-bidirectional
+input sinks its 30-300 uA weak source and its indexed unit price was higher.
 
-Sources: [ADSBee AT implementation](https://github.com/PantsForBirds/adsbee/blob/main/firmware/adsbee_1090/pico/application/comms/at/comms_at.cc),
+The JLCPCB result retrieved on 2026-10-06 listed 15,412 TCA9534 units and USD
+0.7132 at quantity one, Extended. It was indexed the previous week, so this is
+not a live allocation or assembled quote. Recheck stock, feeder fees and placement
+cost at order time. [JLCPCB C783615](https://jlcpcb.com/partdetail/TexasInstruments-TCA9534PWR/C783615).
+
+## Switch footprint and assembly evidence
+
+The [HRO manufacturer drawing](../datasheets/hro-k3-1280s.pdf), dated 2013-09-26,
+is the footprint source. It specifies 2.50 mm terminal pitch, 1.20 x 2.45 mm
+solder lands, 0.90 mm peg holes spaced 6.80 mm, and a peg-line to solder-land
+centre offset of (1.85 + 4.30) / 2 = 3.075 mm. The pattern-side drawing is mirrored
+for the board top view. The origin is common terminal 2. We number the two outer
+terminals locally; the manufacturer drawing does not number them.
+
+A read of the [C92658 supplier CAD API](https://easyeda.com/api/products/C92658/components?version=6.5.51)
+on 2026-10-06 exposed inconsistent data: symbol title K3-1280S-F2, manufacturer
+field K3-1280S-F1, and package SW-SMD_K3-1280S-K1. Package UUID is
+cb2986fb1dba498699763b187255a8d2. Its pad-2 origin is (3986.695, 3000) and its peg
+X is 4000.105 in 0.254 mm units, giving 3.406 mm rather than 3.075 mm. Its 3D model
+is also K1, so it is not assigned to the board. The LCSC [product page](https://www.lcsc.com/product-detail/C92658.html)
+continues to identify C92658 as F1.
+
+`tools/fix_cpl.py` now handles the new footprint: offset (0, 0), rotation +270
+degrees. The supplier origin is the common pad and its actuator points right;
+our unrotated footprint's actuator points down. Aligning the body reverses the
+supplier's outer-terminal numbering relative to our local convention. The
+middle/common terminal agrees. Thus SW1 exports at 270 degrees and SW2/SW3 at
+180 degrees. This is derived from supplier CAD geometry, not a JLCPCB placement
+preview or physical fit test. The supplier CAD discrepancy must be resolved by
+checking an F1 sample and the assembly preview before ordering.
+
+The board positions and enclosure overhangs are in [mechanical.md](../docs/mechanical.md).
+No verified F1 3D model is available in the project. All SMD parts remain on top.
+
+## Firmware dependency
+
+Keep the display-to-ADSBee UART wiring. Stock ADSBee firmware has not established
+AT command intake on COMMS_UART: the local datasheet describes AT commands on
+CONSOLE, and the inspected upstream parser reads stdio/network-console input.
+Custom ADSBee firmware is already planned for FLARM; it must add wired Wi-Fi
+command intake and responses alongside traffic output. No expander coordination
+protocol or additional hardware signal is required.
+
+Sources: [AT implementation](https://github.com/PantsForBirds/adsbee/blob/main/firmware/adsbee_1090/pico/application/comms/at/comms_at.cc),
 [application build configuration](https://github.com/PantsForBirds/adsbee/blob/main/firmware/adsbee_1090/pico/application/CMakeLists.txt).
 
-The existing buzzer path is D11 to U9, R28, SW2 and BZ1. Reusing SW2 as an input
-requires changing that path. This draft does not describe the current wiring.
+## Verification
 
-### Expander selection, provisional
+`tools/check.sh` passes: zero ERC errors/warnings, zero DRC errors/warnings,
+zero unconnected items and parity issues, 108 matching nets, 127 matching
+references, 45 model bindings and 20 existing simulation tests. Zone fills are
+saved. Missing-model warnings remain, including the three new switches.
 
-Prefer TI TCA9534PWR, JLCPCB C783615, subject to a current assembly quote and
-confirmation of all display-module I2C addresses. It provides eight channels in
-TSSOP-16, operates at 3.3 V and supports the existing 100 kHz bus. Its selectable
-addresses are 0x20 to 0x27. The datasheet specifies at most 4 uA standby current
-at 3.6 V with inputs low, and 2.2 uA with inputs high.
-
-The JLCPCB catalog result retrieved on 2026-10-06 was indexed the previous week:
-15,412 stock and USD 0.7132 at quantity one, Extended part. These are cached
-catalog figures, not confirmed live allocatable stock or assembled cost.
-Include feeder fees, placement and supporting parts in the final comparison.
-
-TI PCA9534PWR, C133803, is a suitable alternative without a verified price
-advantage. NXP PCF8574T/3,518, C7605, was less attractive: the indexed price was
-USD 2.1193 at quantity one and its weak high-level output sources 30 to 300 uA
-into each grounded input.
-
-TCA9534 inputs need external bias. Include switch pull-resistor current in the
-power comparison and define every unused input. Retained SPDT sliders can select
-between rails, with weak bias during contact transitions; verify the complete
-input circuit before implementation. Do not automatically populate extra I2C
-bus pull-ups.
-
-Sources: [TI TCA9534](https://www.ti.com/lit/ds/symlink/tca9534.pdf),
-[JLCPCB C783615](https://jlcpcb.com/partdetail/TexasInstruments-TCA9534PWR/C783615),
-[TI PCA9534](https://www.ti.com/lit/ds/symlink/pca9534.pdf),
-[NXP PCF8574](https://www.nxp.com/docs/en/data-sheet/PCF8574_PCF8574A.pdf),
-[JLCPCB C7605](https://jlcpcb.com/partdetail/NXPSemicon-PCF8574T_3518/C7605).
-
-## Future ESP firmware work
-
-Show a system failure icon when a peripheral fails. This shared fail mode applies
-to the expander, fuel gauge and BMP barometer. For expander failure, preserve both
-last known control states. Fault detection, recovery, polling, debounce and screen
-behavior belong to the future ESP firmware work, not this hardware change.
-
-The firmware must apply slider positions at startup. Detailed startup sequencing
-between the display and ADSBee, including any interval before the Wi-Fi setting
-is applied, belongs to that firmware work.
-
-## Remaining electrical design work
-
-- Confirm current assembly stock and total cost, then select the expander.
-- Verify all shared-bus addresses and select a non-conflicting address.
-- Define switch input bias, unused-input levels, decoupling and bus loading.
-- Bring at least four spare inputs to a connector for future enclosure controls;
-  select its pinout and footprint during the electrical design.
-- Place the added Wi-Fi slider on the left edge and check enclosure access,
-  component clearance and routing against the live board.
-
-## Evidence and affected documentation
-
-- [Requirements](../docs/requirements.md): function requirement 6 currently
-  specifies hardware mute and excludes firmware mute; that is superseded by
-  the agreed scope above, pending reconciliation of the project documents.
-- [Interfaces](../docs/interfaces.md): existing GPIO allocation, buzzer drive
-  and shared I2C bus.
-- [Mechanical design](../docs/mechanical.md): SW2 on the left edge.
-- [Open issues](../docs/open-issues.md): currently proposes automatic Wi-Fi
-  shutdown at low state of charge; remove that proposal when reconciling the
-  documents. Wi-Fi remains under slider control.
-
-## Completion
-
-Complete the electrical design and sourcing checks before hardware
-implementation. Hardware work must include schematic and PCB changes,
-project-document reconciliation and the required tools/check.sh run after each
-schematic or board change. No hardware files have been changed for this spec.
+The schematic and placement drawings were refreshed. Production Gerbers/BOM/CPL
+were not regenerated; the existing exports were already stale. Firmware,
+mechanical sample fit, supplier assembly preview, live bus behavior and switch
+failure handling have not been tested on hardware. These remain explicit items
+in [open issues](../docs/open-issues.md).

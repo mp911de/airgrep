@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1830" height="1149" viewBox="-6 -6 183 114.9" font-family="Helvetica,Arial,sans-serif">
-<rect x="-6" y="-6" width="183" height="114.9" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1830" height="1179" viewBox="-6 -6 183 117.9" font-family="Helvetica,Arial,sans-serif">
+<rect x="-6" y="-6" width="183" height="117.9" fill="#ffffff"/>
 <line x1="0.000" y1="-1.500" x2="0.000" y2="0.000" fill="none" stroke="#64748b" stroke-width="0.15"/>
 <text x="0.000" y="-2.200" font-size="1.5" text-anchor="middle" fill="#64748b">0</text>
 <line x1="10.000" y1="-1.500" x2="10.000" y2="0.000" fill="none" stroke="#64748b" stroke-width="0.15"/>
@@ -74,6 +74,7 @@
 <rect x="91.427" y="70.865" width="1.550" height="3.050" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
 <rect x="40.856" y="37.845" width="1.550" height="3.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
 <rect x="95.249" y="59.169" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="31.241" y="64.503" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
 <rect x="62.979" y="67.309" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
 <rect x="62.874" y="70.391" width="2.050" height="3.490" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
 <rect x="56.502" y="70.865" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
@@ -90,6 +91,7 @@
 <rect x="81.135" y="87.185" width="10.730" height="9.510" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
 <rect x="97.985" y="21.305" width="3.630" height="34.110" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
 <rect x="80.085" y="14.385" width="13.790" height="3.630" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="25.617" y="76.417" width="6.180" height="11.250" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
 <rect x="45.120" y="72.077" width="6.990" height="5.590" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
 <rect x="37.796" y="72.093" width="6.990" height="5.590" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
 <rect x="38.161" y="83.057" width="6.990" height="5.590" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
@@ -124,7 +126,7 @@
 <rect x="8.369" y="58.927" width="1.550" height="3.050" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
 <rect x="6.476" y="62.979" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
 <rect x="45.211" y="37.325" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="50.799" y="34.531" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="50.799" y="34.404" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
 <rect x="73.012" y="84.835" width="1.550" height="3.050" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
 <rect x="57.403" y="84.061" width="3.050" height="1.550" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
 <rect x="52.831" y="84.061" width="3.050" height="1.550" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
@@ -138,10 +140,19 @@
 <rect x="37.845" y="39.103" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
 <rect x="89.903" y="56.133" width="1.550" height="3.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
 <rect x="88.379" y="56.133" width="1.550" height="3.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="20.065" y="73.901" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="20.065" y="76.441" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="20.065" y="78.981" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="20.065" y="81.521" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="33.273" y="74.409" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="33.273" y="71.869" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="33.273" y="69.329" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="33.273" y="66.789" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
 <rect x="55.105" y="75.310" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
 <rect x="61.340" y="79.997" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="56.923" y="91.329" width="9.090" height="5.670" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="-2.075" y="61.241" width="5.670" height="9.090" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="56.623" y="89.082" width="9.690" height="8.640" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="-2.294" y="60.941" width="8.640" height="9.690" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="-2.294" y="42.145" width="8.640" height="9.690" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
 <rect x="47.470" y="80.365" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
 <rect x="74.902" y="72.237" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
 <rect x="44.067" y="67.385" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
@@ -152,6 +163,7 @@
 <rect x="39.091" y="57.379" width="2.590" height="2.590" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
 <rect x="92.405" y="55.655" width="2.990" height="2.990" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
 <rect x="37.932" y="36.105" width="2.990" height="2.990" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="23.537" y="66.547" width="7.790" height="5.590" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
 <rect x="58.679" y="69.992" width="3.990" height="3.990" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
 <rect x="51.352" y="66.323" width="1.690" height="2.990" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
 <rect x="87.359" y="65.269" width="3.590" height="4.590" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
@@ -214,8 +226,11 @@
 <text x="86.980" y="19.515" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J11</text>
 <text x="40.457" y="34.302" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">JP1</text>
 <text x="98.557" y="60.719" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">JP2</text>
-<text x="61.468" y="91.029" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">SW1</text>
-<text x="3.995" y="66.311" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">SW2</text>
+<text x="61.468" y="88.782" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">SW1</text>
+<text x="6.746" y="66.311" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">SW2</text>
+<text x="6.746" y="47.515" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">SW3</text>
+<text x="28.707" y="89.167" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J12</text>
+<text x="27.432" y="66.247" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U13</text>
 <text x="13.970" y="69.867" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">BZ1</text>
 <text x="70.612" y="90.949" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">D4</text>
 <text x="76.962" y="90.949" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">D5</text>
@@ -249,7 +264,7 @@
 <rect x="111.000" y="18.800" width="3.000" height="2.000" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
 <text x="115.500" y="20.395" font-size="1.7" text-anchor="start" fill="#0f172a">Gauge and status LEDs</text>
 <rect x="111.000" y="22.000" width="3.000" height="2.000" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<text x="115.500" y="23.595" font-size="1.7" text-anchor="start" fill="#0f172a">Buzzer and barometer</text>
+<text x="115.500" y="23.595" font-size="1.7" text-anchor="start" fill="#0f172a">Buzzer, barometer and controls</text>
 <rect x="111.000" y="25.200" width="3.000" height="2.000" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
 <text x="115.500" y="26.795" font-size="1.7" text-anchor="start" fill="#0f172a">Module sockets and service shunts</text>
 <rect x="111.000" y="28.400" width="3.000" height="2.000" fill="none" stroke="#334155" stroke-width="0.3" stroke-dasharray="1.2 0.8"/>
@@ -266,35 +281,37 @@
 <text x="125.500" y="47.260" font-size="1.7" text-anchor="start" fill="#0f172a">ADSBee sockets 1x13, 1x5</text>
 <text x="111.000" y="50.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">JP1 JP2</text>
 <text x="125.500" y="50.260" font-size="1.7" text-anchor="start" fill="#0f172a">5 V shunts: display, ADSBee</text>
-<text x="111.000" y="53.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">SW1 SW2</text>
-<text x="125.500" y="53.260" font-size="1.7" text-anchor="start" fill="#0f172a">POWER and MUTE sliders</text>
-<text x="111.000" y="56.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">D4 D5</text>
-<text x="125.500" y="56.260" font-size="1.7" text-anchor="start" fill="#0f172a">charge LED, power LED</text>
-<text x="111.000" y="59.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U4 L1</text>
-<text x="125.500" y="59.260" font-size="1.7" text-anchor="start" fill="#0f172a">charger MAX77757</text>
-<text x="111.000" y="62.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U6 L2</text>
-<text x="125.500" y="62.260" font-size="1.7" text-anchor="start" fill="#0f172a">boost TPS61088</text>
-<text x="111.000" y="65.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U7</text>
-<text x="125.500" y="65.260" font-size="1.7" text-anchor="start" fill="#0f172a">load switch TPS22975</text>
-<text x="111.000" y="68.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U5</text>
-<text x="125.500" y="68.260" font-size="1.7" text-anchor="start" fill="#0f172a">undervoltage supervisor</text>
-<text x="111.000" y="71.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U8 U10</text>
-<text x="125.500" y="71.260" font-size="1.7" text-anchor="start" fill="#0f172a">fuel gauge, barometer</text>
-<text x="111.000" y="74.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U9 BZ1</text>
-<text x="125.500" y="74.260" font-size="1.7" text-anchor="start" fill="#0f172a">buzzer driver, buzzer</text>
-<text x="111.000" y="77.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">F1 D3</text>
-<text x="125.500" y="77.260" font-size="1.7" text-anchor="start" fill="#0f172a">pack fuse, VBUS TVS</text>
-<text x="111.000" y="80.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">TP1 to TP7</text>
-<text x="125.500" y="80.260" font-size="1.7" text-anchor="start" fill="#0f172a">VBAT, VSYS, PWR_EN, THERM_OK, USB_VBUS, GND, 5 V</text>
-<text x="111.000" y="83.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">MH1 to MH4</text>
-<text x="125.500" y="83.260" font-size="1.7" text-anchor="start" fill="#0f172a">case, 2.7 mm</text>
-<text x="111.000" y="86.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">MH6 to MH8</text>
-<text x="125.500" y="86.260" font-size="1.7" text-anchor="start" fill="#0f172a">antenna bulkheads, 6.5 mm</text>
-<text x="111.000" y="89.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">MH10 to MH14</text>
-<text x="125.500" y="89.260" font-size="1.7" text-anchor="start" fill="#0f172a">module standoffs, 2.7 mm</text>
-<text x="111.000" y="94.100" font-size="1.5" text-anchor="start" fill="#475569">Origin upper left, +Y down, mm, as in KiCad.</text>
-<text x="111.000" y="96.700" font-size="1.5" text-anchor="start" fill="#475569">Part outlines are courtyards read from carrier.kicad_pcb.</text>
-<text x="111.000" y="99.300" font-size="1.5" text-anchor="start" fill="#475569">Module outlines follow the socket positions.</text>
-<text x="111.000" y="101.900" font-size="1.5" text-anchor="start" fill="#475569">The ADSBee outline is an image estimate.</text>
-<text x="111.000" y="104.500" font-size="1.5" text-anchor="start" fill="#475569">Regenerate with mechanical/draw_placement.py.</text>
+<text x="111.000" y="53.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">SW1 SW2 SW3</text>
+<text x="125.500" y="53.260" font-size="1.7" text-anchor="start" fill="#0f172a">POWER, MUTE and Wi-Fi sliders</text>
+<text x="111.000" y="56.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U13 J12</text>
+<text x="125.500" y="56.260" font-size="1.7" text-anchor="start" fill="#0f172a">control inputs and expansion</text>
+<text x="111.000" y="59.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">D4 D5</text>
+<text x="125.500" y="59.260" font-size="1.7" text-anchor="start" fill="#0f172a">charge LED, power LED</text>
+<text x="111.000" y="62.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U4 L1</text>
+<text x="125.500" y="62.260" font-size="1.7" text-anchor="start" fill="#0f172a">charger MAX77757</text>
+<text x="111.000" y="65.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U6 L2</text>
+<text x="125.500" y="65.260" font-size="1.7" text-anchor="start" fill="#0f172a">boost TPS61088</text>
+<text x="111.000" y="68.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U7</text>
+<text x="125.500" y="68.260" font-size="1.7" text-anchor="start" fill="#0f172a">load switch TPS22975</text>
+<text x="111.000" y="71.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U5</text>
+<text x="125.500" y="71.260" font-size="1.7" text-anchor="start" fill="#0f172a">undervoltage supervisor</text>
+<text x="111.000" y="74.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U8 U10</text>
+<text x="125.500" y="74.260" font-size="1.7" text-anchor="start" fill="#0f172a">fuel gauge, barometer</text>
+<text x="111.000" y="77.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U9 BZ1</text>
+<text x="125.500" y="77.260" font-size="1.7" text-anchor="start" fill="#0f172a">buzzer driver, buzzer</text>
+<text x="111.000" y="80.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">F1 D3</text>
+<text x="125.500" y="80.260" font-size="1.7" text-anchor="start" fill="#0f172a">pack fuse, VBUS TVS</text>
+<text x="111.000" y="83.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">TP1 to TP7</text>
+<text x="125.500" y="83.260" font-size="1.7" text-anchor="start" fill="#0f172a">VBAT, VSYS, PWR_EN, THERM_OK, USB_VBUS, GND, 5 V</text>
+<text x="111.000" y="86.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">MH1 to MH4</text>
+<text x="125.500" y="86.260" font-size="1.7" text-anchor="start" fill="#0f172a">case, 2.7 mm</text>
+<text x="111.000" y="89.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">MH6 to MH8</text>
+<text x="125.500" y="89.260" font-size="1.7" text-anchor="start" fill="#0f172a">antenna bulkheads, 6.5 mm</text>
+<text x="111.000" y="92.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">MH10 to MH14</text>
+<text x="125.500" y="92.260" font-size="1.7" text-anchor="start" fill="#0f172a">module standoffs, 2.7 mm</text>
+<text x="111.000" y="97.100" font-size="1.5" text-anchor="start" fill="#475569">Origin upper left, +Y down, mm, as in KiCad.</text>
+<text x="111.000" y="99.700" font-size="1.5" text-anchor="start" fill="#475569">Part outlines are courtyards read from carrier.kicad_pcb.</text>
+<text x="111.000" y="102.300" font-size="1.5" text-anchor="start" fill="#475569">Module outlines follow the socket positions.</text>
+<text x="111.000" y="104.900" font-size="1.5" text-anchor="start" fill="#475569">The ADSBee outline is an image estimate.</text>
+<text x="111.000" y="107.500" font-size="1.5" text-anchor="start" fill="#475569">Regenerate with mechanical/draw_placement.py.</text>
 </svg>

@@ -40,6 +40,7 @@
     {"name": "Display: backlight at 100 %", "ma": 30, "scales_with_brightness": true, "source": "estimate: 1.47 in IPS backlight, 2 white LEDs at about 15 mA; Seeed publishes no figure"},
     {"name": "Carrier: green power LED D5", "ma": 6.4, "source": "(5.06 V - about 2.0 V LED forward voltage) / 470 Ω (R26)"},
     {"name": "Carrier: BMP581, buzzer driver idle, I2C pull-ups", "ma": 0.1, "source": "BMP581 normal mode below 0.01 mA; 74LVC1G17 below 0.01 mA; display I2C pull-ups about 0.05 mA"},
+    {"name": "Carrier: control inputs, both sliders low", "ma": 0.1, "source": "TCA9534: at most 4 uA standby at 3.6 V plus 2 x 33 uA in 100 kOhm pulls at 3.3 V; rounded to 0.1 mA for polling. Each additional grounded spare input adds 33 uA. Estimate, through display LDO."},
     {"name": "Carrier: buzzer, average", "ma": 0.2, "source": "PKMCS0909 driven from 3.3 V through 150 Ω: about 20 mA while beeping, assumed 1 % duty"}
   ],
 

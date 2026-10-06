@@ -7,9 +7,12 @@ Settled with the user. Change only with the user. Resulting figures are in [spec
 1. Receive 1090 MHz ADS-B and 868 MHz FLARM, receive only, with an ADSBee 1090U. FLARM decoding is not yet shown to work ([open-issues.md](open-issues.md)).
 2. GNSS with Galileo and PPS: SparkFun GPS-18037 (u-blox MAX-M10S), UART to the ADSBee.
 3. Local display: Seeed 100069905, 1.47 inch ESP32-S3 Plus touch display. It gets traffic and status from the ADSBee over a direct UART and the battery state of charge over I2C.
-4. Wi-Fi stays available as an alternative link to the display. The ESP can switch it with AT commands.
+4. Wi-Fi stays available as an alternative link to the display. A maintained Wi-Fi slider controls the ADSBee radio, primarily for the EFB feed and to save battery power. The ESP applies its position through command/response support to be added to the custom ADSBee firmware on the existing UART.
 5. Wi-Fi feed to an EFB (GDL90).
-6. Quiet piezo feedback for ground use, with a hardware MUTE slider. No firmware mute.
+6. Quiet piezo feedback for ground use, with a maintained MUTE slider read through an I2C input expander. The ESP gates buzzer PWM. The independent POWER slider remains the recovery control if firmware hangs.
+7. Include both control sliders in the first revision and expose at least four spare inputs for future enclosure controls. Slider positions are authoritative from startup; the touchscreen displays their states. Keep the buzzer silent until mute is first read.
+8. On an expander read failure, retain both last known control states. Future ESP firmware shows a shared system-failure icon for expander, fuel-gauge or barometer faults.
+9. Low battery does not override the Wi-Fi slider. Show a low-battery warning; automatic backlight dimming may remain.
 
 ## Power
 

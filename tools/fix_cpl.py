@@ -6,10 +6,13 @@ Run with KiCad's bundled Python after every CPL export:
 
 jlcpcb-tools writes the centre of the pad bounding box as Mid X/Y and applies its regex
 rotation table. JLCPCB places its own footprint (origin at the package centre) at that point.
-For the footprints below the two disagree (JLCDFM SMT report, 3 Oct 2026), so this script
+For the footprints below the two disagree (JLCDFM SMT report, 3 Oct 2026; K3 supplier CAD,
+6 Oct 2026), so this script
 rewrites their rows from the board: rotation = board rotation + ROT, position = footprint origin
 + OFFSET (the JLC origin in footprint-local mm, rotated with the footprint). Values were found by
-matching the EasyEDA footprint of each LCSC part to our pads by pad number. Re-running is safe:
+matching the EasyEDA footprint of each LCSC part to our pads by pad number, except the
+unnumbered K3 outer contacts: those use the body and common terminal. Its supplier CAD
+has a peg-offset discrepancy; verify fit and the assembly preview before ordering. Re-running is safe:
 every fixed row is recomputed from the board, not from the previous CPL.
 
 Rows not listed are left alone; the script only reports those whose CPL position is more than
@@ -30,7 +33,9 @@ CPL = ROOT / "hardware/kicad/jlcpcb/production_files/CPL-carrier.csv"
 FIXES = {
     "Texas_DSG0008A_WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm": (0, (0.0, 0.0)),  # U7, C524777; plugin table says 270
     "TDFN-8_L2.0-W2.0-P0.50-EP0.8x1.45_T822": (270, (0.0, 0.0)),  # U8, C2682616; JLC pin 1 bottom left
-    "SW-SMD_JS102011SAQN": (0, (0.0, 0.0)),  # SW1/SW2, C221660; pad box is pulled 1 mm by the tabs
+    "SW-SMD_K3-1280S-F1": (270, (0.0, 0.0)),  # SW1-SW3, C92658; supplier origin is common pad, actuator points right
+    # HRO drawing leaves outer terminals unnumbered. Our 1/3 convention is reversed
+    # relative to the supplier CAD after aligning the body. See workflows/physical-controls.md.
     "USB_C_Receptacle_Hanbo_MC-107DMS": (0, (0.0, -1.322)),  # J1, C3039295 (slots and pegs, pads moved 3 Oct)
     "FC2QFN-24_L3.0-W3.0-P0.40_MAX77757": (0, (0.0019, 0.0736)),  # U4, C7454852
 }

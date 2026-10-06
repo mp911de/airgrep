@@ -1,0 +1,2567 @@
+                                Product          Order         Technical              Tools &                       Support &
+                                Folder           Now           Documents              Software                      Community
+
+
+
+                                                                                                                                                      TCA9534
+                                                                                        SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+      TCA9534 Low Voltage 8-Bit I2C and SMBUS Low-Power I/O Expander with Interrupt
+                           Output and Configuration Registers
+1 Features                                                               3 Description
+1•   ESD Protection Exceeds JESD 22                                      The TCA9534 is a 16-pin device that provides 8 bits
+                                                                         of general purpose parallel input and output (I/O)
+     – 2000-V Human-Body Model (A114-A)                                  expansion for the two-line bidirectional I2C bus (or
+     – 1000-V Charged-Device Model (C101)                                SMBus) protocol. The device can operate with a
+•    Low Standby Current Consumption                                     power supply voltage ranging from 1.65 V to 5.5 V,
+                                                                         which allows for use with a wide range of devices.
+•    I2C to Parallel Port Expander
+                                                                         The device supports both 100-kHz (Standard-mode)
+•    Open-Drain Active-Low Interrupt Output                              and 400-kHz (Fast-mode) clock frequencies. I/O
+•    Operating Power-Supply Voltage Range of 1.65 V                      expanders such as the TCA9534 provide a simple
+     to 5.5 V                                                            solution when additional I/Os are needed for
+•    5-V Tolerant I/O Ports                                              switches, sensors, push-buttons, LEDs, fans, and
+                                                                         other similar devices.
+•    400-kHz Fast I2C Bus
+                                                                         The features of the TCA9534 include an interrupt that
+•    Three Hardware Address Pins Allow up to Eight
+                                                                         is generated on the INT pin. This allows the master to
+     Devices on the I2C/SMBus                                            know when an input port changes state. The A0, A1,
+•    Input and Output Configuration Register                             and A2 hardware selectable address pins allow up to
+•    Polarity Inversion Register                                         eight TCA9534 devices on the same I2C bus. The
+•    Internal Power-On Reset                                             device can also be reset to its default sate by cycling
+                                                                         the power supply and causing a power-on reset.
+•    Power-Up With All Channels Configured as Inputs
+•    No Glitch on Power Up                                                                             Device Information(1)
+•    Noise Filter on SCL/SDA Inputs                                        PART NUMBER                      PACKAGE                         BODY SIZE (NOM)
+•    Latched Outputs With High-Current Drive                                                           TSSOP (16)                        5.00 mm × 4.40 mm
+                                                                           TCA9534
+     Maximum Capability for Directly Driving LEDs                                                      SOIC (16)                         10.30 mm x 7.50 mm
+•    Latch-Up Performance Exceeds 100 mA Per                               (1) For all available packages, see the orderable addendum at
+     JESD 78, Class II                                                         the end of the datasheet.
+
+
+2 Applications
+•    Servers
+•    Routers (Telecom Switching Equipment)
+•    Personal Computers
+•    Personal Electronics (for example: Gaming
+     Consoles)
+•    Industrial Automation
+•    Products With GPIO-Limited Processors
+                                                         Simplified Schematic
+
+                                                                   VCC
+                                                         SDA                                                     Peripheral
+                                                         SCL                                                      Devices
+                              I2C or SMBus                                       P0
+                                                         INT
+                                 Master                                          P1                            • RESET,
+                              (e.g. Processor)                                   P2                              ENABLE, or
+                                                                                 P3
+                                                                TCA9534                                          control
+                                                                                 P4                              inputs
+                                                         A0                      P5
+                                                                                 P6                            • INT or
+                                                         A1                      P7                              status
+                                                         A2                                                      outputs
+                                                         GND                                                   • LEDs
+
+
+
+
+                                                                                      Copyright © 2016, Texas Instruments Incorporated
+
+1
+
+
+
+
+       An IMPORTANT NOTICE at the end of this data sheet addresses availability, warranty, changes, use in safety-critical applications,
+       intellectual property matters and other important disclaimers. PRODUCTION DATA.
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                                                                            www.ti.com
+
+
+                                                                           Table of Contents
+    1   Features .................................................................. 1                    8.4 Device Functional Modes........................................ 17
+    2   Applications ........................................................... 1                       8.5 Programming........................................................... 17
+    3   Description ............................................................. 1                      8.6 Register Maps ......................................................... 19
+    4   Revision History..................................................... 2                   9     Application and Implementation ........................ 24
+                                                                                                         9.1 Application Information............................................ 24
+    5   Pin Configuration and Functions ......................... 4
+                                                                                                         9.2 Typical Application ................................................. 24
+    6   Specifications......................................................... 5
+         6.1    Absolute Maximum Ratings ..................................... 5                  10 Power Supply Recommendations ..................... 27
+                                                                                                         10.1 Power-On Reset Requirements ........................... 27
+         6.2    ESD Ratings ............................................................ 5
+         6.3    Recommended Operating Conditions....................... 5                         11 Layout................................................................... 29
+         6.4    Thermal Information .................................................. 6                 11.1 Layout Guidelines ................................................. 29
+         6.5    Electrical Characteristics........................................... 6                  11.2 Layout Example .................................................... 29
+         6.6    I2C Interface Timing Requirements........................... 7                    12 Device and Documentation Support ................. 30
+         6.7    Switching Characteristics .......................................... 8                   12.1     Documentation Support ........................................ 30
+         6.8    Typical Characteristics .............................................. 9                 12.2     Receiving Notification of Documentation Updates 30
+    7   Parameter Measurement Information ................ 12                                            12.3     Community Resources.......................................... 30
+                                                                                                         12.4     Trademarks ........................................................... 30
+    8   Detailed Description ............................................ 15
+                                                                                                         12.5     Electrostatic Discharge Caution ............................ 30
+         8.1 Overview ................................................................. 15
+                                                                                                         12.6     Glossary ................................................................ 30
+         8.2 Functional Block Diagram ....................................... 16
+         8.3 Feature Description................................................. 17              13 Mechanical, Packaging, and Orderable
+                                                                                                     Information ........................................................... 30
+
+
+
+4 Revision History
+NOTE: Page numbers for previous revisions may differ from page numbers in the current version.
+
+Changes from Revision C (February 2017) to Revision D                                                                                                                                Page
+
+•   Changed VIH value From: VCC = 1.65 V to 2.7 V To: VCC = 1.65 V to 5.5 V in the Recommended Operating Condition...... 5
+•   Changed VIL value From: VCC = 1.65 V to 2.7 V To: VCC = 1.65 V to 5.5 V in the Recommended Operating Condition ...... 5
+
+
+Changes from Revision B (November 2016) to Revision C                                                                                                                                Page
+
+•   Added MAX value: 2000 to VCC_FT and VCC_RT in Recommended Supply Sequencing and Ramp Rates table................... 27
+•   Changed VCC_TRR MIN value from: "2" to: "1" in Recommended Supply Sequencing and Ramp Rates table .................... 27
+
+
+Changes from Revision A (September 2014) to Revision B                                                                                                                               Page
+
+•   Updated the Description section............................................................................................................................................. 1
+•   Added DW package................................................................................................................................................................ 1
+•   Corrected ESD ratings to reflect ± ratings.............................................................................................................................. 5
+•   VIH values, improved performance in the Recommended Operating Condition..................................................................... 5
+•   Made changes to IOL in the Recommended Operating Condition table ................................................................................. 5
+•   Changed VPORR limits in the Electrical Characteristics table .................................................................................................. 6
+•   Changed VOH at VCC = 1.65 V in the Electrical Characteristics table ..................................................................................... 6
+•   Updated IOL in the Electrical Characteristics table.................................................................................................................. 6
+•   Changed ICC in the Electrical Characteristics table ................................................................................................................ 7
+•   Deleted ΔICC parameter from the Electrical Characteristics table .......................................................................................... 7
+•   Increased the pin capacitance maximum, decreased typical in the Electrical Characteristics table...................................... 7
+•   Updated graphs in Typical Characteristics section ................................................................................................................ 9
+•   Updated Interrupt Output (INT) section ................................................................................................................................ 17
+•   Added the Calculating Junction Temperature and Power Dissipation section..................................................................... 25
+
+2        Submit Documentation Feedback                                                                               Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                                         Product Folder Links: TCA9534
+                                                                                                                                                                         TCA9534
+www.ti.com                                                                                                       SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+
+•   Added VCC_MV to Table 8 ..................................................................................................................................................... 27
+•   Updated Figure 39 ............................................................................................................................................................... 27
+
+
+Changes from Original (September 2014) to Revision A                                                                                                                             Page
+
+•   Initial release of full version. .................................................................................................................................................. 1
+
+
+
+
+Copyright © 2014–2017, Texas Instruments Incorporated                                                                             Submit Documentation Feedback                        3
+                                                                       Product Folder Links: TCA9534
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                               www.ti.com
+
+
+5 Pin Configuration and Functions
+
+                                                        PW, DW Package
+                                                       16-Pin TSSOP, SOIC
+                                                            Top View
+
+                                                      A0    1        16   VCC
+                                                      A1    2        15   SDA
+                                                      A2    3        14   SCL
+                                                      P0    4        13   INT
+                                                      P1    5        12   P7
+                                                      P2    6        11   P6
+                                                      P3    7        10   P5
+                                                     GND    8         9   P4
+
+                                                        Pin Functions
+               PIN
+                                              I/O                                           DESCRIPTION
+NO.                   NAME
+1                      A0                      I                Address input. Connect directly to VCC or ground
+2                      A1                      I                Address input. Connect directly to VCC or ground
+3                      A2                      I                Address input. Connect directly to VCC or ground
+                                                                P-port input-output. Push-pull design structure. At power on, P0 is
+4                      P0                     I/O
+                                                                configured as an input
+                                                                P-port input-output. Push-pull design structure. At power on, P1 is
+5                      P1                     I/O
+                                                                configured as an input
+                                                                P-port input-output. Push-pull design structure. At power on, P2 is
+6                      P2                     I/O
+                                                                configured as an input
+                                                                P-port input-output. Push-pull design structure. At power on, P3 is
+7                      P3                     I/O
+                                                                configured as an input
+8                     GND                     —                 Ground
+                                                                P-port input-output. Push-pull design structure. At power on, P4 is
+9                      P4                     I/O
+                                                                configured as an input
+                                                                P-port input-output. Push-pull design structure. At power on, P5 is
+10                     P5                     I/O
+                                                                configured as an input
+                                                                P-port input-output. Push-pull design structure. At power on, P6 is
+11                     P6                     I/O
+                                                                configured as an input
+                                                                P-port input-output. Push-pull design structure. At power on, P7 is
+12                     P7                     I/O
+                                                                configured as an input
+13                     INT                    O                 Interrupt output. Connect to VCC through a pullup resistor
+14                     SCL                    I/O               Serial clock bus. Connect to VCC through a pullup resistor
+15                    SDA                     I/O               Serial data bus. Connect to VCC through a pullup resistor
+16                    VCC                     —                 Supply voltage
+
+
+
+
+4      Submit Documentation Feedback                                                   Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                   Product Folder Links: TCA9534
+                                                                                                                                       TCA9534
+www.ti.com                                                                               SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+
+6 Specifications
+6.1 Absolute Maximum Ratings
+over operating free-air temperature range (unless otherwise noted) (1)
+                                                                                                              MIN           MAX              UNIT
+VCC          Supply voltage                                                                                   –0.5           6                V
+                             (2)
+VI           Input voltage                                                                                    –0.5           6                V
+VO           Output voltage (2)                                                                               –0.5           6                V
+IIK          Input clamp current                                      VI < 0                                                –20              mA
+IOK          Output clamp current                                     VO < 0                                                –20              mA
+IIOK         Input-output clamp current                               VO < 0 or VO > VCC                                    ±20              mA
+IOL          Continuous output low current through a single P-port    VO = 0 to VCC                                          50              mA
+IOH          Continuous output high current through a single P-port   VO = 0 to VCC                                         –50              mA
+             Continuous current through GND by all P-ports, INT, and SDA                                                    250
+ICC                                                                                                                                          mA
+             Continuous current through VCC by all P-ports                                                                  –160
+TJ(MAX)      Maximum junction temperature                                                                                   100               °C
+Tstg         Storage temperature                                                                              –65           150               °C
+
+(1)    Stresses beyond those listed under Absolute Maximum Ratings may cause permanent damage to the device. These are stress ratings
+       only, which do not imply functional operation of the device at these or any other conditions beyond those indicated under Recommended
+       Operating Conditions. Exposure to absolute-maximum-rated conditions for extended periods may affect device reliability.
+(2)    The input negative-voltage and output voltage ratings may be exceeded if the input and output current ratings are observed.
+
+6.2 ESD Ratings
+                                                                                                                       VALUE                UNIT
+             Electrostatic          Human body model (HBM), per ANSI/ESDA/JEDEC JS-001 (1)                              ±2000
+V(ESD)                                                                                                                                       V
+             discharge              Charged device model (CDM), per JEDEC specification JESD22-C101 (2)                 ±1000
+
+(1)    JEDEC document JEP155 states that 500-V HBM allows safe manufacturing with a standard ESD control process.
+(2)    JEDEC document JEP157 states that 250-V CDM allows safe manufacturing with a standard ESD control process.
+
+6.3 Recommended Operating Conditions
+                                                                                                                     MIN           MAX       UNIT
+VCC          Supply voltage                                                                                          1.65            5.5         V
+                                                SCL, SDA                       VCC = 1.65 V to 5.5 V          0.7 × VCC           VCC (1)
+VIH          High-level input voltage                                                                                                            V
+                                                A0, A1, A2, P7–P0              VCC = 1.65 V to 5.5 V          0.7 × VCC              5.5
+                                                SCL, SDA                       VCC = 1.65 V to 5.5 V                 –0.5   0.3 × VCC
+VIL          Low-level input voltage                                           VCC = 1.65 V to 5.5 V                 –0.5   0.3 × VCC            V
+                                                A0, A1, A2, P7–P0
+                                                                               VCC = 3 V to 5.5 V                    –0.5   0.2 × VCC
+IOH          High-level output current          Any P-port, P7–P0                                                                   –10       mA
+                                                                               Tj ≤ 65°C                                              25
+                                                P00–P07, P10–P17               Tj ≤ 85°C                                              18
+       (2)
+IOL          Low-level output current                                          Tj ≤ 105°C                                              9      mA
+                                                                               Tj ≤ 85°C                                               6
+                                                INT, SDA
+                                                                               Tj ≤ 105°C                                              3
+             Continuous current through GND All P-ports P7-P0, INT, and SDA                                                         200
+ICC                                                                                                                                           mA
+             Continuous current through VCC     All P-ports P7-P0                                                                   –80
+TA           Operating free-air temperature                                                                          –40              85         °C
+
+(1)    The SCL and SDA pins shall not be at a higher potential than the supply voltage VCC in the application, or an increase in leakage
+       current, II, results.
+(2)    The values shown apply to specific junction temperatures. See the Calculating Junction Temperature and Power Dissipation section on
+       how to calculate the junction temperature.
+
+
+
+
+Copyright © 2014–2017, Texas Instruments Incorporated                                                  Submit Documentation Feedback                  5
+                                                         Product Folder Links: TCA9534
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                                     www.ti.com
+
+
+6.4 Thermal Information
+                                                                                                         TCA9534
+                               THERMAL METRIC (1)                                         PW (TSSOP)               DW (SOIC)               UNIT
+                                                                                           16 PINS                   16 PINS
+RθJA          Junction-to-ambient thermal resistance                                         122                      92.2                 °C/W
+RθJC(top)     Junction-to-case (top) thermal resistance                                      56.4                     53.8                 °C/W
+RθJB          Junction-to-board thermal resistance                                           67.1                     56.9                 °C/W
+ψJT           Junction-to-top characterization parameter                                     10.8                     26.4                 °C/W
+ψJB           Junction-to-board characterization parameter                                   66.5                     56.4                 °C/W
+
+(1)   For more information about traditional and new thermal metrics, see the Semiconductor and IC Package Thermal Metrics application
+      report.
+
+6.5 Electrical Characteristics
+over operating free-air temperature range (unless otherwise noted)
+              PARAMETER                                   TEST CONDITIONS                           VCC            MIN    TYP (1) MAX       UNIT
+VIK           Input diode clamp voltage   II = –18 mA                                       1.65 V to 5.5 V        –1.2                       V
+              Power-on reset voltage,
+VPORR                                     VI = VCC or GND, IO = 0                                                              1.2   1.5      V
+              VCC rising
+              Power-on reset voltage,
+VPORF                                     VI = VCC or GND, IO = 0                                                  0.75         1
+              VCC falling                                                                                                                     V
+                                                                                                 1.65 V             1.2
+                                                                                                   2.3 V            1.8
+                                          IOH = –8 mA
+                                                                                                    3V              2.6
+              P-port high-level output                                                             4.5 V            4.1
+VOH
+              voltage (2)                                                                        1.65 V              1                        V
+                                                                                                   2.3 V            1.7
+                                          IOH = –10 mA
+                                                                                                    3V              2.5
+                                                                                                   4.5 V             4
+              SDA (3)                     VOL = 0.4 V                                       1.65 V to 5.5 V          3
+                                          VOL = 0.5 V                                       1.65 V to 5.5 V          8
+IOL           P port (4)                                                                                                                     mA
+                                          VOL = 0.7 V                                       1.65 V to 5.5 V         10
+              INT (5)                     VOL = 0.4 V                                       1.65 V to 5.5 V          3
+              SCL, SDA                                                                                                               ±1
+II                                        VI = VCC or GND                                   1.65 V to 5.5 V                                  µA
+              A0, A1, A2                                                                                                             ±1
+IIH           P port                      VI = VCC                                          1.65 V to 5.5 V                           1      µA
+IIL           P port                      VI = GND                                          1.65 V to 5.5 V                          –1      µA
+
+
+
+
+(1)   All typical values are at nominal supply voltage (1.8-, 2.5-, 3.3-, or 5-V VCC) and TA = 25°C.
+(2)   Each P-port I/O configured as a high output must be externally limited to a maximum of 10 mA, and the total current sourced by all I/Os
+      (P-ports P7-P0) through VCC must be limited to a maximum current of 80 mA.
+(3)   The SDA pin must be externally limited to a maximum of 12 mA, and the total current sunk by all I/Os (P-ports P7-P0, INT, and SDA)
+      through GND must be limited to a maximum current of 200 mA.
+(4)   Each P-port I/O configured as a low output must be externally limited to a maximum of 25 mA, and the total current sunk by all I/Os (P-
+      ports P7-P0, INT, and SDA) through GND must be limited to a maximum current of 200 mA.
+(5)   The INT pin must be externally limited to a maximum of 7 mA, and the total current sunk by all I/Os (P-ports P7-P0, INT, and SDA)
+      through GND must be limited to a maximum current of 200 mA.
+6        Submit Documentation Feedback                                                       Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                          Product Folder Links: TCA9534
+                                                                                                                                            TCA9534
+www.ti.com                                                                                   SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+
+Electrical Characteristics (continued)
+over operating free-air temperature range (unless otherwise noted)
+              PARAMETER                                      TEST CONDITIONS                         VCC             MIN     TYP (1) MAX         UNIT
+                                                                                                     5.5 V                      22          40
+                                                VI = VCC or GND, IO = 0,                             3.6 V                      11          30
+                 Operating mode
+                                                I/O = inputs, fSCL = 400 kHz, no load                2.7 V                       8          19
+                                                                                                    1.95 V                       5          11
+                                                                                                     5.5 V                     1.5      3.9
+                                                                                                     3.6 V                     0.9      2.2
+ICC                                                                           VI = VCC                                                             µA
+                                                                                                     2.7 V                     0.6      1.8
+                                                VI = VCC or GND, IO = 0,                            1.95 V                     0.4      1.5
+                 Standby mode                   I/O = inputs,
+                                                fSCL = 0 kHz, no load                                5.5 V                     1.5      8.7
+                                                                                                     3.6 V                     0.9          4
+                                                                              VI = GND
+                                                                                                     2.7 V                     0.6          3
+                                                                                                    1.95 V                     0.4      2.2
+Ci               SCL                            VI = VCC or GND                                 1.65 V to 5.5 V                  3          8      pF
+                 SDA                                                                                                             3      9.5
+Cio                                             VIO = VCC or GND                                1.65 V to 5.5 V                                    pF
+                 P port                                                                                                        3.7      9.5
+
+
+6.6 I2C Interface Timing Requirements
+over operating free-air temperature range (unless otherwise noted) (see Figure 19)
+                                                                                                                     MIN          MAX            UNIT
+STANDARD MODE
+fscl         I2C clock frequency                                                                                        0            100         kHz
+tsch         2                                                                                                          4                         µs
+             I C clock high time
+tscl         I2C clock low time                                                                                       4.7                         µs
+tsp          I2C spike time                                                                                                           50          ns
+tsds         2                                                                                                        250                         ns
+             I C serial-data setup time
+tsdh         I2C serial-data hold time                                                                                  0                         ns
+ticr         I2C input rise time                                                                                                  1000            ns
+ticf         2                                                                                                                       300          ns
+             I C input fall time
+tocf         2                                                 10-pF to 400-pF bus                                                   300          ns
+             I C output fall time
+tbuf         I2C bus free time between Stop and Start                                                                 4.7                         µs
+tsts         I2C Start or repeated Start condition setup                                                              4.7                         µs
+tsth         2                                                                                                          4                         µs
+             I C Start or repeated Start condition hold
+tsps         I2C Stop condition setup                                                                                   4                         µs
+tvd(data)    Valid data time                                   SCL low to SDA output valid                                           3.45         µs
+                                                               ACK signal from SCL low to
+tvd(ack)     Valid data time of ACK condition                                                                                        3.45         µs
+                                                               SDA (out) low
+Cb           I2C bus capacitive load                                                                                                 400          pF
+FAST MODE
+fscl         I2C clock frequency                                                                                        0            400         kHz
+tsch         I2C clock high time                                                                                      0.6                         µs
+tscl         I2C clock low time                                                                                       1.3                         µs
+tsp          2                                                                                                                        50          ns
+             I C spike time
+tsds         I2C serial-data setup time                                                                               100                         ns
+tsdh         I2C serial-data hold time                                                                                  0                         ns
+ticr         2                                                                                                         20            300          ns
+             I C input rise time
+ticf         I2C input fall time                                                                        20 × (VDD / 5.5 V)           300          ns
+tocf         I2C output fall time                              10-pF to 400-pF bus                      20 × (VDD / 5.5 V)           300          ns
+
+Copyright © 2014–2017, Texas Instruments Incorporated                                                   Submit Documentation Feedback                   7
+                                                             Product Folder Links: TCA9534
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                                                www.ti.com
+
+
+I2C Interface Timing Requirements (continued)
+over operating free-air temperature range (unless otherwise noted) (see Figure 19)
+                                                                                                                          MIN           MAX        UNIT
+tbuf           I2C bus free time between Stop and Start                                                                    1.3                      µs
+tsts           2                                                                                                           0.6                      µs
+               I C Start or repeated Start condition setup
+tsth           I2C Start or repeated Start condition hold                                                                  0.6                      µs
+tsps           I2C Stop condition setup                                                                                    0.6                      µs
+tvd(data)      Valid data time                                 SCL low to SDA output valid                                                0.9       µs
+                                                               ACK signal from SCL low to
+tvd(ack)       Valid data time of ACK condition                                                                                           0.9       µs
+                                                               SDA (out) low
+Cb             I2C bus capacitive load                                                                                                   400        pF
+
+
+6.7 Switching Characteristics
+over operating free-air temperature range (unless otherwise noted) (see Figure 20 and Figure 21)
+                                                                FROM                            TO
+                     PARAMETER                                                                                            MIN          MAX         UNIT
+                                                               (INPUT)                       (OUTPUT)
+tiv         Interrupt valid time                                P port                         INT                                         4        µs
+tir         Interrupt reset delay time                           SCL                           INT                                         4        µs
+tpv         Output data valid                                    SCL                          P7–P0                                     350         ns
+tps         Input data setup time                               P port                         SCL                         100                      ns
+tph         Input data hold time                                P port                         SCL                           1                      µs
+
+
+
+
+8           Submit Documentation Feedback                                                            Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                             Product Folder Links: TCA9534
+                                                                                                                                                                                                                       TCA9534
+www.ti.com                                                                                                                                                      SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+
+6.8 Typical Characteristics
+TA = 25°C (unless otherwise noted)
+
+                                 40                                                                                                               2.2
+                                                     Vcc = 1.65 V         Vcc = 3.3 V        Vcc = 5.5V                                                          Vcc = 1.65 V          Vcc = 3.3 V      Vcc = 5.5V
+                                 36                  Vcc = 1.8 V          Vcc = 3.6 V                                                              2             Vcc = 1.8 V           Vcc = 3.6 V
+                                 32                  Vcc = 2.5 V          Vcc = 5 V                                                               1.8            Vcc = 2.5 V           Vcc = 5 V
+
+
+
+
+     ICC - Supply Current (µA)                                                                                      ICC - Supply Current (µA)
+                                 28                                                                                                               1.6
+                                 24                                                                                                               1.4
+                                 20                                                                                                               1.2
+                                 16                                                                                                                1
+                                 12                                                                                                               0.8
+                                  8                                                                                                               0.6
+                                  4                                                                                                               0.4
+                                  0                                                                                                               0.2
+                                  -40                -15           10         35             60           85                                        -40                -15          10         35           60           85
+                                                               TA - Temperature (°C)                      D001
+                                                                                                                                                                                TA - Temperature (°C)                    D002
+
+
+
+
+                                  Figure 1. Supply Current vs Temperature for Different                                                             Figure 2. Standby Supply Current vs Temperature for
+                                                  Supply Voltage (VCC)                                                                                          Different Supply Voltage (VCC)
+                                 30                                                                                                               30
+                                              -40qC                                                                                                             -40qC
+                                              25qC                                                                                                              25qC
+                                 25           85qC                                                                                                25            85qC
+
+
+
+
+     ICC - Supply Current (µA)                                                                                          IOL - Sink Current (mA)
+                                 20                                                                                                               20 VCC = 1.65 V
+
+
+                                 15                                                                                                               15
+
+
+                                 10                                                                                                               10
+
+
+                                 5                                                                                                                 5
+
+
+                                 0                                                                                                                 0
+                                  1.5          2        2.5      3      3.5      4     4.5         5    5.5                                             0        0.1         0.2     0.3     0.4      0.5        0.6    0.7
+                                                              VCC - Supply Voltage (V)                    D003                                                               VOL - Output Low Voltage (V)                D004
+
+
+
+
+                                 Figure 3. Supply Current vs Supply Voltage for Different                                                              Figure 4. I/O Sink Current vs Output Low Voltage for
+                                                    Temperature (TA)                                                                                        Different Temperature (TA) for VCC = 1.65 V
+                                 35                                                                                                               60
+                                              -40qC                                                                                                             -40qC
+                                 30           25qC                                                                                                              25qC
+                                              85qC                                                                                                50            85qC
+
+
+
+
+      IOL - Sink Current (mA)                                                                                           IOL - Sink Current (mA)
+                                 25
+                                          VCC = 1.8 V                                                                                             40        VCC = 2.5 V
+                                 20
+                                                                                                                                                  30
+                                 15
+                                                                                                                                                  20
+                                 10
+
+                                  5                                                                                                               10
+
+
+                                  0                                                                                                                0
+                                      0        0.1         0.2     0.3     0.4      0.5           0.6   0.7                                             0        0.1         0.2     0.3     0.4      0.5        0.6    0.7
+                                                           VOL - Output Low Voltage (V)                   D005
+                                                                                                                                                                             VOL - Output Low Voltage (V)                D006
+
+
+
+
+                                      Figure 5. I/O Sink Current vs Output Low Voltage for                                                             Figure 6. I/O Sink Current vs Output Low Voltage for
+                                           Different Temperature (TA) for VCC = 1.8 V                                                                       Different Temperature (TA) for VCC = 2.5 V
+
+
+
+Copyright © 2014–2017, Texas Instruments Incorporated                                                                                                                            Submit Documentation Feedback                  9
+                                                                                                  Product Folder Links: TCA9534
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                                                                                                                   www.ti.com
+
+
+Typical Characteristics (continued)
+TA = 25°C (unless otherwise noted)
+                                 70                                                                                                              80
+                                              -40qC                                                                                                           -40qC
+                                 60           25qC                                                                                               70           25qC
+                                              85qC                                                                                                            85qC
+                                                                                                                                                 60
+
+
+
+
+     IOL - Sink Current (mA)                                                                                         IOL - Sink Current (mA)
+                                 50
+                                          VCC = 3.3 V                                                                                                     VCC = 5 V
+                                                                                                                                                 50
+                                 40
+                                                                                                                                                 40
+                                 30
+                                                                                                                                                 30
+                                 20
+                                                                                                                                                 20
+
+                                 10                                                                                                              10
+
+                                  0                                                                                                               0
+                                      0        0.1        0.2     0.3     0.4      0.5      0.6   0.7                                                 0        0.1          0.2     0.3     0.4      0.5     0.6     0.7
+                                                          VOL - Output Low Voltage (V)             D007
+                                                                                                                                                                            VOL - Output Low Voltage (V)              D009
+
+
+
+
+                                      Figure 7. I/O Sink Current vs Output Low Voltage for                                                            Figure 8. I/O Sink Current vs Output Low Voltage for
+                                           Different Temperature (TA) for VCC = 3.3 V                                                                       Different Temperature (TA) for VCC = 5 V
+                                 90                                                                                                              300
+                                              -40qC                                                                                                             1.8 V, 1 mA           3.3 V, 10 mA
+                                 80           25qC                                                                                                              1.8 V, 10 mA          5 V, 1 mA
+                                              85qC                                                                                               250            3.3 V, 1mA            5 V, 10 mA
+
+
+
+
+                                                                                                              VOL - Output Low Voltage (V)
+                                 70
+
+
+
+
+     IOL - Sink Current (mA)
+                                 60       VCC = 5.5 V                                                                                            200
+
+                                 50
+                                                                                                                                                 150
+                                 40
+
+                                 30                                                                                                              100
+
+                                 20
+                                                                                                                                                  50
+                                 10
+
+                                  0                                                                                                                0
+                                      0        0.1        0.2     0.3     0.4      0.5      0.6   0.7                                              -40                -15           10         35           60        85
+                                                          VOL - Output Low Voltage (V)             D010
+                                                                                                                                                                                TA - Temperature (°C)                  D011
+
+
+
+
+                                      Figure 9. I/O Sink Current vs Output Low Voltage for                                           Figure 10. II/O Low Voltage vs Temperature for Different VCC
+                                           Different Temperature (TA) for VCC = 5.5 V                                                                           and IOL
+                                 20                                                                                                              25
+                                              -40qC                                                                                                           -40qC
+                                              25qC                                                                                                            25qC
+                                              85qC                                                                                               20           85qC
+
+
+
+
+     IOH - Source Current (mA)                                                                                       IOH - Source Current (mA)
+                                 15
+                                          VCC = 1.65 V                                                                                                    VCC = 1.8 V
+                                                                                                                                                 15
+                                 10
+                                                                                                                                                 10
+
+                                  5
+                                                                                                                                                  5
+
+
+                                  0                                                                                                               0
+                                      0        0.1        0.2     0.3      0.4     0.5      0.6   0.7                                                 0        0.1        0.2     0.3      0.4     0.5       0.6     0.7
+                                                        VCC-VOH - Output High Voltage (V)          D012
+                                                                                                                                                                        VCC-VOH - Output High Voltage (V)             D013
+
+
+
+
+                                 Figure 11. I/O Source Current vs Output High Voltage for                                                        Figure 12. I/O Source Current vs Output High Voltage for
+                                        Different Temperature (TA) for VCC = 1.65 V                                                                     Different Temperature (TA) for VCC = 1.8 V
+
+
+
+
+10                               Submit Documentation Feedback                                                                                                        Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                                                            Product Folder Links: TCA9534
+                                                                                                                                                                                                                           TCA9534
+www.ti.com                                                                                                                                                            SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+
+Typical Characteristics (continued)
+TA = 25°C (unless otherwise noted)
+                                          40                                                                                                             60
+                                                       -40qC                                                                                                          -40qC
+                                          35           25qC                                                                                                           25qC
+                                                       85qC                                                                                              50           85qC
+
+
+
+
+              IOH - Source Current (mA)                                                                                      IOH - Source Current (mA)
+                                          30
+                                                   VCC = 2.5 V                                                                                           40       VCC = 3.3 V
+                                          25
+
+                                          20                                                                                                             30
+
+                                          15
+                                                                                                                                                         20
+                                          10
+                                                                                                                                                         10
+                                           5
+
+                                           0                                                                                                              0
+                                               0        0.1        0.2     0.3      0.4     0.5       0.6       0.7                                           0        0.1        0.2     0.3      0.4     0.5       0.6    0.7
+                                                                 VCC-VOH - Output High Voltage (V)               D014
+                                                                                                                                                                                VCC-VOH - Output High Voltage (V)            D015
+
+
+
+
+                                          Figure 13. I/O Source Current vs Output High Voltage for                                                       Figure 14. I/O Source Current vs Output High Voltage for
+                                                 Different Temperature (TA) for VCC = 2.5 V                                                                     Different Temperature (TA) for VCC = 3.3 V
+                                          70                                                                                                             80
+                                                       -40qC                                                                                                          -40qC
+                                          60           25qC                                                                                              70           25qC
+                                                       85qC                                                                                                           85qC
+
+
+
+
+              IOH - Source Current (mA)                                                                                      IOH - Source Current (mA)
+                                                                                                                                                         60
+                                          50
+                                                   VCC = 5 V                                                                                                      VCC = 5.5 V
+                                                                                                                                                         50
+                                          40
+                                                                                                                                                         40
+                                          30
+                                                                                                                                                         30
+                                          20
+                                                                                                                                                         20
+
+                                          10                                                                                                             10
+
+                                           0                                                                                                              0
+                                               0        0.1        0.2     0.3      0.4     0.5       0.6       0.7                                           0        0.1        0.2     0.3      0.4     0.5       0.6    0.7
+                                                                 VCC-VOH - Output High Voltage (V)               D016
+                                                                                                                                                                                VCC-VOH - Output High Voltage (V)            D017
+
+
+
+
+                                          Figure 15. I/O Source Current vs Output High Voltage for                                                       Figure 16. I/O Source Current vs Output High Voltage for
+                                                  Different Temperature (TA) for VCC = 5 V                                                                      Different Temperature (TA) for VCC = 5.5 V
+                                          400                                                                                                            18
+                                                        1.65 V, 10 mA          5 V, 10 mA                                                                              1.65 V         3.3 V
+                                          350           2.5 V, 10 mA           5.5 V, 10 mA                                                                            1.8 V          5V
+
+
+
+
+    VCC-VOH - I/O High Voltage (mV)
+                                                        3.6 V, 10 mA                                                                                     15            2.5 V          5.5 V
+
+                                          300
+                                                                                                                                                         12
+
+
+
+                                                                                                                            Delta ICC (µA)
+                                          250
+                                                                                                                                                          9
+                                          200
+                                                                                                                                                          6
+                                          150
+
+                                          100                                                                                                             3
+
+
+                                           50                                                                                                             0
+                                            -40                -15         10         35             60          85                                       -40                -15         10         35          60           85
+                                                                       TA - Temperature (°C)                     D018
+                                                                                                                                                                                     TA - Temperature (°C)                   D019
+
+
+
+
+                                                   Figure 17. VCC – VOH Voltage vs Temperature for                                                                        Figure 18. Δ ICC vs Temperature for
+                                                                     Different VCC                                                                                          Different VCC (VI = VCC – 0.6 V)
+
+
+
+
+Copyright © 2014–2017, Texas Instruments Incorporated                                                                                                                                  Submit Documentation Feedback                11
+                                                                                                          Product Folder Links: TCA9534
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                                                     www.ti.com
+
+
+7 Parameter Measurement Information
+                                                                                  VCC
+
+
+                                                                                        R L = 1 kW
+
+                                                                               SDA
+                                                                  DUT
+
+                                                                                         CL = 50 pF
+                                                                                         (see Note A)
+
+
+
+                                                                 SDA LOAD CONFIGURATION
+
+
+
+
+                                                                             Three Bytes for Complete
+                                                                               Device Programming
+
+       Stop      Start   Address                                                        R/W                        Data                     Data      Stop
+                                 Address                               Address                        ACK         Bit 07
+     Condition Condition   Bit 7                                                        Bit 0                                              Bit 10   Condition
+                                  Bit 6                                 Bit 1          (LSB)           (A)        (MSB)
+        (P)       (S)     (MSB)                                                                                                            (LSB)       (P)
+
+
+                                   tscl                        tsch
+
+                                                                                                                                                      0.7 ´ VCC
+     SCL
+                                                                                                                                                      0.3 ´ VCC
+                                          ticr                                                                       tPHL          tsts
+            tbuf                                 ticf
+                                                                                                tsp                      tPLH
+                                                                                                                                                      0.7 ´ VCC
+     SDA
+                                                                                                                                                      0.3 ´ VCC
+                     ticf                        ticr                                       tsdh                                   tsps
+                            tsth                        tsds                                                   Repeat
+                                                                                                                 Start                Stop
+                       Start or
+                                                                                                             Condition             Condition
+                       Repeat
+                       Start
+                       Condition
+                                                                      VOLTAGE WAVEFORMS
+
+
+                                                                      BYTE       DESCRIPTION
+                                                                                   2
+                                                                       1           I C address
+                                                                      2, 3         P-port data
+
+       A.    CL includes probe and jig capacitance.
+       B.    All inputs are supplied by generators having the following characteristics: PRR ≤ 10 MHz, ZO = 50 Ω, tr/tf ≤ 30 ns.
+       C.    All parameters and waveforms are not applicable to all devices.
+
+                                   Figure 19. I2C Interface Load Circuit and Voltage Waveforms
+
+
+
+
+12         Submit Documentation Feedback                                                                     Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                               Product Folder Links: TCA9534
+                                                                                                                                                                      TCA9534
+www.ti.com                                                                                                            SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+
+                                                     Parameter Measurement Information (continued)
+                                                                                                V CC
+
+
+
+                                                                                                       R L = 4.7 kΩ
+
+                                                                                               INT
+                                                                                 DUT
+
+                                                                                                       C L = 100 pF
+                                                                                                       (see Note A)
+
+
+
+                                                                           INTERRUPT LOAD CONFIGURATION
+
+
+
+                                                                              ACK
+                                                                           From Slave
+                    Start                                                                                                  ACK
+                                                                                                      8 Bits            From Slave
+                  Condition
+                                                                           R/W                   (One Data Byte)
+                                         Slave Address                                              From Port                                  Data From Port
+
+
+                       S      0          1       0    0   A2 A1      A0     1    A                       Data 1              A                         Data 2              1     P
+
+
+
+
+                              1      2       3        4   5      6   7      8     A                                          A
+
+
+                                                                                                                                     t ir          B
+                                                                                        t ir
+                                                                                                                                                   B
+
+
+  INT
+
+
+                                             A
+                           t iv
+                                                                                                                                  t sps
+                                             A
+Data
+ Into                                        Address                                                    Data 1                                             Data 2
+Port
+
+
+                                                              0.7 × V CC                                                                                            0.7 × V CC
+        INT                                                                                     SCL
+                                                                                                              R/W                    A
+                                                              0.3 × V CC                                                                                            0.3 × V CC
+
+
+                                  t iv
+                                                                                                                                            t ir
+
+                                                              0.7 × V CC                                                                                            0.7 × V CC
+        Pn                                                                                       INT
+                                                              0.3 × V CC                                                                                            0.3 × V CC
+
+
+                              View A−A                                                                                           View B−B
+         A.   CL includes probe and jig capacitance.
+         B.   All inputs are supplied by generators having the following characteristics: PRR ≤ 10 MHz, ZO = 50 Ω, tr/tf ≤ 30 ns.
+         C.   All parameters and waveforms are not applicable to all devices.
+
+                                             Figure 20. Interrupt Load Circuit and Voltage Waveforms
+
+
+
+
+Copyright © 2014–2017, Texas Instruments Incorporated                                                                             Submit Documentation Feedback                      13
+                                                                             Product Folder Links: TCA9534
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                                        www.ti.com
+
+
+                                   Parameter Measurement Information (continued)
+
+                                                       Pn                                500 Ÿ
+                                        DUT                                                             2 x VCC
+
+                                                             CL = 50 pF
+                                                                                   500 Ÿ
+                                                            (see Note A)
+
+
+
+
+                                                      P-PORT LOAD CONFIGURATION
+
+
+
+
+                                                                                                                  0.7 x VCC
+                             SCL
+                                              P0                      A                     P3
+                                                                                                                  0.3 x VCC
+
+                                                                     Slave
+                                                                     ACK
+
+                            SDA
+
+                                                                                 tpv
+                                                                                 (see Note B)
+
+
+
+
+                                                                                      Last Stable Bit
+                                                                Unstable Data
+
+
+
+
+                                                             WRITE MODE (R/W = 0)
+
+
+
+
+                                                                                                                  0.7 x VCC
+                              SCL              P0                     A                     P3
+                                                                                                                  0.3 x VCC
+                                                                           tph
+                                                     tps
+                                                                                                                  0.7 x VCC
+                               Pn                                                                                 0.3 x VCC
+
+
+                                                              READ MODE (R/W = 1)
+
+     A.   CL includes probe and jig capacitance.
+     B.   tpv is measured from 0.7 × VCC on SCL to 50% I/O (Pn) output.
+     C.   All inputs are supplied by generators having the following characteristics: PRR ≤ 10 MHz, ZO = 50 Ω, tr/tf ≤ 30 ns.
+     D.   The outputs are measured one at a time, with one transition per measurement.
+     E.   All parameters and waveforms are not applicable to all devices.
+
+                                Figure 21. P-Port Load Circuit and Voltage Waveforms
+
+
+
+
+14     Submit Documentation Feedback                                                            Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                     Product Folder Links: TCA9534
+                                                                                                                             TCA9534
+www.ti.com                                                                              SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+
+8 Detailed Description
+
+8.1 Overview
+The TCA9534 is an 8-bit I/O expander for the two-line bidirectional bus (I2C) is designed for 1.65-V to 5.5-V VCC
+operation. It provides general-purpose remote I/O expansion for most micro-controller families through the I2C
+interface (serial clock, SCL, and serial data, SDA, pins).
+The TCA9534 open-drain interrupt (INT) output is activated when any input state differs from its corresponding
+Input Port register state and is used to indicate to the system master that an input state has changed. The INT
+pin can be connected to the interrupt input of a micro-controller. By sending an interrupt signal on this line, the
+remote I/O can inform the micro-controller if there is incoming data on its ports without having to communicate
+through the I2C bus. Thus, the TCA9534 can remain a simple slave device. The device outputs (latched) have
+high-current drive capability for directly driving LEDs.
+Three hardware pins (A0, A1, and A2) are used to program and vary the fixed I2C slave address and allow up to
+eight devices to share the same I2C bus or SMBus.
+The system master can reset the TCA9534 in the event of a timeout or other improper operation by cycling the
+power supply and causing a power-on reset (POR). A reset puts the registers in their default state and initializes
+the I2C/SMBus state machine.
+The TCA9534 consists of one 8-bit Configuration (input or output selection), Input Port, Output Port, and Polarity
+Inversion (active high or active low) registers. At power on, the I/Os are configured as inputs. However, the
+system master can enable the I/Os as either inputs or outputs by writing to the I/O configuration bits. The data for
+each input or output is kept in the corresponding Input Port or Output Port register. The polarity of the Input Port
+register can be inverted with the Polarity Inversion register. All registers can be read by the system master.
+The TCA9534 is identical to the TCA9554 except for the removal of the internal I/O pullup resistors, which greatly
+reduces power consumption when the I/Os are held LOW.
+
+
+
+
+Copyright © 2014–2017, Texas Instruments Incorporated                                              Submit Documentation Feedback     15
+                                                        Product Folder Links: TCA9534
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                                                  www.ti.com
+
+
+8.2 Functional Block Diagram
+
+
+              13                                                                                          Interrupt
+     INT                                              LP Filter
+                                                                                                            Logic
+
+
+                1
+      A0
+                2
+      A1
+                                                                                                                                                  P7−P0
+                3
+      A2
+
+              14
+     SCL                        Input                      I2C Bus
+                                                                                       Shift                                I/O
+              15                Filter                     Control                                          8 Bits
+     SDA                                                                              Register                              Port
+
+
+
+
+                                                                                             Write Pulse
+
+              16                    Power-On                                                 Read Pulse
+     VCC                              Reset
+                8
+     GND
+
+
+           Pin numbers shown are for the PW package.
+
+                                                  Figure 22. Functional Block Diagram
+
+
+
+                           Data From                                                                                         Output Port
+                         Shift Register                                                                                      Register Data
+                                           Configuration
+                                             Register                                                                        VCC
+                            Data From                                                                Q1
+                          Shift Register       D Q
+                                                FF
+                    Write Configuration                              D Q
+                                               CK Q
+                                 Pulse                                FF
+                           Write Pulse                                                                                       P0 to P7
+                                                                     CK Q
+                                                                                                           Q2          ESD Protection
+                                                                  Output Port                                          Diode
+                                                                   Register
+                                                                                   Input Port                                GND
+                                                                                    Register
+                                                                                      D Q                                    Input Port
+                                                                                                                             Register Data
+                                                                                       FF
+                           Read Pulse                                                 CK Q
+                                                                                                                             To INT
+
+
+                       Data From Shift                                                                                       Polarity
+                                                                                      D Q                                    Register Data
+                              Register
+                                                                                       FF
+                         Write Polarity                                               CK Q
+                                Pulse
+                                                                                Polarity Inversion
+                                                                                    Register
+
+           At power-on reset, all registers return to default values.
+
+                                            Figure 23. Simplified Schematic Of P0 To P7
+
+
+16     Submit Documentation Feedback                                                                      Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                             Product Folder Links: TCA9534
+                                                                                                                             TCA9534
+www.ti.com                                                                              SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+
+8.3 Feature Description
+8.3.1 I/O Port
+When an I/O is configured as an input, FETs Q1 and Q2 are off, creating a high-impedance input. The input
+voltage may be raised above VCC to a maximum of 5.5 V.
+If the I/O is configured as an output, Q1 or Q2 is enabled depending on the state of the output port register. In
+this case, there are low impedance paths between the I/O pin and either VCC or GND. The external voltage
+applied to this I/O pin must not exceed the recommended levels for proper operation.
+
+8.3.2 Interrupt Output (INT)
+An interrupt is generated by any rising or falling edge of the port inputs in the input mode. After time, tiv, the
+signal INT is valid. Resetting the interrupt circuit is achieved when data on the port is changed to the original
+setting or data is read from the port that generated the interrupt. Resetting occurs in the read mode at the
+acknowledge (ACK) bit after the rising edge of the SCL signal. Note that the INT is reset at the ACK just before
+the byte of changed data is sent. Interrupts that occur during the ACK clock pulse can be lost (or be very short)
+because of the resetting of the interrupt during this pulse. Each change of the I/Os after resetting is detected and
+is transmitted as INT.
+Reading from or writing to another device does not affect the interrupt circuit, and a pin configured as an output
+cannot cause an interrupt. Changing an I/O from an output to an input may cause a false interrupt to occur if the
+state of the pin does not match the contents of the Input Port register.
+The INT output has an open-drain structure and requires pullup resistor to VCC.
+
+8.4 Device Functional Modes
+8.4.1 Power-On Reset
+When power (from 0 V) is applied to VCC, an internal power-on reset holds the TCA9534 in a reset condition
+until VCC has reached VPORR. At that point, the reset condition is released and the TCA9534 registers and
+SMBus/I2C state machine initializes to their default states. After that, VCC must be lowered to below VPORF and
+then back up to the operating voltage for a power-on reset cycle.
+
+8.5 Programming
+8.5.1 I2C Interface
+The TCA9534 has a standard bidirectional I2C interface that is controlled by a master device in order to be
+configured or read the status of this device. Each slave on the I2C bus has a specific device address to
+differentiate between other slave devices that are on the same I2C bus. Many slave devices require configuration
+upon startup to set the behavior of the device. This is typically done when the master accesses internal register
+maps of the slave, which have unique register addresses. A device can have one or multiple registers where
+data is stored, written, or read. For more information see the Understanding the I2C Bus application report.
+The physical I2C interface consists of the serial clock (SCL) and serial data (SDA) lines. Both SDA and SCL lines
+must be connected to VCC through a pullup resistor. The size of the pullup resistor is determined by the amount
+of capacitance on the I2C lines. For further details, see the I2C Pullup Resistor Calculation application report.
+Data transfer may be initiated only when the bus is idle. A bus is considered idle if both SDA and SCL lines are
+high after a STOP condition.
+Figure 24 and Figure 25 show the general procedure for a master to access a slave device:
+1. If a master wants to send data to a slave:
+    – Master-transmitter sends a START condition and addresses the slave-receiver.
+    – Master-transmitter sends data to slave-receiver.
+    – Master-transmitter terminates the transfer with a STOP condition.
+2. If a master wants to receive or read data from a slave:
+    – Master-receiver sends a START condition and addresses the slave-transmitter.
+    – Master-receiver sends the requested register to read to slave-transmitter.
+    – Master-receiver receives data from the slave-transmitter.
+Copyright © 2014–2017, Texas Instruments Incorporated                                              Submit Documentation Feedback     17
+                                                        Product Folder Links: TCA9534
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                                   www.ti.com
+
+
+Programming (continued)
+     – Master-receiver terminates the transfer with a STOP condition.
+
+
+
+                               SCL
+
+
+                               SDA
+
+
+
+
+                                        START                  Data Transfer                      STOP
+                                       Condition                                                Condition
+                                   Figure 24. Definition of Start and Stop Conditions
+
+                                                    SDA line stable while SCL line is high
+
+
+
+
+       SCL
+
+                     1             0          1          0             1             0              1             0            ACK
+      SDA
+
+
+
+
+                    MSB        Bit           Bit         Bit          Bit            Bit            Bit         LSB           ACK
+
+
+
+                                                   Byte: 1010 1010 ( 0xAAh )
+                                                   Figure 25. Bit Transfer
+
+Table 1 shows the TCA9534 interface definition.
+
+                                              Table 1. Interface Definition Table
+                                                                               BIT
+         BYTE
+                           7 (MSB)           6            5                4               3              2             1            0 (LSB)
+ 2
+I C slave address             L              H            L                L               A2             A1            A0            R/W
+Px I/O data bus               P7             P6          P5             P4                 P3             P2            P1             P0
+
+
+
+
+18     Submit Documentation Feedback                                                       Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                   Product Folder Links: TCA9534
+                                                                                                                                                    TCA9534
+www.ti.com                                                                                                  SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+
+8.6 Register Maps
+8.6.1 Device Address
+Figure 26 shows the address byte of the TCA9534.
+
+                                                                    Slave Address
+
+
+                                                         0     1       0     0         A2       A1    A0   R/W
+
+
+                                                                Fixed                    Hardware
+                                                                                         Selectable
+
+                                                         Figure 26. TCA9534 Address
+
+Table 2 shows the TCA9534 address reference.
+
+                                                             Table 2. Address Reference
+                                                INPUTS
+                                                                                        I2C BUS SLAVE ADDRESS
+                                       A2           A1             A0
+                                        L           L              L                   32 (decimal), 20 (hexadecimal)
+                                        L           L              H                   33 (decimal), 21 (hexadecimal)
+                                        L           H              L                   34 (decimal), 22 (hexadecimal)
+                                        L           H              H                   35 (decimal), 23 (hexadecimal)
+                                        H           L              L                   36 (decimal), 24 (hexadecimal)
+                                        H           L              H                   37 (decimal), 25 (hexadecimal)
+                                        H           H              L                   38 (decimal), 26 (hexadecimal)
+                                        H           H              H                   39 (decimal), 27 (hexadecimal)
+
+The last bit of the slave address defines the operation (read or write) to be performed. When it is high (1), a read
+is selected, while a low (0) selects a write operation.
+
+8.6.2 Control Register and Command Byte
+Following the successful Acknowledgment of the address byte, the bus master sends a command byte that is
+stored in the control register in the TCA9534 (see Figure 27). Two bits of this command byte state the operation
+(read or write) and the internal register (input, output, polarity inversion or configuration) that is affected. This
+register can be written or read through the I2C bus. The command byte is sent only during a write transmission.
+Once a command byte has been sent, the register that was addressed continues to be accessed by reads until a
+new command byte has been sent.
+
+                                                    0          0        0        0          0        B2    B1    B0
+
+                                                    Figure 27. Control Register Bits
+
+Table 3 shows the TCA9534 command byte.
+
+                                                         Table 3. Command Byte Table
+  CONTROL REGISTER BITS              COMMAND BYTE
+                                                                                 REGISTER                              PROTOCOL         POWER-UP DEFAULT
+        B1               B0              (HEX)
+         0                0                  0×00                                    Input Port                         Read byte            XXXX XXXX
+         0                1                  0×01                                Output Port                          Read/write byte         1111 1111
+         1                0                  0×02                           Polarity Inversion                        Read/write byte         0000 0000
+         1                1                  0×03                             Configuration                           Read/write byte         1111 1111
+
+
+
+Copyright © 2014–2017, Texas Instruments Incorporated                                                                      Submit Documentation Feedback   19
+                                                              Product Folder Links: TCA9534
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                            www.ti.com
+
+
+8.6.3 Register Descriptions
+The Input Port register (register 0) reflects the incoming logic levels of the pins, regardless of whether the pin is
+defined as an input or an output by the Configuration register. It only acts on read operation. Writes to these
+registers have no effect. The default value, X, is determined by the externally applied logic level. See Table 4.
+Before a read operation, a write transmission is sent with the command byte to indicate to the I2C device that the
+Input Port register is accessed next.
+
+                                   Table 4. Register 0 (Input Port Register) Table
+                      BIT              I7      I6          I5        I4        I3        I2         I1          I0
+                   DEFAULT             X       X           X         X         X         X           X          X
+
+The Output Port register (register 1) shows the outgoing logic levels of the pins defined as outputs by the
+Configuration register. Bit values in this register have no effect on pins defined as inputs. In turn, reads from this
+register reflect the value that is in the flip-flop controlling the output selection, not the actual pin value. See
+Table 5.
+
+                                  Table 5. Register 1 (Output Port Register) Table
+                      BIT              O7      O6          O5        O4        O3       O2          O1         O0
+                   DEFAULT             1        1          1         1         1         1           1          1
+
+The Polarity Inversion register (register 2) allows polarity inversion of pins defined as inputs by the Configuration
+register. If a bit in this register is set (written with 1), the corresponding port pin polarity is inverted. If a bit in this
+register is cleared (written with a 0), the corresponding port pin original polarity is retained. See Table 6.
+
+                               Table 6. Register 2 (Polarity Inversion Register) Table
+                      BIT              N7      N6          N5        N4        N3       N2          N1         N0
+                   DEFAULT             0        0          0         0         0         0           0          0
+
+The Configuration register (register 3) configures the directions of the I/O pins. If a bit in this register is set to 1,
+the corresponding port pin is enabled as an input with a high-impedance output driver. If a bit in this register is
+cleared to 0, the corresponding port pin is enabled as an output. See Table 7.
+
+                                 Table 7. Register 3 (Configuration Register) Table
+                      BIT              C7      C6          C5        C4        C3       C2          C1         C0
+                   DEFAULT             1        1          1         1         1         1           1          1
+
+
+
+
+20     Submit Documentation Feedback                                                Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                   Product Folder Links: TCA9534
+                                                                                                                                                              TCA9534
+www.ti.com                                                                                                    SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+
+8.6.3.1 Bus Transactions
+Data is exchanged between the master and the TCA9534 through write and read commands.
+
+8.6.3.1.1 Writes
+To write on the I2C bus, the master sends a START condition on the bus with the address of the slave, as well
+as the last bit (the R/W bit) set to 0, which signifies a write. After the slave sends the acknowledge bit, the master
+then sends the register address of the register to which it is designated to write. The slave acknowledges again,
+letting the master know it is ready. After this, the master starts sending the register data to the slave until the
+master has sent all the data necessary (which is sometimes only a single byte), and the master terminates the
+transmission with a STOP condition.
+See Table 3 to see list of the internal registers and a description of each one.
+Figure 28 shows an example of writing a single byte to a slave register.
+
+           Master controls SDA line
+           Slave controls SDA line
+
+ Write to one register in a device
+
+      Device (Slave) Address (7 bits)                                  Register Address N (8 bits)                   Data Byte to Register N (8 bits)
+
+
+  S    0      1     0      0   A2 A1 A0               0       A    B7 B6 B5 B4 B3 B2 B1 B0                     A     D7 D6 D5 D4 D3 D2 D1 D0                   A    P
+
+
+ START                                        R/W=0           ACK                                            ACK                                             ACK    STOP
+                                                                       Figure 28. Write to Register
+
+Figure 29 shows an example of writing to the output port register.
+
+                  SCL          1    2     3   4   6       7    8   9
+                                   Slave Address                              Command Byte                         Data to Register
+
+
+                SDA S      0   1     0    0 A2 A1 A0 0             A    0    0   0   0   0   0   0   1   A               Data 1             A   P
+
+
+                        Start Condition                       R/W ACK From Slave                         ACK From Slave                     ACK From Slave
+
+             Write to
+                Port
+
+            Data Out
+           From Port                                                                                                                                 Data 1 Valid
+
+                                                                                                                                      tpv
+
+
+                                                              Figure 29. Write to Output Port Register
+
+Figure 30 shows an example of writing to the configuration or polarity inversion registers.
+
+
+
+
+Copyright © 2014–2017, Texas Instruments Incorporated                                                                         Submit Documentation Feedback             21
+                                                                            Product Folder Links: TCA9534
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                                                                                        www.ti.com
+
+
+
+                    SCL             1       2       3    4   6   7    8   9
+                                        Slave Address                                  Command Byte                                        Data to Register
+
+
+                    SDA     S   0      1    0       0 A2 A1 A0 0          A     0   0    0       0        0       0       1 1/0 A                   Data                A   P
+
+
+                            Start Condition                          R/W ACK From Slave                                            ACK From Slave                       ACK From Slave
+
+                 Data to
+                Register
+
+                                    Figure 30. Write to Configuration or Polarity Inversion Registers
+
+8.6.3.1.2 Reads
+Reading from a slave is very similar to writing, but requires some additional steps. To read from a slave, the
+master must first instruct the slave which register it is designated to read from. This is done by the master
+starting off the transmission in a similar fashion as the write, by sending the address with the R/W bit equal to 0
+(signifying a write), followed by the register address it is designated to read from. When the slave acknowledges
+this register address, the master sends a START condition again, followed by the slave address with the R/W bit
+set to 1 (signifying a read). This time, the slave acknowledges the read request, and the master releases the
+SDA bus but continues supplying the clock to the slave. During this part of the transaction, the master becomes
+the master-receiver, and the slave becomes the slave-transmitter.
+The master continues to send out the clock pulses but releases the SDA line so that the slave can transmit data.
+At the end of every byte of data, the master sends an ACK to the slave, letting the slave know that it is ready for
+more data. When the master has received the number of bytes it is expecting, it sends a NACK, signaling to the
+slave to halt communications and release the bus. The master follows this up with a STOP condition.
+See Table 3 for the list of the internal registers and a description of each one.
+If a read is requested by the master after a POR without first setting the command byte through a write, the
+device will NACK until a command byte-register address is set as described above.
+Figure 31 shows an example of reading a single byte from a slave register.
+
+       Master controls SDA line
+       Slave controls SDA line
+Read from one register in a device
+     Device (Slave) Address (7 bits)                     Register Address N (8 bits)                      Device (Slave) Address (7 bits)                Data Byte from Register N (8 bits)
+
+
+ S     0    1   0   0   A2 A1 A0        0       A       B7 B6 B5 B4 B3 B2 B1 B0              A       Sr       0       1    0   0    A2 A1 A0   1     A     D7 D6 D5 D4 D3 D2 D1 D0 NA          P
+
+
+ START                          R/W=0           ACK                                     ACK          Repeated START                       R/W=1      ACK                                NACK   STOP
+
+                                                                      Figure 31. Read from Register
+
+Data is clocked into the register on the rising edge of the ACK clock pulse. There is no limitation on the number
+of data bytes received in one read transmission, but when the final byte is received, the bus master must not
+acknowledge the data. See Figure 32.
+<br/>
+
+
+
+
+22         Submit Documentation Feedback                                                                                                 Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                                              Product Folder Links: TCA9534
+                                                                                                                                       TCA9534
+www.ti.com                                                                                       SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+
+
+       SCL               1   2        3    4   5   6   7     8   9
+                                     Slave Address                          Data From Port                   Data From Port
+
+
+       SDA           S   0       1     0   0 A2 A1 A0 1          A              Data 1             A            Data 4            NA P
+
+                      Start                            R/W           ACK From                        ACK From            NACK From      Stop
+                      Condition                                      Slave                           Master                 Master      Condition
+Read From
+      Port
+
+  Data Into
+                                                                       Data 2    Data 3                    Data 4                    Data 5
+      Port
+                                                           tph                            tps
+
+
+
+        INT
+
+           tiv                                             tir
+
+              This figure assumes the command byte has previously been programmed with 00h.
+              Transfer of data can be stopped at any time by a Stop condition. When this occurs, data present at the latest
+              acknowledge phase is valid (output mode). It is assumed that the command byte previously has been set to 00 (Read
+              Input Port register).
+              This figure eliminates the command byte transfer, a restart, and slave address call between the initial slave address
+              call and actual data transfer from the P port (see the Reads section for these details).
+
+                                                       Figure 32. Read Input Port Register
+
+
+
+
+Copyright © 2014–2017, Texas Instruments Incorporated                                                       Submit Documentation Feedback     23
+                                                                 Product Folder Links: TCA9534
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                                         www.ti.com
+
+
+9 Application and Implementation
+
+                                                        NOTE
+            Information in the following applications sections is not part of the TI component
+            specification, and TI does not warrant its accuracy or completeness. TI’s customers are
+            responsible for determining suitability of components for their purposes. Customers should
+            validate and test their design implementation to confirm system functionality.
+
+
+9.1 Application Information
+Figure 33 shows an application in which the TCA9534 can be used.
+I/O Expanders such as the TCA9534 are commonly used to obtain more general purpose I/Os. There are many
+common uses for these additionial I/Os:
+• Inputs from other ICs, such as interrupt signals from sensors
+• Inputs from physical buttons (for detecting button presses)
+• Outputs to control RESET or ENABLE signals on other ICs
+• Outputs for controlling LEDs for visual feedback to a user
+
+9.2 Typical Application
+VCC
+                                                                                                                 100 kΩ
+                                (1)       (1)                                 16            2 kΩ
+               VCC          10 kΩ     10 kΩ     10 kΩ                                                            (x 3)
+                                                                              VCC
+                                                                   15
+                      SDA                                               SDA                 4                                     Subsystem 1
+                                                                                       P0                                 (e.g., temperature sensor)
+         Master                                                    14
+                      SCL                                               SCL                 5
+         Controller                                                                    P1                                 INT
+                                                                   13
+                      INT                                               INT
+                                                                                            6
+                                                                                       P2
+                                                                                            7
+                                                                                                                            RESET
+                                                                                       P3
+              GND                                                                                                             Subsystem 2
+                                                                             TCA9534
+                                                                                            9                                (e.g., counter)
+                                                                                       P4
+                                                                                            10
+                                                                                       P5                                  A
+
+                                                                    3
+                                                                        A2             P6   11                                   Controlled Device
+                                                                    2                                                            (e.g., CBT device)
+                                                                                                               ENABLE
+                                                                        A1
+                                                                                       P7   12
+                                                                    1
+                                                                        A0                                                 B
+
+
+                                                                              GND                                           ALARM
+                                                                               8
+
+                                                                                                                                Subsystem 3
+                                                                                                                            (e.g., alarm system)
+
+
+                                                                                                                                      VCC
+          The SCL and SDA pins must be tied directly to VCC because if SCL and SDA are tied to an auxiliary power supply
+          that could be powered on while VCC is powered off, then the supply current, ICC, will increase as a result.
+          Device address is configured as 0100000 for this example.
+          P0, P2, and P3 are configured as outputs.
+          P1, P4, and P5 are configured as inputs.
+          P6 and P7 are not used and must be configured as outputs.
+
+                                                Figure 33. Application Schematic
+
+
+24     Submit Documentation Feedback                                                             Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                        Product Folder Links: TCA9534
+                                                                                                                             TCA9534
+www.ti.com                                                                              SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+
+Typical Application (continued)
+9.2.1 Design Requirements
+
+9.2.1.1 Calculating Junction Temperature and Power Dissipation
+When designing with the TCA9534, it is important that the Recommended Operating Conditions not be violated.
+Many of the parameters of this device are rated based on junction temperature. So junction temperature must be
+calculated in order to verify that safe operation of the device is met. The basic equation for junction temperature
+is shown in Equation 1.
+      Tj = TA + (qJA ´ Pd )                                                                                      (1)
+θJA is the standard junction to ambient thermal resistance measurement of the package, as seen in Thermal
+Information table. Pd is the total power dissipation of the device, and the approximation is shown in Equation 2.
+             (
+      Pd » ICC _ STATIC ´ VCC        ) + å Pd _ PORT _ L + å Pd _ PORT _ H                                                           (2)
+Equation 2 is the approximation of power dissipation in the device. The equation is the static power plus the
+summation of power dissipated by each port (with a different equation based on if the port is outputting high, or
+outputting low. If the port is set as an input, then power dissipation is the input leakage of the pin multiplied by
+the voltage on the pin). Note that this ignores power dissipation in the INT and SDA pins, assuming these
+transients to be small. They can easily be included in the power dissipation calculation by using Equation 3 to
+calculate the power dissipation in INT or SDA while they are pulling low, and this gives maximum power
+dissipation.
+      Pd _ PORT _ L = (IOL ´ VOL )                                                                                (3)
+Equation 3 shows the power dissipation for a single port which is set to output low. The power dissipated by the
+port is the VOL of the port multiplied by the current it is sinking.
+                        (
+      Pd _ PORT _H = IOH ´ (VCC - VOH )          )                                                                                   (4)
+Equation 4 shows the power dissipation for a single port which is set to output high. The power dissipated by the
+port is the current sourced by the port multiplied by the voltage drop across the device (difference between VCC
+and the output voltage).
+
+9.2.1.2 Minimizing ICC when I/Os Control LEDs
+When the I/Os are used to control LEDs, normally, these are connected to VCC through a resistor as shown in
+Figure 33. For a P-port configured as an input, ICC increases as VI becomes lower than VCC. The LED is a diode,
+with threshold voltage VT, and when a P-port is configured as an input the LED is off but VI is a VT drop below
+VCC.
+For battery-powered applications, it is essential that the voltage of P-ports controlling LEDs is greater than or
+equal to VCC when the P-ports are configured as input to minimize current consumption. Figure 34 shows a high-
+value resistor in parallel with the LED. Figure 35 shows VCC less than the LED supply voltage by at least VT.
+Both of these methods maintain the I/O VI at or above VCC and prevents additional supply current consumption
+when the P-port is configured as an input and the LED is off.
+                                                                                  VCC
+
+
+
+
+                                                                      LED      100 k
+                                                         VCC
+
+                                                          LEDx
+
+
+
+
+                                      Figure 34. High-Value Resistor in Parallel with LED
+
+
+
+Copyright © 2014–2017, Texas Instruments Incorporated                                              Submit Documentation Feedback     25
+                                                        Product Folder Links: TCA9534
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                                                                    www.ti.com
+
+
+Typical Application (continued)
+
+                                                                           3.3 V                       5V
+
+
+
+
+                                                                           VCC              LED
+
+
+                                                                            LEDx
+
+
+
+
+                                                  Figure 35. Device Supplied by a Lower Voltage
+
+9.2.2 Detailed Design Procedure
+The pullup resistors, RP, for the SCL and SDA lines need to be selected appropriately and take into consideration
+the total capacitance of all slaves on the I2C bus. The minimum pullup resistance is a function of VCC, VOL,(max),
+and IOL as shown in Equation 5.
+                VCC - VOL(max)
+      Rp(min) =
+                     IOL                                                                                       (5)
+The maximum pullup resistance is a function of the maximum rise time, tr (300 ns for fast-mode operation, fSCL =
+400 kHz) and bus capacitance, Cb as shown in Equation 6.
+                   tr
+     Rp(max) =
+               0.8473 ´ Cb                                                                                    (6)
+The maximum bus capacitance for an I2C bus must not exceed 400 pF for standard mode or fast mode
+operation. The bus capacitance can be approximated by adding the capacitance of the TCA9534, Ci for SCL or
+Cio for SDA, the capacitance of wires, connections, traces, and the capacitance of additional slaves on the bus.
+
+9.2.3 Application Curves
+
+                  25                                                                                   1.8
+                                                              Standard-mode
+                                                              Fast-mode                                1.6
+                  20
+                                                                                                       1.4
+
+                                                                                                       1.2
+
+
+ Rp(max) (kOhm)                                                                       Rp(min) (kOhm)
+                  15
+                                                                                                        1
+
+                                                                                                       0.8
+                  10
+                                                                                                       0.6
+
+                   5                                                                                   0.4
+
+                                                                                                       0.2                                                      VCC > 2V
+                                                                                                                                                                VCC <= 2
+                   0                                                                                    0
+                       0   50   100   150   200   250   300   350    400     450                             0   0.5   1     1.5   2    2.5  3     3.5   4    4.5   5   5.5
+                                             Cb (pF)                           D008                                                     VCC (V)                            D009
+       Standard-mode                            Fast-mode                                      VOL = 0.2*VCC, IOL = 2 mA
+       (fSCL= 100 kHz, tr = 1 µs)               (fSCL= 400 kHz, tr = 300 ns)                   when VCC ≤ 2 V
+                                                                                               VOL = 0.4 V, IOL = 3 mA
+                                                                                               when VCC > 2 V
+
+                       Figure 36. Maximum Pullup Resistance (Rp(max)) vs Bus                             Figure 37. Minimum Pullup Resistance (Rp(min)) vs Pullup
+                                        Capacitance (Cb)                                                                 Reference Voltage (VCC)
+
+
+
+
+26                     Submit Documentation Feedback                                                                       Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                                    Product Folder Links: TCA9534
+                                                                                                                               TCA9534
+www.ti.com                                                                              SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+
+10 Power Supply Recommendations
+
+10.1 Power-On Reset Requirements
+In the event of a glitch or data corruption, the TCA9534 can be reset to its default conditions by using the power-
+on reset feature. Power-on reset requires that the device goes through a power cycle to be completely reset.
+This reset also happens when the device is powered on for the first time in an application.
+The two types of power-on reset are shown in Figure 38 and Figure 39.
+VCC
+
+                                        Ramp-Down                                           Ramp-Up
+
+                                                                  VCC_TRR
+
+      VCC drops below VPORF – 50 mV
+
+
+                                                                                                                                     Time
+                                                              Time to Re-Ramp
+                                          VCC_FT                                             VCC_RT
+
+               Figure 38. VCC is Lowered Below the PORF Threshold, Then Ramped Back Up to VCC
+
+Table 8 specifies the performance of the power-on reset feature for the TCA9534 for both types of power-on
+reset.
+
+                               Table 8. Recommended Supply Sequencing and Ramp Rates (1)
+                                                    PARAMETER                                                    MIN     MAX       UNIT
+VCC_FT             Fall rate                                                                See Figure 38         1      2000      ms
+VCC_RT             Rise rate                                                                See Figure 38        0.1     2000      ms
+                   Time to re-ramp (when VCC drops to VPOR_MIN – 50 mV or when VCC
+VCC_TRR                                                                                     See Figure 38         1                 μs
+                   drops to GND)
+                   Level that VCCP can glitch down to, but not cause a functional disruption
+VCC_GH                                                                                       See Figure 39               1.2        V
+                   when VCCX_GW = 1 μs
+                   The minimum voltage that VCC can glitch down to without causing a
+VCC_MV                                                                                      See Figure 39        1.5                V
+                   reset (VCC_GH must not be violated)
+                   Glitch width that does not cause a functional disruption when VCCX_GH =
+VCC_GW                                                                                     See Figure 39                  10        μs
+                   0.5 × VCCx
+
+(1)   All supply sequencing and ramp rate values are measured at TA = 25°C
+
+Glitches in the power supply can also affect the power-on reset performance of this device. The glitch width
+(VCC_GW) and height (VCC_GH) are dependent on each other. The bypass capacitance, source impedance, and
+device impedance are factors that affect power-on reset performance. Figure 39 and Table 8 provide more
+information on how to measure these specifications.
+VCC
+
+
+
+
+             VCC_GH
+
+
+
+                                                                             VCC_MV
+                                                                                                                                     Time
+                                            VCC_GW
+
+                                             Figure 39. Glitch Width and Glitch Height
+
+
+
+
+Copyright © 2014–2017, Texas Instruments Incorporated                                              Submit Documentation Feedback         27
+                                                        Product Folder Links: TCA9534
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                           www.ti.com
+
+
+VPOR is critical to the power-on reset. VPORR is the voltage level at which the reset condition is released and all
+the registers and the I2C-SMBus state machine are initialized to their default states. The value of VPOR differs
+based on the VCC being lowered to or from 0. Figure 40 and Table 8 provide more details on this specification.
+             VCC
+
+
+
+
+     VPORR
+
+     VPORF
+
+
+                                                                                                                            Time
+
+
+
+             POR
+
+
+
+
+                                                                                                                            Time
+
+
+
+
+                                                       Figure 40. VPOR
+
+
+
+
+28     Submit Documentation Feedback                                               Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                   Product Folder Links: TCA9534
+                                                                                                                                      TCA9534
+www.ti.com                                                                               SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017
+
+
+11 Layout
+
+11.1 Layout Guidelines
+For printed circuit board (PCB) layout of the TCA9534, common PCB layout practices must be followed but
+additional concerns related to high-speed data transfer such as matched impedances and differential pairs are
+not a concern for I2C signal speeds.
+In all PCB layouts, it is a best practice to avoid right angles in signal traces, to fan out signal traces away from
+each other upon leaving the vicinity of an integrated circuit (IC), and to use thicker trace widths to carry higher
+amounts of current that commonly pass through power and ground traces. By-pass and de-coupling capacitors
+are commonly used to control the voltage on the VCC pin, using a larger capacitor to provide additional power in
+the event of a short power supply glitch and a smaller capacitor to filter out high-frequency ripple. These
+capacitors must be placed as close to the TCA9534 as possible. These best practices are shown in Figure 41.
+For the layout example provided in Figure 41, it must be possible to fabricate a PCB with only 2 layers by using
+the top layer for signal routing and the bottom layer as a split plane for power (VCC) and ground (GND). However,
+a 4-layer board is preferable for boards with higher density signal routing. On a 4-layer PCB, it is common to
+route signals on the top and bottom layer, dedicate one internal layer to a ground plane, and dedicate the other
+internal layer to a power plane. In a board layout using planes or split planes for power and ground, vias are
+placed directly next to the surface mount component pad which needs to attach to VCC or GND and the via is
+connected electrically to the internal layer or the other side of the board. Vias are also used when a signal trace
+needs to be routed to the opposite side of the board, but this technique is not demonstrated in Figure 41.
+
+11.2 Layout Example
+                        LEGEND
+                     Power or GND Plane
+                                                                                                            To I2C Master
+                     VIA to Power Plane                                              VCC
+                     VIA to GND Plane
+
+                                                              By-pass/De-coupling
+                                                                   capacitors
+
+
+
+
+                                                  1         A0                 VCC          16
+
+                                                  2         A1                 SDA          15
+
+
+
+
+                                                                     TCA9534
+                                                  3         A2                 SCL          14
+
+                                                  4         P0                 INT          13
+
+                                                  5         P1                  P7          12
+
+
+
+           To I/Os
+                                                  6         P2                  P6          11
+
+
+
+                                                                                                                            To I/Os
+                                                  7         P3                  P5          10
+
+                                                  8         GND                 P4           9
+
+
+
+                                             GND
+
+
+
+                                                        Figure 41. TCA9534 Layout
+
+
+Copyright © 2014–2017, Texas Instruments Incorporated                                               Submit Documentation Feedback          29
+                                                         Product Folder Links: TCA9534
+TCA9534
+SCPS197D – SEPTEMBER 2014 – REVISED OCTOBER 2017                                                                              www.ti.com
+
+
+12 Device and Documentation Support
+
+12.1 Documentation Support
+12.1.1 Related Documentation
+For related documentation see the following:
+• I2C Bus Pull-Up Resistor Calculation
+• Maximum Clock Frequency of I2C Bus Using Repeaters
+• Introduction to Logic
+• Understanding the I2C Bus
+• Choosing the Correct I2C Device for New Designs
+• I/O Expander EVM User's Guide
+
+12.2 Receiving Notification of Documentation Updates
+To receive notification of documentation updates, navigate to the device product folder on ti.com. In the upper
+right corner, click on Alert me to register and receive a weekly digest of any product information that has
+changed. For change details, review the revision history included in any revised document.
+
+12.3 Community Resources
+The following links connect to TI community resources. Linked contents are provided "AS IS" by the respective
+contributors. They do not constitute TI specifications and do not necessarily reflect TI's views; see TI's Terms of
+Use.
+TI E2E™ Online Community TI's Engineer-to-Engineer (E2E) Community. Created to foster collaboration
+           among engineers. At e2e.ti.com, you can ask questions, share knowledge, explore ideas and help
+           solve problems with fellow engineers.
+Design Support TI's Design Support Quickly find helpful E2E forums along with design support tools and
+           contact information for technical support.
+
+12.4 Trademarks
+E2E is a trademark of Texas Instruments.
+All other trademarks are the property of their respective owners.
+12.5 Electrostatic Discharge Caution
+        This integrated circuit can be damaged by ESD. Texas Instruments recommends that all integrated circuits be handled with
+        appropriate precautions. Failure to observe proper handling and installation procedures can cause damage.
+        ESD damage can range from subtle performance degradation to complete device failure. Precision integrated circuits may be more
+        susceptible to damage because very small parametric changes could cause the device not to meet its published specifications.
+
+12.6 Glossary
+SLYZ022 — TI Glossary.
+   This glossary lists and explains terms, acronyms, and definitions.
+
+13 Mechanical, Packaging, and Orderable Information
+The following pages include mechanical, packaging, and orderable information. This information is the most
+current data available for the designated devices. This data is subject to change without notice and revision of
+this document. For browser-based versions of this data sheet, refer to the left-hand navigation.
+
+
+
+
+30     Submit Documentation Feedback                                                  Copyright © 2014–2017, Texas Instruments Incorporated
+
+                                                   Product Folder Links: TCA9534
+                                                                                                                                                                     PACKAGE OPTION ADDENDUM
+
+       www.ti.com                                                                                                                                                                                                     7-Oct-2025
+
+
+
+
+PACKAGING INFORMATION
+
+       Orderable part number          Status     Material type      Package | Pins      Package qty | Carrier       RoHS             Lead finish/               MSL rating/          Op temp (°C)               Part marking
+                                        (1)            (2)                                                            (3)            Ball material              Peak reflow                                           (6)
+                                                                                                                                          (4)                       (5)
+
+           TCA9534DWR                 Active      Production        SOIC (DW) | 16       2000 | LARGE T&R            Yes               NIPDAU            Level-1-260C-UNLIM             -40 to 85                 TCA9534
+          TCA9534DWR.A                Active      Production        SOIC (DW) | 16       2000 | LARGE T&R            Yes               NIPDAU            Level-1-260C-UNLIM             -40 to 85                 TCA9534
+          TCA9534DWR.B                Active      Production        SOIC (DW) | 16       2000 | LARGE T&R            Yes               NIPDAU            Level-1-260C-UNLIM             -40 to 85                 TCA9534
+            TCA9534DWT                Active      Production        SOIC (DW) | 16        250 | SMALL T&R            Yes               NIPDAU            Level-1-260C-UNLIM             -40 to 85                 TCA9534
+           TCA9534DWT.A               Active      Production        SOIC (DW) | 16        250 | SMALL T&R            Yes               NIPDAU            Level-1-260C-UNLIM             -40 to 85                 TCA9534
+           TCA9534DWT.B               Active      Production        SOIC (DW) | 16        250 | SMALL T&R            Yes               NIPDAU            Level-1-260C-UNLIM             -40 to 85                 TCA9534
+            TCA9534PWR                Active      Production       TSSOP (PW) | 16       2000 | LARGE T&R            Yes             NIPDAU | SN         Level-1-260C-UNLIM             -40 to 85                  PW534
+          TCA9534PWR.A                Active      Production       TSSOP (PW) | 16       2000 | LARGE T&R            Yes               NIPDAU            Level-1-260C-UNLIM             -40 to 85                  PW534
+          TCA9534PWR.B                Active      Production       TSSOP (PW) | 16       2000 | LARGE T&R            Yes               NIPDAU            Level-1-260C-UNLIM             -40 to 85                  PW534
+          TCA9534PWRG4                Active      Production       TSSOP (PW) | 16       2000 | LARGE T&R            Yes               NIPDAU            Level-1-260C-UNLIM             -40 to 85                  PW534
+         TCA9534PWRG4.A               Active      Production       TSSOP (PW) | 16       2000 | LARGE T&R            Yes               NIPDAU            Level-1-260C-UNLIM             -40 to 85                  PW534
+         TCA9534PWRG4.B               Active      Production       TSSOP (PW) | 16       2000 | LARGE T&R            Yes               NIPDAU            Level-1-260C-UNLIM             -40 to 85                  PW534
+
+(1)
+      Status: For more details on status, see our product life cycle.
+
+(2)
+   Material type: When designated, preproduction parts are prototypes/experimental devices, and are not yet approved or released for full production. Testing and final process, including without limitation quality assurance,
+reliability performance testing, and/or process qualification, may not yet be complete, and this item is subject to further changes or possible discontinuation. If available for ordering, purchases will be subject to an additional
+waiver at checkout, and are intended for early internal evaluation purposes only. These items are sold without warranties of any kind.
+
+(3)
+      RoHS values: Yes, No, RoHS Exempt. See the TI RoHS Statement for additional information and value definition.
+
+(4)
+   Lead finish/Ball material: Parts may have multiple material finish options. Finish options are separated by a vertical ruled line. Lead finish/Ball material values may wrap to two lines if the finish value exceeds the maximum
+column width.
+
+(5)
+  MSL rating/Peak reflow: The moisture sensitivity level ratings and peak solder (reflow) temperatures. In the event that a part has multiple moisture sensitivity ratings, only the lowest level per JEDEC standards is shown.
+Refer to the shipping label for the actual reflow temperature that will be used to mount the part to the printed circuit board.
+
+(6)
+      Part marking: There may be an additional marking, which relates to the logo, the lot trace code information, or the environmental category of the part.
+
+Multiple part markings will be inside parentheses. Only one part marking contained in parentheses and separated by a "~" will appear on a part. If a line is indented then it is a continuation of the previous line and the two
+combined represent the entire part marking for that device.
+
+
+
+                                                                                                          Addendum-Page 1
+                                                                                                                                                                      PACKAGE OPTION ADDENDUM
+
+    www.ti.com                                                                                                                                                                                                     7-Oct-2025
+
+
+
+
+Important Information and Disclaimer:The information provided on this page represents TI's knowledge and belief as of the date that it is provided. TI bases its knowledge and belief on information provided by third parties, and
+makes no representation or warranty as to the accuracy of such information. Efforts are underway to better integrate information from third parties. TI has taken and continues to take reasonable steps to provide representative
+and accurate information but may not have conducted destructive testing or chemical analysis on incoming materials and chemicals. TI and TI suppliers consider certain information to be proprietary, and thus CAS numbers
+and other limited information may not be available for release.
+
+In no event shall TI's liability arising out of such information exceed the total purchase price of the TI part(s) at issue in this document sold by TI to Customer on an annual basis.
+
+
+
+
+                                                                                                          Addendum-Page 2
+                                                                               PACKAGE MATERIALS INFORMATION
+
+www.ti.com                                                                                                                                        4-Oct-2026
+
+
+
+TAPE AND REEL INFORMATION
+
+       REEL DIMENSIONS                                                                      TAPE DIMENSIONS
+                                                                                       K0       P1
+
+
+
+                                                                                                                       B0 W
+                                        Reel
+                                      Diameter
+                                                                                    Cavity            A0
+                                                                A0   Dimension designed to accommodate the component width
+                                                                B0   Dimension designed to accommodate the component length
+                                                                K0   Dimension designed to accommodate the component thickness
+                                                                W    Overall width of the carrier tape
+                                                                P1   Pitch between successive cavity centers
+
+
+                                       Reel Width (W1)
+                              QUADRANT ASSIGNMENTS FOR PIN 1 ORIENTATION IN TAPE
+
+                                                                                                      Sprocket Holes
+
+
+                                                 Q1        Q2          Q1    Q2
+
+                                                 Q3        Q4          Q3    Q4                  User Direction of Feed
+
+
+
+                                                            Pocket Quadrants
+
+
+*All dimensions are nominal
+             Device           Package Package Pins              SPQ       Reel   Reel   A0                    B0        K0     P1     W     Pin1
+                               Type Drawing                             Diameter Width (mm)                  (mm)      (mm)   (mm)   (mm) Quadrant
+                                                                          (mm) W1 (mm)
+      TCA9534DWR               SOIC      DW           16        2000        330.0        16.4        10.75   10.7      2.7    12.0   16.0    Q1
+      TCA9534PWR              TSSOP      PW           16        2000        330.0        12.4         6.9    5.6       1.6    8.0    12.0    Q1
+      TCA9534PWR              TSSOP      PW           16        2000        330.0        12.4         6.9    5.6       1.6    8.0    12.0    Q1
+    TCA9534PWRG4              TSSOP      PW           16        2000        330.0        12.4         6.9    5.6       1.6    8.0    12.0    Q1
+
+
+
+
+                                                                      Pack Materials-Page 1
+                                                                PACKAGE MATERIALS INFORMATION
+
+www.ti.com                                                                                                              4-Oct-2026
+
+
+
+ TAPE AND REEL BOX DIMENSIONS
+
+
+
+
+                                                               Width (mm)
+                                                                              H
+
+
+
+
+                      W                                   L
+
+
+
+
+*All dimensions are nominal
+             Device           Package Type   Package Drawing   Pins         SPQ    Length (mm)   Width (mm)   Height (mm)
+      TCA9534DWR                 SOIC             DW            16          2000      350.0        350.0         43.0
+      TCA9534PWR                TSSOP              PW           16          2000      356.0        356.0         35.0
+      TCA9534PWR                TSSOP              PW           16          2000      353.0        353.0         32.0
+     TCA9534PWRG4               TSSOP              PW           16          2000      353.0        353.0         32.0
+
+
+
+
+                                                        Pack Materials-Page 2
+                                                                  GENERIC PACKAGE VIEW
+DW 16                                                                   SOIC - 2.65 mm max height
+7.5 x 10.3, 1.27 mm pitch                                                 SMALL OUTLINE INTEGRATED CIRCUIT
+
+
+
+
+               This image is a representation of the package family, actual package may vary.
+                             Refer to the product data sheet for package details.
+
+
+
+
+                                                                                                  4224780/A
+
+
+
+
+                                                    www.ti.com
+                                                                                                        PACKAGE OUTLINE
+DW0016A                                                            SCALE 1.500
+                                                                                                      SOIC - 2.65 mm max height
+                                                                                                                                      SOIC
+
+
+
+                                                                                                                            C
+
+                                         10.63                                                             SEATING PLANE
+                                               TYP
+                                         9.97
+                          PIN 1 ID                                                                                    0.1 C
+          A
+                          AREA
+                                                                                        14X 1.27
+                                                                                 16
+                  1
+
+
+
+
+        10.5                                                                             2X
+        10.1                                                                            8.89
+       NOTE 3
+
+
+
+
+                  8
+                                                                                 9
+                                                                                          0.51
+                                                                                      16X
+                                                                                          0.31
+                                           7.6
+                      B                                                                 0.25   C A B                  2.65 MAX
+                                           7.4
+                                          NOTE 4
+
+
+
+
+                                                                                        0.33
+                                                                                             TYP
+                                                                                        0.10
+
+
+
+
+                                     SEE DETAIL A
+                                                                                        0.25
+                                                                                 GAGE PLANE
+
+
+                                                                                                                                0.3
+                                                                                      0 -8                                      0.1
+                                                                                               1.27
+                                                                                               0.40              DETAIL A
+                                                                                                        (1.4)     TYPICAL
+
+
+                                                                                                                       4220721/A 07/2016
+
+NOTES:
+
+1. All linear dimensions are in millimeters. Dimensions in parenthesis are for reference only. Dimensioning and tolerancing
+   per ASME Y14.5M.
+2. This drawing is subject to change without notice.
+3. This dimension does not include mold flash, protrusions, or gate burrs. Mold flash, protrusions, or gate burrs shall not
+   exceed 0.15 mm, per side.
+4. This dimension does not include interlead flash. Interlead flash shall not exceed 0.25 mm, per side.
+5. Reference JEDEC registration MS-013.
+
+
+
+
+                                                                  www.ti.com
+                                                                              EXAMPLE BOARD LAYOUT
+DW0016A                                                                                 SOIC - 2.65 mm max height
+                                                                                                                            SOIC
+
+
+
+
+                       16X (2)                                                                     SEE
+                                                             SYMM                                  DETAILS
+
+                                 1                                                            16
+
+                  16X (0.6)
+
+
+
+
+                                                                                                  SYMM
+
+
+
+
+                14X (1.27)
+
+
+
+                                 8                                                            9
+
+                  R0.05 TYP
+
+                                                             (9.3)
+
+
+                                                LAND PATTERN EXAMPLE
+                                                            SCALE:7X
+
+
+
+
+                                             SOLDER MASK               SOLDER MASK                       METAL
+                         METAL               OPENING                       OPENING
+
+
+
+
+                                     0.07 MAX                                                 0.07 MIN
+                                     ALL AROUND                                               ALL AROUND
+
+
+                              NON SOLDER MASK                                            SOLDER MASK
+                                  DEFINED                                                  DEFINED
+
+
+                                                     SOLDER MASK DETAILS
+
+                                                                                                                 4220721/A 07/2016
+
+
+NOTES: (continued)
+
+6. Publication IPC-7351 may have alternate designs.
+7. Solder mask tolerances between and around signal pads can vary based on board fabrication site.
+
+
+
+
+                                                               www.ti.com
+                                                                              EXAMPLE STENCIL DESIGN
+DW0016A                                                                                  SOIC - 2.65 mm max height
+                                                                                                                               SOIC
+
+
+
+
+                        16X (2)                               SYMM
+
+
+                                  1                                                             16
+
+                   16X (0.6)
+
+
+
+
+                                                                                                     SYMM
+
+
+
+
+                14X (1.27)
+
+
+
+                                  8                                                             9
+
+                 R0.05 TYP
+                                                              (9.3)
+
+
+
+
+                                                 SOLDER PASTE EXAMPLE
+                                               BASED ON 0.125 mm THICK STENCIL
+                                                          SCALE:7X
+
+
+
+
+                                                                                                                  4220721/A 07/2016
+
+NOTES: (continued)
+
+8. Laser cutting apertures with trapezoidal walls and rounded corners may offer better paste release. IPC-7525 may have alternate
+   design recommendations.
+9. Board assembly site may have different recommendations for stencil design.
+
+
+
+
+                                                                 www.ti.com
+                                                                                                        PACKAGE OUTLINE
+PW0016A                                                        SCALE 2.500
+                                                                                                 TSSOP - 1.2 mm max height
+                                                                                                                      SMALL OUTLINE PACKAGE
+
+
+
+
+                                                                                                                                     SEATING
+                                                                                                                                     PLANE
+                                       6.6                                                                             C
+                                           TYP
+          A                            6.2
+                                                                                                                                       0.1 C
+                                          PIN 1 INDEX AREA
+                                                                                      14X 0.65
+                                                                              16
+                1
+
+
+
+
+                                                                                      2X
+        5.1                                                                           4.55
+        4.9
+       NOTE 3
+
+
+                                                                                                        4X (0 -12 )
+
+                8
+                                                                              9
+                                                                                           0.30
+                                        4.5                                           16X                             1.2 MAX
+                    B                                                                      0.17
+                                        4.3
+                                       NOTE 4                                             0.1   C A B
+
+
+
+
+                                                          (0.15) TYP
+                                     SEE DETAIL A
+
+                                                                                    0.25
+                                                                             GAGE PLANE
+                                                                                                                                       0.15
+                                                                                                                                       0.05
+
+
+
+                                                                                                   0.75
+                                                                                                   0.50
+                                                                                      0 -8
+                                                                                                                 DETAIL A
+                                                                                                                        A 20
+
+
+
+
+                                                                                                                      TYPICAL
+
+                                                                                                                                4220204/B 12/2023
+
+NOTES:
+
+1. All linear dimensions are in millimeters. Any dimensions in parenthesis are for reference only. Dimensioning and tolerancing
+   per ASME Y14.5M.
+2. This drawing is subject to change without notice.
+3. This dimension does not include mold flash, protrusions, or gate burrs. Mold flash, protrusions, or gate burrs shall not
+   exceed 0.15 mm per side.
+4. This dimension does not include interlead flash. Interlead flash shall not exceed 0.25 mm per side.
+5. Reference JEDEC registration MO-153.
+
+
+
+
+                                                                             www.ti.com
+                                                                                     EXAMPLE BOARD LAYOUT
+PW0016A                                                                                   TSSOP - 1.2 mm max height
+                                                                                                          SMALL OUTLINE PACKAGE
+
+
+
+
+                                            16X (1.5)                   SYMM
+                                                                                                       (R0.05) TYP
+                                       1
+                           16X (0.45)                                                             16
+
+
+
+
+                                                                                                       SYMM
+
+
+                          14X (0.65)
+
+
+
+
+                                        8                                                         9
+
+
+
+                                                                        (5.8)
+
+
+                                                        LAND PATTERN EXAMPLE
+                                                          EXPOSED METAL SHOWN
+                                                               SCALE: 10X
+
+
+
+
+               SOLDER MASK                                                      METAL UNDER              SOLDER MASK
+                                                  METAL                         SOLDER MASK              OPENING
+                   OPENING
+
+
+        EXPOSED METAL                                                                                          EXPOSED METAL
+
+                                   0.05 MAX                                                     0.05 MIN
+                                   ALL AROUND                                                   ALL AROUND
+
+                            NON-SOLDER MASK                                                   SOLDER MASK
+                                DEFINED                                                         DEFINED
+                              (PREFERRED)                SOLDER MASK DETAILS
+                                                               15.000
+
+
+
+
+                                                                                                                     4220204/B 12/2023
+NOTES: (continued)
+
+6. Publication IPC-7351 may have alternate designs.
+7. Solder mask tolerances between and around signal pads can vary based on board fabrication site.
+
+
+
+
+                                                                        www.ti.com
+                                                                               EXAMPLE STENCIL DESIGN
+PW0016A                                                                                 TSSOP - 1.2 mm max height
+                                                                                                           SMALL OUTLINE PACKAGE
+
+
+
+
+                                            16X (1.5)           SYMM
+                                                                                                      (R0.05) TYP
+                                       1
+                           16X (0.45)                                                           16
+
+
+
+
+                                                                                                    SYMM
+
+
+                          14X (0.65)
+
+
+
+
+                                        8                                                       9
+
+
+
+                                                                 (5.8)
+
+
+
+                                                        SOLDER PASTE EXAMPLE
+                                                    BASED ON 0.125 mm THICK STENCIL
+                                                              SCALE: 10X
+
+
+
+
+                                                                                                                    4220204/B 12/2023
+NOTES: (continued)
+
+8. Laser cutting apertures with trapezoidal walls and rounded corners may offer better paste release. IPC-7525 may have alternate
+   design recommendations.
+9. Board assembly site may have different recommendations for stencil design.
+
+
+
+
+                                                                 www.ti.com
+                                         IMPORTANT NOTICE AND DISCLAIMER
+TI PROVIDES TECHNICAL AND RELIABILITY DATA (INCLUDING DATASHEETS), DESIGN RESOURCES (INCLUDING REFERENCE
+DESIGNS), APPLICATION OR OTHER DESIGN ADVICE, WEB TOOLS, SAFETY INFORMATION, AND OTHER RESOURCES “AS IS”
+AND WITH ALL FAULTS, AND DISCLAIMS ALL WARRANTIES, EXPRESS AND IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR NON-INFRINGEMENT OF THIRD
+PARTY INTELLECTUAL PROPERTY RIGHTS.
+These resources are intended for skilled developers designing with TI products. You are solely responsible for (1) selecting the appropriate
+TI products for your application, (2) designing, validating and testing your application, and (3) ensuring your application meets applicable
+standards, and any other safety, security, regulatory or other requirements.
+These resources are subject to change without notice. TI grants you permission to use these resources only for development of an
+application that uses the TI products described in the resource. Other reproduction and display of these resources is prohibited. No license
+is granted to any other TI intellectual property right or to any third party intellectual property right. TI disclaims responsibility for, and you fully
+indemnify TI and its representatives against any claims, damages, costs, losses, and liabilities arising out of your use of these resources.
+TI’s products are provided subject to TI’s Terms of Sale, TI’s General Quality Guidelines, or other applicable terms available either on
+ti.com or provided in conjunction with such TI products. TI’s provision of these resources does not expand or otherwise alter TI’s applicable
+warranties or warranty disclaimers for TI products. Unless TI explicitly designates a product as custom or customer-specified, TI products
+are standard, catalog, general purpose devices.
+TI objects to and rejects any additional or different terms you may propose.
+IMPORTANT NOTICE
+
+                                                Copyright © 2026, Texas Instruments Incorporated
+                                                                Last updated 10/2025
+

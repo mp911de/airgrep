@@ -25,7 +25,7 @@ SHEETS = {
     "boost_switch": ("5 V boost and load switch", "#fca5a5"),
     "battery_control": ("Battery, thermal and power control", "#d8b4fe"),
     "gauge_status": ("Gauge and status LEDs", "#86efac"),
-    "buzzer_baro": ("Buzzer and barometer", "#a5b4fc"),
+    "buzzer_baro": ("Buzzer, barometer and controls", "#a5b4fc"),
     "modules": ("Module sockets and service shunts", "#7dd3fc"),
 }
 
@@ -45,7 +45,7 @@ ANTENNA = {"MH6": "GNSS", "MH7": "868 MHz", "MH8": "1090 MHz"}
 # Reference labels on the drawing: ref -> side of the part the label goes on (c = centred).
 LABELS = {
     "J1": "c", "J2": "t", "J3": "t", "J4": "b", "J5": "b", "J6": "l", "J7": "r", "J8": "b", "J9": "r",
-    "J10": "l", "J11": "b", "JP1": "l", "JP2": "b", "SW1": "t", "SW2": "r", "BZ1": "c", "D4": "c", "D5": "c",
+    "J10": "l", "J11": "b", "JP1": "l", "JP2": "b", "SW1": "t", "SW2": "r", "SW3": "r", "J12": "b", "U13": "t", "BZ1": "c", "D4": "c", "D5": "c",
     "F1": "b", "L1": "c", "L2": "c", "U4": "c", "U5": "b", "U6": "c", "U7": "r", "U8": "t", "U9": "t", "U10": "b",
     "D3": "c", "TP1": "r", "TP2": "l", "TP3": "t", "TP4": "l", "TP5": "l", "TP6": "l", "TP7": "b",
 }
@@ -53,7 +53,7 @@ KEY = [
     ("J1", "USB-C charging input"), ("J2 J3 J4", "pack NTC, battery, thermostat"),
     ("J5", "GNSS socket 1x8"), ("J6 J7 J8 J9", "display sockets 1x8, 1x7, 1x4, 1x2"),
     ("J10 J11", "ADSBee sockets 1x13, 1x5"), ("JP1 JP2", "5 V shunts: display, ADSBee"),
-    ("SW1 SW2", "POWER and MUTE sliders"), ("D4 D5", "charge LED, power LED"),
+    ("SW1 SW2 SW3", "POWER, MUTE and Wi-Fi sliders"), ("U13 J12", "control inputs and expansion"), ("D4 D5", "charge LED, power LED"),
     ("U4 L1", "charger MAX77757"), ("U6 L2", "boost TPS61088"), ("U7", "load switch TPS22975"),
     ("U5", "undervoltage supervisor"), ("U8 U10", "fuel gauge, barometer"), ("U9 BZ1", "buzzer driver, buzzer"),
     ("F1 D3", "pack fuse, VBUS TVS"), ("TP1 to TP7", "VBAT, VSYS, PWR_EN, THERM_OK, USB_VBUS, GND, 5 V"),

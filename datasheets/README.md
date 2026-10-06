@@ -18,7 +18,9 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 | [hanbo-mc107dms.pdf](hanbo-mc107dms.pdf) | J1 USB-C | | |
 | [hongjiacheng-h5vld3b.pdf](hongjiacheng-h5vld3b.pdf) | D6 to D9 ESD (CC, D+, D-) | [LCSC C20615805](https://www.lcsc.com/datasheet/C20615805.pdf) | LCSC mirror |
 | [littelfuse-466.pdf](littelfuse-466.pdf) | F1 fuse | [Series page](https://www.littelfuse.com/products/fuses-overcurrent-protection/fuses/surface-mount-fuses/thin-film-fuses/466) | Distributor mirror |
-| [ck-js-switches.pdf](ck-js-switches.pdf) | SW1, SW2 | C&K JS102011SAQN | Distributor mirror |
+| [hro-k3-1280s.pdf](hro-k3-1280s.pdf) | SW1 to SW3, K3-1280S-F1 | HRO drawing, 2013-09-26 | LCSC mirror |
+| [tca9534.pdf](tca9534.pdf) | U13, TCA9534PWR | [TI](https://www.ti.com/lit/ds/symlink/tca9534.pdf) | Manufacturer |
+| [ck-js-switches.pdf](ck-js-switches.pdf) | superseded switch | C&K JS102011SAQN, retained as historical reference | Distributor mirror |
 | [jst-ph-series.pdf](jst-ph-series.pdf) | J2, J3, J4 | [Original](https://www.jst-mfg.com/product/pdf/eng/ePH.pdf) | Manufacturer |
 | [samtec-ssq-drawing.pdf](samtec-ssq-drawing.pdf), [footprint](samtec-ssq-footprint.pdf), [catalog](samtec-ssq-catalog.pdf) | Module sockets, alternative part | Samtec SSQ | Manufacturer |
 | [samtec-snt-drawing.pdf](samtec-snt-drawing.pdf) | JP1, JP2 shunts, alternative part | Samtec SNT-100 | Manufacturer |
@@ -46,7 +48,7 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 | PKMCS0909E4000-R1 buzzer (LCSC C910763) | BZ1 |
 | Limitor LIM-P-82-60 thermostat | on the pack, plugs into J4 |
 | JSCJ 2N7002 (LCSC C8545); the Nexperia sheet stands in | Q6, Q8, Q9 |
-| Reichelt BL 1X20G8 sockets, SL 1X40G headers and jumpers ([BOM](../docs/bom-hand-sourced.md)); the Samtec SSQ and SNT sheets describe the alternative parts with the same pitch and height | J5 to J11, JP1, JP2 |
+| Reichelt BL 1X20G8 sockets, SL 1X40G headers and jumpers ([BOM](../docs/bom-hand-sourced.md)); the Samtec SSQ and SNT sheets describe the alternative parts with the same pitch and height | J5 to J12, JP1, JP2 |
 
 ## PDFs without a text extraction
 
