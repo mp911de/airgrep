@@ -1,0 +1,104 @@
+THROUGH-HOLE
+.025" SQ POST SOCKET 8
+                                                                                                                                  G b p s
+  (2.54 mm) .100" PITCH • SSW/SSQ SERIES
+
+
+SSW/SSQ
+Mates:
+TSW, MTSW, MTLW,
+                                        SERIES          -1           NO. PINS
+                                                                     PER ROW             -       LEAD
+                                                                                                 STYLE   -         PLATING
+                                                                                                                   OPTION          -      ROW
+                                                                                                                                         OPTION         -    TAIL
+                                                                                                                                                            OPTION          -        OTHER
+                                                                                                                                                                                     OPTION
+DW, EW, ZW, TSS, ZSS,
+TSM, TSSH, HTSS                           SSW                       01 thru 50                Specify                   –F                   –S             Leave blank                  –LL
+                                         = Solder                                              LEAD           = Gold flash             = Single Row         for straight             = Locking
+                                           Tail                                               STYLE           on contact,                                   pin version)                Lead
+    SPECIFICATIONS                                                                             from          Matte Tin on tail               –P                                       Available
+                                            SSQ                                                chart                                   = Single Row            –RA                 on tails from
+Insulator Material:                      = Square                                                                       –L             (36 pins max           = Right-
+                                                                                                                                                               angle
+                                                                                                                                                                                     (2.29 mm)
+Black Liquid Crystal Polymer                Tail                                                             = 10 µ" (0.25 µm)                                                        .090" to
+                                                                                                                                                                                     (7.87 mm)
+(-S & -D) or                                                                                                 Gold on contact,                –D                                     .310" only.
+Black High Temperature                                                                                       Matte Tin on tail         = Double Row
+Thermoplastic (-T)                                                                                                                                                                 Not Available
+Contact Material:                                                                                                                                                                   with single
+Phosphor Bronze                                                                                                         –G                   –T                                     row 1 or 2
+Plating:                                                                                                     = 20 µ" (0.51 µm)         = Triple Row                                  positions)
+Au or Sn over                                                                                                Gold on contact,
+                                                                                                             Gold flash on tail
+50 µ" (1.27 µm) Ni                                                                                                                           –Q                                      “XXX”
+Operating Temp Range:                                                                                                                  = Double Row                                = Polarized
+-55 °C to +125 °C with Gold                                                                                             –T                   .200"                              (Specify “XXX” as
+-55 °C to +105 °C with Tin                                                                                        = Matte Tin            (5.08 mm)                               position number)
+Current Rating:                                                                                                    (-T N/A on            row space
+(SSW/TSM) = 4.7 A per pin                                                                                         LIF contacts)         (outer rows
+(2 pins powered)                                     (2.54) .100 x No. of Positions + (0.51) .020                                        filled only)
+(SSQ/TSW) = 6.3 A per pin
+(2 pins powered)                                                                                                                                                       THROUGH-HOLE
+                                       —S                                                                (2.41)
+Voltage Rating:                                                                                           .095
+                                                                                                                                                                 LEAD STYLE      SINGLE
+465 VAC/655 VDC                                                                                                                                                                  DOUBLE
+Insertion Depth:                                                                                                                                            Standard Low        OR TRIPLE
+(3.68 mm) .145" to                                                                                                                                          Insertion Insertion
+(6.35 mm) .250"                                                                                                                                               Force    Force*       A
+Max Cycles:                                                                                                                                                      –01         –21        (2.64) .104
+100 with 10 µ" (0.25 µm) Au                                                                              (4.95)
+                                       —D                                                                 .195                                                   –02         –22        (4.93) .194
+
+      PROCESSING                                           (2.54)
+                                                                                                                                                                 –03         –23       (10.00) .394
+                                                            .100
+Lead–Free Solderable:                                                                                                                                            –04         –24       (14.83) .584
+Yes:                                                                                                                                                           –06**        N/A         (3.15) .124
+-S and -D row option                                                                                                                                        * LIF not available with Tin Plating
+No, Lead Wave only:                                                                                                                                         **Style –06 Not available with SSQ
+-P, -T and -Q row option
+                                       —T                                                                (7.49)
+                                                                                                          .295
+
+                                                                                                                     —S & —P           —D                   —T                         —Q
+
+
+                                                                                                                                                                                                      (8.51)
+                                                                                                                                                                                                       .335
+
+
+
+                                       —Q                                                                (7.49)
+                                                                                                          .295
+                                                                                                                    A              A               A                          A
+
+                                                 Through-hole                                                                                   Straight Pin Versions
+                                                                                   Right-angle
+
+
+                                                     RIGHT-ANGLE
+                                                                                                                     —S & —P            —D                   —T                        —Q
+                                 LEAD STYLE               SINGLE DOUBLE                 TRIPLE
+                             Standard    Low                 (–S )         (–D )       (–T & –Q )
+                             Insertion Insertion                                                                                                                                                      (8.51)
+                               Force    Force*                 B             B               B
+                                                                                                                                                                                                       .335
+                                                                                                                    B              B                B                         B
+                                 –02           –22        (2.54) .100    (2.54) .100    (2.54) .100
+                                 –03           –23        (7.62) .300    (7.62) .300       N/A
+
+                                 –04           –24       (12.45) .490       N/A            N/A
+                            *LIF not available with Tin Plating
+Note:
+Some lengths, styles and
+options are non-standard,                                                                                                                    Right-angle Versions
+non-returnable.
+
+                                                                   samtec.com?SSW or samtec.com?SSQ                                                                                                F-226
+
+        Unless otherwise approved in writing by Samtec, all parts and components are designed and built according to Samtec’s specifications which are subject to change without notice.
+

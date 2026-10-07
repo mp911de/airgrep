@@ -5,7 +5,7 @@
 * Load and the unknown total module capacitance use the same assumed ADS share.
 .param id_ron=44.85m
 .param id_vfwd=28.4m
-.param ads_share=0.835
+.param ads_share=0.840
 .param cinput=100n
 C39 RAIL_5V 0 {cinput}
 C38 RAIL_5V 0 {cinput}

@@ -235,5 +235,106 @@
     "bytes": 1475976,
     "sha256": "aab050b47942f0c4a0551926b62bc85a5663f74682d4205f4980cca4871a9be1",
     "note": "U13 input expander"
+  },
+  {
+    "file": "abracon-aane-ap-0164.pdf",
+    "downloaded": "2026-10-08",
+    "pages": 15,
+    "bytes": 790113,
+    "sha256": "5014c1ceefeef1d033806cec5990d73d5c7ce5c44ff6ad9b62d084679c75639f",
+    "note": "Active GNSS antenna, LNA 28 dB, NF 3 dB, 15 to 25 mA at 3.0 to 5.0 V; supplied by Mark"
+  },
+  {
+    "file": "cjiang-fxl.pdf",
+    "download_url": "https://datasheet.lcsc.com/datasheet/pdf/40dfb6cb4606b2ccaa4e89438a42f563.pdf?productCode=C167216",
+    "downloaded": "2026-10-08",
+    "pages": 110,
+    "bytes": 13429954,
+    "sha256": "78de9061f720d3a9303b15b0973eb92060f5c330909b0763b611579cf80e2a43",
+    "note": "L1 FXL0630-1R0-M (1 uH, LCSC C167216). SZ Cjiang FXL series catalog, 110 pages; FXL0630-1R0-M on page 14"
+  },
+  {
+    "file": "hongjiacheng-smaj12a.pdf",
+    "download_url": "https://datasheet.lcsc.com/datasheet/pdf/f3d2c9df3269749880b305befd579c39.pdf?productCode=C19077531",
+    "downloaded": "2026-10-08",
+    "pages": 5,
+    "bytes": 500192,
+    "sha256": "3ff5a7b8618e9ea109acec3fdfefba71442e321ac3cd4461702f08964d205947",
+    "note": "D3 SMAJ12A TVS (LCSC C19077531), Zhuhai Hongjiacheng SMAJ series"
+  },
+  {
+    "file": "kingbright-l-115wegw.pdf",
+    "download_url": "https://static.chipdip.ru/lib/156/DOC013156479.pdf",
+    "downloaded": "2026-10-08",
+    "pages": 7,
+    "bytes": 594457,
+    "sha256": "9bbb4065d1c0249ac793d25a7e2ab90e4ea983bc85bf3e0da6aef6464cbf5495",
+    "note": "D4 L-115WEGW red/green, common cathode. Kingbright DSAB9091 V.15A (2014), chipdip.ru mirror. Reichelt serves V.10 (2007)"
+  },
+  {
+    "file": "kingbright-l-7104gd.pdf",
+    "download_url": "https://datasheet.lcsc.com/datasheet/pdf/f620b2ca56cba6c6474771fe84be7bfa.pdf?productCode=C598443",
+    "downloaded": "2026-10-08",
+    "pages": 5,
+    "bytes": 1025644,
+    "sha256": "a61f5d29ee966cd8aeedafc825108a1299de30651ac17fa39c2e46967e7b2710",
+    "note": "D5 L-7104GD green. Kingbright DSAA7649 V.29B (2020), LCSC C598443. Reichelt serves V.14 (2007)"
+  },
+  {
+    "file": "murata-pkmcs0909e4000.pdf",
+    "download_url": "https://datasheet.lcsc.com/datasheet/pdf/68ecee76a59241f9b49d94957d1d10cd.pdf?productCode=C910763",
+    "downloaded": "2026-10-08",
+    "pages": 2,
+    "bytes": 331903,
+    "sha256": "d1aa80839d42533e00c7471254b5e1d8b1af7bd5fc7b96a5e42643ca8f3ebe89",
+    "note": "BZ1 PKMCS0909E4000-R1 piezo buzzer (LCSC C910763)"
+  },
+  {
+    "file": "limitor-p8.pdf",
+    "manufacturer_url": "https://www.limitor.de",
+    "download_url": "https://cdn-reichelt.de/documents/datenblatt/C700/LIMP8260.pdf",
+    "downloaded": "2026-10-08",
+    "pages": 2,
+    "bytes": 214655,
+    "sha256": "9ebfc3263b57e9e1ed3bc6d5cf338a324de555a344494a7c76a8672fb5b2f474",
+    "note": "Pack thermostat LIM-P-82-60, plugs into J4. Limitor P series sheet, German, 2013, includes P82 type key; from reichelt"
+  },
+  {
+    "file": "jscj-2n7002.pdf",
+    "download_url": "https://datasheet.lcsc.com/datasheet/pdf/a141b8bd86b14475955ac8c4d3eea0a8.pdf?productCode=C8545",
+    "downloaded": "2026-10-08",
+    "pages": 5,
+    "bytes": 1575038,
+    "sha256": "7941fb423af7c6c6c8979063a7e8819bb19217ece275efcce18948950a41d9f6",
+    "note": "Q6, Q8, Q9 JSCJ 2N7002 (LCSC C8545), Jiangsu Changjiang"
+  },
+  {
+    "file": "murata-blm31kn.pdf",
+    "manufacturer_url": "https://www.murata.com/en-us/products/productdetail?partno=BLM31KN471SZ1%23",
+    "download_url": "https://datasheet.lcsc.com/datasheet/pdf/c4203d42b65f5921b2bc25ace55edcc4.pdf?productCode=C710518",
+    "downloaded": "2026-10-08",
+    "pages": 9,
+    "bytes": 155472,
+    "sha256": "f47c8f2380bd025e2b9c5300bac40b060890fe03da1da3fba8b0abca2bb53f47",
+    "note": "FB1 BLM31KN471SZ1L (LCSC C710518). Murata BLM31KN_SZ series reference specification"
+  },
+  {
+    "file": "murata-grm21bz71h475.pdf",
+    "manufacturer_url": "https://www.murata.com/en-us/products/productdetail?partno=GRM21BZ71H475KE15%23",
+    "download_url": "https://search.murata.co.jp/Ceramy/image/img/A01X/G101/ENG/GRM21BZ71H475KE15-01A.pdf",
+    "downloaded": "2026-10-08",
+    "pages": 33,
+    "bytes": 2007540,
+    "sha256": "fb1d766c8ffab026feff157abe76b483a834876cd864c84cd4d8de0e7337c864",
+    "note": "C1 GRM21BZ71H475KE15L (4.7 uF 50 V X7R 0805, LCSC C437557). Murata part sheet with characteristic curves. The LCSC C437557 sheet is the generic automotive catalog without this part"
+  },
+  {
+    "file": "taiyo-yuden-emk316bb7226.pdf",
+    "download_url": "https://datasheet.lcsc.com/datasheet/pdf/ac6f18def12243490e97e2039ec24622.pdf?productCode=C385906",
+    "downloaded": "2026-10-08",
+    "pages": 3,
+    "bytes": 456881,
+    "sha256": "50364c6a67349b07f82a4135d54bd2c2b3bf3b41e2c122b9ec17997b31540489",
+    "note": "C33 EMK316BB7226ML-T (22 uF 1206, LCSC C385906). Taiyo Yuden now lists it as MSASE31LBB7226MTNA01"
   }
 ]

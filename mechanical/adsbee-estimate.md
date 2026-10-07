@@ -1,62 +1,55 @@
-# ADSBee 1090U: geometry estimated from an image
+# ADSBee 1090U: measured geometry
 
-No dimensioned drawing or board CAD of the ADSBee 1090U is available. Its outline, header positions and mounting holes are therefore estimated from a two-sided render. The carrier sockets J10 and J11 and the holes MH12 and MH14 rest on this estimate.
+The delivered module was measured with calipers on 2026-10-08. J11, MH12 and MH14 use the measured positions below.
 
-The estimate is good enough for placement. It is not verified for header mating or drilling. Measure the delivered module before the carrier is ordered.
+## Physical measurements, 2026-10-08
 
-## Result
+View: components facing the observer, USB-C down. All readings are mm. Hole spans use inside jaws against the farthest walls. Subtract the two hole radii to obtain centre distance. Rounded PCB corners made some edge readings uncertain. Decimal places are recorded readings, not an accuracy claim.
 
-Reference view: component and shield side, USB on the left. Origin is the upper left corner of the board bounds, X right, Y down, mm. The 2.54 mm pitch comes from the manufacturer's Rev D schematic.
-
-| Feature | Estimate |
+| Measurement | Reading |
 |---|---|
-| Board | 48.0 x 30.0 mm (reconstruction gives 48.09 x 30.08) |
-| Main header, 1x13 | first pad at (9.4, 27.8), pads advance in +X, span 30.48 mm |
-| GNSS header, 1x5 | first pad at (46.8, 9.9), pads advance in +Y, span 10.16 mm |
-| Mounting centres | (4.5, 3.9), (44.9, 3.9), (4.5, 26.5), (44.9, 26.5), a 40.4 x 22.6 mm rectangle |
-| USB | 3 mm overhang reserved on the left edge |
-| Corners, drills | R3.5 corners and M2.5 holes, both assumed |
+| Bare PCB width | 29.86 to 29.89 |
+| Bare PCB height | 47.46 |
+| Top-right mounting hole diameter | 2.72 |
+| Bottom-left mounting hole diameter | 2.69 |
+| Top-right mounting hole gap to right / top PCB edges | 2.10 / 2.15 |
+| Top-left mounting hole gap to left PCB edge | 2.17 |
+| Bottom-left mounting hole gap to left / bottom PCB edges | 2.18 / 2.14 |
+| Header hole diameters, both rows | 0.98 |
+| 13-hole row gap to right PCB edge | 1.60 |
+| Lowest 13-row hole gap to bottom PCB edge | 8.08, provisional due to corner radius |
+| Middle 5-row hole gap to top PCB edge | 1.28 |
+| Leftmost 5-row hole gap to left PCB edge | 9.23, provisional due to corner radius |
+| Full 13-hole row outer span | 31.46 |
+| Full 5-hole row outer span | 11.15 |
+| Topmost 13-row hole to rightmost 5-row hole | 11.59 |
+| Topmost 13-row hole to leftmost 5-row hole | 20.48 |
+| Top-right mounting hole to topmost 13-row hole | 7.03 |
+| Top-right mounting hole to leftmost 5-row hole | 18.68 |
+| Bottom-left mounting hole to bottommost 13-row hole | 26.80 |
+| Bottom-left mounting hole to topmost 13-row hole | 44.99 |
+| Large mounting-hole diagonal, independent cross-check | 49.30 |
 
-Header labels, read from the render:
+Use nominal 2.54 mm header pitch. The measured centre spans are 30.48 mm and 10.17 mm, versus nominal 30.48 mm and 10.16 mm. Assume the two header rows are perpendicular. Trilateration from the direct hole spans gives these approximate centres, relative to the topmost 13-row hole (carrier J10 pin 13), X right, Y down:
 
-- Main: 5VIN, GND, TX, RX, 3.3V, IOA, IOB, IOC, CS, CLK, MOSI, MISO, GND.
-- GNSS: 3V3, TX, RX, PPS, GND.
-
-## Method
-
-The two perpendicular header rows give the scale and the skew on both axes. An affine reconstruction corrects the oblique view, assuming a parallel projection of the board plane. The USB-C shell is only a rough sanity check, because shells and overhangs differ between connector models.
-
-Front and rear view are reconstructed independently:
-
-| Quantity | Front | Rear | Difference |
-|---|---|---|---|
-| GNSS first pad relative to main first pad, X | 37.18 mm | 37.53 mm | 0.35 mm |
-| GNSS first pad relative to main first pad, Y | -17.93 mm | -17.85 mm | 0.08 mm |
-| Mounting centres | | | up to about 0.54 mm |
-
-The differences are a consistency check, not a tolerance. Landmarks are picked by hand, and hole depth and perspective are not modelled.
-
-## Limits
-
-- Use the rounded positions with a planning allowance of 0.5 mm or more, and keep 1 mm of extra clearance around the outline.
-- Two rigid header rows have to mate at once. Their relative offset is the critical dimension.
-- Do not snap offsets to a 2.54 mm grid because the pitch happens to be 2.54 mm.
-- Board height, rear shield projection, pin mating depth and coax plug height cannot be taken from the image. The rear shield must clear the carrier.
-
-## On the carrier
-
-The module sits portrait at the top right, rotated a quarter turn from the reference view. Its outline covers about x 72 to 102, y 15 to 63 on the carrier, with the USB edge at the bottom.
-
-| Carrier feature | Position (X, Y) | From the estimate |
+| Feature | X | Y |
 |---|---|---|
-| J10 pin 1 (main header) | (99.8, 53.6) | anchor |
-| J11 pin 1 (GNSS header) | (81.9, 16.2) | offset (37.4, -17.9) in the module view, as estimated |
+| Leftmost 5-row hole, J11 pin 1 by the existing pin map | -18.253 | -6.861 |
+| Top-right mounting hole, MH12 | -1.532 | -4.948 |
+| Bottom-left mounting hole, MH14 | -24.441 | 35.566 |
 
-The holes MH12 and MH14 do not use the rectangle estimated here. Their pattern and their distance from the estimated centres are in [docs/mechanical.md](../docs/mechanical.md#mounting).
+The inferred mounting pattern is 22.909 x 40.515 mm. It predicts a 49.248 mm outer mounting-hole diagonal, compared with the independent 49.30 mm reading. This 0.052 mm residual checks consistency, not absolute accuracy. Edge-based header offsets differ from the direct-hole solution by about 0.2 mm. Prefer the direct-hole solution for mating positions.
 
-## Files
+### Applied carrier positions
 
-- [adsbee-estimate.json](adsbee-estimate.json): the picked pixel landmarks, both raw reconstructions and the rounded model.
-- [../sources/adsbee-two-sided-reference.png](../sources/adsbee-two-sided-reference.png): the render.
+J10 pin 1 retains its existing (99.800, 53.600) mm anchor. Applied coordinates are rounded to whole mil:
 
-The script that produced the JSON is not in the repository.
+| Ref | X, Y (mil) | X, Y (mm) |
+|---|---|---|
+| J11 pin 1 | 3211, 640 | 81.5594, 16.2560 |
+| MH12 | 3869, 715 | 98.2726, 18.1610 |
+| MH14 | 2967, 2310 | 75.3618, 58.6740 |
+
+Caliper checks do not verify socket mating, rear-shield clearance, connector overhang or the assembled stack. These remain assembly checks in [open-issues.md](../docs/open-issues.md#bench-tests-at-bring-up).
+
+The placement drawing uses the measured maximum width, 29.89 mm, and height, 47.46 mm. Its origin is approximately (-27.80, -39.11) mm from J10 pin 1, using the measured right-edge gap and J11's top-edge gap. Connector overhangs remain estimates.

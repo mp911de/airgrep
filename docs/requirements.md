@@ -33,6 +33,6 @@ Settled with the user. Change only with the user. Resulting figures are in [spec
 ## Manufacturing
 
 1. JLCPCB fabricates the board and assembles all SMD parts. The user solders module sockets and harness connectors.
-2. Modules stay removable. Two removable shunts isolate the display and ADSBee 5 V feeds for USB servicing.
+2. Modules stay removable. A shunt per 5 V feed lets a module stay unpowered in its socket.
 3. Antennas: SMA bulkhead connections in the enclosure for GNSS, 1090 MHz and sub-GHz ([parts](bom-hand-sourced.md)).
 4. Enclosure: custom 3D print, designed after the PCB.

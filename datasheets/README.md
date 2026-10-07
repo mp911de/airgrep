@@ -1,6 +1,6 @@
 # Data sheets
 
-Data sheets for the parts on the carrier and the parts fitted to it by hand. Coverage is not complete; the gaps are listed below. [manifest.json](manifest.json) records source URLs and, where taken, page counts and SHA-256 hashes. Most PDFs have a searchable text extraction in [pdf2text/](pdf2text/) under the PDF's name.
+Data sheets for the parts on the carrier and the parts fitted to it by hand. Coverage is not complete; the gaps are listed below. [manifest.json](manifest.json) records source URLs and, where taken, page counts and SHA-256 hashes. Every PDF has a searchable text extraction in [pdf2text/](pdf2text/) under the PDF's name.
 
 | PDF | Part | Source | Host |
 |---|---|---|---|
@@ -12,9 +12,18 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 | [sn74lvc1g17.pdf](sn74lvc1g17.pdf) | U9 buffer | [Original](https://www.ti.com/lit/ds/symlink/sn74lvc1g17.pdf) | Manufacturer |
 | [bst-bmp581-ds004.pdf](bst-bmp581-ds004.pdf) | U10 barometer | [Original](https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp581-ds004.pdf) | Manufacturer |
 | [ao3401a.pdf](ao3401a.pdf) | Q2, Q3, Q4, Q7 | [Original](https://www.aosmd.com/pdfs/datasheet/AO3401A.pdf) | Manufacturer |
-| [2n7002-nexperia.pdf](2n7002-nexperia.pdf) | Q6, Q8, Q9 | [Original](https://assets.nexperia.com/documents/data-sheet/2N7002.pdf) | Manufacturer |
+| [2n7002-nexperia.pdf](2n7002-nexperia.pdf) | Q6, Q8, Q9, reference for the JSCJ part | [Original](https://assets.nexperia.com/documents/data-sheet/2N7002.pdf) | Manufacturer |
 | [cenker-ckst-series.pdf](cenker-ckst-series.pdf) | L2 | [Manufacturer source](https://www.cenkersz.com/file/upload/products/CKSTPDF.pdf) | LCSC mirror |
 | [murata-grm21bz71a226.pdf](murata-grm21bz71a226.pdf) | 22 µF X7R 0805 capacitors | [Product page](https://www.murata.com/en-us/products/productdetail?partno=GRM21BZ71A226ME15%23) | LCSC mirror |
+| [cjiang-fxl.pdf](cjiang-fxl.pdf) | L1, FXL0630-1R0-M (page 14) | [LCSC C167216](https://www.lcsc.com/datasheet/C167216.pdf) | LCSC mirror |
+| [hongjiacheng-smaj12a.pdf](hongjiacheng-smaj12a.pdf) | D3 TVS, SMAJ12A | [LCSC C19077531](https://www.lcsc.com/datasheet/C19077531.pdf) | LCSC mirror |
+| [kingbright-l-115wegw.pdf](kingbright-l-115wegw.pdf) | D4 LED, DSAB9091 V.15A | Kingbright | chipdip.ru mirror |
+| [kingbright-l-7104gd.pdf](kingbright-l-7104gd.pdf) | D5 LED, DSAA7649 V.29B | [LCSC C598443](https://www.lcsc.com/datasheet/C598443.pdf) | LCSC mirror |
+| [murata-pkmcs0909e4000.pdf](murata-pkmcs0909e4000.pdf) | BZ1 buzzer | [LCSC C910763](https://www.lcsc.com/datasheet/C910763.pdf) | LCSC mirror |
+| [jscj-2n7002.pdf](jscj-2n7002.pdf) | Q6, Q8, Q9, JSCJ 2N7002 | [LCSC C8545](https://www.lcsc.com/datasheet/C8545.pdf) | LCSC mirror |
+| [murata-blm31kn.pdf](murata-blm31kn.pdf) | FB1, BLM31KN471SZ1L | [LCSC C710518](https://www.lcsc.com/datasheet/C710518.pdf) | LCSC mirror |
+| [murata-grm21bz71h475.pdf](murata-grm21bz71h475.pdf) | C1, GRM21BZ71H475KE15L | [Product page](https://www.murata.com/en-us/products/productdetail?partno=GRM21BZ71H475KE15%23) | Manufacturer |
+| [taiyo-yuden-emk316bb7226.pdf](taiyo-yuden-emk316bb7226.pdf) | C33, EMK316BB7226ML-T | [LCSC C385906](https://www.lcsc.com/datasheet/C385906.pdf) | LCSC mirror |
 | [hanbo-mc107dms.pdf](hanbo-mc107dms.pdf) | J1 USB-C | | |
 | [hongjiacheng-h5vld3b.pdf](hongjiacheng-h5vld3b.pdf) | D6 to D9 ESD (CC, D+, D-) | [LCSC C20615805](https://www.lcsc.com/datasheet/C20615805.pdf) | LCSC mirror |
 | [littelfuse-466.pdf](littelfuse-466.pdf) | F1 fuse | [Series page](https://www.littelfuse.com/products/fuses-overcurrent-protection/fuses/surface-mount-fuses/thin-film-fuses/466) | Distributor mirror |
@@ -27,8 +36,10 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 | [variohm-entc-eb.pdf](variohm-entc-eb.pdf) | Pack thermistor | [Series page](https://www.variohm.com/products/temperature-sensors/ntc-thermistor-temperature-sensors/entc-eb-series-) | Distributor mirror |
 | [AKKU_SOLD333290_DB-EN.pdf](AKKU_SOLD333290_DB-EN.pdf), [MSDS](AKKU_SOLD333290_SDB-EN.pdf), [UN38.3](AKKU_SOLD_UN38.3-EN.pdf) | Battery 10 Ah | Fullest Energy FE1160100 | reichelt |
 | [AKKU_SOLD333288_DB-EN.pdf](AKKU_SOLD333288_DB-EN.pdf) | Battery 5 Ah option | | reichelt |
+| [limitor-p8.pdf](limitor-p8.pdf) | Pack thermostat LIM-P-82-60, German | Limitor P series | reichelt |
 | [datasheet_adsbee_1090.pdf](datasheet_adsbee_1090.pdf) | ADSBee 1090U module | | |
 | [max-m10s.pdf](max-m10s.pdf) | GNSS module (SparkFun GPS-18037) | u-blox | |
+| [abracon-aane-ap-0164.pdf](abracon-aane-ap-0164.pdf) | GNSS active antenna | [Digi-Key](https://www.digikey.de/de/products/detail/abracon-llc/AANE-AP-0164-1/26813090) | Supplied by Mark |
 | [100069905.pdf](100069905.pdf) | Display module | Seeed XIAO 1.47" ESP32-S3 | |
 | [FTD-116-FLARM-FAMP-Public-Protocol-v1.02.pdf](FTD-116-FLARM-FAMP-Public-Protocol-v1.02.pdf) | FLARM protocol | Firmware reference | |
 
@@ -42,16 +53,6 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 
 | Part | Ref |
 |---|---|
-| FXL0630-1R0-M inductor, 1 µH (LCSC C167216) | L1 |
-| SMAJ12A TVS diode (LCSC C19077531) | D3 |
-| Kingbright L-115WEGW and L-7104GD LEDs | D4, D5 |
-| PKMCS0909E4000-R1 buzzer (LCSC C910763) | BZ1 |
-| Limitor LIM-P-82-60 thermostat | on the pack, plugs into J4 |
-| JSCJ 2N7002 (LCSC C8545); the Nexperia sheet stands in | Q6, Q8, Q9 |
 | Reichelt BL 1X20G8 sockets, SL 1X40G headers and jumpers ([BOM](../docs/bom-hand-sourced.md)); the Samtec SSQ and SNT sheets describe the alternative parts with the same pitch and height | J5 to J12, JP1, JP2 |
-
-## PDFs without a text extraction
-
-`murata-grm21bz71a226.pdf`, `littelfuse-466.pdf`, `ck-js-switches.pdf`, `samtec-ssq-drawing.pdf`, `samtec-ssq-footprint.pdf`, `samtec-ssq-catalog.pdf`, `samtec-snt-drawing.pdf`, `AKKU_SOLD_UN38.3-EN.pdf` and `FTD-116-FLARM-FAMP-Public-Protocol-v1.02.pdf`.
 
 New data sheets go into this directory, with an entry in the manifest and a text extraction in `pdf2text/`.

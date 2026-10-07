@@ -1,0 +1,426 @@
+L-7104GD
+T-1 (3mm) Solid State Lamp
+
+DESCRIPTION                                                                                                   PACKAGE DIMENSIONS
+   The Green source color devices are made with
+    Gallium Phosphide Green Light Emitting Diode
+
+FEATURES
+ Low power consumption
+ Popular T-1 diameter package
+ General purpose leads
+
+ Reliable and rugged
+
+ Long life - solid state reliability
+
+
+
+
+                                                                                                                                                   t
+ Available on tape and reel
+
+ RoHS compliant
+
+
+
+APPLICATIONS
+ Status indicator
+
+
+
+                                                                                                                  i g                            h
+                                                                                                                r
+ Illuminator
+
+
+
+
+                                                                                                              b
+ Signage applications
+
+ Decorative and entertainment lighting
+
+
+
+
+                                                                              g
+ Commercial and residential architectural lighting
+
+
+
+
+                                                           K               in                                 Notes:
+                                                                                                              1. All dimensions are in millimeters (inches).
+                                                                                                              2. Tolerance is ±0.25(0.01") unless otherwise noted.
+                                                                                                              3. Lead spacing is measured where the leads emerge from the package.
+                                                                                                              4. The specifications, characteristics and technical data described in the datasheet are subject to change
+                                                                                                                 without prior notice.
+
+
+
+
+SELECTION GUIDE
+                                                                                                                                                          Iv (mcd) @ 10mA [2]                         Viewing Angle [1]
+                                                                  Emitting Color
+                Part Number                                                                                      Lens Type
+                                                                    (Material)
+                                                                                                                                                         Min.                      Typ.                        2θ1/2
+
+
+
+                  L-7104GD                                       ■ Green (GaP)                                Green Diffused                               10                       25                           50°
+
+
+
+Notes:
+1. θ1/2 is the angle from optical centerline where the luminous intensity is 1/2 of the optical peak value.
+2. Luminous intensity / luminous flux: +/-15%.
+3. Luminous intensity value is traceable to CIE127-2007 standards.
+
+
+
+             © 2020 Kingbright. All Rights Reserved. Spec No: DSAA7649 / 1101024896 Rev No: V.29B Date: 04/17/2020                                                                                                 Page 1 / 5
+                                                                                                                                                                                           L-7104GD
+ELECTRICAL / OPTICAL CHARACTERISTICS at TA=25°C
+                                                                                                                                                                       Value
+                              Parameter                                             Symbol                               Emitting Color                                                      Unit
+                                                                                                                                                                Typ.              Max.
+
+    Wavelength at Peak Emission IF = 10mA                                              λpeak                                    Green                           565                    -      nm
+
+    Dominant Wavelength IF = 10mA                                                    λdom [1]                                   Green                           568                    -      nm
+
+    Spectral Bandwidth at 50% Φ REL MAX
+                                                                                        ∆λ                                      Green                            30                    -      nm
+    IF = 10mA
+
+    Capacitance                                                                          C                                      Green                            15                    -      pF
+
+    Forward Voltage IF = 10mA                                                          VF [2]                                   Green                            2                 2.4        V
+
+    Reverse Current (VR = 5V)                                                            IR                                     Green                             -                10         µA
+
+    Temperature Coefficient of λpeak
+
+
+
+
+                                                                                                                                                 t
+                                                                                     TCλpeak                                    Green                           0.1                    -    nm/°C
+    IF = 10mA, -10°C ≤ T ≤ 85°C
+
+
+
+
+                                                                                                                                               h
+    Temperature Coefficient of λdom
+                                                                                     TCλdom                                     Green                           0.06                   -    nm/°C
+    IF = 10mA, -10°C ≤ T ≤ 85°C
+
+
+
+
+                                                                                                           i g
+    Temperature Coefficient of VF
+                                                                                       TCV                                      Green                            -2                    -    mV/°C
+    IF = 10mA, -10°C ≤ T ≤ 85°C
+
+
+
+
+                                                                                                         r
+Notes:
+
+
+
+
+                                                                                                       b
+1. The dominant wavelength (λd) above is the setup value of the sorting machine. (Tolerance λd : ±1nm. )
+2. Forward voltage: ±0.1V.
+3. Wavelength value is traceable to CIE127-2007 standards.
+
+
+
+
+                                                                           g
+4. Excess driving current and / or operating temperature higher than recommended conditions may result in severe light degradation or premature failure.
+
+
+
+
+                                                                        in
+ABSOLUTE MAXIMUM RATINGS at TA=25°C
+
+
+
+
+                                                        K
+                              Parameter                                             Symbol                                                          Value                                    Unit
+
+
+    Power Dissipation                                                                     PD                                                         62.5                                    mW
+
+    Reverse Voltage                                                                       VR                                                           5                                      V
+
+    Junction Temperature                                                                  Tj                                                          110                                     °C
+
+    Operating Temperature                                                                 Top                                                   -40 To +85                                    °C
+
+    Storage Temperature                                                                  Tstg                                                   -40 To +85                                    °C
+
+    DC Forward Current                                                                     IF                                                         25                                      mA
+
+    Peak Forward Current                                                                IFM [1]                                                       140                                     mA
+
+    Electrostatic Discharge Threshold (HBM)                                                -                                                         8000                                     V
+
+    Thermal Resistance (Junction / Ambient)                                           Rth JA [2]                                                      680                                    °C/W
+
+    Thermal Resistance (Junction / Solder point)                                      Rth JS [2]                                                      460                                    °C/W
+
+    Lead Solder Temperature [3]                                                                                                                      260°C For 3 Seconds
+
+    Lead Solder Temperature [4]                                                                                                                      260°C For 5 Seconds
+
+Notes:
+1. 1/10 Duty Cycle, 0.1ms Pulse Width.
+2. Rt h JA ,Rt h JS Results from mounting on PC board FR4 (pad size ≥ 16 mm 2 per pad).
+3. 2mm below package base.
+4. 5mm below package base.
+5. Relative humidity levels maintained between 40% and 60% in production area are recommended to avoid the build-up of static electricity – Ref JEDEC/JESD625-A and JEDEC/J-STD-033.
+
+
+
+             © 2020 Kingbright. All Rights Reserved. Spec No: DSAA7649 / 1101024896 Rev No: V.29B Date: 04/17/2020                                                                           Page 2 / 5
+                                                                                                                                                                                                                                                                                                          L-7104GD
+TECHNICAL DATA
+RELATIVE INTENSITY vs. WAVELENGTH                                                                                                                                                                                      SPATIAL DISTRIBUTION
+
+                                                                       Green
+                          100%                                                                                                                                                                                                                       -15°                                 0°
+                                                                                                                                                                                                                                                                                                  15°
+                                        Ta = 25 °C                                                                                                                                                                       Ta = 25 °C
+                                                                                                                                                                                                                                                                                                         30°
+
+
+
+
+  Relative Intensity (a. u.)
+                                                                                                                                                                                                                                           -30°
+                               80%
+                                                                                                                                                                                                                                    -45°                                                                           45°
+                               60%
+
+                               40%                                                                                                                                                                                           -60°                                                                                        60°
+
+
+                               20%
+                                                                                                                                                                                                                         -75°                                                                                                  75°
+
+                               0%
+                                 350        400      450     500   550     600                                   650        700      750    800
+                                                                                                                                                                                                                       -90°                                                                                                  90°
+                                                                Wavelength (nm)                                                                                                                                           1.0                0.5                                         0.0            0.5               1.0
+
+
+                                                                                                                                                           GREEN
+                                     Forward Current vs.                                                                Luminous Intensity vs.                                                          Forward Current Derating Curve                                                    Luminous Intensity vs.
+                                     Forward Voltage                                                                    Forward Current                                                                                                                                                   Ambient Temperature
+
+
+
+
+                                                                                                                                                                                                                            t
+                               20                                                                                 2.5                                                                              50                                                                              2.5
+
+
+
+
+                                                                                                                                                                Permissible forward current (mA)
+                                                                                 Luminous intensity normalised                                                                                                                                     Luminous intensity normalised
+                                       Ta = 25 °C                                                                           Ta = 25 °C
+
+
+
+
+Forward current (mA)
+                                                                                                                                                                                                                          h
+                               16                                                                                 2.0                                                                              40                                                                              2.0
+
+
+
+
+                                                                                                                                                                               g
+                               12                                                                                 1.5                                                                              30                                                                              1.5
+
+
+
+
+                                                                                           at 10 mA
+
+
+
+                                                                                                                                                                           r i
+                                8                                                                                 1.0                                                                              20                                                                              1.0
+
+
+                                                                                                                                                                                                                                                          at Ta = 25 °C
+
+
+
+
+                                                                                                                                                 b
+                                4                                                                                 0.5                                                                              10                                                                              0.5
+
+
+
+
+                                                                                                                                               g
+                                0                                                                                 0.0                                                                              0                                                                               0.0
+                                 1.5      1.7   1.9     2.1    2.3       2.5                                            0          4     8     12     16   20                                           -40 -20 0 20 40 60 80 100                                                        -40 -20 0 20 40 60 80 100
+
+
+
+
+                                                                                            n
+                                            Forward voltage (V)                                                                   Forward current (mA)                                                       Ambient temperature (°C)                                                        Ambient temperature (°C)
+
+
+
+
+    RECOMMENDED WAVE SOLDERING PROFILE
+
+
+
+
+                                                                                        K i
+                                                                                                                                                                                                        Notes:
+                                                                                                                                                                                                        1. Recommend pre-heat temperature of 105°C or less (as measured with a thermocouple
+                                                                                                                                                                                                           attached to the LED pins) prior to immersion in the solder wave with a maximum solder bath
+                                                                                                                                                                                                           temperature of 260°C
+                                                                                                                                                                                                        2. Peak wave soldering temperature between 245°C ~ 255°C for 3 sec (5 sec max).
+                                                                                                                                                                                                        3. Do not apply stress to the epoxy resin while the temperature is above 85°C.
+                                                                                                                                                                                                        4. Fixtures should not incur stress on the component when mounting and during soldering process.
+                                                                                                                                                                                                        5. SAC 305 solder alloy is recommended.
+                                                                                                                                                                                                        6. No more than one wave soldering pass.
+
+
+
+
+PACKING & LABEL SPECIFICATIONS
+
+
+
+
+                                        © 2020 Kingbright. All Rights Reserved. Spec No: DSAA7649 / 1101024896 Rev No: V.29B Date: 04/17/2020                                                                                                                                                                  Page 3 / 5
+                                                                                                                                                                L-7104GD
+
+
+
+
+PRECAUTIONS
+Storage conditions
+1. Avoid continued exposure to the condensing moisture environment and keep the product away from rapid transitions in ambient
+
+
+
+
+                                                                                                                          t
+   temperature.
+2. LEDs should be stored with temperature ≤ 30°C and relative humidity < 60%.
+
+
+
+
+                                                                                                                        h
+3. Product in the original sealed package is recommended to be assembled within 72 hours of opening.
+
+
+
+
+                                                                                                         g
+   Product in opened package for more than a week should be baked for 30 (+10/-0) hours at 85 ~ 100°C.
+
+
+
+
+                                                                                                   b r i
+                                                                        g
+LED Mounting Method
+1. The lead pitch of the LED must match the
+
+
+
+
+                                                                     in
+   pitch of the mounting holes on the PCB
+   during component placement.
+
+
+
+
+                                                    K
+   Lead-forming may be required to insure
+   the lead pitch matches the hole pitch.
+   Refer to the figure below for proper lead
+   forming procedures.
+  Note 1-3: Do not route PCB trace in the contact area between the
+  leadframe and the PCB to prevent short-circuits.
+                                                                                                                  " ○" Correct mounting method " x " Incorrect mounting method
+
+
+
+
+2. When soldering wires to the LED, each wire joint should be separately insulated with heat-shrink tube to prevent short-circuit contact.
+   Do not bundle both wires in one heat shrink tube to avoid pinching the LED leads. Pinching stress on the LED leads may damage the
+   internal structures and cause failure.
+
+
+
+
+                                                                3. Use stand-offs (Fig.1) or spacers (Fig.2) to securely position the LED above the PCB.
+                                                                4. Maintain a minimum of 3mm clearance between the base of the LED lens and the first lead
+                                                                   bend (Fig. 3 ,Fig. 4).
+                                                                5. During lead forming, use tools or jigs to hold the leads securely so that the bending force
+                                                                   will not be transmitted to the LED lens and its internal structures. Do not perform lead
+                                                                   forming once the component has been mounted onto the PCB. (Fig. 5 )
+
+
+          © 2020 Kingbright. All Rights Reserved. Spec No: DSAA7649 / 1101024896 Rev No: V.29B Date: 04/17/2020                                                     Page 4 / 5
+                                                                                                                                                                             L-7104GD
+Lead Forming Procedures
+1. Do not bend the leads more than twice. (Fig. 6 )
+2. During soldering, component covers and holders should leave
+   clearance to avoid placing damaging stress on the LED during
+   soldering. (Fig. 7)
+3. The tip of the soldering iron should never touch the lens epoxy.
+4. Through-hole LEDs are incompatible with reflow soldering.
+5. If the LED will undergo multiple soldering passes or face other
+   processes where the part may be subjected to intense heat,
+   please check with Kingbright for compatibility.
+
+
+
+
+                                                                                                                          h t
+                                                                                                    r i g
+                                                                     g                            b
+                                                   K              in
+
+
+PRECAUTIONARY NOTES
+1. The information included in this document reflects representative usage scenarios and is intended for technical reference only.
+2. The part number, type, and specifications mentioned in this document are subject to future change and improvement without notice. Before production usage customer should refer to
+   the latest datasheet for the updated specifications.
+3. When using the products referenced in this document, please make sure the product is being operated within the environmental and electrical limits specified in the datasheet. If
+   customer usage exceeds the specified limits, Kingbright will not be responsible for any subsequent issues.
+4. The information in this document applies to typical usage in consumer electronics applications. If customer's application has special reliability requirements or have life-threatening
+   liabilities, such as automotive or medical usage, please consult with Kingbright representative for further assistance.
+5. The contents and information of this document may not be reproduced or re-transmitted without permission by Kingbright.
+6. All design applications should refer to Kingbright application notes available at https://www.Kingbright.com/application_notes
+
+
+
+         © 2020 Kingbright. All Rights Reserved. Spec No: DSAA7649 / 1101024896 Rev No: V.29B Date: 04/17/2020                                                                    Page 5 / 5
+

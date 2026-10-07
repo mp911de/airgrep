@@ -1,0 +1,78 @@
+Conducted emission of the charger buck on the USB input, measured at a LISN
+*
+* The MAX77757 buck draws a trapezoidal current pulse train from BYP (C6, C33). The input
+* switch (RCHGIN2BYP) leads to CHGIN with C5, the USB_VBUS copper (R and L from the board,
+* run_emi.py) to J1 with C1, then a 1 m USB cable to the adapter, which is replaced by a
+* CISPR 16 LISN (50 uH, measurement across 50 ohm through 0.1 uF). The adapter's own input
+* filtering is not in the model, so the LISN voltage is the worst case for the mains port.
+*
+*   ngspice -b usb_lisn.cir              (writes usb_lisn.txt into the current directory)
+
+.param fsw=1.3Meg
+.param d=0.84
+.param ipk=3.0
+.param tedge=5n
+* C6 10 uF 25 V + C33 22 uF 16 V at 5 V, -40 % DC bias assumed (no curves on file)
+.param cbyp=19.2u
+.param esr_byp=3m
+.param esl_byp=0.3n
+* RCHGIN2BYP 45 mOhm typical plus bond wires
+.param r_in=45m
+.param l_in=1n
+* C5 2.2 uF 25 V at CHGIN, -40 %
+.param c5=1.3u
+.param esr5=10m
+.param esl5=0.6n
+* USB_VBUS copper J1 to U4 (from the board)
+.param r_tr=8.1m
+.param l_tr=25n
+* C1 4.7 uF 50 V X7R 0805 (GRM21BZ71H475KE15L) at J1, -25 % at 5 V assumed (no curve on file)
+.param c1=3.5u
+.param esr1=15m
+.param esl1=0.6n
+* 1 m USB cable, VBUS and GND conductors as a loop (estimate)
+.param r_cab=0.3
+.param l_cab=1u
+* FB1 between C1 at J1 and the USB_VBUS copper: DCR, L parallel R. run_emi.py sets it;
+* the defaults make it transparent
+.param r_fb=1m
+.param l_fb=1p
+.param rp_fb=1G
+* optional adapter output capacitor at the cable end, in parallel with the LISN (off by default)
+.param c_adp=1p
+.param esr_adp=1G
+.param ton={d/fsw-tedge}
+.param per={1/fsw}
+
+Ibuck  BYP 0 PULSE(0 {ipk} 0 {tedge} {tedge} {ton} {per})
+Cbyp   BYP BYP_X {cbyp}
+Rbyp   BYP_X BYP_Y {esr_byp}
+Lbyp   BYP_Y 0 {esl_byp}
+Rin    CHGIN RIN_X {r_in}
+Lin    RIN_X BYP {l_in}
+C5     CHGIN C5_X {c5}
+R5     C5_X C5_Y {esr5}
+L5     C5_Y 0 {esl5}
+Rfb    VBUS_J1 FB_X {r_fb}
+Lfb    FB_X FB_Y {l_fb}
+Rpfb   FB_X FB_Y {rp_fb}
+Rtr    FB_Y RTR_X {r_tr}
+Ltr    RTR_X CHGIN {l_tr}
+C1     VBUS_J1 C1_X {c1}
+R1     C1_X C1_Y {esr1}
+L1     C1_Y 0 {esl1}
+Rcab   CAB RCAB_X {r_cab}
+Lcab   RCAB_X VBUS_J1 {l_cab}
+* LISN
+Llisn  SRC CAB 50u
+Vsrc   SRC 0 5
+Cm     CAB M 0.1u
+Rm     M 0 50
+Cadp   CAB ADP_X {c_adp}
+Radp   ADP_X 0 {esr_adp}
+
+.control
+tran 1n 400u 300u 1n
+wrdata usb_lisn.txt v(m) v(byp) v(vbus_j1)
+.endc
+.end

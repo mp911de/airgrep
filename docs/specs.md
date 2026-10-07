@@ -1,4 +1,4 @@
-# Technical data: Flybee carrier
+# Technical data: airgrep carrier
 
 Headline numbers for the carrier board with its modules. Other documents link here instead of repeating them. The design behind the numbers is in [power.md](power.md), [mechanical.md](mechanical.md) and [interfaces.md](interfaces.md).
 
@@ -146,18 +146,19 @@ The user tapes two temperature sensors to the pack:
 
 ### Limits of the operating range
 
-The -10 to +50 °C range holds for the electronics on an open bench. In a closed case the heat model shows tighter limits (simulated, `hardware/sim/heat/results.md`). The model assumes an unvented 3D-printed case of 115 x 105 x 40 mm. The real enclosure is not designed yet.
+The -10 to +50 °C range holds for the electronics on an open bench. In a closed case the heat model shows tighter limits (simulated, `hardware/sim/heat/results.md`). The model assumes a 115 x 105 x 40 mm printed case with a 5 cm² inlet and a 5 cm² outlet, a 50 % open grille and 35 mm vertical vent separation. The real enclosure is not designed yet.
 
 | Supply | Load | Ambient | Pack temperature | Consequence |
 |---|---|---|---|---|
-| battery | typical, 1.22 W | 25 °C | 34 °C | none |
-| battery | typical, 1.22 W | 50 °C | 59 °C | inside the thermostat's opening range (55 to 65 °C) |
-| battery | 0.8 A | 25 °C | 55 to 56 °C | at the thermostat's lowest opening point |
-| battery | 0.8 A | 50 °C | 80 °C | the thermostat opens and the device switches off |
-| USB, 3 A source, charging | 0.8 A | any | about 44 K above ambient | charging stops above about -2 °C ambient |
-| USB, 3 A source, charging | device off | any | about 10 K above ambient | charging stops above about 32 °C ambient |
+| battery | typical, 1.22 W | 25 °C | 33 °C | below the thermostat's opening range |
+| battery | typical, 1.22 W | 50 °C | 58 °C | inside the thermostat's opening range (55 to 65 °C) |
+| battery | 0.8 A | 25 °C | 50 to 51 °C | below the thermostat's lowest opening point |
+| battery | 1.0 A | 25 °C | 57 to 58 °C | above the thermostat's lowest opening point |
+| battery | 0.8 A | 50 °C | 76 to 77 °C | the thermostat opens and the device switches off |
+| USB, 3 A source, charging | 0.8 A | 25 °C | 61 to 64 °C | exceeds the nominal 42.1 °C charge-stop threshold |
+| USB, 3 A source, charging | device off | 25 °C | 34 to 36 °C | below the nominal charge-stop threshold |
 
-So 50 °C ambient is not reachable at full load in a closed case, and charging at full load needs the case open or vented. The vents are tracked in [open-issues.md](open-issues.md). On the open bench at 25 °C the charger delivers the full 1.8 A with the device running.
+The selected vents do not support full load at 50 °C ambient or continuous charging while running at 0.8 A and 25 °C ambient in this model. JEITA and thermostat shutdown are not simulated, so temperatures above their thresholds are hypothetical steady states. Enclosure validation remains in [open-issues.md](open-issues.md). On the open bench at 25 °C the charger delivers the full 1.8 A with the device running.
 
 ## Power, runtime and charging
 
@@ -174,19 +175,19 @@ The boost efficiency is a budget estimate from the TI data sheet curve, derated 
 
 | Scenario | 5 V rail | Boost eff. | Battery power | 5000 mAh (new / aged) | 10000 mAh (new / aged) |
 |---|---|---|---|---|---|
-| Wi-Fi off, GNSS fix | 231 mA, 1.17 W | 90 % | 1.30 W (352 mA at 3.7 V) | 13.5 h / 10.8 h | 27.0 h / 21.6 h |
-| Wi-Fi off, GNSS no fix | 233 mA, 1.18 W | 90 % | 1.31 W (355 mA at 3.7 V) | 13.4 h / 10.7 h | 26.8 h / 21.4 h |
-| Wi-Fi on, GNSS fix | 511 mA, 2.58 W | 93 % | 2.82 W (763 mA at 3.7 V) | 6.2 h / 5.0 h | 12.5 h / 10.0 h |
-| Wi-Fi on, GNSS no fix | 513 mA, 2.59 W | 93 % | 2.83 W (766 mA at 3.7 V) | 6.2 h / 5.0 h | 12.4 h / 9.9 h |
+| Wi-Fi off, GNSS fix | 246 mA, 1.24 W | 90 % | 1.39 W (374 mA at 3.7 V) | 12.7 h / 10.2 h | 25.4 h / 20.3 h |
+| Wi-Fi off, GNSS no fix | 248 mA, 1.25 W | 90 % | 1.40 W (377 mA at 3.7 V) | 12.6 h / 10.1 h | 25.2 h / 20.1 h |
+| Wi-Fi on, GNSS fix | 526 mA, 2.66 W | 93 % | 2.91 W (786 mA at 3.7 V) | 6.0 h / 4.8 h | 12.1 h / 9.7 h |
+| Wi-Fi on, GNSS no fix | 528 mA, 2.67 W | 93 % | 2.92 W (789 mA at 3.7 V) | 6.0 h / 4.8 h | 12.0 h / 9.6 h |
 
 **Backlight 50 %**
 
 | Scenario | 5 V rail | Boost eff. | Battery power | 5000 mAh (new / aged) | 10000 mAh (new / aged) |
 |---|---|---|---|---|---|
-| Wi-Fi off, GNSS fix | 216 mA, 1.09 W | 90 % | 1.22 W (329 mA at 3.7 V) | 14.4 h / 11.5 h | 28.8 h / 23.1 h |
-| Wi-Fi off, GNSS no fix | 218 mA, 1.10 W | 90 % | 1.23 W (332 mA at 3.7 V) | 14.3 h / 11.4 h | 28.6 h / 22.9 h |
-| Wi-Fi on, GNSS fix | 496 mA, 2.51 W | 93 % | 2.74 W (741 mA at 3.7 V) | 6.4 h / 5.1 h | 12.8 h / 10.3 h |
-| Wi-Fi on, GNSS no fix | 498 mA, 2.52 W | 93 % | 2.75 W (744 mA at 3.7 V) | 6.4 h / 5.1 h | 12.8 h / 10.2 h |
+| Wi-Fi off, GNSS fix | 231 mA, 1.17 W | 90 % | 1.30 W (352 mA at 3.7 V) | 13.5 h / 10.8 h | 27.0 h / 21.6 h |
+| Wi-Fi off, GNSS no fix | 233 mA, 1.18 W | 90 % | 1.31 W (355 mA at 3.7 V) | 13.4 h / 10.7 h | 26.8 h / 21.4 h |
+| Wi-Fi on, GNSS fix | 511 mA, 2.58 W | 93 % | 2.82 W (763 mA at 3.7 V) | 6.2 h / 5.0 h | 12.5 h / 10.0 h |
+| Wi-Fi on, GNSS no fix | 513 mA, 2.59 W | 93 % | 2.83 W (766 mA at 3.7 V) | 6.2 h / 5.0 h | 12.4 h / 9.9 h |
 
 ### Component breakdown (backlight 100 %, Wi-Fi off, GNSS fix)
 
@@ -200,8 +201,8 @@ The boost efficiency is a budget estimate from the TI data sheet curve, derated 
 | Carrier: BMP581, buzzer driver idle, I2C pull-ups | 0.1 mA | BMP581 normal mode below 0.01 mA; 74LVC1G17 below 0.01 mA; display I2C pull-ups about 0.05 mA |
 | Carrier: control inputs, both sliders low | 0.1 mA | TCA9534: at most 4 uA standby at 3.6 V plus 2 x 33 uA in 100 kOhm pulls at 3.3 V; rounded to 0.1 mA for polling. Each additional grounded spare input adds 33 uA. Estimate, through display LDO. |
 | Carrier: buzzer, average | 0.2 mA | PKMCS0909 driven from 3.3 V through 150 Ω: about 20 mA while beeping, assumed 1 % duty |
-| GNSS: MAX-M10S, breakout LED, active antenna (tracking) | 20.8 mA | u-blox MAX-M10S data sheet UBX-20035208 R02, Table 13, GPS+GAL+GLO: tracking 7.0 + 2.3 mA (VCC + V_IO), acquisition 9.0 + 2.3 mA at 3.0 V; Typical active GNSS antenna LNA bias at 3.3 V, to be measured (docs/open-issues.md). Set 0 for a passive antenna. |
-| **Total at 5.06 V** | **231 mA** | |
+| GNSS: MAX-M10S, breakout LED, active antenna (tracking) | 35.8 mA | u-blox MAX-M10S data sheet UBX-20035208 R02, Table 13, GPS+GAL+GLO: tracking 7.0 + 2.3 mA (VCC + V_IO), acquisition 9.0 + 2.3 mA at 3.0 V; Abracon AANE-AP-0164 LNA, 15 to 25 mA at 3.0 to 5.0 V, maximum used (datasheets/abracon-aane-ap-0164.pdf). Set 0 for a passive antenna. |
+| **Total at 5.06 V** | **246 mA** | |
 
 Wi-Fi on raises the ADSBee from 120 mA to 400 mA. Without a fix the GNSS receiver stays in acquisition and draws 2.0 mA more, below 1 % of the total.
 
@@ -223,14 +224,14 @@ Wi-Fi on raises the ADSBee from 120 mA to 400 mA. Without a fix the GNSS receive
 
 ### Charging time from empty
 
-The charge current is limited to 1.8 A (IFAST) and by the input limit of the source. The charger powers the system first; only the rest charges the cell. "On" is the typical scenario: Wi-Fi off, GNSS fix, backlight 50 %, 1.22 W.
+The charge current is limited to 1.8 A (IFAST) and by the input limit of the source. The charger powers the system first; only the rest charges the cell. "On" is the typical scenario: Wi-Fi off, GNSS fix, backlight 50 %, 1.30 W.
 
 | Source | Input limit | 5000 mAh off / on | 10000 mAh off / on |
 |---|---|---|---|
 | USB-C charger 3 A | 3.00 A | 2 h 58 min (1.80 A) / 2 h 58 min (1.80 A) | 5 h 55 min (1.80 A) / 5 h 55 min (1.80 A) |
 | USB-A charger, Apple 2.4 A signature | 2.40 A | 2 h 58 min (1.80 A) / 2 h 58 min (1.80 A) | 5 h 55 min (1.80 A) / 5 h 55 min (1.80 A) |
-| USB-C charger 1.5 A, or USB-A charger with BC1.2 DCP | 1.50 A | 2 h 58 min (1.80 A) / 3 h 27 min (1.49 A) | 5 h 55 min (1.80 A) / 6 h 53 min (1.49 A) |
-| PC USB 2.0 port (SDP), or default-current USB-C | 0.50 A | 7 h 35 min (0.61 A) / 15 h 51 min (0.28 A) | 15 h 11 min (0.61 A) / 31 h 42 min (0.28 A) |
+| USB-C charger 1.5 A, or USB-A charger with BC1.2 DCP | 1.50 A | 2 h 58 min (1.80 A) / 3 h 29 min (1.47 A) | 5 h 55 min (1.80 A) / 6 h 58 min (1.47 A) |
+| PC USB 2.0 port (SDP), or default-current USB-C | 0.50 A | 7 h 35 min (0.61 A) / 17 h 11 min (0.26 A) | 15 h 11 min (0.61 A) / 34 h 23 min (0.26 A) |
 
 With Wi-Fi on the system needs more than a PC port can supply. The battery then supplements the input and slowly discharges.
 

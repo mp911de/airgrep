@@ -41,6 +41,7 @@ except ImportError as exc:
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import simlib  # noqa: E402
 import run_power  # noqa: E402  (boost constants and switching frequency)
+import vent_model  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "heat")
@@ -71,7 +72,7 @@ CHG_VSYSMIN = 3.5  # 4.1 to 4.5 V termination variants
 CHG_TREG = 130.0  # thermal regulation: charge current folds back above this junction temperature
 TREG_SLOPE = 50.0  # K/A, junction rise per ampere of charge current, for the regulation loop (estimate)
 BULK_CAPS = ("C1", "C5", "C6", "C7", "C9", "C10", "C11", "C13", "C14", "C15", "C18", "C19", "C20", "C24", "C25",
-             "C26", "C33", "C34")  # X7R (LCSC C105174, C415535, C3039694, C907991)
+             "C26", "C33", "C34")  # X7R (LCSC C105174, C415535, C3039694, C385906, C907991)
 CAP_RATING = 125.0  # °C, X7R upper limit
 THERMOSTAT_MIN = 55.0  # LIM-P-82-60: 60 °C ± 5 K
 CHG_THETA_JC = 7.5  # K/W
@@ -97,6 +98,8 @@ LS_THETA_JC = 16.4
 
 # --- Contacts and passives: (nominal, high). Nominal is an estimate, high is the data sheet maximum
 USB_CONTACT = (0.020, 0.040)  # Hanbo MC-107DMS: 40 mΩ max per contact; 4 VBUS + 4 GND contacts
+FB_R = (0.015, 0.020)  # FB1 BLM31KN471SZ1L: 20 mΩ max DCR (LCSC C710518); nominal estimated
+USB_J1 = "USB_VBUS_J1"  # J1 VBUS pins, D3 and C1, ahead of FB1
 JST_CONTACT = (0.005, 0.010)  # JST PH: 10 mΩ max initial per contact
 SOCKET_CONTACT = (0.010, 0.020)  # 2.54 mm pin socket or shunt contact (estimate, no data sheet on file)
 FUSE_R = (0.011, 0.015)  # F1 Littelfuse 0466005.NRHF 5 A (C57525): 11 mΩ nominal cold; high adds self-heating
@@ -899,7 +902,7 @@ class Model:
         self.corner = corner  # 0 nominal, 1 high
         self.heatsink = heatsink or {}  # {ref: HEATSINK entry}
         self.nets = {n: TrackNet(board, self.grid, n) for n in
-                     ("USB_VBUS", "CHG_SW", "VSYS", "VBAT", "BAT_IN", "BOOST_SW", "BOOST_5V", "RAIL_5V",
+                     ("USB_VBUS", USB_J1, "CHG_SW", "VSYS", "VBAT", "BAT_IN", "BOOST_SW", "BOOST_5V", "RAIL_5V",
                       "ESP_5V_D", "ADS_5V_D", "ESP_5V", "ADS_5V")}
         ads = next(l for l in params["loads_5v"] if l["name"].startswith("ADSBee"))
         gnss = params["gnss"]
@@ -1007,7 +1010,8 @@ def solve_paths(model, board):
     """Copper path resistances at 20 °C that run_case uses for its voltage bookkeeping:
     (r_net, r_gnd_bat, r_gnd_usb). Assign them to every Model before run_case."""
     r_net = {
-        "USB_VBUS": model.nets["USB_VBUS"].resistance(("J1", ("A4", "A9", "B4", "B9")), ("U4", ("23", "24"))),
+        "USB_VBUS J1": model.nets[USB_J1].resistance(("J1", ("A4", "A9", "B4", "B9")), ("FB1", ("1",))),
+        "USB_VBUS": model.nets["USB_VBUS"].resistance(("FB1", ("2",)), ("U4", ("23", "24"))),
         "CHG_SW": model.nets["CHG_SW"].resistance(("U4", ("20", "21")), ("L1", ("1",))),
         "VSYS": model.nets["VSYS"].resistance(("U4", ("15", "16")), ("L2", ("1",))),
         "VSYS L1": model.nets["VSYS"].resistance(("L1", ("2",)), ("U4", ("15", "16"))),
@@ -1029,7 +1033,9 @@ def solve_paths(model, board):
     return r_net, r_gnd_bat, r_gnd_usb
 
 
-def run_case(model, case, env_key, ambient, k_buck, max_iterations=16):
+def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
+             vent_area_cm2=vent_model.VENT_AREA_CM2, charge_current=CHARGE_A,
+             regulation_temperature=CHG_TREG):
     """Solve an independent operating point; reject an unconverged thermal iteration."""
     if max_iterations < 1:
         raise ValueError("thermal iteration limit must be positive")
@@ -1044,7 +1050,7 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16):
     vsys_drop = 0.0
     load = case["load"]
     i_ads, i_esp = load * model.ads_share, load * (1 - model.ads_share)
-    chg_cap = CHARGE_A  # charge current allowed by the junction thermal regulation
+    chg_cap = charge_current  # charge current allowed by the junction thermal regulation
     regulated = False
     for outer in range(max_iterations):
         losses, heat = {}, {}
@@ -1087,7 +1093,8 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16):
                 vin = vsys - vsys_drop
                 b = boost_losses(vin, load, tj["U6"], tj["L2"], model.fit)
                 i_l1 = i_chg + b["iin"] + 2 * LED_SYS_A
-                r_usb = 2 * USB_CONTACT[corner] / 4 + model.r_net["USB_VBUS"] + model.r_gnd_usb
+                r_usb = (2 * USB_CONTACT[corner] / 4 + model.r_net["USB_VBUS J1"] + FB_R[corner]
+                         + model.r_net["USB_VBUS"] + model.r_gnd_usb)
                 i_in = 2.5
                 for _ in range(20):
                     vbus = 5.0 - i_in * r_usb
@@ -1125,7 +1132,9 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16):
         if case["mode"] == "battery":
             track("VSYS", {("U4", ("15", "16")): i_bat, ("L2", ("1",)): -i_bat})
         else:
-            track("USB_VBUS", {("J1", ("A4", "A9", "B4", "B9")): i_in, ("U4", ("23", "24")): -i_in})
+            track(USB_J1, {("J1", ("A4", "A9", "B4", "B9")): i_in, ("FB1", ("1",)): -i_in})
+            contact("FB1 ferrite bead", pads_of(board, "FB1"), i_in, FB_R[corner])
+            track("USB_VBUS", {("FB1", ("2",)): i_in, ("U4", ("23", "24")): -i_in})
             track("CHG_SW", {("U4", ("20", "21")): i_l1, ("L1", ("1",)): -i_l1})
             inj = {("L1", ("2",)): i_l1, ("U4", ("15", "16")): -i_chg}
             if b["iin"]:
@@ -1189,7 +1198,8 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16):
                                                "copper ADS_5V", "shunts and module sockets"))
         p_pack = i_b ** 2 * r_pack
         inside = board_loss + max(p_modules, 0.0) + p_pack
-        t_air = ambient + (inside * r_enc if env["enclosed"] else 0.0)
+        t_air = ambient + (vent_model.air_rise(inside, ambient, vent_area_cm2, wall_resistance=r_enc)
+                           if env["enclosed"] else 0.0)
 
         # thermal solve
         b_vec = [0.0] * (NL * nc + len(model.nodes))
@@ -1206,10 +1216,10 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16):
         if case["mode"] == "usb":
             # MAX77757 junction regulation: the charge current, then the input current, folds back
             # so that the junction stays at TREG; a negative value means the battery supplements
-            if tj["U4"] > CHG_TREG + 0.5 or (chg_cap < CHARGE_A and tj["U4"] < CHG_TREG - 0.5):
-                chg_cap = min(CHARGE_A, chg_cap - 0.8 * (tj["U4"] - CHG_TREG) / TREG_SLOPE)
+            if tj["U4"] > regulation_temperature + 0.5 or (chg_cap < charge_current and tj["U4"] < regulation_temperature - 0.5):
+                chg_cap = min(charge_current, chg_cap - 0.8 * (tj["U4"] - regulation_temperature) / TREG_SLOPE)
                 chg_cap = max(chg_cap, -(b["iin"] + 2 * LED_SYS_A))  # the buck cannot sink current
-                regulated = chg_cap < CHARGE_A
+                regulated = chg_cap < charge_current
                 converged = False
         # VSYS track drop between U4 and L2 for the boost input in the USB case
         if case["mode"] == "usb" and load:
@@ -1435,7 +1445,8 @@ def main():
             "pins of a group share the current equally. GND is a four-layer sheet on the grid.")
     rep.add()
     rep.table(["Path", "Resistance"], [[k, "%.1f mΩ" % (v * 1e3)] for k, v in (
-        ("USB_VBUS: J1 VBUS pins to U4 CHGIN", r_net["USB_VBUS"]),
+        ("USB_VBUS_J1: J1 VBUS pins to FB1", r_net["USB_VBUS J1"]),
+        ("USB_VBUS: FB1 to U4 CHGIN", r_net["USB_VBUS"]),
         ("CHG_SW: U4 LX to L1", r_net["CHG_SW"]),
         ("VSYS: L1 to U4 SYS", r_net["VSYS L1"]),
         ("VSYS: U4 SYS to L2", r_net["VSYS"]),
@@ -1458,12 +1469,17 @@ def main():
     rep.add("- Open bench: board in still air, %.0f W/m²K on both faces (convection plus radiation), "
             "no enclosure." % ENVIRONMENTS["open"]["h_top"])
     rep.add("- Closed case (not yet designed; assumed): %.0f x %.0f x %.0f mm outside, %.0f mm printed wall "
-            "(k %.1f W/m·K), no vents, %.0f W/m²K inside and %.0f W/m²K outside. Case to ambient %.1f K/W "
+            "(k %.1f W/m·K), %.0f W/m²K inside and %.0f W/m²K outside. Wall path to ambient %.1f K/W "
             "over %.0f cm². Inside it the board loses %.0f W/m²K per face to the case air (modules above, "
             "battery below). The air carries everything dissipated in the case: board losses, the modules' "
             "5 V power and the pack's own I²R. The pack: %.1f K/W to the case air."
             % (ENCLOSURE_MM + (WALL_MM, K_WALL, H_IN, H_OUT, r_enc, a_enc * 1e4,
                                ENVIRONMENTS["closed"]["h_top"], pack_resistance())))
+    rep.add("- Vents: %.1f cm² each for the lower inlet and upper outlet, %.0f %% open grille, "
+            "%.0f mm vertical separation, discharge coefficient %.1f. Natural draft acts in parallel "
+            "with the wall path; no fan."
+            % (vent_model.VENT_AREA_CM2, vent_model.BLOCKAGE * 100, vent_model.VENT_HEIGHT_M * 1000,
+               vent_model.CD))
     rep.add("- Junction to board: MAX77757 θJC %.1f K/W onto its pins, TPS61088 RθJC(bot) 3.1 K/W plus 1 K/W "
             "solder onto its pad, TPS22975 RθJC(bot) %.1f K/W; inductor winding to terminals %.0f K/W."
             % (CHG_THETA_JC, LS_THETA_JC, INDUCTOR_THETA_BODY))

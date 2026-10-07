@@ -1,22 +1,25 @@
 """Lumped vented-enclosure model for the FLARM carrier.
 
-Takes the sealed enclosure of hardware/sim/run_heat.py (case 115 x 105 x 40 mm, 2 mm PETG wall, 7 W/m2K
+Uses the enclosure wall path of hardware/sim/run_heat.py (case 115 x 105 x 40 mm, 2 mm PETG wall, 7 W/m2K
 inside and 9 W/m2K outside) and adds two paths in parallel with the wall: a natural convection vent
 (stack effect, inlet low, outlet high) and a fan. Steady state. Estimate only: the enclosure does not
 exist yet.
 
-The constants below are copied by hand from the heat model, closed case, 25 C ambient, high corner
-(hardware/sim/heat/results.md, there rounded). Update them after a layout or loss model change.
+The constants below are copied by hand from the heat model, sealed case, 25 C ambient, high corner.
+Recompute with run_case(..., vent_area_cm2=0) after a layout or loss model change; the default heat
+report now includes vents.
 """
 import math
 
 RHO, CP, G = 1.18, 1005.0, 9.81     # air at 25 to 30 C
 CD = 0.6                            # orifice discharge coefficient
 BLOCKAGE = 0.5                      # grille / mesh open-area fraction
+VENT_AREA_CM2 = 5.0                 # geometric area of each opening, before grille blockage
+VENT_HEIGHT_M = 0.035               # vertical separation of inlet and outlet
 R_WALL = 6.3                        # K/W, sealed case to ambient (run_heat.enclosure_resistance)
 R_PACK = 9.2                        # K/W, pack to case air (run_heat.pack_resistance)
 TREG = 130.0                        # C, MAX77757 thermal regulation (run_heat.CHG_TREG)
-R_U4 = 34.0                         # K/W, U4 junction above case air per W of U4 loss, with the heatsink
+R_U4 = 36.0                         # K/W, U4 junction above case air per W of U4 loss, with the heatsink
 THERMOSTAT_MIN, JEITA_HOT = 55.0, 42.1  # C, lowest thermostat opening point and charge stop
 
 # Per scenario: p_in, heat inside the case without the U4 loss of a charging scenario [W]; u6, u7, cap,
@@ -24,14 +27,14 @@ THERMOSTAT_MIN, JEITA_HOT = 55.0, 42.1  # C, lowest thermostat opening point and
 # Charging scenarios carry the U4 loss as p0 + k * charge current, a line through the heat model's
 # results with the charge current capped at 0.6, 1.2 and 1.8 A (the last one in thermal regulation).
 SCEN = {
-    "bat_typ": dict(label="Battery, typical 1.22 W load", p_in=1.40, u6=4.3, u7=2.6, cap=3.4, p_pack=0.017, chg=None),
-    "bat08":   dict(label="Battery 3.1 V, 0.8 A load",   p_in=4.65, u6=10.6, u7=7.3, cap=8.5, p_pack=0.173, chg=None),
-    "bat10":   dict(label="Battery 3.1 V, 1.0 A load",   p_in=5.91, u6=13.8, u7=10.0, cap=11.2, p_pack=0.271, chg=None),
-    "usb32":   dict(label="USB 3 A, cell 3.2 V, charging, 0.8 A load", p_in=5.04, u6=27.9, u7=23.7, cap=44.6,
-                    p_pack=0.248, chg=dict(p0=0.37, k=0.87, imax=1.8)),
-    "usb37":   dict(label="USB 3 A, cell 3.7 V, charging, 0.8 A load", p_in=5.10, u6=27.6, u7=23.9, cap=44.8,
-                    p_pack=0.278, chg=dict(p0=0.13, k=0.94, imax=1.8)),
-    "usb_off": dict(label="USB 3 A, cell 3.2 V, charging, device off", p_in=0.59, u6=0.0, u7=0.0, cap=19.9,
+    "bat_typ": dict(label="Battery, typical 1.22 W load", p_in=1.40, u6=4.4, u7=2.7, cap=3.2, p_pack=0.017, chg=None),
+    "bat08":   dict(label="Battery 3.1 V, 0.8 A load",   p_in=4.65, u6=11.0, u7=7.8, cap=8.4, p_pack=0.173, chg=None),
+    "bat10":   dict(label="Battery 3.1 V, 1.0 A load",   p_in=5.91, u6=14.5, u7=10.8, cap=11.2, p_pack=0.271, chg=None),
+    "usb32":   dict(label="USB 3 A, cell 3.2 V, charging, 0.8 A load", p_in=5.11, u6=29.2, u7=25.1, cap=42.5,
+                    p_pack=0.212, chg=dict(p0=0.38, k=0.87, imax=1.8)),
+    "usb37":   dict(label="USB 3 A, cell 3.7 V, charging, 0.8 A load", p_in=5.21, u6=29.3, u7=25.5, cap=42.7,
+                    p_pack=0.244, chg=dict(p0=0.15, k=0.91, imax=1.8)),
+    "usb_off": dict(label="USB 3 A, cell 3.2 V, charging, device off", p_in=0.64, u6=0.0, u7=0.0, cap=19.6,
                     p_pack=0.292, chg=dict(p0=0.05, k=0.44, imax=1.8)),
 }
 
@@ -48,11 +51,25 @@ def vent_power(dT, area_cm2, height_m, t_amb):
     return m_dot * CP * dT
 
 
-def solve(scen, t_amb, area_cm2=0.0, height_m=0.035, fan_m3h=0.0):
+def air_rise(power, t_amb, area_cm2=VENT_AREA_CM2, height_m=VENT_HEIGHT_M, fan_m3h=0.0,
+             wall_resistance=R_WALL):
+    """Steady-state case-air rise with parallel wall, vent and fan heat paths."""
+    fan_mcp = fan_m3h / 3600 * RHO * CP
+    lo, hi = 0.0, power * wall_resistance
+    for _ in range(60):
+        mid = 0.5 * (lo + hi)
+        cooling = mid / wall_resistance + vent_power(mid, area_cm2, height_m, t_amb) + fan_mcp * mid
+        if cooling < power:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi)
+
+
+def solve(scen, t_amb, area_cm2=VENT_AREA_CM2, height_m=VENT_HEIGHT_M, fan_m3h=0.0):
     """Returns case air, pack, U4 Tj, charge current, U6/U7/cap temperatures."""
     s = SCEN[scen]
     chg = s["chg"]
-    fan_mcp = fan_m3h / 3600 * RHO * CP            # W/K, forced air (exhaust at case-air temperature)
     i_chg = chg["imax"] if chg else 0.0
 
     def u4_loss():
@@ -61,16 +78,7 @@ def solve(scen, t_amb, area_cm2=0.0, height_m=0.035, fan_m3h=0.0):
     dT = 10.0
     for _ in range(200):
         p_in = s["p_in"] + u4_loss()
-        # residual: p_in - wall - vent - fan = 0, solved by bisection on dT
-        lo, hi = 0.0, 150.0
-        for _ in range(60):
-            mid = 0.5 * (lo + hi)
-            q = mid / R_WALL + vent_power(mid, area_cm2, height_m, t_amb) + fan_mcp * mid
-            if q < p_in:
-                lo = mid
-            else:
-                hi = mid
-        previous, dT = dT, 0.5 * (lo + hi)
+        previous, dT = dT, air_rise(p_in, t_amb, area_cm2, height_m, fan_m3h)
         if chg:
             # thermal regulation: the charge current settles where Tj = TREG, between zero and the set current
             i_treg = (TREG - t_amb - dT - R_U4 * chg["p0"]) / (R_U4 * chg["k"])
@@ -106,15 +114,15 @@ if __name__ == "__main__":
                     cells.append("%3.0f/%3.0f" % (r["t_air"], r["t_pack"]))
             print("%-46s %5.0f |" % (SCEN[scen]["label"], t_amb) + "".join(" %12s" % c for c in cells))
         print()
-    print("=== component temperatures with 10 cm2 per side, H 35 mm ===")
+    print("=== component temperatures with %.0f cm2 per side, H %.0f mm ===" % (VENT_AREA_CM2, VENT_HEIGHT_M * 1000))
     print("%-46s %5s %7s %7s %7s %7s %7s %7s" % ("scenario", "Tamb", "air", "pack", "U4", "U6", "U7", "capX7R"))
     for scen, t_amb in [("bat08", 25), ("bat10", 25), ("bat08", 50), ("bat10", 50), ("usb32", 25), ("usb32", 35),
                         ("usb37", 25), ("usb_off", 25), ("usb_off", 35)]:
-        r = solve(scen, t_amb, 10, 0.035)
+        r = solve(scen, t_amb)
         print("%-46s %5.0f %7.0f %7.0f %7s %7.0f %7.0f %7.0f" % (SCEN[scen]["label"], t_amb, r["t_air"], r["t_pack"],
                                                               fmt(r["tj_u4"]), r["tj_u6"], r["tj_u7"], r["t_cap"]))
     print()
-    print("=== fan: forced air, no stack effect credited, 10 cm2 openings ===")
+    print("=== fan: delivered airflow, no stack effect credited ===")
     print("%-46s %5s %8s %8s %8s %8s" % ("scenario", "Tamb", "2 CFM", "4 CFM", "U4@2CFM", "Ichg@2CFM"))
     for scen, t_amb in [("bat08", 25), ("bat10", 50), ("usb32", 25), ("usb32", 35), ("usb37", 25), ("usb_off", 35)]:
         r2 = solve(scen, t_amb, 0, 0.035, fan_m3h=3.4)

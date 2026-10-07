@@ -1,11 +1,11 @@
 # Circuit simulation
 
 ngspice benches and closed-form checks for the parts of the carrier that can be simulated.
-Simulated numbers live in the three `results.md` files. The design itself is described in [docs/power.md](../../docs/power.md).
+Simulated numbers live in the four `results.md` files. The design itself is described in [docs/power.md](../../docs/power.md).
 
 ## Setup
 
-Python 3.10 or newer. The heat model needs NumPy and SciPy, the other suites use only the standard library.
+Python 3.10 or newer. The heat and EMI models need NumPy (heat also SciPy). Charging transient graphs use Matplotlib. The other suites use only the standard library.
 
 ```sh
 python3 -m venv hardware/sim/.venv
@@ -13,7 +13,7 @@ source hardware/sim/.venv/bin/activate
 python -m pip install -r hardware/sim/requirements.txt
 ```
 
-The thermal cut-off and converter suites need ngspice on the PATH (`brew install ngspice`, version 47 used).
+The thermal cut-off, converter and EMI suites need ngspice on the PATH (`brew install ngspice`, version 47 used).
 
 ## Running
 
@@ -21,6 +21,8 @@ The thermal cut-off and converter suites need ngspice on the PATH (`brew install
 python3 hardware/sim/run_thermal.py --write    # thermal charge cut-off, report in thermal/results.md
 python3 hardware/sim/run_power.py --write      # converters, report in power/results.md
 python3 hardware/sim/run_heat.py --write       # power loss and temperatures, report in heat/results.md
+python3 hardware/sim/run_charge_heat.py --write # battery heating delay, heat/charging.pdf and SVGs
+python3 hardware/sim/run_emi.py --write        # emission estimate, report in emi/results.md, FLARM spectrum in emi/spectrum_flarm.svg/.pdf
 python3 hardware/sim/vent_model.py             # vented enclosure sweep, prints to the terminal
 ```
 
@@ -33,8 +35,9 @@ Without `--write` a script prints its report and stores nothing. `vent_model.py`
 | `run_power.py` | `--fast` | Skip the ngspice benches, closed-form checks only |
 | `run_heat.py` | `--pcb FILE` | Read another board file, for example a copy with refilled zones |
 | `run_heat.py` | `--no-heatsink` | Model the board without the U4 heatsink |
+| `run_emi.py` | `--fast` | Skip the ngspice benches, closed-form spectra and board checks only |
 
-The ngspice suites take a few seconds. The heat run takes about 20 seconds.
+The ngspice suites take a few seconds, the EMI run about 10. The heat run takes about 20 seconds.
 The exit code is 1 if a model check fails. Such a failure describes a modelled design limit, not necessarily a solver failure.
 
 Solver and operating-point regressions:
@@ -53,10 +56,13 @@ Shared and scripts:
 | `run_thermal.py` | Thermal charge cut-off: runs the benches over all corners and checks them against data sheet thresholds |
 | `run_power.py` | Converters: TPS61088 loop gain in closed form, ripple and transient benches, undervoltage cut-off, switch-node coupling read from the board file |
 | `run_heat.py` | Power loss and temperatures on the routed board inside an assumed enclosure, with and without the U4 heatsink |
+| `run_charge_heat.py` | Five-node transient charging model, pack inertia and JEITA cutoff, 5 Ah and 10 Ah graphs |
+| `run_emi.py` | Emission estimate: converter hot loops and edges, digital signals, radiated and conducted levels against CISPR 32 class B, converter lines in the receiver bands, return paths and rail ripple, all with geometry from the board |
 | `vent_model.py` | Lumped vented-enclosure model: stack-effect vents and a fan against case air, pack and U4 temperature |
 | `test_power.py` | Module-feed forward drop, branch currents, reverse isolation and shutdown solver regressions |
 | `test_heat.py` | Analytic network checks, layer and via temperatures, zero-current cases, numerical failure checks, operating-point regressions, vent model constants against the heat model |
-| `requirements.txt` | NumPy and SciPy for the heat model |
+| `test_emi.py` | Spectrum helpers against closed forms, Ott's loop formula, limits, microstrip, geometry, and the board: hot loops found, In1 solid, return-path gaps |
+| `requirements.txt` | NumPy and SciPy for the heat and EMI models |
 
 Thermal charge cut-off:
 
@@ -87,6 +93,17 @@ Power loss and temperatures:
 |---|---|
 | `heat/results.md` | Last stored report |
 | `heat/map_*.svg` | Top-copper temperature maps, see below |
+| `heat/charging.pdf`, `heat/charging_*.svg` | Both pack sizes, current limits, heating-delay sensitivity and illustrative external spreader paths |
+| `heat/charging.md`, `heat/charging.json` | Transient assumptions, results, board/input hashes and steady calibration points |
+
+EMI:
+
+| Path | Content |
+|---|---|
+| `emi/switch_edge.cir` | One switching period of a converter hot loop at 10 ps: gate-limited switches, body diodes, switch output capacitances, the loop inductance from the board, capacitor bank, optional snubber. Serves both converters through gate weights |
+| `emi/usb_lisn.cir` | Buck input current pulses into the BYP, CHGIN and J1 capacitors, the USB_VBUS copper, a USB cable and a CISPR 16 LISN; optional bead at J1 and adapter output capacitor |
+| `emi/results.md` | Last stored report |
+| `emi/spectrum_flarm.svg`, `.pdf` | Converter and digital lines at the FLARM antenna, 1 MHz to 2 GHz and a zoom on 868.2 / 868.4 MHz |
 
 The maps cover four cases at 25 °C ambient:
 
@@ -203,16 +220,36 @@ Solver:
 
 Assumptions that decide the numbers:
 
-- The enclosure does not exist yet. The closed case is a sealed 115 x 105 x 40 mm printed box (6.3 K/W to ambient) holding board, modules and pack. Everything dissipated inside heats its air.
+- The enclosure does not exist yet. The closed case is a 115 x 105 x 40 mm printed box holding board, modules and pack, with a 5 cm² inlet and a 5 cm² outlet. The wall path is 6.3 K/W to ambient. Natural draft through the vents adds a parallel heat path. Everything dissipated inside heats its air.
 - The open case is the board on a bench. Real numbers lie between the two and depend on vents.
 - The MAX77757 switching loss is an estimate. The TPS61088 fit rests on the project's curve, which is TI's figure less an estimated 2 points.
 - Contact, fuse and pack DC resistances are data sheet maxima or estimates. The USB cable is not included.
 - Zone fills are read as stored. Refill the zones in KiCad before a run after layout changes, or pass a refilled copy with `--pcb`.
 
+### EMI
+
+`run_emi.py` is a pre-compliance estimate, good to an order of magnitude. It exists to rank the sources and to show which knob moves each one before a chamber visit, not to predict a pass.
+
+Sources:
+
+- The converters are simulated for one period in `emi/switch_edge.cir`. The switches conduct the smaller of their ohmic current and a gate-limited current, so the edge parameter sets the current slew (10 A per gate ramp, 5 ns nominal, 2 and 10 ns swept). The loop inductance is derived from the board: the copper runs between the pads of the hot loop as microstrip over the plane 0.2 mm below, plus capacitor ESL, vias and 1 nH for the package. The loop area is the polygon through the pad centres. The switch output capacitance is not on either data sheet; 1 nF (boost) and 300 pF (buck) are assumed and swept by a factor of two. Line spectra come from the Fourier transform of one period, cross-checked against the trapezoid closed form at the low harmonics.
+- Digital nets get their track length, capacitance and layer from the board. The edge at the far end combines an assumed driver edge (2 to 10 ns) with the RC of the series resistor and the load. Their loop is the track over the plane.
+- The inductor leakage field uses the triangle ripple current, 5 turns of 10 mm² and 10 % leakage, as in `run_power.py`.
+
+Levels:
+
+- Radiated: Ott's small-loop formula with the test-site ground reflection at 3 m, against CISPR 32 class B. Lines closer than the receiver bandwidth add as power.
+- Receiver bands: the same loops at the antenna (mount position plus 30 mm, free space with the near-field term), received by a dipole with its far-field aperture, compared with the receiver's thermal noise floor less 6 dB. The aperture overstates the coupling at a quarter wavelength; the result ranks the sources, it does not predict the desense in dB.
+- Conducted: `emi/usb_lisn.cir` measures the buck input ripple that reaches a LISN at the end of a 1 m USB cable. This is the CISPR 32 method for a DC power port and the worst case for the mains port; a real adapter's output capacitor absorbs most of it, which the adapter row shows.
+- Return paths: bottom-layer signal tracks over In2 power copper and crossings of In2 power tracks, sampled every 0.1 mm. In1 is checked to be GND only.
+- Rails: track R and L per net, the RAIL_5V ripple reaching the module sockets through the LM73100 and the copper, and the VSYS ripple that drives the untwisted pack leads as a 500 mm² loop.
+
+Not modelled: common-mode currents on the antenna coax and the USB cable, the modules' own emissions (ESP32-S3 clocks and Wi-Fi, RP2040, CC1312), the enclosure, cable resonances, and the electric-dipole radiation of the switch-node copper (negligible at these areas). Digital nets below 1 Hz repetition (PPS) are read with the peak detector in the radiated table, which overstates the quasi-peak by 20 to 40 dB.
+
 ### Vented enclosure
 
-`vent_model.py` adds a vent path and a fan path in parallel with the sealed wall path of the heat model.
+`vent_model.py` supplies the shared wall and vent heat balance used by `run_heat.py`, and adds a fan path for its own sweeps.
 It is a lumped steady-state estimate of case air, pack and U4 temperature over vent area.
 
-- The enclosure parameters and the component rises over case air are constants copied from the heat model (closed case, 25 °C, high corner). Update them by hand after the heat model changes; `test_heat.py` fails when they drift.
-- Vents are modelled as stack-effect openings, inlet low and outlet high, with a 50 % open grille.
+- The lumped model's enclosure parameters and component rises over case air are copied from the sealed heat model (25 °C, high corner). Its consistency test explicitly disables vents in both models. Temperature tolerance is 1 °C; charge-current tolerance is 0.05 A.
+- Both models default to 5 cm² per opening, inlet low and outlet high, 35 mm vertical separation and a 50 % open grille. Each opening therefore has 2.5 cm² free area. `VENT_AREA_CM2` and `VENT_HEIGHT_M` in `vent_model.py` set these assumptions. Pass zero vent area for the sealed reference.

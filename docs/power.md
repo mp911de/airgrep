@@ -10,8 +10,8 @@ battery -- fuse --+-- MAX77757 BATT -- SYS -- TPS61088 boost -- TPS22975 load sw
                   +-- MAX17048 gauge -- I2C -- display ESP32
                   +-- NTC -- MAX77757 THM
 SYS -- R43 -- thermostat contact -- THERM_OK
-5 V rail -- LM73100 U12 -- shunt JP1 -- display VBUS    (remove for display USB service)
-5 V rail -- LM73100 U11 -- shunt JP2 -- ADSBee 5VIN     (remove for ADSBee USB service)
+5 V rail -- LM73100 U12 -- shunt JP1 -- display VBUS
+5 V rail -- LM73100 U11 -- shunt JP2 -- ADSBee 5VIN
 ADSBee 3V3 out -- GNSS 3.3 V
 ```
 
@@ -88,7 +88,7 @@ The pack thermistor is a Variohm ENTC-EB-100K4262-02 (100 kΩ, B25/85 4262 K ±0
 | Part | Pin or function | Value | Note |
 |---|---|---|---|
 | C5 | CHGIN | 2.2 µF 25 V | |
-| C6, C33 | BYP | 2 x 10 µF 25 V | about 12 µF at 5 V |
+| C6, C33 | BYP | 10 µF 25 V + 22 µF 16 V | matches data sheet Table 4; DC-bias derating unverified |
 | C9, C10 | SYS | 2 x 22 µF 10 V | data sheet asks for 2 x 10 µF |
 | C11 | BATT | 10 µF 25 V | |
 | C7 | VDD | 2.2 µF 25 V | 1.8 V internal rail, no external load |
@@ -102,12 +102,13 @@ All bulk ceramics are X7R (125 °C):
 
 | Value | Part | LCSC | Used for |
 |---|---|---|---|
-| 1 µF 50 V 0603 | Taiyo Yuden UMK107AB7105KA-T | C105174 | C1 |
+| 4.7 µF 50 V 0805 | Murata GRM21BZ71H475KE15L | C437557 | C1 |
 | 2.2 µF 25 V 0603 | Murata GRM188Z71E225KE43D | C415535 | C5, C7, C15, C34 |
-| 10 µF 25 V 0805 | Samsung CL21B106KAYQNNE | C3039694 | C6, C11, C24 to C26, C33 |
+| 10 µF 25 V 0805 | Samsung CL21B106KAYQNNE | C3039694 | C6, C11, C24 to C26 |
 | 22 µF 10 V 0805 | Murata GRM21BZ71A226ME15L | C907991 | C9, C10, C13, C14, C18 to C20 |
+| 22 µF 16 V 1206 | [Taiyo Yuden EMK316BB7226ML-T](https://ds.yuden.co.jp/TYCOMPAS/ut/detail?pn=EMK316BB7226ML-T) | C385906 | C33 |
 
-The 22 µF parts lose 52 % of their capacitance at 5 V and 44 % at 4.2 V (`datasheets/murata-grm21bz71a226.pdf`). The simulations use the derated values.
+The Murata 22 µF 10 V parts lose 52 % of their capacitance at 5 V and 44 % at 4.2 V (`datasheets/murata-grm21bz71a226.pdf`). The simulations use the derated values.
 
 L1 uses the footprint `IND-SMD_L7.0-W6.6_FXL0630` (pads 2.72 x 3.6 mm). It covers both the vendor land pattern and the terminal position of the JLCPCB part.
 
@@ -120,7 +121,7 @@ Distances are pad centre to pin centre, measured on the board.
 | C8 | BST (1), LX (21) | 1.8 mm, 1.6 mm |
 | C34 | PVL (17) | 2.9 mm |
 | C7 | VDD (10) | 3.4 mm |
-| C33, C6 | BYP (22) | 3.8 mm, 4.2 mm |
+| C33, C6 | BYP (22) | 4.3 mm, 2.1 mm |
 | C11 | BATT (13) | 4.0 mm |
 | C14, C10, C9 | SYS (15, 16) | 12.1 mm, 14.3 mm, 18.1 mm |
 
@@ -133,21 +134,43 @@ Distances are pad centre to pin centre, measured on the board.
 
 ### Heatsink
 
-A 10 x 10 mm aluminium sink (Fischer ICK S 10 x 10 x 6.5, or ICK BGA 10 x 10 x 6) sits on the package top, bonded with thermal epoxy to a 1.5 mm copper spacer. The spacer lifts the sink over the 0805 capacitors, which are taller than the 0.65 mm package. C6, C7, C8, C11, C33, C34, R6 and R8 lie under the sink. The stack is about 8.9 mm high, 0.4 mm above the top of the module sockets; no module overhangs U4.
+A 10 x 10 mm aluminium sink (Fischer ICK S 10 x 10 x 6.5, or ICK BGA 10 x 10 x 6) sits on the package top, bonded with thermal epoxy to a 1.5 mm copper spacer. The spacer lifts the sink over the 0805 and 1206 capacitors, which are taller than the 0.65 mm package. C6, C7, C8, C11, C33, C34, R6 and R8 lie under the sink. The stack is about 8.9 mm high, 0.4 mm above the top of the module sockets; no module overhangs U4.
 
 Heat model, 3 A source, charging with 0.8 A load, 25 °C ambient (`hardware/sim/heat/results.md`):
 
 | Condition | Cell 3.7 V | Cell 3.2 V |
 |---|---|---|
-| Open bench, with sink: U4 junction at 1.8 A | 69 °C | 75 °C |
-| Open bench, bare: U4 junction at 1.8 A | 90 °C | 100 °C |
-| Closed case, with sink: charge current | 1.80 A at 125 °C | 1.70 A at 130 °C |
-| Closed case, bare: charge current | 1.48 A at 130 °C | 1.24 A at 130 °C |
+| Open bench, with sink: U4 junction at 1.8 A | 70 °C | 76 °C |
+| Open bench, bare: U4 junction at 1.8 A | 92 °C | 102 °C |
+| Closed case, with sink: charge current | 1.80 A at 118 °C | 1.80 A at 127 °C |
+| Closed case, bare: charge current | 1.59 A at 130 °C | 1.35 A at 130 °C |
 
-- In the closed case the charger's thermal regulation holds the junction at 130 °C by reducing the charge current.
-- Charging with the device off in the closed case: 1.8 A, U4 at 63 °C.
+- The closed case includes the selected 5 cm² inlet and 5 cm² outlet. These nominal-corner figures model junction regulation only; pack JEITA may stop charging first.
+- Charging with the device off in the closed case: 1.8 A, U4 at 62 °C.
 - On battery U4 dissipates under 0.1 W and the sink makes no difference.
 - The sink path is an estimate. Junction to package top is not published for this package; the model assumes 35 K/W.
+
+### Earlier charge limiting
+
+The [transient graphs](../hardware/sim/heat/charging.pdf) model battery heating delay and JEITA cutoff for both packs. [Assumptions and results](../hardware/sim/heat/charging.md) distinguish estimated timing from measured behaviour. The 90-100 °C limiter and external spreader paths are proposals, not fitted hardware.
+
+The MAX77757's native 130 °C threshold is fixed. Options:
+
+- Lower the IFAST resistance total from 12.4 kΩ (1.8 A) to 8.2 kΩ (1.2 A) or 6.65 kΩ (1 A). This also lowers the termination-current threshold from 75 to 50 mA. Values are from [Table 3](https://www.analog.com/media/en/technical-documentation/data-sheets/MAX77757.pdf).
+- Add a [TMP302 temperature switch](https://www.ti.com/product/TMP302) beside U4 and use its output to disable charging through THM, preserving the pack NTC. Selectable thresholds and hysteresis allow an earlier stop and restart. Sensor placement, junction offset, supply and output interface need circuit design and bench checks.
+- Use a sensor and switched IFAST resistors for staged reduction, then THM for complete charge suspension. Runtime IFAST switching is not explicitly characterised in the datasheet; verify it with ADI and on the bench. The plotted continuous taper is an ideal target, not a claim that IFAST supports an analogue control voltage.
+
+PCB or heatsink temperature is below U4 junction temperature by a load-dependent amount. A 95 °C sensor threshold does not establish a 100 °C junction ceiling. Keep the pack NTC and thermostat independent. Charging suspension leaves the USB system load running.
+
+Heat-spreader materials to evaluate:
+
+| Part | Purpose | Limit |
+|---|---|---|
+| [Würth WE-TGS 4051100100017](https://www.we-online.com/components/products/datasheet/4051100100017.pdf) | 100 x 100 mm, 37 µm graphite laminate, spreads heat across a surface | 120 °C maximum. Conductive graphite requires separate insulation; do not rely on the adhesive as electrical protection. |
+| [Würth WE-TGF 40016005](https://www.we-online.com/components/products/datasheet/40016005.pdf) | 100 x 100 x 0.5 mm, 6 W/mK insulating gap pad between PCB and metal spreader | Fills a gap; it is not a lateral heat spreader. Select thickness for the actual clearance. |
+| [Würth sample kit 400002](https://www.we-online.com/en/components/products/THERMAL_SAMPLE_KIT_HEAT_SPREADING_SOLUTIONS) | Graphite sheet and graphite foam gasket samples | Useful for comparing handling and fit. |
+
+For a first prototype, compare a thin copper or aluminium plate plus an insulating gap pad with graphite. Connect the spreader to exposed metal or outside airflow. A strip's lateral resistance depends on thickness and width, not just conductivity. Keep metal clear of the module antennas and avoid a thermal bridge into the battery.
 
 ## Input protection
 
@@ -155,10 +178,12 @@ Heat model, 3 A source, charging with 0.8 A load, 25 °C ambient (`hardware/sim/
 |---|---|---|---|
 | D3 | USB_VBUS | SMAJ12A, unidirectional, cathode to VBUS | breakdown 13.3 V minimum, clamp 19.9 V at 20.8 A |
 | D6 to D9 | CC1, CC2, D+, D- | H5VLD3B, 5 V, SOD-323 (C20615805) | at the connector |
-| C1, C5 | USB_VBUS | 1 µF at J1, 2.2 µF at U4 | 3.2 µF in total, below the 10 µF hot-plug limit |
+| C1, C5 | USB_VBUS_J1, USB_VBUS | 4.7 µF at J1, 2.2 µF at U4 | 6.9 µF in total, below the 10 µF hot-plug limit |
+| FB1 | USB_VBUS_J1 to USB_VBUS | Murata BLM31KN471SZ1L, 470 Ω at 100 MHz, 4 A, 20 mΩ, 1206 (C710518) | with C1, keeps the charger's 1.3 MHz input ripple off the USB cable |
 
 - A USB-C source does not deliver more than 5 V without PD, so D3 only sees ESD and surge.
 - The BYP capacitors are behind the charger's input switch and do not count as VBUS capacitance.
+- J1, D3 and C1 sit on USB_VBUS_J1, ahead of FB1. The EMI estimate gives 13 to 32 dB conducted margin with FB1 and -2 dB with FB1 replaced by 0 Ω (`hardware/sim/emi/results.md`). FB1's inductance at 3 A is an estimate.
 - Reverse blocking, over-voltage lockout and the input current limit are functions of the charger.
 
 ## Battery pack
@@ -251,7 +276,7 @@ U6 TPS61088RHLR (LCSC C87357) converts SYS (3.1 to 4.4 V) to 5.06 V. The load is
 - PWR_EN enables U6 and U7 together. The load switch rises slower than the boost soft start, so rail inrush does not reach the boost current limit.
 - BOOST_5V stays charged behind the open load switch after shutdown.
 - SW1 (HRO K3-1280S-F1, LCSC C92658) carries control current only. Terminal 2, the middle pad, is the common.
-- Fit the snubber only if the bench shows switch-edge ringing in the receiver bands. The model shows ringing near 1 GHz; its real amplitude depends on the layout.
+- Fit the snubber only if the bench shows switch-edge ringing in the receiver bands. The EMI estimate (`hardware/sim/emi/results.md`) puts the ring at about 80 MHz with the board's loop inductance and the edge tail of both converters within a few dB of the receiver noise floors; the real amplitude depends on the IC's edges and switch capacitance.
 - L1 and L2 are 13 mm apart, centre to centre. Simulated magnetic pickup is at most 0.08 mV into the THM network and 0.03 mV between the inductors.
 
 ### Simulated behaviour
@@ -326,27 +351,27 @@ Closed case, 25 °C ambient, nominal corner (`hardware/sim/heat/results.md`):
 
 | Operating point | Board loss | Cell to 5 V |
 |---|---|---|
-| Battery 3.1 V, typical 1.22 W load | 162 mW | 89.9 % |
-| Battery 3.1 V, 0.8 A load | 450 mW | 89.3 % |
-| Battery 3.1 V, 1.0 A load | 616 mW | 88.0 % |
-| USB 3 A source, cell 3.7 V, charging, 0.8 A load | 2.42 W | |
+| Battery 3.1 V, typical 1.22 W load | 166 mW | 89.9 % |
+| Battery 3.1 V, 0.8 A load | 458 mW | 89.4 % |
+| Battery 3.1 V, 1.0 A load | 626 mW | 88.2 % |
+| USB 3 A source, cell 3.7 V, charging, 0.8 A load | 2.41 W | |
 
-- At 0.8 A on battery the largest items are U6 (202 mW), L2 (55 mW), the charger's BATT-to-SYS switch (44 mW), the LEDs (32 mW) and F1 (21 mW).
-- While charging the charger buck dissipates 1.61 W. L1, the USB copper and the USB contacts add 70 to 100 mW each.
+- At 0.8 A on battery the largest items are U6 (201 mW), L2 (54 mW), the charger's BATT-to-SYS switch (43 mW), the LEDs (32 mW) and F1 (21 mW).
+- While charging the charger buck dissipates 1.58 W. L1, the USB copper and the USB contacts add about 70 to 100 mW each.
 
 ### Temperatures
 
-Heat model at 25 °C ambient unless stated (`hardware/sim/heat/results.md`). The closed case is an assumed unvented printed enclosure; the enclosure is not designed yet. U4 is covered under [Heatsink](#heatsink).
+Heat model at 25 °C ambient unless stated (`hardware/sim/heat/results.md`). The closed case includes a 5 cm² lower inlet and a 5 cm² upper outlet, 50 % open grille and 35 mm vertical separation. The enclosure is not designed yet. U4 is covered under [Heatsink](#heatsink).
 
 | Item | Open bench | Closed case | Closed case, 50 °C ambient |
 |---|---|---|---|
-| U6 junction at 1 A load | 36 °C | 75 to 76 °C | 100 to 102 °C |
-| Hottest capacitor | 53 °C (C34) | 106 °C (C34, charging) | 99 °C (C18, 1 A load) |
-| Pack at 0.8 A load | 26 °C | 55 to 56 °C | 80 °C |
-| Pack at 1.0 A load | 27 °C | 63 to 65 °C | 88 to 90 °C |
+| U6 junction at 1 A load | 36 °C | 69 to 70 °C | 94 to 96 °C |
+| Hottest capacitor | 57 °C (C6) | 108 °C (C6, charging) | 93 °C (C15, 1 A load) |
+| Pack at 0.8 A load | 26 °C | 50 to 51 °C | 76 to 77 °C |
+| Pack at 1.0 A load | 27 °C | 57 to 58 °C | 82 to 84 °C |
 
 - L2 and U7 stay below 100 °C, the X7R capacitors below their 125 °C rating.
-- In the closed case the pack reaches the thermostat's lowest opening point (55 °C) at 0.8 A load. The enclosure needs vents; see `hardware/sim/vent_model.py` and [open-issues.md](open-issues.md).
+- With the selected vents, the pack stays below the thermostat's lowest opening point (55 °C) at 0.8 A and 25 °C ambient, but exceeds it at 1.0 A. These estimates do not simulate thermostat or JEITA shutdown; see [open-issues.md](open-issues.md).
 
 ## Gauge
 

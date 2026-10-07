@@ -51,8 +51,8 @@
     "_module": "u-blox MAX-M10S data sheet UBX-20035208 R02, Table 13, GPS+GAL+GLO: tracking 7.0 + 2.3 mA (VCC + V_IO), acquisition 9.0 + 2.3 mA at 3.0 V",
     "breakout_led_ma": 1.5,
     "_breakout_led_ma": "SparkFun GPS-18037 power LED; PPS LED blinks only with fix. Estimate.",
-    "active_antenna_ma": 10,
-    "_active_antenna_ma": "Typical active GNSS antenna LNA bias at 3.3 V, to be measured (docs/open-issues.md). Set 0 for a passive antenna."
+    "active_antenna_ma": 25,
+    "_active_antenna_ma": "Abracon AANE-AP-0164 LNA, 15 to 25 mA at 3.0 to 5.0 V, maximum used (datasheets/abracon-aane-ap-0164.pdf). Set 0 for a passive antenna."
   },
 
   "brightness_levels": [1.0, 0.5],
@@ -61,7 +61,7 @@
     "charge_current_a": 1.8,
     "_charge_current_a": "MAX77757 IFAST: R6 + R37 = 6.2 kΩ + 6.2 kΩ in series = 12.4 kΩ (1 %, Basic C4260 each); data sheet Table 3 gives 1.8 A nominal, top-off 75 mA.",
     "charger_efficiency": 0.90,
-    "_charger_efficiency": "MAX77757 1.3 MHz buck at 5 V in, about 3.8 V out, 1 to 2 A: about 90 % (data sheet typical operating characteristics). Estimate.",
+    "_charger_efficiency": "MAX77757 1.3 MHz buck at 5 V in, about 3.8 V out, 1 to 2 A: about 90 % (data sheet typical operating characteristics). The heat model agrees at the input currents used here: 90.3 % at 1.4 A in (device off); it drops to 86 to 87 % only at 2.5 A in with the device running (hardware/sim/heat/results.md).",
     "cv_tail_hours_per_ah": 0.12,
     "_cv_tail_hours_per_ah": "Constant-voltage phase after the constant-current phase until termination. Rule of thumb for LiPo at 0.2 to 0.5 C. Estimate.",
     "cc_fraction": 0.85,

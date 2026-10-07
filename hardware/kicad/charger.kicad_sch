@@ -7,6 +7,7 @@
 	(title_block
 		(title "Charger MAX77757")
 		(rev "A")
+		(comment 1 "commit ${GIT_COMMIT}")
 	)
 	(lib_symbols
 		(symbol "Connector_Generic:Conn_01x02"
@@ -4303,7 +4304,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "10u 25V X7R"
+		(property "Value" "22u 16V X7R"
 			(at 121.92 107.95 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4314,7 +4315,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 119.38 106.68 0)
 			(hide yes)
 			(show_name no)
@@ -4325,7 +4326,7 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://ds.yuden.co.jp/TYCOMPAS/ut/detail?pn=EMK316BB7226ML-T"
 			(at 119.38 106.68 0)
 			(hide yes)
 			(show_name no)
@@ -4347,7 +4348,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C3039694"
+		(property "LCSC" "C385906"
 			(at 119.38 106.68 0)
 			(hide yes)
 			(show_name no)

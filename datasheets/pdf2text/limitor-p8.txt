@@ -1,0 +1,116 @@
+Schutz-
+Temperaturbegrenzer P
+                                                                            Temperatur, Strom, Zeit unter Kontrolle
+
+
+
+
+                                                                      £ sehr kleine
+                                                                          Bauform
+
+                                                                      £ vergussdichtes
+                                                                          Gehäuse
+
+                                                                      £ gute Wärme-
+Einsatzgebiet                      unterbricht somit den
+                                                                          übertragung durch
+Der Temperaturwächter P findet
+                                   elektrischen Stromkreis des zu         homogene Bauform
+                                   schützenden Gerätes.
+überall dort Anwendung, wo
+ein Schutz vor Übertemperatur      Nach dem Abkühlen und
+                                                                      £ hohe Temperatur-
+gefordert ist.                     Erreichen der Einschalt-               empfindlichkeit
+Konkrete Einsatzfälle sind der     temperatur T E erfolgt auto-
+Schutz von Primärwicklungen        matisch die Rückschaltung und      £ kurze Reaktionszeit
+bei Trafos, Wicklungsschutz von    damit das Schließen des
+Kleinmotoren und allgemeiner       Kontaktsystems. Der Stromkreis
+Temperaturschutz bei               ist somit wieder geschlossen.
+elektrischen Kleingeräten.
+
+
+Funktion                            Schaltschema                    Konfigurationsmöglichkeiten
+
+Der Temperaturwächter P
+arbeitet stromunabhängig.
+Die Temperaturerfassung
+erfolgt mittels Bimetallscheibe,
+welche vorher entsprechend
+der gewünschten Abschalt-
+                                    Funktionsschema
+temperatur T A dimensioniert
+wurde.
+
+Bei Erreichen dieser fixierten
+Abschalttemperatur T A schnappt
+die Bimetallscheibe um, öffnet
+dabei ein Kontaktsystem und
+Technische Daten Schutz-Temperaturbegrenzer P
+   Schaltleistung:                    250 V; 2,5 (1,6) A / 50 Hz                          Maßzeichnung P8
+
+   Min. Strom:                        20 mA
+   Schalttemperatur:                  40°C – 150°C,
+                                      (±5 oder ±10), in 5 Kelvin Schritten
+   max. Schaltleistung:               2,5 A cos Φ 1,00 / 250 V, 150°C
+                                      4,0 A cos Φ 0,45 / 250 V, 135°C
+                                                                                         alternativ:
+   Schaltdifferential:                abhängig v. Schalttemperatur
+                                      im Bereich von 10 K – 60 K                         5er Gehäuse:
+                                                                                         H 4,0 x B 8,0 x L 16,0
+   Wirkungsweise:                     2.B (max. Drift ±5 K)
+                                                                                         1er Gehäuse:
+   max. Dauertemperatur:              160°C / 200°C, 1 Minute
+                                                                                         H 3,6 x B 8,0 x L 14,5
+   Approbationen:                     VDE (EN 60730)
+                                      UL 2111, RoHS-konform
+
+
+Technische Angaben                                  eine sehr schnelle Reaktion. Seine   Zubehör
+                                                    rechteckige, homogene Bauform
+Das Gehäuse des Schalters besteht
+                                                    ermöglicht eine sehr gute Wärme-
+aus einem Halbgehäuse, das
+                                                    übertragung.
+wahlweise in einem Sackgehäuse
+                                                    Das Gehäuse ist temperatur-                             Befestigungsbügel
+vergossen (P8), eingeklippt (P5)
+                                                    beständig (Dauertemperatur 160°C),   Befestigungsclip
+oder mittels Schnappdeckel (P1)
+                                                    wobei kurzzeitig eine Erwärmung
+verschlossen wird.
+                                                    bis max. 200°C zulässig ist.
+Die vergussdichte Ausführung
+ermöglicht den Einsatz in „rauen”                   Die Standardausführung besitzt
+Umgebungsbedingungen.                               einen Litzen-, oder Drahtanschluss
+Alle Gehäuseausführungen sind                       (AWG 24) von 100 mm Länge
+dicht (IP00) und spannungsfrei.                     (Länge der Abisolierung 10mm).
+
+Der P-Schalter gehört mit seiner                    Auf Wunsch sind größere
+Bauform zu den kleinsten                            Querschnitte bis AWG 22 sowie
+Thermostaten. Dies gewährleistet                    Sonderlängen möglich.
+
+
+   Typenschlüssel P-Schalter (Schalter mit automatischer Rückschaltung)
+
+   P 8 X - XXX - XX - XXX
+                                              Litzenlänge in mm                          Beispiel Typenschlüssel:
+                                              Standard = 100 mm
+                                                                                         P 8 2 – 125 – 05 – 100
+                                              Toleranz in K                              Thermoschalter mit
+                                              (+/- 5/10 K)                               automatischer Rückschaltung
+
+                                              Ansprechtemperatur in °C                   Litze isoliert (Standard AWG 24)
+                                              40,45,50,...150°C                          125°C Abschalttemperatur
+                                              Anschlussart:                              ±5 K Toleranz
+                                              2 = Litze isoliert
+                                              3 = Draht isoliert                         100 mm Litzenlänge
+                                              •                                          (10 mm abisoliert)
+                                              •
+                                              •
+                                              8er-Gehäuse (vergussdicht)
+
+
+                                                      Limitor GmbH             Tel 07181/48390-0              info@limitor.de
+         Temperatur, Strom, Zeit unter Kontrolle      Dieselstraße 22          Fax 07181/48390-10             www.limitor.de
+                                                      D-73660 Urbach                             Stand: 05.03.2013 Änderungen vorbehalten
+

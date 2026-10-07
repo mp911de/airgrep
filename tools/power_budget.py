@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Power budget, runtime and charge-time calculation for the Flybee carrier.
+"""Power budget, runtime and charge-time calculation for the airgrep carrier.
 
 Reads specs/power_params.json, prints the results as Markdown and replaces the
 generated block in docs/specs.md (between the BEGIN/END GENERATED markers).

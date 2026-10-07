@@ -26,9 +26,9 @@ Placement rules:
 - The pack connectors J2, J3, J4 and the pack fuse F1 are at the bottom, left of centre, reachable with the rear cover off.
 - Shunt JP1 is left of the display and stays reachable with the display fitted. JP2 lies under the lower right corner of the ADSBee outline.
 - The antenna mounts are MH6 (GNSS), MH7 (868 MHz) and MH8 (1090 MHz). MH6 is 20.6 mm from the GNSS SMA axis at x = 19.3, so an SMA adapter or a short lead fits.
-- The ADSBee is portrait, 30 x 48 mm. Its own USB-C faces down, above the boost converter. Its U.FL connectors are at the upper left corner.
+- The ADSBee is portrait, measured 29.86 to 29.89 x 47.46 mm. Its own USB-C faces down, above the boost converter. Its U.FL connectors are at the upper left corner.
 
-Module outlines in the drawing follow the socket positions. The GNSS and display outlines come from the manufacturer CAD (`mechanical/source-geometry.json`), the ADSBee outline from an image estimate ([adsbee-estimate.md](../mechanical/adsbee-estimate.md)).
+Module outlines in the drawing follow the socket positions. GNSS and ADSBee sizes use the physical measurements recorded below and in [adsbee-estimate.md](../mechanical/adsbee-estimate.md); their edge offsets remain approximate. The display outline comes from manufacturer CAD (`mechanical/source-geometry.json`).
 
 ### Control sliders
 
@@ -68,21 +68,46 @@ All mounting hardware is M2.5. The carrier has nine 2.7 mm non-plated holes (KiC
 | Case | MH1, MH2, MH3, MH4 | (3.556, 3.556), (101.600, 3.556), (3.556, 91.440), (101.600, 91.440) | 3.40 to 3.56 mm from the edges |
 | GNSS | MH10, MH11 | (6.600, 17.531), (32.014, 17.520) | SparkFun GPS-18037 holes H2 and H1, within 0.012 mm of the module CAD |
 | Display | MH13 | (47.511, 64.195) | Seeed 100069905 hole H1, within 0.029 mm of the module CAD |
-| ADSBee | MH12, MH14 | (98.301, 18.097), (75.321, 58.561) | image estimate, see below |
+| ADSBee | MH12, MH14 | (98.2726, 18.1610), (75.3618, 58.6740) | measured, rounded to whole mil |
 | Antenna bulkheads | MH6, MH7, MH8 | (39.878, 7.112), (61.976, 7.112), (91.948, 7.112) | 6.5 mm hole, 11 mm keepout |
 
 Notes on the module holes:
 
 - GNSS: the two holes next to J5 are not drilled. They would sit 1.3 mm from the header row, and the header carries that edge.
 - Display: the other three module holes, at (67.53, 64.17), (67.53, 41.67) and (47.53, 41.67), are not drilled. The display rests on its four socket groups and the one standoff. The module CAD has 2.5 mm holes.
-- ADSBee: MH12 and MH14 are a diagonal pair on the 23.0 x 40.5 mm pattern of the manufacturer enclosure STEP. They sit 0.20 mm and 0.58 mm from the centres of the image estimate, inside its 0.5 mm planning allowance only for MH12.
+- ADSBee: MH12 and MH14 use the measured diagonal pair, rounded to a 22.9108 x 40.5130 mm pattern (902 x 1595 mil). The [measurement record](../mechanical/adsbee-estimate.md#physical-measurements-2026-10-08) includes the independent diagonal cross-check.
 - Module standoffs are 8.5 mm nominal to match the sockets. Case standoff height depends on the enclosure.
 
 Clearance around the 2.7 mm holes on the current board:
 
-- No copper other than GND within 3 mm of any hole centre, with one exception: a GNSS_TXO track on F.Cu ends 2.66 mm from the MH11 centre, under solder mask. A 5 mm hex standoff reaches 2.89 mm at its corners, so use a round standoff or a nylon washer there.
+- The nearest non-GND track edge is 6.13 mm from the MH11 centre.
 - The nearest courtyards are J10 at 3.2 mm from MH12, J9 at 3.6 mm from MH13 and J8 at 5.0 mm from MH14.
 - `carrier.kicad_dru` keeps copper clear of the holes.
+
+## Delivered GNSS measurements, 2026-10-08
+
+View: components facing the observer, 8-hole header at the bottom. Caliper readings in mm. Hole spans are between farthest walls, including diagonal spans. ADSBee readings and applied carrier positions are in [adsbee-estimate.md](../mechanical/adsbee-estimate.md#physical-measurements-2026-10-08).
+
+| Measurement | Reading |
+|---|---|
+| Bare PCB width x height | 31.12 x 38.62 |
+| All mounting hole diameters | 3.30 |
+| All header hole diameters | 0.99 |
+| Left PCB edge to nearest wall of each left mounting hole | 1.30 |
+| Right PCB edge to nearest wall of each right mounting hole | 1.20 |
+| Top edge to nearest wall of top-left / top-right mounting hole | 1.27 / 1.30 |
+| Bottom edge to nearest header-hole / mounting-hole wall | 0.85 / 1.10 |
+| Across the two top mounting holes, outer span | 28.69 |
+| Large mounting-hole diagonal | 44.95 |
+| Full 8-hole header outer span | 18.84 |
+| Top-left mounting hole to leftmost header hole | 36.50 |
+| Top-left mounting hole to rightmost header hole | 42.55 |
+| Top-right mounting hole to rightmost header hole | 36.72 |
+| Bottom-left mounting hole to leftmost header hole, diagonal | 6.13 |
+
+Keep the manufacturer's header and mounting-hole coordinates. The top mounting centre span is 25.39 mm versus 25.40 mm in CAD. The CAD mounting pattern (25.40 x 33.02 mm) predicts a 44.959 mm outer diagonal, agreeing with 44.95 mm measured. The short mounting-to-header diagonal is 6.13 mm versus 6.161 mm calculated using CAD centres and the measured hole diameters.
+
+The header centre span reads 17.85 mm versus nominal 17.78 mm. The long header diagonals disagree with one another by 0.225 mm under a parallel-row assumption. Do not move individual CAD holes to fit these readings or interpret the displayed hundredths as positioning accuracy. The placement drawing uses the measured 31.12 x 38.62 mm envelope. Horizontal registration centres the additional width around the CAD outline; vertical registration uses the measured 0.85 mm bottom gap plus the 0.495 mm header-hole radius. Edge registration remains approximate.
 
 ## Insulator board
 
@@ -113,6 +138,12 @@ From front to back:
 4. Spacers and insulator board.
 5. Battery, supported by the case.
 6. Rear cover.
+
+## Enclosure vents
+
+Provide a 5 cm² lower inlet and a 5 cm² upper outlet. These are geometric areas before the grille; the thermal model assumes 50 % free area and 35 mm vertical separation between the openings. Keep the internal airflow path clear of the battery, boards and wiring.
+
+The model assumes a 115 x 105 x 40 mm enclosure with 2 mm printed walls. Geometry and cooling remain to be verified in the actual enclosure.
 
 ## Open checks
 

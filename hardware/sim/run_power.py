@@ -597,9 +597,9 @@ TD_CT_OPEN, TP_SUPERVISOR = 40e-6, 30e-6  # reset delay with CT open, propagatio
 VIN_UVLO = 2.4  # TPS61088 VIN UVLO falling, minimum
 R_B2S = 20e-3  # MAX77757 BATT to SYS switch
 # Board copper, copied from the path resistances in heat/results.md (run_heat.py solves the
-# routed tracks and copper areas): J3 to F1 1.3 mOhm, F1 to U4 BATT 4.5 mOhm, U4 SYS to L2
-# 6.9 mOhm. Update these when the layout of the battery path changes.
-R_BOARD = 1.3e-3 + 4.5e-3 + 6.9e-3
+# routed tracks and copper areas): J3 to F1 1.3 mOhm, F1 to U4 BATT 4.6 mOhm, U4 SYS to L2
+# 6.2 mOhm. test_heat.py checks them against the heat model.
+R_BOARD = 1.3e-3 + 4.6e-3 + 6.2e-3
 R_SWITCH_BOARD = R_B2S + R_BOARD
 # Pack: <= 50 mOhm AC at 1 kHz and 50 % capacity (data sheet); the DC value near the end of
 # discharge with the protection FETs is assumed 2 to 3 times that. Harness: two JST-PH

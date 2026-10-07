@@ -33,11 +33,11 @@ SHEETS = {
 # socket on the board; the offsets come from the module geometry in this folder.
 #   name, note, anchor ref, envelope origin relative to pin 1 (dx, dy), size (w, h), label height, colour
 MODULES = [
-    ("GNSS GPS-18037", "", "J5", (-6.35, -36.83), (30.48, 38.10), 0.42, "#0369a1"),
+    ("GNSS GPS-18037", "measured outline", "J5", (-6.67, -37.275), (31.12, 38.62), 0.42, "#0369a1"),
     ("Display", "Seeed 100069905", "J6", (-24.2, -3.88), (26.4, 51.4), 0.53, "#047857"),
-    ("ADSBee 1090U", "image estimate", "J10", (-27.8, -38.6), (30.0, 48.0), 0.42, "#b91c1c"),
+    ("ADSBee 1090U", "measured outline", "J10", (-27.8, -39.11), (29.89, 47.46), 0.42, "#b91c1c"),
 ]
-GNSS_SMA = (15.24, 6.1, 6.4)   # axis from the envelope's left edge, length above the top edge, width
+GNSS_SMA = (15.56, 6.1, 6.4)   # axis from the envelope's left edge, length above the top edge, width
 ADSBEE_USB = (3.0, 9.0)        # reserved overhang below the envelope, assumed width (position along the edge unknown)
 
 ANTENNA = {"MH6": "GNSS", "MH7": "868 MHz", "MH8": "1090 MHz"}
@@ -178,7 +178,7 @@ def build():
     for note in ("Origin upper left, +Y down, mm, as in KiCad.",
                  "Part outlines are courtyards read from carrier.kicad_pcb.",
                  "Module outlines follow the socket positions.",
-                 "The ADSBee outline is an image estimate.",
+                 "GNSS and ADSBee sizes measured; edge offsets approximate.",
                  "Regenerate with mechanical/draw_placement.py."):
         text(kx, ky, note, size=1.5, anchor="lt", fill="#475569")
         ky += 2.6

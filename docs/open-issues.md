@@ -2,38 +2,27 @@
 
 Open work only, ordered by what blocks the next step. The design itself is described in [power.md](power.md), [mechanical.md](mechanical.md) and [interfaces.md](interfaces.md); closed items are in git.
 
-The three modules are ordered. The carrier board is not.
+The GNSS and ADSBee modules have arrived. The display is ordered. The carrier board is not.
 
 ## Before ordering the board
 
 - [ ] **Reverse-polarity protection at J3.** CSD25404Q3 (LCSC C2865523) selected; design and validate the bidirectional protection stage, including USB-powered reversed-pack insertion and depleted-pack recovery. Coordinate with the planned off-state battery disconnect. No indicator LED; see [issue 0002](../issues/0002-battery-reverse-polarity-protection.md).
 - [ ] **Silkscreen.** Labels on the top side:
-  - Add "ESP 5V" at JP1. ("REMOVE BEFORE USB" is on the board at JP1 and JP2 since 6 Oct.)
+  - Add "ESP 5V" at JP1.
   - Add "THERM" at J4, which is labelled on the bottom only.
 - [ ] **Battery connector rating.** J3 is JST-PH, rated 2 A per contact. The battery current is about 1.9 A at the 1 A load peak and about 3 A at the 1.5 A headroom near empty, and F1 is 5 A. Accept this for short peaks or change the connector ([interfaces.md](interfaces.md#carrier-connectors)).
 - [ ] **K3-1280S-F1 fit and assembly placement.** Compare a real C92658 F1 sample with the manufacturer-derived footprint, including its 0.90 mm peg holes and 3.075 mm peg-to-terminal-row offset. The supplier CAD mixes F2/K1 names and uses 3.406 mm; its 3D model is not trusted. Verify SW1-SW3 orientation and seating in the JLCPCB preview before ordering. Details in [physical controls](../workflows/physical-controls.md).
-- [ ] **Production files.** The set in `hardware/kicad/jlcpcb/` is older than the board: BOM and CPL lack R43, the CPL has outdated positions for R6, R8 and F1, and L1 is exported with the footprint `IND-SMD_L7.4-W6.6` instead of `IND-SMD_L7.0-W6.6_FXL0630`. The control change also replaces SW1/SW2 and adds SW3, U13, C40 and R48-R55; J12 is hand-fitted. Export again:
+- [ ] **Display fit.**
+  - The 8.5 mm socket stack against the controller and the microSD slot on the back of the display.
+  - An M2.5 screw in the module hole at MH13.
+  - One standoff plus four header groups against the touch force.
+- [ ] **Production files.** Regenerate `hardware/kicad/jlcpcb/` from the final board:
   - Fill all zones, save, run DRC with schematic parity.
   - Export Gerbers, BOM and CPL.
   - Run `tools/kpy tools/fix_cpl.py` after every CPL export. It corrects rotation and position of the parts whose JLCPCB model origin differs from the footprint; see the script header.
   - Record the JLCPCB class (Basic or Extended) per part; the project does not hold it yet.
   - Select stackup JLC04161H-2116C in the order.
 - [ ] **Insulator board.** Order `hardware/insulator/` together with the carrier ([mechanical.md](mechanical.md#insulator-board)).
-
-## Checks when the modules arrive
-
-These decide whether the board can be ordered as drawn.
-
-- [ ] **ADSBee geometry.** The sockets and holes rest on an image estimate ([adsbee-estimate.md](../mechanical/adsbee-estimate.md)). Measure on the module:
-  - Position and pin count of both header rows (J10, J11) and the offset between them.
-  - Hole positions against the header rows. MH14 lies outside the 0.5 mm allowance of the estimate ([mechanical.md](mechanical.md#mounting)).
-  - Clearance under the rear shield.
-  - Access to JP2, which lies under the estimated module outline, and room for a USB plug above the boost converter.
-- [ ] **Display fit.**
-  - The 8.5 mm socket stack against the controller and the microSD slot on the back of the display.
-  - An M2.5 screw in the module hole at MH13.
-  - One standoff plus four header groups against the touch force.
-- [ ] **GNSS standoff at MH11.** A track passes close to the hole ([mechanical.md](mechanical.md#mounting)). Check the standoff and the screw head on the real hardware.
 
 ## Assumptions to measure
 
@@ -42,12 +31,13 @@ The simulations rest on these. Each one changes a result if it is far off.
 - [ ] **Module input capacitance on the 5 V rail** (assumed 40 µF) and the modules' input voltage window (assumed 4.75 to 5.25 V, 5.5 V absolute). The diode-inclusive load-step model leaves only 42 mV above the lower limit at maximum LM73100 drop. Measure each branch's capacitance and load share as well as the voltage window; they set the load-step and start-up results.
 - [ ] **Peak 5 V current**, in particular ADSBee Wi-Fi bursts (assumed 1.0 A peak, 1.5 A short-term headroom).
 - [ ] **Battery pack DC resistance** near empty, new and aged, warm and cold (assumed 50 to 150 mΩ), and harness resistance (assumed 60 to 100 mΩ). They set the voltage at which the undervoltage latch trips.
-- [ ] **Boost switch-node ringing** near 1 GHz against the 1090 MHz receiver. The snubber R39/C36 has footprints but is not fitted (start with 2.2 Ω and 1 nF).
+- [ ] **Converter noise in the receiver bands.** `hardware/sim/emi/results.md` puts the edge tails of the boost and the charger within a few dB of the ADS-B and FLARM noise floors, with assumed edges and switch capacitances. Measure the ADSBee noise floor (trigger level) with each converter on and off, then with the snubber R39/C36 fitted (start with 2.2 Ω and 1 nF). The snubber gains under 1 dB at 868 MHz (`emi/spectrum_flarm.pdf`). Moving the switching frequency does not help: U4 is fixed, and the U6 lines sweep 27 MHz with VIN. A shield can over U6/L2 and U4/L1 is the remaining fix. Deferred: it conflicts with the heat sinks. Decide after the heat problem is solved and the bench shows a loss.
+- [ ] **USB input ripple.** FB1 and C1 at 4.7 µF filter the charger's 1.3 MHz ripple from the USB cable. Without them the model gives 74 dBµV into a LISN, 18 dB over the CISPR 32 class B limit for a DC port. With them the margin is 13 to 32 dB, depending on FB1's inductance at up to 3 A, which is estimated. Get Murata's DC-bias curve for BLM31KN471SZ1L, or measure the ripple at J1 with a 3 A source.
 - [ ] **Charger and boost temperature** at the intended load, in the enclosure, with the heatsink on U4 (thermocouple on the sink base). Compare against `hardware/sim/heat/results.md`.
-- [ ] **GNSS antenna bias current.** It must fit the ADSBee's 200 mA 3.3 V output.
 
 ## Bench tests at bring-up
 
+- [ ] **Module assembly.** Verify socket mating, clearance under the ADSBee rear shield, access to JP2 and room for the ADSBee USB plug above the boost converter.
 - [ ] **Before first power-up.**
   - Inspect the U6 and U7 solder joints. The exposed pads have unfilled thermal vias next to the paste windows.
   - Confirm the pack lead polarity at J3 (pin 1, square pad, is plus).
@@ -80,7 +70,7 @@ The simulations rest on these. Each one changes a result if it is far off.
 
 The enclosure is not designed yet. The carrier does not depend on these, the finished device does.
 
-- [ ] **Vents.** In a closed, unvented case the pack reaches the thermostat's opening range at 0.8 A load and 25 °C ambient, and two heat checks fail (`hardware/sim/heat/results.md`). Size the vents with `hardware/sim/vent_model.py` once its constants are current (see below), then check the limits in [specs.md](specs.md#limits-of-the-operating-range) against the result.
+- [ ] **Vents.** Implement a 5 cm² lower inlet and a 5 cm² upper outlet. The model assumes a 50 % open grille and 35 mm vertical separation. At 25 °C ambient, the high-corner pack estimate is 51.3 °C at 0.8 A but 58.3 °C at 1.0 A, so one heat check still fails. Charging while running also exceeds the pack's charge-temperature limit in the model. Verify airflow and temperatures in the actual enclosure; see [operating limits](specs.md#limits-of-the-operating-range).
 - [ ] **Antenna parts.** Confirm the bulkhead cables from the BOM in the 6.5 mm holes MH6 to MH8, the coax bend radius and the routing.
 - [ ] **Barometer vent and Wi-Fi antennas.** The case needs an opening for the BMP581 and no metal near the module antennas.
 
@@ -93,10 +83,4 @@ The enclosure is not designed yet. The carrier does not depend on these, the fin
 
 Small corrections in scripts, parameters and project files. None changes the board.
 
-- [ ] `hardware/sim/power/undervoltage.cir` has defaults that differ from what `run_power.py` passes (`vin_uvlo`, `voc0`, `tc`, `tdn`, `tstop`). A standalone ngspice run is a different scenario from the report.
-- [ ] `R_BOARD` in `run_power.py` and the constants in `vent_model.py` are copied by hand from the heat model. `test_heat.py` catches drift in the vent model; nothing checks `R_BOARD`.
-- [ ] `tools/power_budget.py` uses its own efficiency estimates: boost 90 and 93 % (heat model: 91.4 % at the typical load) and charger 90 % (heat model: about 87 %). The charger figure affects only the PC-port rows of the charge-time table.
-- [ ] `mechanical/antenna-mounts.json` holds positions from an early study and nothing reads it. Remove it or update it from the board.
 - [ ] The L1 symbol uses the library symbol of the L2 part. Value and footprint are correct, so this is cosmetic.
-- [ ] Data sheets are missing for L1, D3, D4, D5, BZ1 and the thermostat; nine PDFs have no text extraction. See [datasheets/README.md](../datasheets/README.md).
-- [ ] The product name differs between places: "Flybee" in `specs.md`, "Airfrep" in the board title block, "airgrep" on the silkscreen. Pick one.

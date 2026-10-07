@@ -60,9 +60,9 @@
           "hatch_smoothing_level": 0,
           "hatch_smoothing_value": 0.1,
           "hatch_thickness": 1.0,
-          "min_clearance": 0.2,
+          "min_clearance": 0.508,
           "min_island_area": 9.999998999962,
-          "min_thickness": 0.2,
+          "min_thickness": 0.508,
           "pad_connection": 2,
           "remove_islands": 2,
           "thermal_relief_gap": 0.508,
@@ -658,6 +658,7 @@
         "clearance": 0.1524,
         "diff_pair_gap": 0.1905,
         "diff_pair_width": 0.127,
+        "line_style": 0,
         "name": "+12V",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 2,
@@ -671,6 +672,7 @@
         "clearance": 0.1524,
         "diff_pair_gap": 0.1905,
         "diff_pair_width": 0.127,
+        "line_style": 0,
         "name": "+24V",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 3,
@@ -684,6 +686,7 @@
         "clearance": 0.1524,
         "diff_pair_gap": 0.127,
         "diff_pair_width": 0.1905,
+        "line_style": 0,
         "name": "+3V3",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 4,
@@ -697,6 +700,7 @@
         "clearance": 0.1524,
         "diff_pair_gap": 0.1905,
         "diff_pair_width": 0.127,
+        "line_style": 0,
         "name": "+3V3A",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 5,
@@ -710,6 +714,7 @@
         "clearance": 0.1524,
         "diff_pair_gap": 0.1905,
         "diff_pair_width": 0.127,
+        "line_style": 0,
         "name": "+48V",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 6,
@@ -723,6 +728,7 @@
         "clearance": 0.1524,
         "diff_pair_gap": 0.254,
         "diff_pair_width": 0.2032,
+        "line_style": 0,
         "name": "+5V",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 7,
@@ -736,6 +742,7 @@
         "clearance": 0.127,
         "diff_pair_gap": 0.254,
         "diff_pair_width": 0.2032,
+        "line_style": 1,
         "microvia_diameter": 0.3048,
         "microvia_drill": 0.1016,
         "name": "Dense",
@@ -751,6 +758,7 @@
         "clearance": 0.1524,
         "diff_pair_gap": 0.1524,
         "diff_pair_width": 0.1524,
+        "line_style": 0,
         "name": "ETH",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 8,
@@ -764,6 +772,7 @@
         "clearance": 0.1524,
         "diff_pair_gap": 0.1905,
         "diff_pair_width": 0.127,
+        "line_style": 0,
         "name": "GND",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 9,
@@ -777,6 +786,7 @@
         "clearance": 0.254,
         "diff_pair_gap": 0.254,
         "diff_pair_width": 0.1905,
+        "line_style": 0,
         "name": "SPI",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 10,
@@ -790,6 +800,7 @@
         "clearance": 0.1524,
         "diff_pair_gap": 0.1905,
         "diff_pair_width": 0.127,
+        "line_style": 4,
         "name": "UART",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 11,
@@ -811,7 +822,7 @@
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 1,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.4064,
+        "track_width": 0.3048,
         "tuning_profile": "",
         "via_diameter": 0.8128,
         "via_drill": 0.4064,
@@ -853,7 +864,7 @@
         "pattern": "BOOST_SW"
       },
       {
-        "netclass": "power",
+        "netclass": "+5V",
         "pattern": "BOOST_5V"
       },
       {
@@ -867,6 +878,30 @@
       {
         "netclass": "+5V",
         "pattern": "ESP_5V"
+      },
+      {
+        "netclass": "+5V",
+        "pattern": "USB_VBUS_J1"
+      },
+      {
+        "netclass": "+5V",
+        "pattern": "ADS_5V_D"
+      },
+      {
+        "netclass": "+3V3",
+        "pattern": "GNSS_3V3"
+      },
+      {
+        "netclass": "+3V3",
+        "pattern": "ESP_3V3"
+      },
+      {
+        "netclass": "+5V",
+        "pattern": "/USB input/USB_VBUS_J1"
+      },
+      {
+        "netclass": "+5V",
+        "pattern": "ESP_5V_D"
       }
     ]
   },
@@ -1056,7 +1091,9 @@
       "Gauge and status"
     ]
   ],
-  "text_variables": {},
+  "text_variables": {
+    "GIT_COMMIT": "not stamped"
+  },
   "tuning_profiles": {
     "meta": {
       "version": 0

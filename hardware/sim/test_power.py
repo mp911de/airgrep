@@ -1,5 +1,7 @@
 """Electrical regressions for the module feed model, including reverse isolation."""
 import math
+import os
+import re
 import unittest
 
 import run_power as power
@@ -56,3 +58,25 @@ class ModuleFeedTests(unittest.TestCase):
                 for col in (10, 11):
                     self.assertLess(rows[-1][col], .5)
                     self.assertGreater(min(row[col] for row in rows), -.05)
+
+
+class DeckDefaultTests(unittest.TestCase):
+    SUFFIX = {"f": 1e-15, "p": 1e-12, "n": 1e-9, "u": 1e-6, "m": 1e-3, "k": 1e3, "meg": 1e6}
+
+    def defaults(self, bench):
+        deck = simlib.flatten(os.path.join(power.BENCHES, bench + ".cir"))
+        out = {}
+        for name, value in re.findall(r"(?im)^\.param\s+(\w+)\s*=\s*([-0-9.e]+(?:meg|[fpnumk])?)\s*$", deck):
+            number = re.match(r"([-0-9.e]+)(meg|[fpnumk])?$", value.lower())
+            out[name] = float(number.group(1)) * self.SUFFIX.get(number.group(2), 1.0)
+        return out
+
+    def test_undervoltage_deck_runs_the_first_report_case(self):
+        """A standalone ngspice run of undervoltage.cir is the report's first discharge case."""
+        case = power.uv_params(power.UV_LOADS["nominal"], power.R_PATH_CASES["pack 100 + harness 60 mΩ"],
+                               power.VHYS_CASES["5 % (typical)"])
+        deck = self.defaults("undervoltage")
+        for name, value in case.items():
+            with self.subTest(param=name):
+                self.assertIn(name, deck)
+                self.assertAlmostEqual(deck[name], value, delta=max(abs(value) * 0.005, 1e-12))

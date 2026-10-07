@@ -19,8 +19,9 @@ MAX77757 buck power stage: switching ripple on VSYS from the charger
 .param esr_out=0.8m
 .param esl_out=0.15n
 .param lloop=0.3n
-* BYP: C6 + C33, 2 x 10 uF 0805 X7R 25 V at 5 V, -40 % DC bias assumed (no curve on file)
-.param cin=12u
+* BYP: C6 10 uF 25 V X7R 0805 + C33 22 uF 16 V X7R 1206.
+* At 5 V, -40 % DC bias assumed for both (no curves on file).
+.param cin=19.2u
 .param esr_in=1.5m
 * Data sheet does not give the switch resistances; assumed
 .param ron_ls=40m

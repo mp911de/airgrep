@@ -95,7 +95,7 @@ The carrier uses the module's 1x8 header J5, on carrier socket J5.
 
 ## ADSBee 1090U
 
-Pin names follow the manufacturer's Rev D schematic. The header positions are an image estimate, see [adsbee-estimate.md](../mechanical/adsbee-estimate.md).
+Pin names follow the manufacturer's Rev D schematic. Header positions use the delivered module's caliper measurements, see [adsbee-estimate.md](../mechanical/adsbee-estimate.md).
 
 Main header (module J5, 1x13) on carrier socket J10:
 

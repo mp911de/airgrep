@@ -1,0 +1,781 @@
+                                                                 中国认可
+                                                                 国际互认
+                                                                 检测                    Version: Rev.8
+                                                                 TESTING
+                                                                 CNAS L6165
+
+
+
+
+              UN38.3 Test Report
+               UN38.3 检测报告
+ Applicant’s Name       Dongguan Aotai Digital Technology Co., LTD
+ 委托方名称                  东莞市奥泰数码科技有限公司
+
+ Applicant’s Address    Room 202, Building 1, No. 80 Luhu West Road, Qingxi Town, Dongguan City
+ 委托方地址                  东莞清溪镇鹿湖西路 80 号 1 号楼 202 室
+
+ Name of Sample         Li-ion Battery
+ 样品名称                   锂离子电池
+
+ Model
+                        1260110
+ 型号
+
+                        Shenzhen TCT Testing Technology Co., Ltd.
+                        深圳市通测检测技术有限公司
+ Testing Laboratory
+                        2101 & 2201, Zhenchang Factory, Renshan Industrial Zone, Fuhai Subdistrict,
+ 测试实验室
+                        Bao'an District, Shenzhen, Guangdong, China
+                        广东省深圳市宝安区福海街道桥头社区稔山工业区振昌胶粘制品厂 2101、2201
+
+ Report No.
+                        TCT250925B005
+ 报告编号
+
+ Date of Issue
+                        2025. 10. 17
+ 签发日期
+
+ Test Conclusion 测试结论:
+ 经检测，该样品符合联合国《试验和标准手册》（第八修订版)38.3 节测试要求。
+ After testing, the sample meets the UN "Manual of Tests and Criteria" ST/SG/AC.10/11/Rev.8
+ Subsection 38.3 test requirements.
+
+
+
+
+Tested by主检人:                                     Approved by 批准人:
+Cindy Su / Test Engineer 苏琼香/测试工程师                Evan Chen /Technical Manager 陈祖铭/技术负责人
+
+
+
+Reviewer by 审核人:
+Mollie wu/ Project Engineer 吴玲玲/项目工程师
+                                                  Seal of TCT 报告单位（盖章）:
+
+
+
+Report No. TCT250925B005                                                                Page 1 of 18
+Hotline: 400-6611-140             E-mail: service@tct-lab.com                  http://www.tct-lab.com
+Ⅰ、General product information:
+  一般产品信息
+  Manufacturer’s
+                    Dongguan Aotai Digital Technology Co., LTD
+     Name
+                    东莞市奥泰数码科技有限公司
+   生产单位名称
+  Manufacturer’s
+                    Room 202, Building 1, No. 80 Luhu West Road, Qingxi Town, Dongguan City
+    Address
+                    东莞清溪镇鹿湖西路 80 号 1 号楼 202 室
+   生产单位地址
+  Manufacturer’s
+     Contact                                             E-mail
+   Telephone                +86-13434556778                               290219130@qq.com
+                                                          邮箱
+  生产单位联系电话
+       Web                                             Trade Mark
+                    https://qr.1688.com/s/8bjZuL6h                                   ----
+       网址                                                 商标
+     Name of
+                              Li-ion Battery             Model
+     Sample                                                                     1260110
+                               锂离子电池                      型号
+     样品名称
+      Shape                     Prismatic              Size 尺寸
+                                                                         (112.0×60.0×12.0) mm
+       形状                        棱柱形                   (L×W×T)
+
+  Nominal Voltage                   Rated Capacity     10000mAh      Charge Voltage
+                       3.7V                                                                    4.2V
+     标称电压                               额定容量              37Wh          充电电压
+
+  Nominal Charge                      Maximum                        End of Charge
+     Current         5000mA         Charge Current      10000mA         Current               500mA
+   标称充电电流                            最大充电电流                           结束充电电流
+     Nominal                           Maximum                         Discharge
+    Discharge                          Discharge
+     Current         5000mA             Current         10000mA      Cut-off Voltage           2.75V
+   标称放电电流                            最大放电电流                           放电截止电压
+
+                                   Nominal Voltage                   Rated Capacity
+    Cell Model
+                     1260110           of Cell            3.7V           of Cell            10000mAh
+     电芯型号
+                                     电芯标称电压                           电芯额定容量
+                                       Sample                                               2025. 09. 21
+  Number of Cell                                                      Testing Date
+                       1PC          Receiving Date    2025. 09. 13                              —
+     电芯数量                                                               测试日期                2025. 10. 17
+                                     样品接收日期
+
+
+
+
+ Report No. TCT250925B005                                                               Page 2 of 18
+ Hotline: 400-6611-140              E-mail: service@tct-lab.com                 http://www.tct-lab.com
+Ⅱ、Test Standard 检测标准
+ UN "Manual of Tests and Criteria" ST/SG/AC.10/11/Rev.8/Subsection 38.3.
+ 联合国《试验和标准手册》
+            （第八修订版）38.3 节。
+
+
+
+Ⅲ、Test Item 检测项目
+        Test clause                        Tests performed                       Test conclusion
+         测试条款                                 测试项目                                  测试结论
+         38.3.4.1           Test T.1. Altitude simulation 高度模拟                     Pass 合格
+
+         38.3.4.2           Test T.2. Thermal test 温度试验                            Pass 合格
+
+         38.3.4.3           Test T.3. Vibration 振动                                 Pass 合格
+
+         38.3.4.4           Test T.4. Shock 冲击                                     Pass 合格
+
+         38.3.4.5           Test T.5. External short circuit 外部短路                  Pass 合格
+
+         38.3.4.6           Test T.6. Crush 挤压                                     Pass 合格
+
+         38.3.4.7           Test T.7. Overcharge 过度充电                              Pass 合格
+
+         38.3.4.8           Test T.8. Forced discharge 强制放电                        Pass 合格
+
+Possible test case verdicts: 可能发生的试验情况判定
+ - test case does not apply to the test object 试验情况不适用本试验产品：               N/A
+ - test object does meet the requirement 试验样品满足要求：                         P (Pass 合格)
+ - test object does not meet the requirement 试验样品不满足要求：                    F (Fail 不合格)
+
+
+
+
+Report No. TCT250925B005                                                                 Page 3 of 18
+Hotline: 400-6611-140             E-mail: service@tct-lab.com                    http://www.tct-lab.com
+Ⅳ、Test Method and Requirement 检测方法和要求
+ T.1. Altitude simulation 高度模拟
+     Purpose 目的
+     This test simulates air transport under low-pressure conditions.
+     本试验模拟在低压条件下的空运。
+     Test procedure 测试程序
+     Test cells and batteries shall be stored at a pressure of 11.6 kPa or less for at least six hours at ambient
+ temperature (20 ± 5 °C).
+     试验电池和电池组应在压力等于或低于 11.6 千帕和环境温度 (20 ± 5 °C) 下存放至少 6 小时。
+     Requirement 要求
+      Cells and batteries meet this requirement if there is no leakage, no venting, no disassembly, no
+ rupture and no fire and if the open circuit voltage of each test cell or battery after testing is not less than
+ 90% of its voltage immediately prior to this procedure. The requirement relating to voltage is not applicable
+ to test cells and batteries at fully discharged states.
+   如果无渗漏、无排气、无解体、无破裂和无起火，并且每个试验电池或电池组在试验后的开路电压不小
+ 于其在进行这一试验前电压的 90%，电池和电池组即符合这一要求。有关电压的要求不适用于完全放电状态
+ 的试验电池和电池组。
+
+ T.2. Thermal test 温度试验
+     Purpose 目的
+     This test assesses cell and battery seal integrity and internal electrical connections. The test is
+ conducted using rapid and extreme temperature changes.
+     本试验评估电池和电池组的密封完善性和内部电连接。试验利用迅速和极端的温度变化进行。
+     Test procedure 测试程序
+      Test Cells and batteries are to be stored for at least six hours at a test temperature equal to 72 ± 2°C,
+ followed by storage for at least six hours at a test temperature equal to -40 ± 2°C. The maximum time
+ interval between test temperature extremes is 30 minutes. This procedure is to be repeated until 10 total
+ cycles are complete, after which all test cells and batteries are to be stored for 24 hours at ambient
+ temperature (20 ± 5°C). For large cells and batteries the duration of exposure to the test temperature
+ extremes should be at least 12 hours.
+    试验电池和电池组应先在试验温度等于 72 ± 2℃的条件下存放至少6小时，接着再在试验温度等于-40
+ ± 2℃的条件下存放至少6小时。两个极端试验温度之间的最大时间间隔为30分钟。此程序重复进行，共完
+ 成10 次，接着将所有试验电池和电池组在环境温度 (20 ± 5℃)下存放24小时。对于大型电池和电池组，暴
+ 露于极端试验温度的时间至少应为12小时。
+     Requirement 要求
+      Cells and batteries meet this requirement if there is no leakage, no venting, no disassembly, no
+ rupture and no fire and if the open circuit voltage of each test cell or battery after testing is not less than
+ 90% of its voltage immediately prior to this procedure. The requirement relating to voltage is not applicable
+ to test cells and batteries at fully discharged states.
+   如果无渗漏、无排气、无解体、无破裂和无起火，并且每个试验电池或电池组在试验后的开路电压不小
+ 于其在进行这一试验前电压的 90%，电池和电池组即符合这一要求。有关电压的要求不适用于完全放电状
+ 态的试验电池和电池组。
+
+
+
+
+Report No. TCT250925B005                                                                          Page 4 of 18
+Hotline: 400-6611-140                  E-mail: service@tct-lab.com                        http://www.tct-lab.com
+ T.3. Vibration 振动
+     Purpose 目的
+     This test simulates vibration during transport.
+     本试验模拟运输过程中的振动。
+     Test procedure 测试程序
+      Cells and batteries are firmly secured to the platform of the vibration machine without distorting the
+ cells in such a manner as to faithfully transmit the vibration. The vibration shall be a sinusoidal waveform
+ with a logarithmic sweep between 7 Hz and 200 Hz and back to 7 Hz traversed in 15 minutes. This cycle
+ shall be repeated 12 times for a total of 3 hours for each of three mutually perpendicular mounting
+ positions of the cell. One of the directions of vibration must be perpendicular to the terminal face.
+      The logarithmic frequency sweep shall differ for cells and batteries with a gross mass of not more
+ than 12 kg (cells and small batteries), and for batteries with a gross mass of more than 12 kg (large
+ batteries).
+      For cells and small batteries: from 7 Hz a peak acceleration of 1 gn is maintained until 18 Hz is
+ reached. The amplitude is then maintained at 0.8 mm (1.6 mm total excursion) and the frequency
+ increased until a peak acceleration of 8 gn occurs (approximately 50 Hz). A peak acceleration of 8 gn is
+ then maintained until the frequency is increased to 200 Hz.
+      For large batteries: from 7 Hz to a peak acceleration of 1 gn is maintained until 18 Hz is reached. The
+ amplitude is then maintained at 0.8 mm (1.6 mm total excursion) and the frequency increased until a peak
+ acceleration of 2 gn occurs (approximately 25 Hz). A peak acceleration of 2 gn is then maintained until the
+ frequency is increased to 200 Hz.
+   电池和电池组紧固于振动机平台，但紧固程度不能造成电池变形以致不能准确传递振动。振动应是正弦
+ 波形，对数频率扫描从 7 赫兹到 200 赫兹，再回到 7 赫兹，跨度为 15 分钟。这一振动过程须对三个互相垂
+ 直的电池安装方位的每一方向重复进行 12 次，总共为时 3 小时。其中一个振动方向必须与端面垂直。
+   作对数式频率扫描，对总质量不足 12 千克的电池和电池组(电池和小型电池组)，和对 12 千克及更大的
+ 电池组(大型电池组)应有所不同。
+   对电池和小型电池组：从 7 赫兹开始，保持 1 gn 的最大加速度，直到频率达到 18 赫兹。然后将振幅
+ 保持在 0.8 毫米(总偏移 1.6 毫米)，并增加频率直到最大加速度达到 8 gn(频率约为 50 赫兹)。将最大加速度
+ 保持在 8 gn 直到频率增加到 200 赫兹。
+     对大型电池组：从 7 赫兹开始，保持 1 gn 的最大加速度，直到频率达到 18 赫兹。然后将振幅保持在
+ 0.8 毫米(总偏移 1.6 毫米)，并增加频率直到最大加速度达到 2 gn(频率约为 25 赫兹)。将最大加速度保持在
+ 2 gn 直到频率增加到 200 赫兹。
+      Requirement 要求
+      Cells and batteries meet this requirement if there is no leakage, no venting, no disassembly, no
+ rupture and no fire during the test and after the test and if the open circuit voltage of each test cell or
+ battery directly after testing in its third perpendicular mounting position is not less than 90% of its voltage
+ immediately prior to this procedure. The requirement relating to voltage is not applicable to test cells and
+ batteries at fully discharged states.
+   如果试验中和试验后无渗漏、无排气、无解体、无破裂和无起火，并且每个试验电池或电池组在第三个
+ 垂直安装方位上的试验后立即测得的开路电压不小于在进行这一试验前电压的 90%，电池和电池组即符合
+ 本项要求。有关电压的要求不适用于完全放电状态的试验电池和电池组。
+
+
+
+
+Report No. TCT250925B005                                                                           Page 5 of 18
+Hotline: 400-6611-140                   E-mail: service@tct-lab.com                        http://www.tct-lab.com
+ T.4. Shock 冲击
+     Purpose 目的
+     This test assesses the robustness of cells and batteries against cumulative shocks.
+     本试验评估电池和电池组对累积冲击效应的耐受程度。
+     Test procedure 测试程序
+      Test cells and batteries shall be secured to the testing machine by means of a rigid mount which will
+ support all mounting surfaces of each test battery.
+      Each cell shall be subjected to a half-sine shock of peak acceleration of 150 gn and pulse duration of
+ 6 milliseconds. Alternatively, large cells may be subjected to a half-sine shock of peak acceleration of 50
+ gn and pulse duration of 11 milliseconds.
+      Each battery shall be subjected to a half-sine shock of peak acceleration depending on the mass of
+ the battery. The pulse duration shall be 6 milliseconds for small batteries and 11 milliseconds for large
+ batteries. The formulas below are provided to calculate the appropriate minimum peak accelerations.
+      Each cell or battery shall be subjected to three shocks in the positive direction and to three shocks in
+ the negative direction in each of three mutually perpendicular mounting positions of the cell or battery for a
+ total of 18 shocks.
+     试验电池和电池组用坚固支架紧固在试验机上，支架支撑着每个试验电池组的所有安装面。
+   每个电池须经受最大加速度 150 gn 和脉冲持续时间 6 毫秒的半正弦波冲击。不过，大型电池须经受最
+ 大加速度 50 gn 和脉冲持续时间 11 毫秒的半正弦波冲击。
+   每个电池须经受的正弦波冲击的最大加速度取决于电池组的质量。小型电池组的脉冲持续时间 6 毫秒，
+ 大型电池组的脉冲持续时间 11 毫秒。以下公式用于计算合适的最低限度最大加速度。
+   每个电池或电池组须在三个互相垂直的电池或电池组安装方位的正极方向经受三次冲击，接着在负极方
+ 向经受三次冲击，总共经受 18 次冲击。
+   The formulas below are provided to calculate the appropriate minimum peak accelerations.
+ 以下公式用于计算合适的最低限度最大加速度。
+                  Battery                 Minimum peak acceleration                  Pulse duration
+                  电池组                         最低限度最大加速度                              脉冲持续时间
+
+                                           150 gn or result of formula
+              Small batteries
+                                             Acceleration(gn) =                           6 ms
+                小型电池组
+                                              whichever is smaller
+
+                                            50 gn or result of formula
+              Large batteries
+                                            Acceleration(gn) =                           11 ms
+                大型电池组
+                                              whichever is smaller
+
+                                        * Mass is expressed in kilograms.
+                                                 *质量用千克表示
+
+     Requirement 要求
+      Cells and batteries meet this requirement if there is no leakage, no venting, no disassembly, no rupture
+ and no fire and if the open circuit voltage of each test cell or battery after testing is not less than 90% of its
+ voltage immediately prior to this procedure. The requirement relating to voltage is not applicable to test cells
+ and batteries at fully discharged states.
+   如果无渗漏、无排气、无解体、无破裂和无起火，并且每个试验电池或电池组在试验后的开路电压不小
+ 于其在进行这一试验前电压的 90%，电池和电池组即符合这一要求。有关电压的要求不适用于完全放电状态
+ 的试验电池和电池组。
+
+
+Report No. TCT250925B005                                                                            Page 6 of 18
+Hotline: 400-6611-140                   E-mail: service@tct-lab.com                         http://www.tct-lab.com
+ T.5. External short circuit 外部短路
+     Purpose 目的
+     This test simulates an external short circuit.
+     本试验模拟外部短路。
+     Test procedure 测试程序
+     The cell or battery to be tested shall be heated for a period of time necessary to reach a
+ homogeneous stabilized temperature of 57 ± 4 °C, measured on the external case. This period of time
+ depends on the size and design of the cell or battery and should be assessed and documented. If this
+ assessment is not feasible, the exposure time shall be at least 6 hours for small cells and small batteries,
+ and 12 hours for large cells and large batteries. Then the cell or battery at 57 ± 4 °C shall be subjected to
+ one short circuit condition with a total external resistance of less than 0.1 ohm.
+     This short circuit condition is continued for at least one hour after the cell or battery external case
+ temperature has returned to 57 ± 4 °C, or in the case of the large batteries, has decreased by half of the
+ maximum temperature increase observed during the test and remains below that value.
+     The short circuit and cooling down phases shall be conducted at least at ambient temperature.
+   对于待试电池或电池组，应加温一段必要的时间，使从外壳测量的温度达到均匀的稳定温度57 ± 4°C。
+ 这段时间的长短取决于电池或电池组的大小和设计，对于这个持续时间应加以评估和记录。如无法进行这种
+ 评估，则小型电池和小型电池组的暴露时间应至少6小时，大型电池和大型电池组的暴露时间应至少12小
+ 时。然后，电池或电池组应在57 ± 4°C条件下经受总外电阻小于0.1欧姆的短路条件。这一短路条件应在电
+ 池或电池组外壳温度回到57 ± 4°C后继续至少1小时，或在大型电池组的情况下外壳温度降幅达试验中所观
+ 察的的最高温升幅的二分之一并保持低于该数值。
+     短路和降温阶段的温度应至少相当于环境温度。
+     Requirement 要求
+      Cells and batteries meet this requirement if their external temperature does not exceed 170 °C and
+ there is no disassembly, no rupture and no fire during the test and within six hours after the test.
+      如果外壳温度不超过 170℃，并且在试验过程中及试验后 6 小时内无解体、无破裂，无起火，电池和电
+ 池组即符合本项要求。
+
+ T.6. Impact / Crush 撞击/挤压
+     Purpose 目的
+      These tests simulate mechanical abuse from an impact or crush that may result in an internal short
+ circuit.
+      本节的试验模拟撞击或挤压等可能造成内部短路的机械性破坏。
+     Test procedure – Impact (applicable to cylindrical cells not less than 18.0 mm in diameter)
+     测试程序 – 撞击（适用于直径不小于 18.0 毫米的圆柱形电池）
+       The test sample cell or component cell is to be placed on a flat smooth surface. A 15.8 mm ± 0.1mm
+ diameter, at least 6 cm long, or the longest dimension of the cell, whichever is greater, Type 316 stainless
+ steel bar is to be placed across the centre of the sample. A 9.1 kg ± 0.1 kg mass is to be dropped from a
+ height of 61 ± 2.5 cm at the intersection of the bar and sample in a controlled manner using a near
+ frictionless, vertical sliding track or channel with minimal drag on the falling mass. The vertical track or
+ Channel used to guide the falling mass shall be oriented 90 degrees from the horizontal supporting
+ surface.
+       The test sample is to be impacted with its longitudinal axis parallel to the flat surface and
+ perpendicular to the longitudinal axis of the 15.8 mm ± 0.1mm diameter curved surface lying across the
+ centre of the test sample. Each sample is to be subjected to only a single impact.
+    试样电池或元件电池放在平坦光滑的表面上。一根 316 型不锈钢棒横放在试样中心，钢棒直径 15.8 毫
+ 米±0.1 毫米，长度至少 6 厘米，或电池最长端的尺寸，取二者之长者。将一块 9.1 千克±0.1 千克的重锤
+ 从 61 ± 2.5 厘米高处跌落到钢棒和试样交叉处，使用一个几乎没有摩擦的、对落体重锤阻力最小的垂直轨
+ 道或管道加以控制。垂直轨道或管道用于引导落锤沿与水平支撑表面呈 90 度落下。
+   接受撞击的试样，纵轴应与平坦表面平行并与横放在试样中心的直径 15.8 ± 0.1 毫米弯曲表面的纵轴垂
+ 直。每一试样只经受一次撞击。
+
+
+Report No. TCT250925B005                                                                         Page 7 of 18
+Hotline: 400-6611-140                  E-mail: service@tct-lab.com                       http://www.tct-lab.com
+     Test procedure – Crush (applicable to prismatic, pouch, coin/button cells and cylindrical cells less
+ than 18.0 mm in diameter)
+     测试程序 – 挤压（适用于棱柱形、袋状、硬币/纽扣电池和直径小于 18.0 毫米的圆柱形电池）
+       A cell or component cell is to be crushed between two flat surfaces. The crushing is to be gradual with
+ a speed of approximately 1.5 cm/s at the first point of contact. The crushing is to be continued until the
+ first of the three options below is reached.
+     (a) The applied force reaches 13 kN ± 0.78 kN;
+     (b) The voltage of the cell drops by at least 100 mV; or
+     (c) The cell is deformed by 50% or more of its original thickness.
+     Once the maximum pressure has been obtained, the voltage drops by 100 mV or more, or the cell is
+ deformed by at least 50% of its original thickness, the pressure shall be released.
+      A prismatic or pouch cell shall be crushed by applying the force to the widest side. A button/coin cell
+ shall be crushed by applying the force on its flat surfaces. For cylindrical cells, the crush force shall be
+ applied perpendicular to the longitudinal axis.
+     Each test cell or component cell is to be subjected to one crush only. The test sample shall be
+ observed for a further 6 h. The test shall be conducted using test cells or component cells that have not
+ previously been subjected to other tests.
+   将电池或元件电池放在两个平面之间挤压，挤压力度逐渐加大，在第一个接触点上的速度大约为 1.5
+ 厘米/秒。挤压持续进行，直到出现以下三种情况之一：
+   (a)施加的力量达到 13 千牛顿 ± 0.78 千牛顿；
+     (b)电池的电压下降至少 100 毫伏；或
+     (c)电池形变达原始厚度的 50%或以上。
+     一旦达到最大压力、电压下降 100 毫伏或更多，或电池变形至少达原厚度的 50%，即可解除压力。
+   棱柱形或袋状电池应从最宽的一面施压。纽扣/硬币形电池应从其平坦表面施压。圆柱形电池应从与纵
+ 轴垂直的方向施压。
+   每个试样电池或元件电池只做一次挤压试验。试样应继续观察 6 小时。试验应使用之前未做过其他试验
+ 的电池或元件电池进行。
+     Requirement 要求
+     Cells and component cells meet this requirement if their external temperature does not exceed 170 °C
+ and there is no disassembly and no fire during the test and within six hours after this test.
+     如果外壳温度不超过 170°C，并且在试验过程中及试验后 6 小时内无解体、无破裂，无起火，电池和电
+ 池组即符合本项要求。
+
+ T.7. Overcharge 过度充电
+     Purpose 目的
+     This test evaluates the ability of a rechargeable battery or a single cell rechargeable battery to
+ withstand an overcharge condition.
+     本试验评估可再充电电池组或可再充电单一电池电池组承受过度充电状况的能力。
+     Test procedure 测试程序
+      The charge current shall be twice the manufacturer's recommended maximum continuous charge
+ current. The minimum voltage of the test shall be as follows:
+      (a) When the manufacturer's recommended charge voltage is not more than 18 V, the minimum
+ voltage of the test shall be the lesser of two times the maximum charge voltage of the battery or 22 V.
+      (b) When the manufacturer's recommended charge voltage is more than 18 V, the minimum voltage
+ of the test shall be 1.2 times the maximum charge voltage.
+     Tests are to be conducted at ambient temperature. The duration of the test shall be 24 hours.
+
+
+
+
+Report No. TCT250925B005                                                                         Page 8 of 18
+Hotline: 400-6611-140                  E-mail: service@tct-lab.com                       http://www.tct-lab.com
+     充电电流必须是制造商建议的最大持续充电电流的两倍。试验的最小电压如下：
+   (a)制造商建议的充电电压不大于 18 伏时，试验的最小电压应是电池组最大充电电压的两倍或 22 伏两
+ 者中的较小者。
+     (b)制造商建议的充电电压大于 18 伏时，试验的最小电压应是最大充电电压的 1.2 倍。
+     试验应在环境温度下进行，进行试验的时间应为 24 小时。
+
+     Requirement 要求
+      Rechargeable batteries meet this requirement if there is no disassembly and no fire during the test and
+ within seven days after the test.
+      充电电池组在试验过程中和试验后 7 天内无解体、无起火，即符合本项要求。
+
+ T.8. Forced discharge 强制放电
+     Purpose 目的
+     This test evaluates the ability of a primary or a rechargeable cell to withstand a forced discharge
+ condition.
+     本试验评估原电池或充电电池承受强制放电状况的能力。
+     Test procedure 测试程序
+    Each cell shall be forced discharged at ambient temperature by connecting it in series with a 12 V D.C.
+ power supply at an initial current equal to the maximum discharge current specified by the manufacturer.
+       The specified discharge current is to be obtained by connecting a resistive load of the appropriate size
+ and rating in series with the test cell. Each cell shall be forced discharged for a time interval (in hours) equal
+ to its rated capacity divided by the initial test current (in ampere).
+   每个电池应在环境温度下与 12 伏直流电源串联在起始电流等于制造商给定的最大放电电流的条件下强
+ 制放电。
+   将适当大小和额定值的电阻负荷与试验电池串联，计算得出给定的放电电流。对每个电池进行强制放电，
+ 放电时间(小时)应等于其额定容量除以初始试验电流(安培)。
+
+     Requirement 要求
+      Primary or rechargeable cells meet this requirement if there is no disassembly and no fire during the
+ test and within seven days after the test.
+     原电池或充电电池如在试验过程中和试验后 7 天内无解体，无起火，即符合本项要求。
+
+
+
+
+Report No. TCT250925B005                                                                            Page 9 of 18
+Hotline: 400-6611-140                   E-mail: service@tct-lab.com                         http://www.tct-lab.com
+Ⅴ、General Remarks 一般附注
+1. Tests T.1 to T.5 shall be conducted in sequence on the same cell or battery. Tests T.6 and T.8 shall be
+conducted using not otherwise tested cells. Test T.7 may be conducted using undamaged batteries
+previously used in Tests T.1 to T.5 for purposes of testing on cycled batteries.
+     测试T.1-T.5须按顺序依次在同一组电芯或电池上进行。T.6和T.8须用全新的电芯进行测试。T.7 可以用之
+前T.1-T.5测试中完整无损的电池进行测试。
+2. In order to quantify the mass loss, the following procedure is provided:
+    质量损失的量化值，可用以下公式计算：
+                                  Mass loss 质量损失 (%) = (M1 - M2)/M1 x 100
+    Where M1 is the mass before the test and M2 is the mass after the test. When mass loss does not
+exceed the values in Table 38.3.1, it shall be considered as "no mass loss".
+  式中：M1 是试验前的质量，M2 是试验后的质量。如果质量损失不超过表 38.3.1 所列的数值，应视为“无
+质量损失”。
+                                           Table 38.3.1: Mass loss limit
+                                              表 38.3.1: 质量损失限值
+                            Mass M of cell or battery            Mass loss limit
+                              电池或电池组质量 M                          质量损失限值
+                                     M ＜ 1g                           0.5%
+                                 1 g ≤ M ≤75 g                        0.2%
+                                    M ＞ 75 g                          0.1%
+3. Unless otherwise stated in this document, the test procedure was performed at ambient temperatures of
+20±5°C.
+    除非本文档另有说明，否则测试过程在 20°C±5°C 的环境温度下进行。
+
+
+
+
+Report No. TCT250925B005                                                                    Page 10 of 18
+Hotline: 400-6611-140                  E-mail: service@tct-lab.com                  http://www.tct-lab.com
+Ⅴ、Test Data 测试数据
+T.1. Altitude simulation 高度模拟
+                                                                         Mass        Change
+ Test sample               Pre-test 试验前            After test 试验后                                Status
+                  No.                                                    loss         ratio
+   status                                                               质量损失
+                  编号     Mass        Voltage     Mass        Voltage                 电压比         结果
+ 测试样品状态
+                         质量(g)       电压(V)       质量(g)       电压(V)       (%)           (%)
+
+                  B01    171.444       4.19      171.444       4.19        0.00       100.0        P
+   first cycle,
+ fully charged    B02    171.445       4.18      171.435       4.18        0.01       100.0        P
+       state
+                  B03    171.430       4.17      171.430       4.16        0.00        99.8        P
+  第 1 个充放
+  电周期，完           B04    171.436       4.19      171.436       4.19        0.00       100.0        P
+  全充电状态
+                  B05    171.439       4.17      171.439       4.17        0.00       100.0        P
+                  B06    171.428       4.18      171.428       4.18        0.00       100.0        P
+  25th cycle,
+ fully charged    B07    171.441       4.19      171.425       4.19        0.01       100.0        P
+      state
+                  B08    171.436       4.17      171.436       4.17        0.00       100.0        P
+ 第 25 个充放
+  电周期，完           B09    171.449       4.18      171.449       4.17        0.00        99.8        P
+  全充电状态
+                  B10    171.433       4.19      171.433       4.19        0.00       100.0        P
+ Supplementary information 补充信息:
+      After the test, there is no leakage, no venting, no disassembly, no rupture and no fire. And change
+ ratio is not less than 90 %. 测试后，样品无渗漏、无排气、无解体、无破裂和无起火。电压比不小于 90 %。
+
+
+T.2. Thermal test 温度试验
+                                                                         Mass        Change
+ Test sample               Pre-test 试验前            After test 试验后                                Status
+                  No.                                                    loss         ratio
+   status                                                               质量损失         电压比
+                  编号     Mass        Voltage     Mass        Voltage                             结果
+ 测试样品状态
+                         质量(g)       电压(V)       质量(g)       电压(V)       (%)           (%)
+
+                  B01    171.444       4.19      171.427       4.15        0.01        99.0        P
+   first cycle,
+ fully charged    B02    171.435       4.18      171.415       4.14        0.01        99.0        P
+       state
+                  B03    171.430       4.16      171.385       4.13        0.03        99.3        P
+  第 1 个充放
+  电周期，完           B04    171.436       4.19      171.408       4.16        0.02        99.3        P
+  全充电状态
+                  B05    171.439       4.17      171.413       4.13        0.02        99.0        P
+                  B06    171.428       4.18      171.416       4.14        0.01        99.0        P
+  25th cycle,
+ fully charged    B07    171.425       4.19      171.367       4.16        0.03        99.3        P
+      state
+                  B08    171.436       4.17      171.384       4.14        0.03        99.3        P
+ 第 25 个充放
+  电周期，完           B09    171.449       4.17      171.418       4.13        0.02        99.0        P
+  全充电状态
+                  B10    171.433       4.19      171.416       4.16        0.01        99.3        P
+ Supplementary information 补充信息:
+      After the test, there is no leakage, no venting, no disassembly, no rupture and no fire. And change
+ ratio is not less than 90 %. 测试后，样品无渗漏、无排气、无解体、无破裂和无起火。电压比不小于 90 %。
+
+
+Report No. TCT250925B005                                                                   Page 11 of 18
+Hotline: 400-6611-140               E-mail: service@tct-lab.com                    http://www.tct-lab.com
+T.3. Vibration 振动
+                                                                         Mass        Change
+ Test sample               Pre-test 试验前            After test 试验后                                Status
+                  No.                                                    loss         ratio
+   status                                                               质量损失
+                  编号     Mass        Voltage     Mass        Voltage                 电压比         结果
+ 测试样品状态
+                         质量(g)       电压(V)       质量(g)       电压(V)       (%)           (%)
+
+                  B01    171.427       4.15      171.427       4.15        0.00       100.0        P
+   first cycle,
+ fully charged    B02    171.415       4.14      171.415       4.14        0.00       100.0        P
+       state
+                  B03    171.385       4.13      171.374       4.12        0.01        99.8        P
+  第 1 个充放
+  电周期，完           B04    171.408       4.16      171.408       4.16        0.00       100.0        P
+  全充电状态
+                  B05    171.413       4.13      171.413       4.13        0.00       100.0        P
+                  B06    171.416       4.14      171.405       4.14        0.01       100.0        P
+  25th cycle,
+ fully charged    B07    171.367       4.16      171.367       4.16        0.00       100.0        P
+      state
+                  B08    171.384       4.14      171.384       4.14        0.00       100.0        P
+ 第 25 个充放
+  电周期，完           B09    171.418       4.13      171.408       4.13        0.01       100.0        P
+  全充电状态
+                  B10    171.416       4.16      171.416       4.15        0.00        99.8        P
+ Supplementary information 补充信息:
+      After the test, there is no leakage, no venting, no disassembly, no rupture and no fire. And change
+ ratio is not less than 90 %. 测试后，样品无渗漏、无排气、无解体、无破裂和无起火。电压比不小于 90 %。
+
+
+T.4. Shock 冲击
+                                                                         Mass        Change
+ Test sample               Pre-test 试验前            After test 试验后                                Status
+                  No.                                                    loss         ratio
+   status                                                               质量损失         电压比
+                  编号     Mass        Voltage     Mass        Voltage                             结果
+ 测试样品状态
+                         质量(g)       电压(V)       质量(g)       电压(V)       (%)           (%)
+
+                  B01    171.427       4.15      171.427       4.15        0.00       100.0        P
+   first cycle,
+ fully charged    B02    171.415       4.14      171.415       4.13        0.00        99.8        P
+       state
+                  B03    171.374       4.12      171.354       4.12        0.01       100.0        P
+  第 1 个充放
+  电周期，完           B04    171.408       4.16      171.408       4.16        0.00       100.0        P
+  全充电状态
+                  B05    171.413       4.13      171.413       4.13        0.00       100.0        P
+                  B06    171.405       4.14      171.405       4.14        0.00       100.0        P
+  25th cycle,
+ fully charged    B07    171.367       4.16      171.367       4.15        0.00        99.8        P
+      state
+                  B08    171.384       4.14      171.384       4.14        0.00       100.0        P
+ 第 25 个充放
+  电周期，完           B09    171.408       4.13      171.408       4.13        0.00       100.0        P
+  全充电状态
+                  B10    171.416       4.15      171.403       4.15        0.01       100.0        P
+ Supplementary information 补充信息:
+      After the test, there is no leakage, no venting, no disassembly, no rupture and no fire. And change
+ ratio is not less than 90 %. 测试后，样品无渗漏、无排气、无解体、无破裂和无起火。电压比不小于 90 %。
+
+
+
+
+Report No. TCT250925B005                                                                   Page 12 of 18
+Hotline: 400-6611-140               E-mail: service@tct-lab.com                    http://www.tct-lab.com
+T.5. External short circuit 外部短路
+  Test sample status       No.         Maximum external temperature (°C)             Status
+    测试样品状态                 编号                 表面最高温度(°C)                              结果
+                           B01                        57.3                             P
+
+    first cycle, fully     B02                        57.7                             P
+     charged state
+                           B03                        57.1                             P
+  第 1 个充放电周期，
+     完全充电状态                B04                        57.2                             P
+                           B05                        57.8                             P
+                           B06                        57.3                             P
+
+   25th cycle, fully       B07                        57.4                             P
+    charged state
+                           B08                        57.9                             P
+ 第 25 个充放电周期，
+    完全充电状态                 B09                        57.5                             P
+                           B10                        57.2                             P
+ Supplementary information 补充信息:
+     Test sample external temperature does not exceed 170 °C and there is no disassembly, no rupture
+ and no fire during the test and within six hours after the test.
+     测试样品表面温度不超过 170 °C，测试中与测试后 6 小时内无解体、无破裂、无起火。
+
+
+T.6. Crush 挤压
+  Test sample status       No.         Maximum external temperature (°C)             Status
+    测试样品状态                 编号                 表面最高温度(°C)                              结果
+                           C01                        23.9                             P
+    first cycle, 50%       C02                        23.5                             P
+     charged state
+                           C03                        23.4                             P
+  第 1 个充放电周期，
+     50%充电状态               C04                        23.8                             P
+                           C05                        23.6                             P
+                           C06                        23.7                             P
+   25th cycle, 50%         C07                        23.5                             P
+    charged state
+                           C08                        23.9                             P
+ 第 25 个充放电周期，
+    50%充电状态                C09                        23.4                             P
+                           C10                        23.8                             P
+ Supplementary information 补充信息:
+     Test sample external temperature does not exceed 170 °C and there is no disassembly, no rupture
+ and no fire during the test and within six hours after the test.
+     测试样品表面温度不超过 170 °C，测试中与测试后 6 小时内无解体、无破裂、无起火。
+
+
+
+
+Report No. TCT250925B005                                                                Page 13 of 18
+Hotline: 400-6611-140              E-mail: service@tct-lab.com                  http://www.tct-lab.com
+T.7. Overcharge 过度充电
+
+  Test sample status 测试样品状态                             No.编号                           Status 结果
+
+                                                          B11                                P
+   first cycle, fully charged state                       B12                                P
+  第 1 个充放电周期，完全充电状态                                       B13                                P
+                                                          B14                                P
+                                                          B15                                P
+   25th cycle, fully charged state                        B16                                P
+ 第 25 个充放电周期，完全充电状态                                       B17                                P
+                                                          B18                                P
+ Supplementary information 补充信息:
+     There is no disassembly and no fire during the test and within seven days after the test.
+     样品在测试中和测试后 7 天内无解体、无起火。
+
+
+T.8. Forced discharge 强制放电
+
+  Test sample status 测试样品状态                             No.编号                           Status 结果
+
+                                                          C11                                P
+                                                          C12                                P
+                                                          C13                                P
+                                                          C14                                P
+  first cycle, fully discharged state                     C15                                P
+  第 1 个充放电周期，完全放电状态                                       C16                                P
+                                                          C17                                P
+                                                          C18                                P
+                                                          C19                                P
+                                                          C20                                P
+                                                          C21                                P
+                                                          C22                                P
+                                                          C23                                P
+                                                          C24                                P
+  25th cycle, fully discharged state                      C25                                P
+ 第 25 个充放电周期，完全放电状态                                       C26                                P
+                                                          C27                                P
+                                                          C28                                P
+                                                          C29                                P
+                                                          C30                                P
+ Supplementary information 补充信息:
+     There is no disassembly and no fire during the test and within seven days after the test.
+     样品在测试中和测试后 7 天内无解体、无起火。
+
+Report No. TCT250925B005                                                                      Page 14 of 18
+Hotline: 400-6611-140                   E-mail: service@tct-lab.com                   http://www.tct-lab.com
+Ⅵ、Picture of the sample 样品图片
+
+
+
+
+                           Picture 1. Front view of battery
+                                图片 1. 电池组前视图
+
+
+
+
+                           Picture 2. Back view of battery
+                                图片 2. 电池组后视图
+
+Report No. TCT250925B005                                              Page 15 of 18
+Hotline: 400-6611-140      E-mail: service@tct-lab.com        http://www.tct-lab.com
+                            Picture 3. Front view of cell
+                                图片 3. 电芯前视图
+
+
+
+
+                            Picture 4. Back view of cell
+                                图片 4. 电芯后视图
+
+
+
+
+Report No. TCT250925B005                                            Page 16 of 18
+Hotline: 400-6611-140      E-mail: service@tct-lab.com      http://www.tct-lab.com
+                           Picture 5. Front view of protection board
+                                      图片 5. 保护板前视图
+
+
+
+
+                           Picture 6. Back view of protection board
+                                      图片 6. 保护板后视图
+                              ******End of Report 报告结束******
+
+
+
+
+Report No. TCT250925B005                                                       Page 17 of 18
+Hotline: 400-6611-140           E-mail: service@tct-lab.com            http://www.tct-lab.com
+                                           Important Notice
+                                                  注意事项
+
+1. The test report is invalid without the official stamp of TCT.
+   本报告书无 TCT 盖章无效。
+2. Nobody is allowed to photocopy or partly photocopy this test report without written permission of TCT.
+   未经 TCT 书面同意，不得复制或部分地复制本报告书。
+3. The test report is invalid without the signatures of Ratifier, Reviewer and Testing engineer.
+   本报告书无批准人、审核人、及主检人签名无效。
+4. The report is invalid when anything of following happens – illegal transfer, reproduce, embezzlement,
+   imposture, modification or tampering in any media form.
+   私自转让、复制、盗用、冒用、涂改、或以任何媒体形式篡改的报告书无效。
+5. Objections to the test report must be submitted to TCT within 15 days.
+   对报告书若有异议，应于收到报告之日起 15 天内向本公司提出。
+6. The test report is valid for the tested samples only.
+   本报告仅对本次测试样品有效。
+7. The Chinese contents in this report are only for reference.
+    本报告中的中文内容仅供参考。
+
+
+
+
+Report No. TCT250925B005                                                                       Page 18 of 18
+Hotline: 400-6611-140                  E-mail: service@tct-lab.com                     http://www.tct-lab.com
+

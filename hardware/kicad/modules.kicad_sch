@@ -7,6 +7,7 @@
 	(title_block
 		(title "Modules and service shunts")
 		(rev "A")
+		(comment 1 "commit ${GIT_COMMIT}")
 	)
 	(lib_symbols
 		(symbol "Connector_Generic:Conn_01x02"

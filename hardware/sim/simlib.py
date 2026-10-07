@@ -137,3 +137,109 @@ class Report:
             with open(path, "w") as out:
                 out.write(text)
         return 1 if self.failed else 0
+
+
+class Figure:
+    """Vector drawing written as SVG and as PDF, without a plotting library. Coordinates in
+    points, origin top left. Colours are #rrggbb; PDF has no transparency, so pass blended colours."""
+
+    # Helvetica advance widths per 1000 units, enough to place anchored labels
+    WIDTH = dict.fromkeys("0123456789", 556) | dict.fromkeys(" .,:/()[]|", 278) | {"-": 333, "−": 584, "°": 400}
+
+    def __init__(self, width, height):
+        self.w, self.h, self.items = width, height, []
+
+    def line(self, points, color, width=1.0, dash=None):
+        self.items.append(("line", points, color, width, dash))
+
+    def rect(self, x, y, w, h, fill=None, stroke=None):
+        self.items.append(("rect", (x, y, w, h), fill, stroke))
+
+    def circle(self, x, y, r, fill):
+        self.items.append(("circle", (x, y, r), fill))
+
+    def text(self, x, y, s, size=11, color="#000000", anchor="start", bold=False, rotate=False):
+        self.items.append(("text", (x, y), s, size, color, anchor, bold, rotate))
+
+    def text_width(self, s, size):
+        return sum(self.WIDTH.get(c, 667 if c.isupper() else 520) for c in s) * size / 1000
+
+    def svg(self, path):
+        esc = lambda s: s.replace("&", "&amp;").replace("<", "&lt;")
+        out = ['<svg xmlns="http://www.w3.org/2000/svg" width="%g" height="%g" viewBox="0 0 %g %g" '
+               'font-family="Helvetica, Arial, sans-serif">' % (self.w, self.h, self.w, self.h),
+               '<rect width="100%" height="100%" fill="#ffffff"/>']
+        for kind, geo, *a in self.items:
+            if kind == "line":
+                color, width, dash = a
+                out.append('<polyline fill="none" stroke="%s" stroke-width="%g"%s points="%s"/>'
+                           % (color, width, ' stroke-dasharray="%g,%g"' % dash if dash else "",
+                              " ".join("%.2f,%.2f" % p for p in geo)))
+            elif kind == "rect":
+                fill, stroke = a
+                out.append('<rect x="%.2f" y="%.2f" width="%.2f" height="%.2f" fill="%s" stroke="%s"/>'
+                           % (*geo, fill or "none", stroke or "none"))
+            elif kind == "circle":
+                out.append('<circle cx="%.2f" cy="%.2f" r="%g" fill="%s"/>' % (*geo, a[0]))
+            else:
+                s, size, color, anchor, bold, rotate = a
+                out.append('<text x="%.2f" y="%.2f" font-size="%g" fill="%s" text-anchor="%s"%s%s>%s</text>'
+                           % (*geo, size, color, {"start": "start", "middle": "middle", "end": "end"}[anchor],
+                              ' font-weight="bold"' if bold else "",
+                              ' transform="rotate(-90 %.2f %.2f)"' % geo if rotate else "", esc(s)))
+        out.append("</svg>")
+        with open(path, "w") as f:
+            f.write("\n".join(out) + "\n")
+
+    def pdf(self, path):
+        rgb = lambda c: " ".join("%.3f" % (int(c[k:k + 2], 16) / 255) for k in (1, 3, 5))
+        y = lambda v: self.h - v
+        ops = []
+        for kind, geo, *a in self.items:
+            if kind == "line":
+                color, width, dash = a
+                ops.append("%s RG %g w [%s] 0 d" % (rgb(color), width, "%g %g" % dash if dash else ""))
+                ops.append(" ".join("%.2f %.2f %s" % (px, y(py), "m" if k == 0 else "l")
+                                    for k, (px, py) in enumerate(geo)) + " S")
+            elif kind == "rect":
+                (rx, ry, rw, rh), (fill, stroke) = geo, a
+                paint = "B" if fill and stroke else "f" if fill else "S"
+                ops.append("%s%s[] 0 d 1 w %.2f %.2f %.2f %.2f re %s" % (
+                    "%s rg " % rgb(fill) if fill else "", "%s RG " % rgb(stroke) if stroke else "",
+                    rx, y(ry + rh), rw, rh, paint))
+            elif kind == "circle":
+                (cx, cy, r), k = geo, 0.5523 * geo[2]
+                cy = y(cy)
+                ops.append("%s rg %.2f %.2f m %.2f %.2f %.2f %.2f %.2f %.2f c %.2f %.2f %.2f %.2f %.2f %.2f c "
+                           "%.2f %.2f %.2f %.2f %.2f %.2f c %.2f %.2f %.2f %.2f %.2f %.2f c f"
+                           % (rgb(a[0]), cx + r, cy, cx + r, cy + k, cx + k, cy + r, cx, cy + r,
+                              cx - k, cy + r, cx - r, cy + k, cx - r, cy, cx - r, cy - k, cx - k, cy - r,
+                              cx, cy - r, cx + k, cy - r, cx + r, cy - k, cx + r, cy))
+            else:
+                s, size, color, anchor, bold, rotate = a
+                shift = {"start": 0, "middle": 0.5, "end": 1}[anchor] * self.text_width(s, size)
+                tx, ty = geo
+                body = s.replace("−", "-").encode("cp1252", "replace")
+                body = body.replace(b"\\", b"\\\\").replace(b"(", b"\\(").replace(b")", b"\\)")
+                matrix = "0 1 -1 0 %.2f %.2f" % (tx, y(ty) - shift) if rotate else \
+                    "1 0 0 1 %.2f %.2f" % (tx - shift, y(ty))
+                ops.append(b"BT /%s %g Tf %s rg %s Tm (" % (b"F2" if bold else b"F1", size, rgb(color).encode(),
+                                                           matrix.encode()) + body + b") Tj ET")
+        content = b"\n".join(o if isinstance(o, bytes) else o.encode() for o in ops)
+        font = "<< /Type /Font /Subtype /Type1 /BaseFont /%s /Encoding /WinAnsiEncoding >>"
+        objects = [b"<< /Type /Catalog /Pages 2 0 R >>",
+                   b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+                   ("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %g %g] /Contents 4 0 R "
+                    "/Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>" % (self.w, self.h)).encode(),
+                   b"<< /Length %d >>\nstream\n" % len(content) + content + b"\nendstream",
+                   (font % "Helvetica").encode(), (font % "Helvetica-Bold").encode()]
+        out, offsets = bytearray(b"%PDF-1.4\n"), []
+        for n, body in enumerate(objects, 1):
+            offsets.append(len(out))
+            out += b"%d 0 obj\n" % n + body + b"\nendobj\n"
+        xref = len(out)
+        out += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objects) + 1)
+        out += b"".join(b"%010d 00000 n \n" % o for o in offsets)
+        out += b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (len(objects) + 1, xref)
+        with open(path, "wb") as f:
+            f.write(out)

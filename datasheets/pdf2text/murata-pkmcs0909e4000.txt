@@ -1,0 +1,130 @@
+ Piezoelectric SMD Sounder
+ - For consumer & Medical market -
+                                                                      Application
+
+                                                                      For consumer and medical market.
+                                                                       Consumer : Remote controller
+                                                                                   Mobile printer
+                                                                                   Payment terminal
+                                                                                         Digital still camera etc...
+                                                                       Medical        : Blood glucose meter
+                                                                                         Thermometer etc…
+
+
+
+ Feature and Structure                                                                                        Lid
+
+
+                                                                                                          Adhesive for lid attaching
+ Small, thin and lightweight
+   9.0mm x 9.0mm x 1.9mm              Conductive paste                                                    Adhesive for sealing
+   44% less than current one
+ Low power consumption                                                                                  Piezo electric diaphragm
+ The piezo based brings in noiseless Insulating material
+  because of magnet less                                                                                      Case
+
+
+
+
+Sound Pressure Level
+                                            Frequency Characteristics of Sound Pressure Level
+                                                      P/N:
+                                               Frequency   PKMCS0909E4000-R1
+                                                         Characteristics of Sound Pressure Level
+                                                           PKMCS0909E4000-R1
+                                                       Conditions: 10cm, A-filter ,±1.5Vo-p, square
+                                   90
+
+                                   85       Input Voltage : ±1.5Vo-p, square
+
+
+
+
+                     Level
+            PressureLevel
+      SoundPressure         (dB)
+      Sound               (dB)
+                                            Distance : 10cm
+                                   80       Filter : A-Filter
+
+                                   75
+
+                                   70
+
+                                   65
+
+                                   60
+
+                                   55
+                                        0            2              4             6                  8                  10
+                                                                   Frequency  (kHz)
+                                                                     Frequency (kHz)
+
+                                                          Murata Manufacturing Co., Ltd.                       VPPT-BUZJ083-D
+Specifications
+
+
+       Global Part Number                                     PKMCS0909E4000-R1
+
+       Sound Pressure Level                                   65dB min.
+
+       Measure Condition of Sound Pressure Level              ±1.5 Vo-p,4.0kHz,square wave,10cm
+
+       Maximum Input Voltage                                  ±12.5Vo-p max.
+
+       Operating Temperature Range                            -40 to +85℃
+
+       Storage Temperature Range                              -40 to +85℃
+
+       Drive Type                                             External-Drive
+
+
+
+
+Dimensions and Land pattern                                                                       (in mm)
+
+
+
+                                                PKMCS Series
+
+                                               Open  Hole
+                                                Open Hole
+                              9.0                             0.6
+
+
+
+                                                                                     (1.5)
+
+
+
+                                              9.0             3.2
+
+
+
+
+                                                                                    1.0
+
+                                                    1.9max.
+
+                    (0.3)                                      Recommendable       Pattern
+                                                                Recommendable Land Pattern
+                                                                            10.0
+                                    (2.0)                                    7.4
+                                            Sound
+                                             SoundEmitting  Hole
+                                                   Emitting Hole
+
+
+                                                                                      3.4
+
+
+
+
+                                              * The location of open hole is not specified.
+                                              * Tol. : ±0.2mm
+
+
+
+
+                                      Murata Manufacturing Co., Ltd.
+

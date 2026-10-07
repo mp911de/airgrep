@@ -7,36 +7,39 @@ Battery, supervisor and boost: undervoltage cut-off, rebound and restart
 * td, and pulls PWR_EN low with its open drain against R13 100k and the 800k EN pull-down.
 * R13 is fed from VSYS through R43 1k, the closed thermostat and the closed slider. The boost, the TPS22975 and the modules are the
 * averaged model of boost_transient.cir. VOC follows a slow ramp down (discharge), holds,
-* takes a load burst, then ramps back up (restore).
+* then ramps back up (restore). An optional load burst runs from t1 to t2.
+* The defaults are the report's first discharge case: nominal load, pack 100 + harness 60 mOhm,
+* typical hysteresis (run_power.py uv_params).
 *
 *   ngspice -b undervoltage.cir          (writes undervoltage.txt into the current directory)
 
 * One .param per line: run_power.py overrides them by name.
 * Battery: open-circuit voltage profile and resistances
-.param voc0=3.25
+.param voc0=3.30
 .param voc1=2.95
 .param voc2=3.30
 .param ta=20m
 .param tb=420m
-.param tc=620m
-.param tdn=820m
+.param tc=520m
+.param tdn=920m
 .param rbat=100m
 .param rharn=60m
-.param rb2s=20m
+* MAX77757 BATT-to-SYS switch 20m plus the board copper J3 to L2 (run_power.py R_SWITCH_BOARD)
+.param rb2s=32.1m
 * Supervisor
 .param vit=2.9
 .param vhys=0.145
 .param td=40u
 .param tp=30u
 * Boost input UVLO (VIN falling)
-.param vin_uvlo=2.3
+.param vin_uvlo=2.4
 * Boost and load switch, as in boost_transient.cir
 .param eff=0.9
 * Switching frequency with R16 220 kOhm at 3.0 V in (run_power.py fsw_boost)
 .param fsw=707k
 .param lval=2.2u
-.param cout=29.7u
-.param c24=7u
+.param cout=31.68u
+.param c24=6u
 .param cmod=40u
 .param rmod=20m
 .param rsense=0.08
@@ -51,12 +54,12 @@ Battery, supervisor and boost: undervoltage cut-off, rebound and restart
 .param ct_rise=17m
 .param ron=16m
 .param rqod=230
-* Load: i0 throughout, i1 from t1 to t2
+* Load: i0 throughout, i1 from t1 to t2 (no burst by default)
 .param i0=0.8
-.param i1=1.5
-.param t1=520m
-.param t2=530m
-.param tstop=900m
+.param i1=0.8
+.param t1=10
+.param t2=10
+.param tstop=1
 
 .param tramp={ct_rise*5.5/4}
 

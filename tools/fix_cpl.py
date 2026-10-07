@@ -32,7 +32,7 @@ CPL = ROOT / "hardware/kicad/jlcpcb/production_files/CPL-carrier.csv"
 # footprint name: (rotation added to the board rotation, JLC origin in footprint-local mm)
 FIXES = {
     "Texas_DSG0008A_WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm": (0, (0.0, 0.0)),  # U7, C524777; plugin table says 270
-    "TDFN-8_L2.0-W2.0-P0.50-EP0.8x1.45_T822": (270, (0.0, 0.0)),  # U8, C2682616; JLC pin 1 bottom left
+    "TDFN-8_L2.0-W2.0-P0.50-EP0.8x1.38_T822": (270, (0.0, 0.0)),  # U8, C2682616; JLC pin 1 bottom left
     "SW-SMD_K3-1280S-F1": (270, (0.0, 0.0)),  # SW1-SW3, C92658; supplier origin is common pad, actuator points right
     # HRO drawing leaves outer terminals unnumbered. Our 1/3 convention is reversed
     # relative to the supplier CAD after aligning the body. See workflows/physical-controls.md.

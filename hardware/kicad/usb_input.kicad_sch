@@ -7,6 +7,7 @@
 	(title_block
 		(title "USB input")
 		(rev "A")
+		(comment 1 "commit ${GIT_COMMIT}")
 	)
 	(lib_symbols
 		(symbol "74xGxx:74LVC1G02"
@@ -1453,6 +1454,171 @@
 					(at 3.81 0 180)
 					(length 2.54)
 					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Device:FerriteBead"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "FB"
+				(at -3.81 0.635 90)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "FerriteBead"
+				(at 3.81 0 90)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -1.778 0 90)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Ferrite bead"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "L ferrite bead inductor filter"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "Inductor_* L_* *Ferrite*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "FerriteBead_0_1"
+				(polyline
+					(pts
+						(xy -2.7686 0.4064) (xy -1.7018 2.2606) (xy 2.7686 -0.3048) (xy 1.6764 -2.159) (xy -2.7686 0.4064)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 1.27) (xy 0 1.2954)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 -1.27) (xy 0 -1.2192)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "FerriteBead_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 2.54)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 2.54)
+					(name ""
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4209,16 +4375,16 @@
 		(uuid "8919604c-119e-4e2a-a3c6-327ec1a8246b")
 	)
 	(junction
+		(at 99.06 53.34)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a28938ee-36e0-4c8e-90f4-628de95fa0d1")
+	)
+	(junction
 		(at 109.22 81.28)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "d1523160-b534-47ad-a587-ff9a7493e1e1")
-	)
-	(junction
-		(at 73.66 53.34)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "f29ab3fc-45eb-4f58-a23e-0f6e57f7d1aa")
 	)
 	(no_connect
 		(at 60.96 104.14)
@@ -4380,6 +4546,16 @@
 	)
 	(wire
 		(pts
+			(xy 110.49 53.34) (xy 114.3 53.34)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b0c2b5c6-34a9-4c15-87e6-d40334cf8655")
+	)
+	(wire
+		(pts
 			(xy 109.22 107.95) (xy 109.22 111.76)
 		)
 		(stroke
@@ -4387,6 +4563,16 @@
 			(type default)
 		)
 		(uuid "c7274cb9-4ad1-4135-9171-bb307c7a3eb7")
+	)
+	(wire
+		(pts
+			(xy 99.06 53.34) (xy 102.87 53.34)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ca243f82-95b8-42f4-8f64-0e947f9d1ff5")
 	)
 	(wire
 		(pts
@@ -4541,6 +4727,30 @@
 				(font
 					(size 1.27 1.27)
 				)
+			)
+		)
+	)
+	(global_label "USB_VBUS_J1"
+		(shape input)
+		(at 76.2 53.34 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "a9a1797c-49e6-4fcd-a132-6b01ce0df5d4")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 60.3939 53.34 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
 			)
 		)
 	)
@@ -4702,7 +4912,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1u 50V X7R"
+		(property "Value" "4.7u 50V X7R"
 			(at 101.6 62.23 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4713,7 +4923,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 99.06 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -4746,7 +4956,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C105174"
+		(property "LCSC" "C437557"
 			(at 99.06 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -5019,8 +5229,98 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:FerriteBead")
+		(at 106.68 53.34 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "5522948e-f6a3-4571-a565-35c8c3769300")
+		(property "Reference" "FB1"
+			(at 106.68 48.26 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "BLM31KN471SZ1L"
+			(at 109.474 57.404 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Inductor_SMD:L_1206_3216Metric"
+			(at 106.68 53.34 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C710518.pdf"
+			(at 106.68 53.34 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Ferrite bead 470 Ω at 100 MHz, 4 A, 20 mΩ: filters the charger buck ripple from the USB cable"
+			(at 106.68 53.34 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C710518"
+			(at 106.68 53.34 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "631bc846-eb5f-4e95-a890-ebdf3afb3d90")
+		)
+		(pin "2"
+			(uuid "ab730961-f708-4539-b92e-a59caae19dd2")
+		)
+		(instances
+			(project "carrier"
+				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/8d582056-b074-472b-a300-fd21b59a9139"
+					(reference "FB1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "carrier:USB_VBUS")
-		(at 73.66 53.34 0)
+		(at 114.3 53.34 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -5030,7 +5330,7 @@
 		(dnp no)
 		(uuid "5c5c1340-771a-46ab-9a7d-428c33fd85c3")
 		(property "Reference" "#PWR001"
-			(at 73.66 57.15 0)
+			(at 114.3 57.15 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5041,7 +5341,7 @@
 			)
 		)
 		(property "Value" "USB_VBUS"
-			(at 73.66 49.53 0)
+			(at 114.3 49.53 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5051,7 +5351,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 73.66 53.34 0)
+			(at 114.3 53.34 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5062,7 +5362,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 73.66 53.34 0)
+			(at 114.3 53.34 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5073,7 +5373,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"USB_VBUS\""
-			(at 73.66 53.34 0)
+			(at 114.3 53.34 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)

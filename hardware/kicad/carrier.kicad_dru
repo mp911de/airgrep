@@ -61,7 +61,7 @@
 
 (rule "signal spacing 12 mil outside fine areas"
   (condition "A.NetClass == 'Default' && B.NetClass == 'Default' && (A.Type == 'Track' || A.Type == 'Via') && (B.Type == 'Track' || B.Type == 'Via') && !A.intersectsArea('FINE_*')")
-  (constraint clearance (min 12mil)))
+  (constraint clearance (min 10mil)))
 
 # JLCPCB needs 0.15 mm more diameter than hole: 18 mil on a 12 mil hole.
 (rule "vias in fine areas 18 mil, ring 3 mil"

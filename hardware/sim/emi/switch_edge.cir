@@ -1,0 +1,88 @@
+One switching period of a converter hot loop at 10 ps resolution: edges and ringing
+*
+* The inductor is a current source idc into (boost, dir=1) or out of (buck, dir=-1) the switch
+* node. Four switches cover both converters; the gate weights select them: the boost main
+* switch pulls SW to GND (mg=1) and its rectifier connects SW to the bank (sb=1), the buck
+* main switch connects SW to the bank (mb=1) and its rectifier pulls SW to GND (sg=1). A
+* switch conducts the smaller of its ohmic current and a gate-limited current, so the gate
+* ramp tedge sets the current slew (about gm/5 per tedge); body diodes carry the dead time. The bank is the input (buck) or output (boost) capacitors with
+* ESR and ESL, reached through the hot-loop inductance lloop that run_emi.py takes from the
+* board. Each switch has the output capacitance coss with rcoss as its damping; the off
+* switch's coss rings with lloop. The snubber (R39, C36 on the boost) is on through rsnub;
+* 1G means not fitted.
+* The main switch turns on at t1 and off at t1+ton, then the run ends 250 ns later.
+*
+*   ngspice -b switch_edge.cir           (writes switch_edge.txt into the current directory)
+
+.param dir=1
+.param mg=1
+.param mb=0
+.param sg=0
+.param sb=1
+.param vbank=5.057
+.param idc=2.5
+.param ton=570n
+.param t1=100n
+.param tedge=5n
+.param ron_main=11m
+.param ron_sync=13m
+* gate-limited current per unit of gate drive above the threshold; the gate ramp reaches
+* about 0.2 above it, so 50 allows 10 A
+.param gm=50
+.param lloop=2n
+.param rloop=5m
+.param coss=300p
+.param rcoss=0.5
+.param cbank=36u
+.param esr=1m
+.param esl=0.2n
+.param rsnub=1G
+.param csnub=1n
+.param lsnub=2n
+.param ic_sw=5.057
+.param ic_il=2.5
+.param tstop={t1+ton+250n}
+
+Iind   0 SW {dir*idc}
+* I = Ilim tanh(V / (ron Ilim)): ohmic for small V, gate-limited beyond
+Bmg    SW 0 I = (gm*max(0, V(GMG)-0.8)+1u) * tanh(V(SW)/(ron_main*(gm*max(0, V(GMG)-0.8)+1u)))
+Bmb    SW BANK_N I = (gm*max(0, V(GMB)-0.8)+1u) * tanh(V(SW,BANK_N)/(ron_main*(gm*max(0, V(GMB)-0.8)+1u)))
+Bsg    SW 0 I = (gm*max(0, V(GSG)-0.8)+1u) * tanh(V(SW)/(ron_sync*(gm*max(0, V(GSG)-0.8)+1u)))
+Bsb    SW BANK_N I = (gm*max(0, V(GSB)-0.8)+1u) * tanh(V(SW,BANK_N)/(ron_sync*(gm*max(0, V(GSB)-0.8)+1u)))
+* body diodes: high side SW to bank, low side GND to SW
+Dhs    SW BANK_N DBODY
+Dls    0 SW DBODY
+.model DBODY D(is=1e-12 n=1.2 cjo=2p)
+* output capacitance of the low-side and the high-side switch
+Cls    SW CLS_X {coss}
+Rcls   CLS_X 0 {rcoss}
+Chs    SW CHS_X {coss}
+Rchs   CHS_X BANK_N {rcoss}
+
+* pad capacitance at the bank side of the switch, keeps the node defined when both switches are off
+Cbn    BANK_N 0 2p
+Lloop  BANK_N LLOOP_X {lloop} ic={ic_il}
+Rloop  LLOOP_X BANK {rloop}
+Cbank  BANK CB_X {cbank} ic={vbank}
+Resr   CB_X CB_Y {esr}
+Lesl   CB_Y 0 {esl}
+
+Lsnub  SW SN_X {lsnub}
+Rsnub  SN_X SN_Y {rsnub}
+Csnub  SN_Y 0 {csnub}
+
+Vpwm   PWM 0 PULSE(0 1 {t1} 1p 1p {ton} 1)
+Rg     PWM G 1k
+Cg     G 0 {tedge/1k}
+Bgmg   GMG 0 V = mg * V(G)
+Bgmb   GMB 0 V = mb * V(G)
+Bgsg   GSG 0 V = sg * (1 - V(G))
+Bgsb   GSB 0 V = sb * (1 - V(G))
+
+.ic V(SW)={ic_sw} V(BANK_N)={vbank}
+.tran 10p {tstop} 0 10p uic
+.control
+run
+wrdata switch_edge.txt v(sw) i(Lloop) v(bank_n)
+.endc
+.end

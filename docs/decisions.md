@@ -19,7 +19,7 @@ One entry per decision, with its reason. The design is described in [power.md](p
 - Charging from a weak source may hit the safety timer. Accepted. There is no timer extension and no automatic retry.
 - L1 is 1 µH, not the typical 0.47 µH. That halves the ripple, stays within the data sheet range and is well stocked.
 - All bulk capacitors are X7R. The heat model puts the capacitors at U4 above 100 °C in a closed case. X5R is rated to 85 °C.
-- BYP has 2 x 10 µF 25 V, not 22 µF. BYP can see up to 13.7 V, and no 0805 X7R 22 µF is rated 16 V or more.
+- BYP uses C6 10 µF 25 V and C33 22 µF 16 V, both X7R, matching MAX77757 Table 4. C33 is Taiyo Yuden EMK316BB7226ML-T (C385906), in 1206 to retain X7R and the required voltage rating. DC-bias derating remains an estimate.
 - The SYS capacitors sit 4 to 10 mm from the pins. Accepted. The pin order and L1 leave no room closer in.
 - U4 carries a heatsink. The package has no exposed pad. Without the sink, thermal regulation cuts the charge current to 1.2 to 1.5 A in a closed case while the device runs.
 
@@ -54,7 +54,7 @@ One entry per decision, with its reason. The design is described in [power.md](p
 - The boost runs in forced PWM, with MODE at GND. A fixed switching frequency keeps harmonics predictable next to the 1090 MHz and GNSS receivers.
 - The switching frequency is 720 kHz with R16 at 220 kΩ, not 1 MHz. Boost loss at 1 A drops by about 20 %. Ripple rises from 20 to 28 mV.
 - R18 is 6.8 kΩ, not 10 kΩ. It brings the crossover inside the fSW/10 and RHPZ/5 guideline up to 1 A. The loop is slower, and the light-load phase margin drops from 72° to 60°.
-- The snubber has footprints but no parts. The model shows switch-edge ringing near 1 GHz. Whether it matters is a bench question.
+- The snubber has footprints but no parts. With the loop inductance taken from the board, the EMI estimate puts the ring at about 80 MHz (`hardware/sim/emi/results.md`); the receiver bands see the edge tail, which the snubber barely changes. Whether it matters is a bench question.
 - U6 has three unfilled vias in one row under its pad, with the paste beside them. That gives thermal vias without a paid fill process, and the paste windows keep clear of the drills.
 
 ## Board
@@ -70,6 +70,7 @@ One entry per decision, with its reason. The design is described in [power.md](p
 
 ## Mechanics and interfaces
 
+- The enclosure has a 5 cm² lower inlet and a 5 cm² upper outlet. The heat model assumes a 50 % open grille and 35 mm vertical separation. These are design inputs, not measured cooling performance.
 - All modules use one socket height, 8.5 mm. That means one part type for all seven sockets and one standoff length.
 - All case and module holes are 2.7 mm for M2.5 hardware, on KiCad stock footprints. The module holes take M2.5 as delivered and are not enlarged for M3.
 - The GNSS has two standoffs, the display one. The header rows carry the rest.

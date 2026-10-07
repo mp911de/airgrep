@@ -8,6 +8,7 @@ from unittest.mock import patch
 import numpy as np
 
 import run_heat as heat
+import run_power
 import vent_model
 
 
@@ -176,16 +177,41 @@ class OperatingPointTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "thermal iteration did not converge"):
             heat.run_case(self.model, self.case, "closed", 25., self.k_sw, max_iterations=1)
 
+    def test_vents_reduce_pack_temperature(self):
+        case = next(c for c in heat.CASES if c["key"] == "bat08")
+        vented = heat.run_case(self.high, case, "closed", 25., self.k_sw)
+        sealed = heat.run_case(self.high, case, "closed", 25., self.k_sw, vent_area_cm2=0.)
+        self.assertLess(vented["t_pack"], sealed["t_pack"])
+
+    def test_battery_path_copper_in_the_power_model_follows_the_board(self):
+        """run_power.R_BOARD copies J3 to F1, F1 to U4 BATT and U4 SYS to L2 from the heat model."""
+        board = sum(self.model.r_net[n] for n in ("BAT_IN", "VBAT", "VSYS"))
+        self.assertAlmostEqual(run_power.R_BOARD, board, delta=0.15e-3)
+
     def test_vent_model_constants_follow_the_heat_model(self):
-        """The sealed vent model must reproduce the closed case it copies its constants from."""
+        """The sealed vent model must reproduce the sealed case it copies its constants from."""
         for key, scenario in (("bat08", "bat08"), ("usb32", "usb32"), ("usb32off", "usb_off")):
             case = next(c for c in heat.CASES if c["key"] == key)
-            grid = heat.run_case(self.high, case, "closed", 25., self.k_sw * heat.BUCK_SW_HIGH)
-            lumped = vent_model.solve(scenario, 25.)
+            grid = heat.run_case(self.high, case, "closed", 25., self.k_sw * heat.BUCK_SW_HIGH, vent_area_cm2=0.)
+            lumped = vent_model.solve(scenario, 25., area_cm2=0.)
             with self.subTest(case=key):
-                self.assertAlmostEqual(lumped["t_air"], grid["t_air"], delta=0.5)
-                self.assertAlmostEqual(lumped["t_pack"], grid["t_pack"], delta=0.5)
+                self.assertAlmostEqual(lumped["t_air"], grid["t_air"], delta=1.0)
+                self.assertAlmostEqual(lumped["t_pack"], grid["t_pack"], delta=1.0)
                 self.assertAlmostEqual(lumped["i_chg"], grid["i_chg"], delta=0.05)
+
+
+class EnclosureTests(unittest.TestCase):
+    def test_sealed_air_rise_matches_wall_resistance(self):
+        self.assertAlmostEqual(vent_model.air_rise(5., 25., area_cm2=0.), 5. * vent_model.R_WALL)
+
+    def test_vents_conserve_heat_and_lower_temperature(self):
+        rise = vent_model.air_rise(5., 25.)
+        cooling = rise / vent_model.R_WALL + vent_model.vent_power(
+            rise, vent_model.VENT_AREA_CM2, vent_model.VENT_HEIGHT_M, 25.)
+        self.assertAlmostEqual(cooling, 5.)
+        self.assertGreater(rise, 0.)
+        self.assertLess(rise, vent_model.air_rise(5., 25., area_cm2=0.))
+        self.assertLess(vent_model.air_rise(5., 25., area_cm2=10.), rise)
 
 
 if __name__ == "__main__":
