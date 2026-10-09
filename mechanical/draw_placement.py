@@ -15,7 +15,7 @@ import pcbnew
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
-KICAD = ROOT / "hardware/kicad"
+KICAD = ROOT / "hardware/carrier-max-charger"
 OUT = ROOT / "mechanical"
 
 # Schematic sheet -> (legend text, fill colour). Parts are coloured by the sheet they are on.

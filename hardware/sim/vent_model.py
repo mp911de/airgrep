@@ -19,7 +19,7 @@ VENT_HEIGHT_M = 0.035               # vertical separation of inlet and outlet
 R_WALL = 6.3                        # K/W, sealed case to ambient (run_heat.enclosure_resistance)
 R_PACK = 9.2                        # K/W, pack to case air (run_heat.pack_resistance)
 TREG = 130.0                        # C, MAX77757 thermal regulation (run_heat.CHG_TREG)
-R_U4 = 36.0                         # K/W, U4 junction above case air per W of U4 loss, with the heatsink
+R_U4 = 37.0                         # K/W, U4 junction above case air per W of U4 loss, with the heatsink
 THERMOSTAT_MIN, JEITA_HOT = 55.0, 42.1  # C, lowest thermostat opening point and charge stop
 
 # Per scenario: p_in, heat inside the case without the U4 loss of a charging scenario [W]; u6, u7, cap,

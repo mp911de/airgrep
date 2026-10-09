@@ -25,7 +25,7 @@ except ImportError:
     kpy = os.path.join(HERE, "kpy")
     os.execv(kpy, [kpy, os.path.abspath(__file__)] + sys.argv[1:])
 
-DEFAULT_PCB = os.path.join(os.path.dirname(HERE), "hardware", "kicad", "carrier.kicad_pcb")
+DEFAULT_PCB = os.path.join(os.path.dirname(HERE), "hardware", "carrier-max-charger", "carrier.kicad_pcb")
 MIL = 25400          # nm per mil
 MM = 1000000         # nm per mm
 unit = MIL
@@ -204,7 +204,7 @@ def main():
     # The shared options are accepted before and after the subcommand.
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--pcb", default=argparse.SUPPRESS, metavar="FILE",
-                        help="board file (default hardware/kicad/carrier.kicad_pcb)")
+                        help="board file (default hardware/carrier-max-charger/carrier.kicad_pcb)")
     common.add_argument("--mm", action="store_true", default=argparse.SUPPRESS,
                         help="mm with 3 decimals instead of integer mil")
     ap = argparse.ArgumentParser(description="Read-only queries on a KiCad board.", parents=[common])

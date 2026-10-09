@@ -153,20 +153,37 @@ def steady_error(cal):
     return error
 
 
-def simulate(cal, pack, ambient=25.0, policy="stock", minutes=90, dt=1.0, **kwargs):
+@dataclass
+class TemperatureSwitch:
+    trip: float
+    hysteresis: float = 10.0
+    sensor_node: int = 1  # local PCB; node 0 is an ideal junction-sensing comparison
+    sensor_tau: float = 2.0  # seconds, assumed thermal lag from PCB to sensor
+    trip_error: float = 0.0
+
+    def tripped(self, was_hot, temperature):
+        threshold = self.trip + self.trip_error
+        return temperature > threshold - self.hysteresis if was_hot else temperature >= threshold
+
+
+def simulate(cal, pack, ambient=25.0, policy="stock", minutes=90, dt=1.0, limit=None, **kwargs):
     net = network(cal, pack, **kwargs)
     step = net.stepper(dt)
     temperature = np.full(5, ambient, dtype=float)
     rows, hot, current, charge = [], False, 0.0, 0.0
+    sensor, charger_hot = ambient, False
     energy_error = 0.0
     for index in range(round(minutes * 60 / dt) + 1):
         hot = jeita_hot(hot, temperature[4])
         # Stop at the thermostat's earliest possible trip; its reset cycle is not modelled.
         if temperature[4] >= heat.THERMOSTAT_MIN:
             break
+        if limit is not None:
+            charger_hot = limit.tripped(charger_hot, sensor)
         target = current_target(temperature[0], hot, policy)
-        current = 0.0 if hot else current + min(1.0, dt / 5) * (target - current)
-        rows.append([index * dt / 60, *temperature, current, charge])
+        current = 0.0 if hot or charger_hot else current + min(1.0, dt / 5) * (target - current)
+        row = [index * dt / 60, *temperature, current, charge]
+        rows.append(row + [sensor, float(charger_hot)] if limit is not None else row)
         if index == round(minutes * 60 / dt):
             break
         pu, pb, other = cal.losses(current)
@@ -179,6 +196,9 @@ def simulate(cal, pack, ambient=25.0, policy="stock", minutes=90, dt=1.0, **kwar
         supplied = dt * (sum(power) - np.dot(net.ambient_g, updated - ambient))
         energy_error = max(energy_error, abs(stored - supplied))
         temperature = updated
+        if limit is not None:
+            fraction = 1 - math.exp(-dt / limit.sensor_tau) if limit.sensor_tau else 1.0
+            sensor += fraction * (temperature[limit.sensor_node] - sensor)
         charge += current * dt / 3600
     return np.array(rows), energy_error
 

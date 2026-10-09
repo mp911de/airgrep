@@ -121,6 +121,16 @@ class TrackTests(unittest.TestCase):
             with self.subTest(layer=layer):
                 self.assertAlmostEqual(self.net.resistance(self.src, self.dst, hot), expected)
 
+    def test_wide_track_end_connects_both_pad_and_via(self):
+        board = track_board(layer="F", length=1.)
+        board["pads"][0].w = 1.2
+        board["pads"][1].layers = ("B",)
+        board["vias"] = [(1.5, 0.5, 0.6, 0.3, "TEST")]
+        net = heat.TrackNet(board, self.grid, "TEST")
+        resistance = net.resistance(self.src, self.dst)
+        self.assertTrue(math.isfinite(resistance))
+        self.assertGreater(resistance, 0.)
+
     def test_via_uses_adjacent_layers_for_temperature_and_heat(self):
         board = track_board()
         board["segments"] = []

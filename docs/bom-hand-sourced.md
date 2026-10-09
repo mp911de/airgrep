@@ -81,4 +81,4 @@ Hole positions and the insulator board are described in [mechanical.md](mechanic
 
 | Qty | Part | Where |
 |---|---|---|
-| 5 (JLCPCB minimum) | Carrier PCB, 105 x 95 mm, 4 layers, 1.6 mm, stackup JLC04161H-2116C (select it in the order; 1 oz outer copper), SMD parts assembled on the top side (standard assembly, because of the USB-C shell tabs) | [JLCPCB](https://jlcpcb.com/). Upload Gerbers, BOM and CPL from `hardware/kicad/jlcpcb/production_files/`. Not ordered; the files need a fresh export first, see [open-issues.md](open-issues.md). |
+| 5 (JLCPCB minimum) | Carrier PCB, 105 x 95 mm, 4 layers, 1.6 mm, stackup JLC04161H-2116C (select it in the order; 1 oz outer copper), SMD parts assembled on the top side (standard assembly, because of the USB-C shell tabs) | [JLCPCB](https://jlcpcb.com/). Upload Gerbers, BOM and CPL from `hardware/carrier-max-charger/jlcpcb/production_files/`. Not ordered; the files need a fresh export first, see [open-issues.md](open-issues.md). |

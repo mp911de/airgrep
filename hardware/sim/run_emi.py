@@ -2,7 +2,7 @@
 """EMI estimate for the carrier: emission spectra of the two converters and of the carrier's
 digital signals, radiated and conducted levels against CISPR 32 class B, and the converter
 lines that fall into the receiver bands. Hot loops, track parasitics and return-path gaps are
-read from hardware/kicad/carrier.kicad_pcb.
+read from hardware/carrier-max-charger/carrier.kicad_pcb.
 
     python3 hardware/sim/run_emi.py            # print the report
     python3 hardware/sim/run_emi.py --write    # also store emi/results.md and emi/spectrum_flarm.svg/.pdf

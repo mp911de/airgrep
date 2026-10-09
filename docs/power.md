@@ -130,7 +130,7 @@ Distances are pad centre to pin centre, measured on the board.
 - F.Cu zones "U4 GND heat", "U4 VSYS heat", "U4 VBAT heat" and "U4 CHGIN heat2" tie the pins to wider copper with solid connections.
 - Four GND vias at the package reach the In1 plane: one under the body, one at the PGND corner (pins 18, 19), two left of pins 8 and 9.
 - In2 carries the zones "U4 VSYS In2 heat2" and "U4 VBAT In2 heat2" under U4, each fed by vias next to the pins.
-- Rule areas named FINE_* relax clearances and via sizes locally. The rules are in `hardware/kicad/carrier.kicad_dru`.
+- Rule areas named FINE_* relax clearances and via sizes locally. The rules are in `hardware/carrier-max-charger/carrier.kicad_dru`.
 
 ### Heatsink
 

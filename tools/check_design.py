@@ -16,7 +16,7 @@ import pcbnew
 
 ROOT, TMP = sys.argv[1], sys.argv[2]
 EXPORTS = "--exports" in sys.argv[3:]
-KICAD = os.path.join(ROOT, "hardware/kicad")
+KICAD = os.path.join(ROOT, "hardware/carrier-max-charger")
 SIM = os.path.join(ROOT, "hardware/sim")
 findings = 0
 

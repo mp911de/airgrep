@@ -22,6 +22,7 @@ python3 hardware/sim/run_thermal.py --write    # thermal charge cut-off, report 
 python3 hardware/sim/run_power.py --write      # converters, report in power/results.md
 python3 hardware/sim/run_heat.py --write       # power loss and temperatures, report in heat/results.md
 python3 hardware/sim/run_charge_heat.py --write # battery heating delay, heat/charging.pdf and SVGs
+python3 hardware/sim/run_charge_limits.py --write # TMP300 threshold/hysteresis sweeps, separate charging_limits outputs
 python3 hardware/sim/run_emi.py --write        # emission estimate, report in emi/results.md, FLARM spectrum in emi/spectrum_flarm.svg/.pdf
 python3 hardware/sim/vent_model.py             # vented enclosure sweep, prints to the terminal
 ```
@@ -57,10 +58,12 @@ Shared and scripts:
 | `run_power.py` | Converters: TPS61088 loop gain in closed form, ripple and transient benches, undervoltage cut-off, switch-node coupling read from the board file |
 | `run_heat.py` | Power loss and temperatures on the routed board inside an assumed enclosure, with and without the U4 heatsink |
 | `run_charge_heat.py` | Five-node transient charging model, pack inertia and JEITA cutoff, 5 Ah and 10 Ah graphs |
+| `run_charge_limits.py` | Full-current charging with 80/90/100/110 °C TMP300 sensor trips, 5/10 °C hysteresis, thermal-mass and sensor uncertainty |
 | `run_emi.py` | Emission estimate: converter hot loops and edges, digital signals, radiated and conducted levels against CISPR 32 class B, converter lines in the receiver bands, return paths and rail ripple, all with geometry from the board |
 | `vent_model.py` | Lumped vented-enclosure model: stack-effect vents and a fan against case air, pack and U4 temperature |
 | `test_power.py` | Module-feed forward drop, branch currents, reverse isolation and shutdown solver regressions |
 | `test_heat.py` | Analytic network checks, layer and via temperatures, zero-current cases, numerical failure checks, operating-point regressions, vent model constants against the heat model |
+| `test_charge_heat.py` | Transient energy balance, thermal inertia, pack cutoff, charger hysteresis, sensor lag and timestep convergence |
 | `test_emi.py` | Spectrum helpers against closed forms, Ott's loop formula, limits, microstrip, geometry, and the board: hot loops found, In1 solid, return-path gaps |
 | `requirements.txt` | NumPy and SciPy for the heat and EMI models |
 
@@ -95,6 +98,8 @@ Power loss and temperatures:
 | `heat/map_*.svg` | Top-copper temperature maps, see below |
 | `heat/charging.pdf`, `heat/charging_*.svg` | Both pack sizes, current limits, heating-delay sensitivity and illustrative external spreader paths |
 | `heat/charging.md`, `heat/charging.json` | Transient assumptions, results, board/input hashes and steady calibration points |
+| `heat/charging_limits.pdf`, `heat/charging_limits_*.svg` | Separate TMP300 comparison graphs for both packs, 25/35 °C ambient, delay/tolerance scenarios and raw switching cycles |
+| `heat/charging_limits.md`, `heat/charging_limits.json` | Threshold-sweep assumptions, results and input hashes; original charging outputs remain untouched |
 
 EMI:
 

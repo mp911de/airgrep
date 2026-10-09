@@ -2,12 +2,12 @@
   {
     "file": "max77757.pdf",
     "manufacturer_url": "https://www.analog.com/media/en/technical-documentation/data-sheets/MAX77757.pdf",
-    "download_url": "https://docs.rs-online.com/1bdf/A700000007829174.pdf",
-    "downloaded": "2026-09-30",
+    "download_url": "https://www.analog.com/media/en/technical-documentation/data-sheets/MAX77757.pdf",
+    "downloaded": "2026-10-09",
     "pages": 35,
-    "bytes": 726655,
-    "sha256": "6a825dfc6163fe0c97326fedab458ada86e4dbe7e216b525b8572dcd6e5d1175",
-    "note": "U4 charger. Analog Devices timed out; Maxim document from the RS Components document server"
+    "bytes": 870008,
+    "sha256": "8643685f33613e98d0e2fa9ffeb1ee0b5ebdc7e396b6fa0badf1d791b1f725ee",
+    "note": "U4 charger. Rev 2, 6/21, downloaded by Mark from analog.com in a browser (the host blocks scripted downloads). Replaces the Rev 1 RS mirror copy."
   },
   {
     "file": "tps61088.pdf",

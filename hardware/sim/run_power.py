@@ -14,7 +14,7 @@ Three parts:
   2. Switching ripple from ngspice benches of the two power stages (power/*.cir) with
      the real inductors and derated capacitors.
   3. Distances between the switch-node copper and the sensitive nets on the board,
-     read from hardware/kicad/carrier.kicad_pcb, with an estimate of the capacitive
+     read from hardware/carrier-max-charger/carrier.kicad_pcb, with an estimate of the capacitive
      coupling. Magnetic coupling from the shielded inductors is bounded analytically.
 
 Requires ngspice for part 2. Only the standard library is used.
@@ -34,7 +34,7 @@ import simlib  # noqa: E402
 HERE = os.path.dirname(os.path.abspath(__file__))
 BENCHES = os.path.join(HERE, "power")
 RESULTS = os.path.join(BENCHES, "results.md")
-PCB = os.path.join(HERE, "..", "kicad", "carrier.kicad_pcb")
+PCB = os.path.join(HERE, "..", "carrier-max-charger", "carrier.kicad_pcb")
 
 # --- TPS61088, data sheet SLVSCM8D
 VREF = 1.204

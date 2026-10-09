@@ -16,7 +16,7 @@ The GNSS and ADSBee modules have arrived. The display is ordered. The carrier bo
   - The 8.5 mm socket stack against the controller and the microSD slot on the back of the display.
   - An M2.5 screw in the module hole at MH13.
   - One standoff plus four header groups against the touch force.
-- [ ] **Production files.** Regenerate `hardware/kicad/jlcpcb/` from the final board:
+- [ ] **Production files.** Regenerate `hardware/carrier-max-charger/jlcpcb/` from the final board:
   - Fill all zones, save, run DRC with schematic parity.
   - Export Gerbers, BOM and CPL.
   - Run `tools/kpy tools/fix_cpl.py` after every CPL export. It corrects rotation and position of the parts whose JLCPCB model origin differs from the footprint; see the script header.

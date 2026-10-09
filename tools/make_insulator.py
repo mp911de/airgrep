@@ -19,7 +19,7 @@ from pathlib import Path
 import pcbnew
 
 ROOT = Path(__file__).resolve().parents[1]
-CARRIER = ROOT / "hardware/kicad/carrier.kicad_pcb"
+CARRIER = ROOT / "hardware/carrier-max-charger/carrier.kicad_pcb"
 OUT = ROOT / "hardware/insulator/insulator.kicad_pcb"
 REV = "Rev A 2026-10-03"
 THICKNESS = 0.8

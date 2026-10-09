@@ -26,8 +26,8 @@ from pathlib import Path
 import pcbnew
 
 ROOT = Path(__file__).resolve().parents[1]
-BOARD = ROOT / "hardware/kicad/carrier.kicad_pcb"
-CPL = ROOT / "hardware/kicad/jlcpcb/production_files/CPL-carrier.csv"
+BOARD = ROOT / "hardware/carrier-max-charger/carrier.kicad_pcb"
+CPL = ROOT / "hardware/carrier-max-charger/jlcpcb/production_files/CPL-carrier.csv"
 
 # footprint name: (rotation added to the board rotation, JLC origin in footprint-local mm)
 FIXES = {

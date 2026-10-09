@@ -6,7 +6,7 @@ Board outline, placement, mounting and the stack behind the display. Headline fi
 
 ![Carrier placement, front view](../mechanical/placement.png)
 
-The drawing is generated from `hardware/kicad/carrier.kicad_pcb`, which is the source for every position. Regenerate it after moving parts, from the repository root, with KiCad's Python:
+The drawing is generated from `hardware/carrier-max-charger/carrier.kicad_pcb`, which is the source for every position. Regenerate it after moving parts, from the repository root, with KiCad's Python:
 
 ```
 tools/kpy mechanical/draw_placement.py

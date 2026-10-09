@@ -4,7 +4,7 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 
 | PDF | Part | Source | Host |
 |---|---|---|---|
-| [max77757.pdf](max77757.pdf) | U4 charger | [Original](https://www.analog.com/media/en/technical-documentation/data-sheets/MAX77757.pdf) | RS Components mirror |
+| [max77757.pdf](max77757.pdf) | U4 charger, Rev 2 | [Original](https://www.analog.com/media/en/technical-documentation/data-sheets/MAX77757.pdf) | Manufacturer, browser download |
 | [tps61088.pdf](tps61088.pdf) | U6 boost | [Original](https://www.ti.com/lit/ds/symlink/tps61088.pdf) | Manufacturer |
 | [tps22975.pdf](tps22975.pdf) | U7 load switch | [Original](https://www.ti.com/lit/ds/symlink/tps22975.pdf) | Manufacturer |
 | [tlv840.pdf](tlv840.pdf) | U5 supervisor | [Original](https://www.ti.com/lit/ds/symlink/tlv840.pdf) | Manufacturer |

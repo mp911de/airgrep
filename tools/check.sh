@@ -2,7 +2,7 @@
 # Design check for the carrier board. Read-only: it never saves the board or the schematic.
 #
 #   tools/check.sh                 run all checks, exit 1 on any finding
-#   tools/check.sh --exports       also check BOM and CPL in hardware/kicad/jlcpcb/ against the board
+#   tools/check.sh --exports       also check BOM and CPL in hardware/carrier-max-charger/jlcpcb/ against the board
 #   tools/check.sh --install-hook  write .git/hooks/pre-commit, a stub that runs this script
 #
 # Steps: ERC, DRC with zone refill in memory and schematic parity, net names, schematic
@@ -19,8 +19,8 @@ KICAD_APP="${KICAD_APP:-/Applications/KiCad/KiCad.app/Contents}"
 CLI="$KICAD_APP/MacOS/kicad-cli"
 KPY="$KICAD_APP/Frameworks/Python.framework/Versions/Current/bin/python3"
 VPY="$ROOT/hardware/sim/.venv/bin/python"
-SCH="$ROOT/hardware/kicad/carrier.kicad_sch"
-PCB="$ROOT/hardware/kicad/carrier.kicad_pcb"
+SCH="$ROOT/hardware/carrier-max-charger/carrier.kicad_sch"
+PCB="$ROOT/hardware/carrier-max-charger/carrier.kicad_pcb"
 
 EXPORTS=""
 case "${1:-}" in
