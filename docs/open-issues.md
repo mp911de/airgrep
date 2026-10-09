@@ -77,6 +77,7 @@ The enclosure is not designed yet. The carrier does not depend on these, the fin
 ## Optional improvements
 
 - [ ] **Lower battery path resistance** to delay the undervoltage cut-off: a connector with two contacts per pole or JST-XH, and AWG 22 leads. The same change settles the connector rating above.
+- [ ] **Overvoltage lockout on U11 and U12 (rev B).** OVLO (pin 2) is tied to GND, so the overvoltage cut-off does nothing. If the boost feedback divider R14/R15 fails, the 5 V rail can rise toward 13 V and U7 and the modules see it. Fix: a divider from RAIL_5V on each OVLO pin, two resistors per chip.
 - [ ] **SMAJ10A instead of SMAJ12A** for D3 if 12 V adapters need not be tolerated. The charger locks out at 13.7 V and withstands 16 V.
 
 ## Housekeeping outside the docs
