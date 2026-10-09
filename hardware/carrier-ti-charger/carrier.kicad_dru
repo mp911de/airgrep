@@ -1,0 +1,70 @@
+(version 1)
+
+# Units are mil. A later rule overrides an earlier one.
+# JLCPCB minimums are in Board Setup > Constraints. Stackup JLC04161H-2116C.
+# kicad-cli skips broken rules silently. Check edits in Board Setup > Custom Rules.
+
+# JLCPCB limits that Board Setup cannot express. Names give the fab value.
+
+(rule "pad hole to hole 18 mil (0.45 mm)"
+  (condition "A.Type == 'Pad' && (B.Type == 'Pad' || B.Type == 'Via')")
+  (constraint hole_to_hole (min 18mil)))
+
+(rule "PTH hole to track 12 mil (0.28 mm)"
+  (condition "A.Pad_Type == 'Through-hole' && (B.Type == 'Track' || B.Type == 'Arc')")
+  (constraint hole_clearance (min 12mil)))
+
+(rule "PTH annular ring 10 mil (0.25 mm recommended, 0.18 mm minimum)"
+  (condition "A.Pad_Type == 'Through-hole'")
+  (constraint annular_width (min 10mil)))
+
+(rule "NPTH hole 20 mil (0.5 mm)"
+  (condition "A.Pad_Type == 'NPTH, mechanical'")
+  (constraint hole_size (min 20mil)))
+
+(rule "pad to pad 6 mil (0.15 mm)"
+  (condition "A.Type == 'Pad' && B.Type == 'Pad' && A.Net != B.Net")
+  (constraint clearance (min 6mil)))
+
+(rule "silkscreen to pad 5 mil (0.13 mm)"
+  (layer outer)
+  (condition "A.Layer == '?.Silkscreen' && B.Type == 'Pad'")
+  (constraint silk_clearance (min 5mil)))
+
+# JLCPCB flags 1:1 mask openings. Keep the mask web in Board Setup at 0.
+(rule "solder mask expansion 1 mil"
+  (constraint solder_mask_expansion (opt 1mil)))
+
+(rule "fiducial mask opening 2 mm"
+  (condition "A.Type == 'Pad' && A.memberOfFootprint('FID*')")
+  (constraint solder_mask_expansion (opt 0.5mm)))
+
+# Project rules
+
+(rule "edge clearance 40 mil"
+  (constraint edge_clearance (min 40mil)))
+
+(rule "J1 shell pads at the edge 12 mil"
+  (condition "A.Reference == 'J1'")
+  (constraint edge_clearance (min 12mil)))
+
+(rule "mounting holes: copper keepaway 12 mil"
+  (condition "A.Reference == 'MH*'")
+  (constraint hole_clearance (min 12mil)))
+
+# MH6 to MH8 are 6.5 mm. JLCPCB routes holes above 6.3 mm with +/-8 mil.
+(rule "routed mounting holes: copper keepaway 16 mil"
+  (condition "A.Reference == 'MH6' || A.Reference == 'MH7' || A.Reference == 'MH8'")
+  (constraint hole_clearance (min 16mil)))
+
+# Fine areas are the rule areas named FINE_*. Draw one around a fine-pitch part.
+
+(rule "signal spacing 12 mil outside fine areas"
+  (condition "A.NetClass == 'Default' && B.NetClass == 'Default' && (A.Type == 'Track' || A.Type == 'Via') && (B.Type == 'Track' || B.Type == 'Via') && !A.intersectsArea('FINE_*')")
+  (constraint clearance (min 10mil)))
+
+# JLCPCB needs 0.15 mm more diameter than hole: 18 mil on a 12 mil hole.
+(rule "vias in fine areas 18 mil, ring 3 mil"
+  (condition "A.Type == 'Via' && A.intersectsArea('FINE_*')")
+  (constraint via_diameter (min 18mil))
+  (constraint annular_width (min 3mil)))

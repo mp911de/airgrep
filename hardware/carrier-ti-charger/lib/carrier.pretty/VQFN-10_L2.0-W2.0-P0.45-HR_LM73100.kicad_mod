@@ -1,0 +1,302 @@
+(footprint "VQFN-10_L2.0-W2.0-P0.45-HR_LM73100"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "TI LM73100 RPW0010A VQFN-HR 2 x 2 mm, 0.45 mm pitch; land pattern example from SNOSDC0A (4225183/A): corner pins 1, 4, 7, 10 as L-shaped pads, IN (5) and OUT (6) as 0.3 x 2.4 mm centre pads")
+	(tags "QFN VQFN-HR LM73100 ideal diode")
+	(property "Reference" "REF**"
+		(at 0 -2.2 0)
+		(layer "F.SilkS")
+		(uuid "ef18ea7a-fd8a-434c-91fa-34009a5b70ac")
+		(effects
+			(font
+				(size 1.016 1.016)
+				(thickness 0.1524)
+			)
+		)
+	)
+	(property "Value" "VQFN-10_L2.0-W2.0-P0.45-HR_LM73100"
+		(at 0 2.2 0)
+		(layer "F.Fab")
+		(uuid "3c3c3bbc-e2a6-4641-b638-29c3102beff1")
+		(effects
+			(font
+				(size 1.016 1.016)
+				(thickness 0.1524)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "5558a860-31c7-4026-b8a4-63e06e766d31")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "735d05f8-ade2-4e43-9818-441fb2dbddd5")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr smd)
+	(pad "1" smd roundrect
+		(at -0.9 -0.7)
+		(size 0.6 0.3)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "bae9ead2-b5b5-4021-9780-be9ae73e07c5")
+	)
+	(pad "1" smd roundrect
+		(at -0.725 -0.875)
+		(size 0.25 0.65)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "9bdf3a2f-c5f8-4983-9d7b-169850fdc85f")
+	)
+	(pad "2" smd roundrect
+		(at -0.9 -0.225)
+		(size 0.6 0.25)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "5cadc24e-58a2-4d56-9c01-36cfc4837d2b")
+	)
+	(pad "3" smd roundrect
+		(at -0.9 0.225)
+		(size 0.6 0.25)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "ba05d86d-b1b8-489f-908d-7746c0c2c3c4")
+	)
+	(pad "4" smd roundrect
+		(at -0.9 0.7)
+		(size 0.6 0.3)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "ee2c35c4-22bf-423c-b6e2-98a1174ff2f2")
+	)
+	(pad "4" smd roundrect
+		(at -0.725 0.875)
+		(size 0.25 0.65)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "d4818c05-d75b-4334-8bf5-5e2f5ce6511b")
+	)
+	(pad "5" smd roundrect
+		(at -0.25 0)
+		(size 0.3 2.4)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "abd08110-dab5-4b7b-8550-8800faf6364a")
+	)
+	(pad "6" smd roundrect
+		(at 0.25 0)
+		(size 0.3 2.4)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "c68e7968-871f-4822-bc40-baaf75d585f6")
+	)
+	(pad "7" smd roundrect
+		(at 0.9 0.7)
+		(size 0.6 0.3)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "e2d62f25-57a7-4651-be6b-26b17bce9563")
+	)
+	(pad "7" smd roundrect
+		(at 0.725 0.875)
+		(size 0.25 0.65)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "a2d09eb9-d7c2-4857-a295-cdf06aaa99b2")
+	)
+	(pad "8" smd roundrect
+		(at 0.9 0.225)
+		(size 0.6 0.25)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "67d556d4-acf7-47c7-81f6-ed6d155f07c4")
+	)
+	(pad "9" smd roundrect
+		(at 0.9 -0.225)
+		(size 0.6 0.25)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "97289cf5-6865-462e-aa68-fcf635b8c25a")
+	)
+	(pad "10" smd roundrect
+		(at 0.9 -0.7)
+		(size 0.6 0.3)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "6786945e-f0b2-4b8d-910f-b3a335cd94f0")
+	)
+	(pad "10" smd roundrect
+		(at 0.725 -0.875)
+		(size 0.25 0.65)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.2)
+		(uuid "71793a5f-29a0-4308-99e8-6a2e887ba0cf")
+	)
+	(fp_line
+		(start -0.7 -1)
+		(end 1 -1)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "8975c628-9af7-4e0e-b5a4-9d13f3d0e9ba")
+	)
+	(fp_line
+		(start 1 -1)
+		(end 1 1)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "9b46ad3b-5088-4867-b2c3-6a1b13269c63")
+	)
+	(fp_line
+		(start 1 1)
+		(end -1 1)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "dd0907f9-8286-4fd0-8b3a-9edb750e4866")
+	)
+	(fp_line
+		(start -1 1)
+		(end -1 -0.7)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "ebe673f7-ad1e-4940-803e-0174464022a0")
+	)
+	(fp_line
+		(start -1 -0.7)
+		(end -0.7 -1)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "9d4b10e7-3123-4d51-b206-dc77bfa567c5")
+	)
+	(fp_line
+		(start -1.45 -1.45)
+		(end 1.45 -1.45)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "1405597a-e9c4-4b92-a051-84513a3bd519")
+	)
+	(fp_line
+		(start 1.45 -1.45)
+		(end 1.45 1.45)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "b3ee7d77-46f9-4046-9fe8-c506c433670d")
+	)
+	(fp_line
+		(start 1.45 1.45)
+		(end -1.45 1.45)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "882b1a09-a27f-4627-aad3-25764fc4f37f")
+	)
+	(fp_line
+		(start -1.45 1.45)
+		(end -1.45 -1.45)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "221f6dbd-0128-4f90-8948-7560cfd37d9e")
+	)
+	(fp_line
+		(start -1.45 -1.45)
+		(end -1.45 -1.1)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "3ae95eec-9b77-43ea-8eda-2e558aec51c9")
+	)
+	(fp_line
+		(start -1.45 -1.45)
+		(end -1.1 -1.45)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "c6261cb4-b37a-4e25-8557-d6aaa3cd359d")
+	)
+	(fp_line
+		(start 1.45 -1.45)
+		(end 1.45 -1.1)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "992394a8-0823-43df-8be9-0af6148654d2")
+	)
+	(fp_line
+		(start 1.45 1.45)
+		(end 1.45 1.1)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "febaad4d-4f05-4c48-9e24-a55c9fb28d4b")
+	)
+	(fp_line
+		(start -1.45 1.45)
+		(end -1.45 1.1)
+		(stroke
+			(width 0.15)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "ae15c53a-7f3c-4cf8-93ec-423fb518c23d")
+	)
+	(model "${KIPRJMOD}/lib/carrier.3dshapes/VQFN-10_L2.0-W2.0-P0.45-HR_LM73100.wrl"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)
