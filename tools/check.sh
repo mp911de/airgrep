@@ -3,6 +3,7 @@
 #
 #   tools/check.sh                 run all checks, exit 1 on any finding
 #   tools/check.sh --exports       also check BOM and CPL in hardware/carrier-max-charger/jlcpcb/ against the board
+#   tools/check.sh --staged        run only for staged design, sim, specs or tools changes (excluding Markdown)
 #   tools/check.sh --install-hook  write .git/hooks/pre-commit, a stub that runs this script
 #
 # Steps: ERC, DRC with zone refill in memory and schematic parity, net names, schematic
@@ -25,16 +26,25 @@ PCB="$ROOT/hardware/carrier-max-charger/carrier.kicad_pcb"
 EXPORTS=""
 case "${1:-}" in
   --exports) EXPORTS="--exports" ;;
+  --staged)
+    git -C "$ROOT" diff --cached --quiet --no-renames -- \
+      hardware/carrier-max-charger/ hardware/sim/ specs/ tools/ ':(glob,exclude)**/*.md'
+    status=$?
+    case $status in
+      0) exit 0 ;;
+      1) ;;
+      *) echo "FAIL hook     cannot inspect staged changes"; exit "$status" ;;
+    esac ;;
   --install-hook)
     hook="$(git -C "$ROOT" rev-parse --git-path hooks/pre-commit)" || exit 1
     case "$hook" in /*) ;; *) hook="$ROOT/$hook" ;; esac
     if [ -e "$hook" ] && ! grep -q 'tools/check.sh' "$hook"; then
       echo "FAIL hook     $hook exists and is not this hook"; exit 1
     fi
-    printf '#!/bin/sh\nexec "$(git rev-parse --show-toplevel)/tools/check.sh"\n' > "$hook" && chmod +x "$hook"
+    printf '#!/bin/sh\nexec "$(git rev-parse --show-toplevel)/tools/check.sh" --staged\n' > "$hook" && chmod +x "$hook"
     echo "ok   hook     $hook"; exit 0 ;;
   "") ;;
-  *) sed -n '2,6p' "$0"; exit 2 ;;
+  *) sed -n '2,7p' "$0"; exit 2 ;;
 esac
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/flarm-check.XXXXXX")" || exit 1
