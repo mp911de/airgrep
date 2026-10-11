@@ -71,6 +71,24 @@ RPN = S x L x D. "Rev" says where the mitigation fits: **A** = no board change (
 | C12 | Soft short below 5 to 6 A on VBAT, VSYS or BOOST_5V (cracked MLCC: C9 to C14, C11, C27, C18 to C20) | Nothing trips. F1 carries 100 % for at least 4 h and opens at 200 % within 5 s [D]. QBAT trips at 6 A only. The POWER slider does not isolate the pack: QBAT stays closed and a disabled TPS61088 conducts through its high-side body diode [D][Doc] | F | None below 6 A. Placement verified: all these MLCCs are at least 7.7 mm from the edge and 9 mm from a hole [S] | 5 | 1 | 5 | 25 | Torque-limited screws, no board flex at assembly | A |
 | | | | | | | | | | Battery disconnect controlled by the slider ([issue 0001](../issues/0001-battery-disconnect-switch.md)) plus a battery-side current limit near 3 A. Flex-termination MLCCs on VBAT and VSYS | B |
 
+## 2b. Charger U4 on carrier-ti-charger: BQ25798
+
+Rows C1 to C12 describe the MAX77757 board. The BQ25798 variant changes these:
+
+| ID | Item and failure mode | Effect on the system | Cockpit | Existing detection or limit | S | L | D | RPN | Mitigation | Rev |
+|---|---|---|---|---|---|---|---|---|---|---|
+| T1 | Host never configures the charger (display absent, firmware fault) | Default mode: 1 A, 4.2 V, TREG 120 °C, 12 h timer [D]. Charging continues, slower | N | WD_STAT readable, STAT LED | 1 | 3 | 2 | 6 | By design; the default is the safe state | |
+| T2 | Host stops writing (crash, reset) | Watchdog expiry (40 s default) resets every register to default [D]: 1 A, TREG 120 °C, JEITA back to defaults | N | WD_STAT, INT pulse | 1 | 3 | 3 | 9 | Firmware re-applies the profile on every WD_STAT; never disables the watchdog | A |
+| T3 | Host writes a wrong profile (ICHG above 1.8 A, VREG above 4.2 V, TREG 120 °C) | More heat; VREG up to 4.99 V on a 1S setting [D] | F | Pack PCM overcharge cut at about 4.25 V [D] | 4 | 2 | 3 | 24 | Firmware clamps writes; verify by reading back; keep VREG at the 4.2 V default. Pack PCM is the last line | A |
+| T4 | Pack above 45 °C in default mode | T5 hot stop at 43.0 °C nominal, 44.2 °C worst case (RT1 80.6 kΩ, RT2 768 kΩ) suspends charging in default mode too; T3 at 32.2 °C lowers VREG by 400 mV [Sim]. Pack rated to 45 °C [D] | N | TS thresholds | 3 | 2 | 3 | 18 | Host sets JEITA_VSET = suspend, or the 71.5 kΩ / 412 kΩ divider puts T5 at 45 °C (`docs/power.md`) | B |
+| T5 | PROG (R56) open or shorted | Open: cell count undefined at POR [A]; shorted: 0 Ω is no table entry [D]. Charger may configure for the wrong frequency or cell count | F | VREG default follows the cell count; pack PCM | 4 | 1 | 3 | 12 | Measure VREG and VSYSMIN at bring-up; X-ray not needed, 0603 | A |
+| T6 | ILIM_HIZ divider (R57/R58) open at the top | Pin below 0.75 V: converter stops, HIZ [D]. No charging, battery runs the system | IL | STAT, PG_STAT | 2 | 1 | 2 | 4 | None needed | |
+| T7 | CE pulled high by Q2 leakage (above 1.3 V) | Charging disabled with the thermostat closed | IL | CHG_STAT | 2 | 1 | 3 | 6 | 100 kΩ R12 keeps CE at 0.1 V at the 25 °C leakage maximum; 5 µA at 55 °C reaches 0.5 V, still below VIH [Sim] | |
+| T8 | C-to-C cable from a PD adapter | D+/D- open: "unknown adapter", input limit 3 A [D], capped by ILIM_HIZ at about 3 A; a 500 mA-limited source then sags to VINDPM | N | VINDPM loop | 2 | 3 | 2 | 12 | AICL holds the input at 4.2 V; bench test | A |
+| T9 | Unrouted copper paths in the heat model | The model assumes 5 mΩ per unrouted net until the board is routed [Sim] | - | report line | - | - | - | - | Rerun after routing | A |
+
+Package: VQFN-HR 29 at 0.4 mm pitch with no exposed pad; the GND pin is a 0.2 x 1 mm pad. A1 (bridges) applies with the TI land pattern; A3 (heatsink stack short) does not apply, the plate sits on the solder mask through an insulating pad.
+
 ## 3. Battery path: pack, J3, harness, F1, gauge U8
 
 | ID | Item and failure mode | Effect on the system | Cockpit | Existing detection or limit | S | L | D | RPN | Mitigation | Rev |

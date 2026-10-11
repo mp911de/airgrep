@@ -29,12 +29,14 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tools"))
+import chargers  # noqa: E402
+import project  # noqa: E402
 import simlib  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BENCHES = os.path.join(HERE, "power")
-RESULTS = os.path.join(BENCHES, "results.md")
-PCB = os.path.join(HERE, "..", "carrier-max-charger", "carrier.kicad_pcb")
+RESULTS = os.path.join(BENCHES, "results_max.md")  # results_<charger>.md, bind_charger
 
 # --- TPS61088, data sheet SLVSCM8D
 VREF = 1.204
@@ -97,8 +99,29 @@ IOUT_CASES = (0.05, 0.2, 0.8, 1.0, 1.5)
 IOUT_DESIGN = 1.0  # loads above this are short-term headroom, not design points
 PM_MIN, GM_MIN = 45.0, 10.0
 
-# --- MAX77757 buck
+# --- charger buck (chargers.py, bound by bind_charger; run_heat.select_project calls it)
 BUCK_FSW = 1.3e6
+CHG = None
+
+
+def bind_charger(tag=None):
+    """Charger buck constants and the battery path copper of the project's board."""
+    global BUCK_FSW, CHG, R_B2S, R_BOARD, R_SWITCH_BOARD, R_BOARD_SOURCE, RESULTS
+    tag = tag or project.charger(project.resolve())
+    CHG = chargers.CHARGERS[tag]
+    RESULTS = os.path.join(BENCHES, "results_%s.md" % tag)
+    BUCK_FSW = CHG["fsw"]
+    R_B2S = CHG["r_batfet"]
+    path = os.path.join(HERE, "heat", tag, "calibration.json")
+    if os.path.exists(path):
+        with open(path) as f:
+            cal = json.load(f)
+        R_BOARD = sum(cal["r_board"].values())
+        R_BOARD_SOURCE = "heat/%s/calibration.json%s" % (tag, ", unrouted nets assumed" if cal["unrouted"] else "")
+    else:
+        R_BOARD = 1.3e-3 + 4.6e-3 + 6.2e-3  # MAX77757 board, heat/max/results.md
+        R_BOARD_SOURCE = "literal, no calibration file"
+    R_SWITCH_BOARD = R_B2S + R_BOARD
 
 BENCH = simlib.Bench(BENCHES)
 
@@ -340,7 +363,7 @@ def buck_ripple(report):
     report.add("## Charger buck switching ripple on VSYS (ngspice, power/buck_ripple.cir)")
     report.add()
     cases = list(itertools.product((3.5, 4.2), (1.5, 3.0)))
-    runs = [{"vsys": vsys, "iload": iload} for vsys, iload in cases]
+    runs = [dict(vsys=vsys, iload=iload, **buck_bench_params()) for vsys, iload in cases]
     results = BENCH.simulate_all("buck_ripple", runs)
     table = []
     worst = 0.0
@@ -352,9 +375,9 @@ def buck_ripple(report):
         worst = max(worst, pp)
         table.append(["%.1f V" % vsys, "%.1f A" % iload, "%.1f mV" % (1e3 * pp),
                       "%.2f A / %.2f A" % (il_pp, il_peak)])
-    report.add("5 V input, %.1f MHz, L1 1 µH, VSYS capacitors 4 x 22 µF derated to 49 µF. "
-               "The MAX77757 loop is internal and not modelled, so only the ripple is meaningful:"
-               % (BUCK_FSW / 1e6))
+    report.add("5 V input, %.2g MHz, L1 %.1f µH (%s), VSYS capacitors 4 x 22 µF derated to 49 µF. "
+               "The %s loop is internal and not modelled, so only the ripple is meaningful:"
+               % (BUCK_FSW / 1e6, CHG["l1"]["l"] * 1e6, CHG["l1"]["label"], CHG["part"]))
     report.add()
     report.table(["VSYS", "Load", "VSYS ripple (20 MHz)", "L1 ripple / peak"], table)
     report.check(worst < 0.02, "VSYS ripple at most %.1f mV peak to peak, below 20 mV" % (1e3 * worst))
@@ -595,12 +618,18 @@ VIT = 2.9  # TLV840CADL29, VIT-
 VHYS_CASES = {"2.5 % (minimum)": 0.025 * VIT, "5 % (typical)": 0.05 * VIT, "7 % (maximum)": 0.07 * VIT}
 TD_CT_OPEN, TP_SUPERVISOR = 40e-6, 30e-6  # reset delay with CT open, propagation delay
 VIN_UVLO = 2.4  # TPS61088 VIN UVLO falling, minimum
-R_B2S = 20e-3  # MAX77757 BATT to SYS switch
-# Board copper, copied from the path resistances in heat/results.md (run_heat.py solves the
-# routed tracks and copper areas): J3 to F1 1.3 mOhm, F1 to U4 BATT 4.6 mOhm, U4 SYS to L2
-# 6.2 mOhm. test_heat.py checks them against the heat model.
+R_B2S = 20e-3  # charger BATT to SYS switch, bind_charger
+# Board copper J3 to F1, F1 to U4 BATT, U4 SYS to L2 from heat/<charger>/calibration.json (run_heat.py
+# solves the routed tracks and copper areas). test_heat.py checks them against the heat model.
 R_BOARD = 1.3e-3 + 4.6e-3 + 6.2e-3
 R_SWITCH_BOARD = R_B2S + R_BOARD
+R_BOARD_SOURCE = "literal"
+
+
+def buck_bench_params():
+    """power/buck_ripple.cir parameters of the project's charger."""
+    return dict(fsw=CHG["fsw"], lval=CHG["l1"]["l"], dcr=CHG["l1"]["dcr"], ron_hs=CHG["r_hs"], ron_ls=CHG["r_ls"],
+                r_series=CHG["r_series"])
 # Pack: <= 50 mOhm AC at 1 kHz and 50 % capacity (data sheet); the DC value near the end of
 # discharge with the protection FETs is assumed 2 to 3 times that. Harness: two JST-PH
 # contacts (20 mOhm maximum each), AWG 24 lead 2 x 10 cm (17 mOhm) and F1 (11 mOhm, Littelfuse
@@ -642,7 +671,7 @@ def undervoltage(report):
                "as the transient bench. Module readiness requires both terminals above 4.75 V.")
     report.add()
     report.add("The battery is an open-circuit voltage behind the pack resistance and the harness. "
-               "Then follow the MAX77757 BATT-to-SYS switch (%.0f mΩ) and the board copper (%.0f mΩ "
+               "Then follow the " + CHG["part"] + " BATT-to-SYS switch (%.0f mΩ) and the board copper (%.0f mΩ "
                "from the routed tracks, J3 to L2). The TLV840 on VSYS (VIT− %.1f V, "
                "hysteresis %s, %.0f µs propagation, %.0f µs reset delay with CT open) pulls PWR_EN "
                "low against R13 100 kΩ. R13 is fed from VSYS through R43 1 kΩ, the closed thermostat "
@@ -799,15 +828,15 @@ def undervoltage(report):
     report.add()
 
 
-AGGRESSORS = {"BOOST_SW": VOUT, "CHG_SW": 5.0}  # switch-node net and its edge swing
+AGGRESSORS = {"BOOST_SW": VOUT, "CHG_SW": 5.0, "CHG_SW1": 5.0, "CHG_SW2": 5.0}  # switch-node net and its edge swing
 VICTIMS = ("BOOST_FB", "BOOST_COMP", "BOOST_SS", "BOOST_ILIM", "BAT_TS", "CHG_PVL", "CHG_IFAST",
-           "CHG_VDD", "THERM_OK", "CHG_DIS", "I2C_SDA", "I2C_SCL", "GNSS_PPS")
+           "CHG_VDD", "CHG_PROG", "CHG_ILIM", "CHG_REGN", "THERM_OK", "CHG_DIS", "I2C_SDA", "I2C_SCL", "GNSS_PPS")
 NODE_CAP = 5e-12  # pin plus trace capacitance of a high-impedance node, assumed
 
 
 def read_pcb():
     """Copper of the board: tracks and pads as (x1, y1, x2, y2, width, layer, net)."""
-    with open(PCB) as pcb:
+    with open(project.pcb(project.resolve())) as pcb:
         text = pcb.read()
     copper = []
     for m in re.finditer(r"\(segment\n\t\t\(start ([-\d.]+) ([-\d.]+)\)\n\t\t\(end ([-\d.]+) "
@@ -829,6 +858,15 @@ def read_pcb():
             y = fy - px * math.sin(rot) + py * math.cos(rot)
             size = max(float(pm.group(3)), float(pm.group(4)))
             copper.append((x, y, x, y, size, "pad", pm.group(5)))
+    # pours: the edges of every filled polygon as zero-width segments, so the distance to a pour is
+    # the distance to its outline
+    sys.modules.setdefault("run_power", sys.modules[__name__])  # run_heat imports run_power: keep one copy when run as a script
+    import run_heat
+    for net, layer, pts in run_heat.read_board(project.pcb(project.resolve()))["zones"]:
+        if layer != "F":
+            continue  # victims are top-layer tracks; a pour on another layer is not a coplanar neighbour
+        for (x1, y1), (x2, y2) in zip(pts, pts[1:] + pts[:1]):
+            copper.append((x1, y1, x2, y2, 0.0, "zone F", net))
     return copper, positions
 
 
@@ -874,7 +912,7 @@ def layout_coupling(report):
             # length of victim track within 0.6 mm of the aggressor copper
             run = 0.0
             for b in by_net[victim]:
-                if b[5] == "pad":
+                if b[5] == "pad" or b[5].startswith("zone"):
                     continue
                 length = math.hypot(b[2] - b[0], b[3] - b[1])
                 steps = max(2, int(length / 0.05))
@@ -914,7 +952,7 @@ def layout_coupling(report):
     report.add("Centre distances from the two switching inductors (both magnetically shielded, "
                "molded):")
     report.add()
-    report.table(["Part", "from L1 (charger, 1 µH)", "from L2 (boost, 2.2 µH)"], table)
+    report.table(["Part", "from L1 (charger, %.1f µH)" % (CHG["l1"]["l"] * 1e6), "from L2 (boost, 2.2 µH)"], table)
     # magnetic bound: dipole of the inductor ripple current (5 turns of 10 mm², 10 % leakage for a
     # shielded core), axial field at the real centre distance, EMF in a victim loop
     vin = 3.1
@@ -959,11 +997,18 @@ def layout_coupling(report):
     report.add()
 
 
+bind_charger()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--write", action="store_true", help="store the report in power/results.md")
+    parser.add_argument("--write", action="store_true", help="store the report in power/results_<charger>.md")
     parser.add_argument("--fast", action="store_true", help="skip the ngspice benches")
+    project.add_argument(parser)
     args = parser.parse_args()
+    if args.project:
+        project.select(args.project)
+        bind_charger()
     version = simlib.require_ngspice()
 
     report = simlib.Report()

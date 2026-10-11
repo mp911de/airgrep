@@ -20,7 +20,7 @@ input current limit and charger efficiency); with the device on, the system
 power is taken from the charger first and only the remainder charges the cell.
 
 This is a budget estimate. The simulated losses on the routed board are in
-hardware/sim/heat/results.md. Only the standard library is used.
+hardware/sim/heat/<charger>/results.md. Only the standard library is used.
 """
 
 import json
@@ -95,9 +95,10 @@ def runtime_h(p, battery, p_batt_w, aged=False):
     return cap * p["battery_nominal_v"] / p_batt_w
 
 
-def charge(p, battery, src, system_w):
-    """Charge current (A) and time from empty (h, None if it does not charge) for one source."""
-    c = p["charging"]
+def charge(p, battery, src, system_w, variant=None):
+    """Charge current (A) and time from empty (h, None if it does not charge) for one source.
+    variant: a charging/variants entry with its own charge current and efficiency."""
+    c = dict(p["charging"], **(variant or {}))
     p_for_cell = c["input_v"] * src["input_limit_a"] * c["charger_efficiency"] - system_w
     i_chg = min(c["charge_current_a"], max(0.0, p_for_cell / p["battery_nominal_v"]))
     if i_chg <= 0.05:
@@ -117,6 +118,42 @@ def fmt_charge(i_chg, hours):
     return f"{h} h {m:02d} min ({i_chg:.2f} A)"
 
 
+def off_state_ua(item, v):
+    """(typ, max) µA of one standby item at cell voltage v. Resistor paths: (v - drop) / R, max at R - 1 %."""
+    if "ohm" in item:
+        drop_typ, drop_max = item["drop_v"]
+        return max(v - drop_typ, 0) / item["ohm"] * 1e6, max(v - drop_max, 0) / (item["ohm"] * 0.99) * 1e6
+    return tuple(item["ua"])
+
+
+def standby(p, bats):
+    """Standby tables, one per board variant, at the cell voltages of off_state.cell_v."""
+    off = p["off_state"]
+    volts = off["cell_v"]
+    nominal = p["battery_nominal_v"]
+    lines = ["### Standby (POWER slider off, no USB)", "",
+             "Typical and maximum from the data sheets; the two resistor paths are computed from the cell voltage. "
+             "The pack's own protection IC and cell self-discharge come on top.", ""]
+    for key, variant in p["charging"]["variants"].items():
+        items = off["common"] + off["variants"][key]
+        lines += [f"{variant['label']}:", "",
+                  f"| Source | Typ at {nominal:g} V | Max at {nominal:g} V |", "|---|---|---|"]
+        for it in items:
+            typ, mx = off_state_ua(it, nominal)
+            lines.append(f"| {it['name']} | {typ:.1f} µA | {mx:.1f} µA |")
+        totals = {v: [sum(off_state_ua(it, v)[k] for it in items) for k in (0, 1)] for v in volts}
+        lines.append(f"| **Total** | **{totals[nominal][0]:.0f} µA** | **{totals[nominal][1]:.0f} µA** |")
+        lines += ["", "| Cell voltage | " + " | ".join(f"{v:g} V" for v in volts) + " |", "|---|" + "---|" * len(volts),
+                  "| Typ / max | " + " | ".join(f"{totals[v][0]:.0f} / {totals[v][1]:.0f} µA" for v in volts) + " |", ""]
+        typ_ma, max_ma = (x / 1000.0 for x in totals[nominal])
+        for bt in bats:
+            lines.append(f"- {bt['capacity_mah']} mAh: {pct(typ_ma * 24 * 30.4 / bt['capacity_mah'], 2)} per month typical, "
+                         f"{pct(max_ma * 24 * 30.4 / bt['capacity_mah'], 2)} maximum. A full pack would last about "
+                         f"{bt['capacity_mah'] / typ_ma / 24 / 365:.0f} years on the circuit alone.")
+        lines.append("")
+    return lines
+
+
 def render(p):
     scen = scenarios(p)
     bats = p["batteries"]
@@ -134,7 +171,7 @@ def render(p):
         "The display's Wi-Fi is off in all cases; the display talks to the ADSBee over UART.",
         "",
         "The boost efficiency is a budget estimate from the TI data sheet curve, derated for about 1 MHz. "
-        "The heat model simulates the board at about 720 kHz and gives about 1 point more at the typical load (`hardware/sim/heat/results.md`).",
+        "The heat model simulates the board at about 720 kHz and gives about 1 point more at the typical load (`hardware/sim/heat/max/results.md`).",
         "",
     ]
     for brightness in p["brightness_levels"]:
@@ -167,38 +204,33 @@ def render(p):
         "",
     ]
 
-    off_ma = sum(p["off_state_ua"].values()) / 1000.0
-    lines += [
-        "### Standby (POWER slider off, no USB)",
-        "",
-        "| Source | Current |",
-        "|---|---|",
-        *(f"| {name} | {ua:g} µA |" for name, ua in p["off_state_ua"].items()),
-        f"| **Total** | **{off_ma * 1000:.0f} µA** |",
-        "",
-    ]
-    for b in bats:
-        hours = b["capacity_mah"] / off_ma
-        lines.append(f"- {b['capacity_mah']} mAh: the circuit takes {pct(24 * 30.4 / hours, 1)} per month. "
-                     f"A full pack would last about {hours / 24 / 30.4 / 12:.0f} years, so cell self-discharge dominates.")
-    lines.append("")
-
+    lines += standby(p, bats)
     typ = baseline(dimmed)
     lines += [
         "### Charging time from empty",
         "",
-        f"The charge current is limited to {p['charging']['charge_current_a']} A (IFAST) and by the input limit of the source. "
+        "The charge current is limited by the charger setting and by the input limit of the source. "
         "The charger powers the system first; only the rest charges the cell. "
         f"\"On\" is the typical scenario: Wi-Fi off, GNSS fix, backlight {pct(dimmed)}, {typ['p_batt_w']:.2f} W.",
         "",
-        "| Source | Input limit | " + " | ".join(f"{b['capacity_mah']} mAh off / on" for b in bats) + " |",
-        "|---|---|" + "---|" * len(bats),
     ]
-    for src in p["charging"]["sources"]:
-        cells = " | ".join(f"{fmt_charge(*charge(p, b, src, 0.0))} / {fmt_charge(*charge(p, b, src, typ['p_batt_w']))}" for b in bats)
-        lines.append(f"| {src['name']} | {src['input_limit_a']:.2f} A | {cells} |")
+    for key, variant in p["charging"]["variants"].items():
+        settings = [("", variant)]
+        if variant.get("default_current_a"):
+            settings.append((f" (default mode, {variant['default_current_a']:g} A, no host)",
+                             dict(variant, charge_current_a=variant["default_current_a"])))
+        for suffix, v in settings:
+            lines += [
+                f"{variant['label']}{suffix}: {v['charge_current_a']:g} A, charger efficiency {pct(v['charger_efficiency'])}. {variant['note']}.",
+                "",
+                "| Source | Input limit | " + " | ".join(f"{b['capacity_mah']} mAh off / on" for b in bats) + " |",
+                "|---|---|" + "---|" * len(bats),
+            ]
+            for src in p["charging"]["sources"]:
+                cells = " | ".join(f"{fmt_charge(*charge(p, b, src, 0.0, v))} / {fmt_charge(*charge(p, b, src, typ['p_batt_w'], v))}" for b in bats)
+                lines.append(f"| {src['name']} | {src['input_limit_a']:.2f} A | {cells} |")
+            lines.append("")
     lines += [
-        "",
         "With Wi-Fi on the system needs more than a PC port can supply. The battery then supplements the input and slowly discharges.",
         "",
         "Parameters: `specs/power_params.json`. Regenerate with `python3 tools/power_budget.py`.",

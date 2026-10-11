@@ -2,7 +2,8 @@
 # Design check for the carrier board. Read-only: it never saves the board or the schematic.
 #
 #   tools/check.sh                 run all checks, exit 1 on any finding
-#   tools/check.sh --exports       also check BOM and CPL in hardware/carrier-max-charger/jlcpcb/ against the board
+#   tools/check.sh --project NAME  check hardware/NAME (default $CARRIER_PROJECT or carrier-ti-charger)
+#   tools/check.sh --exports       also check BOM and CPL in the project's jlcpcb/ against the board
 #   tools/check.sh --staged        run only for staged design, sim, specs or tools changes (excluding Markdown)
 #   tools/check.sh --install-hook  write .git/hooks/pre-commit, a stub that runs this script
 #
@@ -20,15 +21,21 @@ KICAD_APP="${KICAD_APP:-/Applications/KiCad/KiCad.app/Contents}"
 CLI="$KICAD_APP/MacOS/kicad-cli"
 KPY="$KICAD_APP/Frameworks/Python.framework/Versions/Current/bin/python3"
 VPY="$ROOT/hardware/sim/.venv/bin/python"
-SCH="$ROOT/hardware/carrier-max-charger/carrier.kicad_sch"
-PCB="$ROOT/hardware/carrier-max-charger/carrier.kicad_pcb"
 
 EXPORTS=""
+PROJECT="${CARRIER_PROJECT:-carrier-ti-charger}"
+while [ $# -gt 1 ] && [ "$1" = "--project" ]; do PROJECT="$2"; shift 2; done
+case "$PROJECT" in /*) ;; *) PROJECT="$ROOT/hardware/$PROJECT" ;; esac
+export CARRIER_PROJECT="$PROJECT"
+SCH="$PROJECT/carrier.kicad_sch"
+PCB="$PROJECT/carrier.kicad_pcb"
+[ -f "$PCB" ] || { echo "FAIL project  no carrier.kicad_pcb in $PROJECT"; exit 2; }
+
 case "${1:-}" in
   --exports) EXPORTS="--exports" ;;
   --staged)
     git -C "$ROOT" diff --cached --quiet --no-renames -- \
-      hardware/carrier-max-charger/ hardware/sim/ specs/ tools/ ':(glob,exclude)**/*.md'
+      hardware/carrier-max-charger/ hardware/carrier-ti-charger/ hardware/sim/ specs/ tools/ ':(glob,exclude)**/*.md'
     status=$?
     case $status in
       0) exit 0 ;;
@@ -44,7 +51,7 @@ case "${1:-}" in
     printf '#!/bin/sh\nexec "$(git rev-parse --show-toplevel)/tools/check.sh" --staged\n' > "$hook" && chmod +x "$hook"
     echo "ok   hook     $hook"; exit 0 ;;
   "") ;;
-  *) sed -n '2,7p' "$0"; exit 2 ;;
+  *) sed -n '2,8p' "$0"; exit 2 ;;
 esac
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/flarm-check.XXXXXX")" || exit 1

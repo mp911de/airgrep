@@ -29,27 +29,27 @@ Trip values below refer to the sensor, not the charger junction. Cycle periods a
 
 | Pack | Sensor trip | Hysteresis | Peak U4 | Pack stop | Charge added | Charger stops | Median cycle |
 |---|---|---|---|---|---|---|---|
-| 5000 mAh | no extra cutoff | - | 119.7 °C | 20.6 min | 0.61 Ah | 0 | - |
-| 5000 mAh | 80 °C | 5 °C | 91.1 °C | 26.7 min | 0.39 Ah | 24 | 59 s |
-| 5000 mAh | 90 °C | 5 °C | 100.6 °C | 23.9 min | 0.49 Ah | 18 | 61 s |
-| 5000 mAh | 100 °C | 5 °C | 110.0 °C | 21.9 min | 0.56 Ah | 9 | 85 s |
-| 5000 mAh | 110 °C | 5 °C | 119.5 °C | 20.7 min | 0.61 Ah | 1 | - |
-| 5000 mAh | 80 °C | 10 °C | 91.0 °C | 27.6 min | 0.35 Ah | 14 | 105 s |
-| 5000 mAh | 90 °C | 10 °C | 100.4 °C | 24.4 min | 0.47 Ah | 12 | 98 s |
-| 5000 mAh | 100 °C | 10 °C | 109.9 °C | 22.1 min | 0.55 Ah | 6 | 126 s |
-| 5000 mAh | 110 °C | 10 °C | 119.5 °C | 20.7 min | 0.60 Ah | 1 | - |
-| 10000 mAh | no extra cutoff | - | 119.9 °C | 28.5 min | 0.85 Ah | 0 | - |
-| 10000 mAh | 80 °C | 5 °C | 91.0 °C | 37.5 min | 0.53 Ah | 35 | 59 s |
-| 10000 mAh | 90 °C | 5 °C | 100.5 °C | 33.5 min | 0.67 Ah | 27 | 61 s |
-| 10000 mAh | 100 °C | 5 °C | 109.9 °C | 30.6 min | 0.78 Ah | 14 | 87 s |
-| 10000 mAh | 110 °C | 5 °C | 119.5 °C | 28.6 min | 0.85 Ah | 1 | - |
-| 10000 mAh | 80 °C | 10 °C | 91.0 °C | 38.8 min | 0.48 Ah | 20 | 106 s |
-| 10000 mAh | 90 °C | 10 °C | 100.4 °C | 34.3 min | 0.64 Ah | 18 | 99 s |
-| 10000 mAh | 100 °C | 10 °C | 109.9 °C | 31.0 min | 0.75 Ah | 10 | 128 s |
-| 10000 mAh | 110 °C | 10 °C | 119.5 °C | 28.7 min | 0.84 Ah | 1 | - |
+| 5000 mAh | no extra cutoff | - | 121.9 °C | 20.5 min | 0.61 Ah | 0 | - |
+| 5000 mAh | 80 °C | 5 °C | 91.1 °C | 27.0 min | 0.38 Ah | 24 | 60 s |
+| 5000 mAh | 90 °C | 5 °C | 100.6 °C | 24.1 min | 0.48 Ah | 19 | 59 s |
+| 5000 mAh | 100 °C | 5 °C | 110.0 °C | 22.1 min | 0.55 Ah | 11 | 78 s |
+| 5000 mAh | 110 °C | 5 °C | 119.5 °C | 20.7 min | 0.60 Ah | 2 | 174 s |
+| 5000 mAh | 80 °C | 10 °C | 91.1 °C | 27.9 min | 0.34 Ah | 14 | 108 s |
+| 5000 mAh | 90 °C | 10 °C | 100.5 °C | 24.6 min | 0.46 Ah | 12 | 98 s |
+| 5000 mAh | 100 °C | 10 °C | 110.0 °C | 22.4 min | 0.54 Ah | 8 | 116 s |
+| 5000 mAh | 110 °C | 10 °C | 119.5 °C | 20.9 min | 0.59 Ah | 2 | 217 s |
+| 10000 mAh | no extra cutoff | - | 122.1 °C | 28.4 min | 0.85 Ah | 0 | - |
+| 10000 mAh | 80 °C | 5 °C | 91.1 °C | 37.9 min | 0.52 Ah | 35 | 60 s |
+| 10000 mAh | 90 °C | 5 °C | 100.6 °C | 34.0 min | 0.65 Ah | 29 | 60 s |
+| 10000 mAh | 100 °C | 5 °C | 110.0 °C | 30.9 min | 0.76 Ah | 17 | 79 s |
+| 10000 mAh | 110 °C | 5 °C | 119.5 °C | 28.8 min | 0.83 Ah | 3 | 193 s |
+| 10000 mAh | 80 °C | 10 °C | 91.0 °C | 39.2 min | 0.46 Ah | 20 | 109 s |
+| 10000 mAh | 90 °C | 10 °C | 100.5 °C | 34.7 min | 0.62 Ah | 18 | 98 s |
+| 10000 mAh | 100 °C | 10 °C | 109.9 °C | 31.4 min | 0.73 Ah | 12 | 118 s |
+| 10000 mAh | 110 °C | 10 °C | 119.5 °C | 29.0 min | 0.82 Ah | 3 | 239 s |
 
 ## Validation
 
-Reduced steady model agrees with its board calibration within 5.68e-14 K. Maximum main-run energy residual is 5.63e-12 J per step. Unit tests cover hysteresis memory, immediate stop, restart, pack precedence, thermal lag, energy conservation and timestep convergence. These are numerical checks, not physical validation.
+Reduced steady model agrees with its board calibration within 5.68e-14 K. Maximum main-run energy residual is 4.93e-12 J per step. Unit tests cover hysteresis memory, immediate stop, restart, pack precedence, thermal lag, energy conservation and timestep convergence. These are numerical checks, not physical validation.
 
-Board SHA256: `f4b19205c14a00864a4699724a1f7f12e91cf4ad50552eac387c2ea8a7284d83`. Full inputs, 35 °C results and sensitivity results: [charging_limits.json](charging_limits.json).
+Board SHA256: `0680137302e10a352f89cd9ed49d9b0e862f8e9835a293ec1be8e2a76e6120b1`. Full inputs, 35 °C results and sensitivity results: [charging_limits.json](charging_limits.json).

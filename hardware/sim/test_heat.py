@@ -202,7 +202,7 @@ class OperatingPointTests(unittest.TestCase):
         """The sealed vent model must reproduce the sealed case it copies its constants from."""
         for key, scenario in (("bat08", "bat08"), ("usb32", "usb32"), ("usb32off", "usb_off")):
             case = next(c for c in heat.CASES if c["key"] == key)
-            grid = heat.run_case(self.high, case, "closed", 25., self.k_sw * heat.BUCK_SW_HIGH, vent_area_cm2=0.)
+            grid = heat.run_case(self.high, case, "closed", 25., heat.buck_k(self.k_sw) * heat.BUCK_SW_HIGH, vent_area_cm2=0.)
             lumped = vent_model.solve(scenario, 25., area_cm2=0.)
             with self.subTest(case=key):
                 self.assertAlmostEqual(lumped["t_air"], grid["t_air"], delta=1.0)

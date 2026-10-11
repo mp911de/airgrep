@@ -14,9 +14,13 @@ gains a constant that mirrors a part value.
 import ast, csv, json, operator, os, re, sys
 import pcbnew
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import project  # noqa: E402
+
 ROOT, TMP = sys.argv[1], sys.argv[2]
 EXPORTS = "--exports" in sys.argv[3:]
-KICAD = os.path.join(ROOT, "hardware/carrier-max-charger")
+KICAD = project.resolve()  # CARRIER_PROJECT, set by check.sh
+CHARGER = project.charger(KICAD)
 SIM = os.path.join(ROOT, "hardware/sim")
 findings = 0
 
@@ -253,7 +257,7 @@ def par(path, scale=1.0):
 def prose(src, pattern, scale=1.0, group=1):
     """Number quoted in prose. src is a power_params path to a string or a sim script name."""
     def get(c):
-        if src.startswith("run_"):
+        if src.startswith("run_") or src == "chargers":
             text = open(os.path.join(SIM, src + ".py"), encoding="utf-8").read()
         else:
             text = par(src, 1)[1](c) if not src.endswith("#keys") else " ".join(c["params"][src[:-5]])
@@ -268,11 +272,22 @@ def lit(value, note):
     return "%g (%s)" % (value, note), lambda c: value
 
 
+def chg(*keys):
+    """A value of the project's charger entry in hardware/sim/chargers.py, nested keys allowed."""
+    sys.path.insert(0, SIM)
+    import chargers
+
+    def get(c):
+        v = chargers.CHARGERS[CHARGER]
+        for k in keys:
+            v = v[k]
+        return v
+    return "chargers.py %s/%s" % (CHARGER, "/".join(keys)), get
+
+
 CHG = "charging/_charge_current_a"
 IFAST = r"R6 \+ R37 = ([\d.]+) kΩ \+ ([\d.]+) kΩ in series = ([\d.]+) kΩ"
 BINDINGS = [
-    # thermal cut-off
-    (sch("R8"), sim("run_thermal", "R8")),
     # boost converter and load switch
     (sch("R14"), sim("run_power", "R14")),
     (sch("R15"), sim("run_power", "R15")),
@@ -292,36 +307,49 @@ BINDINGS = [
     (sim("run_power", "ID_VFWD", 1), sim("run_heat", "ID_VFWD", 1)),
     (sch("C18", "C19", "C20"), sim("run_power", "C_MAIN")),
     (sch("L2"), sim("run_power", "L2")),
-    (sch("L1"), sim("run_heat", "L1_L")),
+    (sch("L1"), chg("l1", "l")),
     (sch("R14"), prose("_rail_5v_v", r"R14/R15 \((\d+) kΩ / (\d+) kΩ\)", 1e3)),
     (sch("R15"), prose("_rail_5v_v", r"R14/R15 \((\d+) kΩ / (\d+) kΩ\)", 1e3, 2)),
     (sch("R16"), prose("_boost_efficiency_curve", r"R16 (\d+) kΩ", 1e3)),
     (par("rail_5v_v"), sim("run_power", "VOUT", digits=2)),
     (par("load_switch_ron_ohm"), sim("run_heat", "LS_RON")),
     (sim("run_power", "L2_DCR"), prose("_boost_efficiency_curve", r"DCR \(([\d.]+) mΩ\)", 1e-3)),
-    # charger. The pair 12.4 kΩ and 1.8 A is one row of MAX77757 data sheet Table 3.
-    # A new charge current means new values in both literal rows.
-    (sch("R6", "R37"), lit(12.4e3, "IFAST resistor for 1.8 A")),
-    (sim("run_heat", "CHARGE_A"), lit(1.8, "IFAST current for 12.4 kΩ")),
-    (sim("run_heat", "CHARGE_A"), par("charging/charge_current_a")),
-    (par("charging/charge_current_a"), prose(CHG, r"gives ([\d.]+) A nominal")),
-    (sch("R6"), prose(CHG, IFAST, 1e3)),
-    (sch("R37"), prose(CHG, IFAST, 1e3, 2)),
-    (sch("R6", "R37"), prose(CHG, IFAST, 1e3, 3)),
-    (sch("R6", "R37"), prose("run_heat", r"CHARGE_A = .*# R6 \+ R37 = ([\d.]+) kΩ", 1e3)),
-    (sim("run_power", "BUCK_FSW"), sim("run_heat", "CHG_FSW")),
-    (sim("run_power", "R_B2S"), sim("run_heat", "CHG_R_BATFET")),
-    (sim("run_heat", "CHG_R_BATFET"), prose("_path_resistance_ohm", r"BATT-to-SYS switch \((\d+) mΩ typ\)", 1e-3)),
     # loads, fuse, pack
     (sim("run_heat", "LED_5V_A", scale=1e3), par("loads_5v/Carrier: green power LED D5/ma")),
     (sch("R26"), prose("loads_5v/Carrier: green power LED D5/source", r"/ (\d+) Ω \(R26\)")),
     (sch("R10"), prose("_battery_side_quiescent_ma", r"R10 (\d+) MΩ", 1e6)),
-    (sch("R10"), prose("off_state_ua#keys", r"R10 thermostat pull-down (\d+) MΩ", 1e6)),
+    (sch("R10"), par("off_state/common/R10/ohm")),
     (sim("run_heat", "FUSE_R", 0), prose("_path_resistance_ohm", r"fuse F1 [^(]*\((\d+) mΩ nominal\)", 1e-3)),
     (sim("run_heat", "PACK_MM", 0), prose("batteries/1/dimensions_mm", r"^(\d+) x (\d+) x (\d+)")),
     (sim("run_heat", "PACK_MM", 1), prose("batteries/1/dimensions_mm", r"^(\d+) x (\d+) x (\d+)", 1, 2)),
     (sim("run_heat", "PACK_MM", 2), prose("batteries/1/dimensions_mm", r"^(\d+) x (\d+) x (\d+)", 1, 3)),
 ]
+# charger bindings per project; the MAX77757 pair 12.4 kΩ and 1.8 A is one row of its data sheet Table 3.
+# A new charge current means new values in both literal rows.
+BINDINGS_MAX = [
+    (sch("R8"), sim("run_thermal", "R8")),  # thermal cut-off network
+    (sch("R6", "R37"), lit(12.4e3, "IFAST resistor for 1.8 A")),
+    (chg("charge_a"), lit(1.8, "IFAST current for 12.4 kΩ")),
+    (chg("charge_a"), par("charging/charge_current_a")),
+    (par("charging/charge_current_a"), prose(CHG, r"gives ([\d.]+) A nominal")),
+    (sch("R6"), prose(CHG, IFAST, 1e3)),
+    (sch("R37"), prose(CHG, IFAST, 1e3, 2)),
+    (sch("R6", "R37"), prose(CHG, IFAST, 1e3, 3)),
+    (sch("R6", "R37"), prose("chargers", r'charge_note="R6 \+ R37 = ([\d.]+) kΩ', 1e3)),
+    (chg("r_batfet"), prose("_path_resistance_ohm", r"BATT-to-SYS switch \((\d+) mΩ typ\)", 1e-3)),
+]
+BINDINGS_TI = [
+    (sch("R56"), lit(4.7e3, "PROG: 1S, 750 kHz, BQ25798 Table 7-1")),
+    (sch("R57"), lit(47e3, "ILIM_HIZ divider top, 3.4 V from REGN 4.8 V for 3 A")),
+    (sch("R58"), lit(100e3, "ILIM_HIZ divider bottom")),
+    (sch("R59"), lit(80.6e3, "TS divider RT1 for the 100k B4262 NTC, window 3 to 43 C")),
+    (sch("R60"), lit(768e3, "TS divider RT2")),
+    (sch("R65"), lit(5.1e3, "USB-C Rd")),
+    (sch("R66"), lit(5.1e3, "USB-C Rd")),
+    (chg("charge_a"), par("charging/charge_current_a")),
+    (chg("fsw"), lit(750e3, "PROG 4.7 kΩ")),
+]
+BINDINGS += {"max": BINDINGS_MAX, "ti": BINDINGS_TI}[CHARGER]
 
 
 def check_bindings(sch_comps):

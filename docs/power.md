@@ -1,6 +1,6 @@
 # Power architecture
 
-The power design of the carrier board. Headline figures are in [specs.md](specs.md), reasons in [decisions.md](decisions.md), connectors in [interfaces.md](interfaces.md), open work in [open-issues.md](open-issues.md). Simulated values come from `hardware/sim/*/results.md`; those files are the reference when a number here differs.
+The power design of the carrier board. Headline figures are in [specs.md](specs.md), reasons in [decisions.md](decisions.md), connectors in [interfaces.md](interfaces.md), open work in [open-issues.md](open-issues.md). Simulated values come from `hardware/sim/*/results_<charger>.md` and `hardware/sim/heat/<charger>/`; those files are the reference when a number here differs. Two board variants exist: `hardware/carrier-max-charger/` (MAX77757, the sections below) and `hardware/carrier-ti-charger/` (BQ25798, see [Charger variant: BQ25798](#charger-variant-bq25798-carrier-ti-charger)).
 
 ```
 USB-C -- TVS -- MAX77757 CHGIN   (CC and D+/D- detection on chip, no PD)
@@ -10,17 +10,18 @@ battery -- fuse --+-- MAX77757 BATT -- SYS -- TPS61088 boost -- TPS22975 load sw
                   +-- MAX17048 gauge -- I2C -- display ESP32
                   +-- NTC -- MAX77757 THM
 SYS -- R43 -- thermostat contact -- THERM_OK
-5 V rail -- LM73100 U12 -- shunt JP1 -- display VBUS
+5 V rail -- LM73100 U12 --+-- shunt JP1 --+-- display VBUS (ESP_5V, C51/C52 2 x 22 µF)
+charger PMID -- LM73100 U14 --+   (charger mode only: Q12 holds U14 off while the slider is on)
 5 V rail -- LM73100 U11 -- shunt JP2 -- ADSBee 5VIN
 ADSBee 3V3 out -- GNSS 3.3 V
 ```
 
 - Battery path: one conversion (boost).
-- USB path: two conversions (buck to SYS, boost to 5 V), about 83 % at 0.8 A load (`hardware/sim/heat/results.md`). The loss is heat and does not affect runtime.
+- USB path: two conversions (buck to SYS, boost to 5 V), about 83 % at 0.8 A load (`hardware/sim/heat/max/results.md`). The loss is heat and does not affect runtime.
 - The loads run from the 5 V rail only. The ADSBee's AZ1117 LDO needs 3.7 V, which SYS does not guarantee.
 - The charger's reverse boost (OTG) is disabled. ENBST is tied to GND.
 
-## Charger
+## Charger (carrier-max-charger: MAX77757)
 
 U4 is an ADI MAX77757JEFG420+T (LCSC C7454852, FC2QFN-24, 3 x 3 mm, 0.4 mm pitch). It runs standalone, without I2C or firmware.
 
@@ -68,7 +69,7 @@ The pack thermistor is a Variohm ENTC-EB-100K4262-02 (100 kΩ, B25/85 4262 K ±0
 | Warm | 32.5 % | 31.4 °C | 29.2 to 33.6 °C | termination 4.05 V above |
 | Hot | 23 % | 42.1 °C | 39.4 to 45.0 °C | charging stops above |
 
-- Temperatures are simulated (`hardware/sim/thermal/results.md`). The worst case covers thermistor, R8 and threshold tolerances at the typical THM leakage of 0.1 µA.
+- Temperatures are simulated (`hardware/sim/thermal/results_max.md`). The worst case covers thermistor, R8 and threshold tolerances at the typical THM leakage of 0.1 µA.
 - Thresholds are ±1.5 points of PVL with 1 point hysteresis (data sheet).
 - At the data sheet maximum leakage of 1 µA the outer limits move to 47.2 and -24.1 °C.
 - The Variohm data sheet has no R/T table. The nominal figures follow the B-value model and may be off by about 1 °C.
@@ -136,7 +137,7 @@ Distances are pad centre to pin centre, measured on the board.
 
 A 10 x 10 mm aluminium sink (Fischer ICK S 10 x 10 x 6.5, or ICK BGA 10 x 10 x 6) sits on the package top, bonded with thermal epoxy to a 1.5 mm copper spacer. The spacer lifts the sink over the 0805 and 1206 capacitors, which are taller than the 0.65 mm package. C6, C7, C8, C11, C33, C34, R6 and R8 lie under the sink. The stack is about 8.9 mm high, 0.4 mm above the top of the module sockets; no module overhangs U4.
 
-Heat model, 3 A source, charging with 0.8 A load, 25 °C ambient (`hardware/sim/heat/results.md`):
+Heat model, 3 A source, charging with 0.8 A load, 25 °C ambient (`hardware/sim/heat/max/results.md`):
 
 | Condition | Cell 3.7 V | Cell 3.2 V |
 |---|---|---|
@@ -152,7 +153,7 @@ Heat model, 3 A source, charging with 0.8 A load, 25 °C ambient (`hardware/sim/
 
 ### Earlier charge limiting
 
-The [transient graphs](../hardware/sim/heat/charging.pdf) model battery heating delay and JEITA cutoff for both packs. [Assumptions and results](../hardware/sim/heat/charging.md) distinguish estimated timing from measured behaviour. The 90-100 °C limiter and external spreader paths are proposals, not fitted hardware.
+The [transient graphs](../hardware/sim/heat/max/charging.pdf) model battery heating delay and JEITA cutoff for both packs. [Assumptions and results](../hardware/sim/heat/max/charging.md) distinguish estimated timing from measured behaviour. The 90-100 °C limiter and external spreader paths are proposals, not fitted hardware.
 
 The MAX77757's native 130 °C threshold is fixed. Options:
 
@@ -172,13 +173,120 @@ Heat-spreader materials to evaluate:
 
 For a first prototype, compare a thin copper or aluminium plate plus an insulating gap pad with graphite. Connect the spreader to exposed metal or outside airflow. A strip's lateral resistance depends on thickness and width, not just conductivity. Keep metal clear of the module antennas and avoid a thermal bridge into the battery.
 
+## Charger variant: BQ25798 (carrier-ti-charger)
+
+U4 is a TI BQ25798RQMR (LCSC C2876593, VQFN-HR 29, 4 x 4 mm, 0.4 mm pitch, no exposed pad). It is an I2C charger with a complete default mode: it charges at 1 A with no host, the display's ESP32-S3 raises the current to 1.8 A, and the watchdog returns every register to its default when the host stops writing. Data sheet SLUSDV2C in `datasheets/bq25798.pdf`.
+
+```
+USB-C -- TVS -- BQ25798 VBUS   (D+/D- BC1.2 on chip; CC has Rd 5.1 kOhm only)
+                   |
+battery -- fuse --+-- BQ25798 BAT -- SYS -- TPS61088 boost -- TPS22975 load switch -- 5 V rail
+                  |     L1 2.2 uH between SW1 and SW2       EN = thermostat AND slider AND supervisor (latched)
+                  +-- MAX17048 gauge -- I2C -- display ESP32 -- I2C -- BQ25798 (0x6B)
+                  +-- NTC -- BQ25798 TS (RT1 39 kOhm from REGN, RT2 150 kOhm)
+thermostat open -- Q2 -- CHG_DIS = BQ25798 CE (high: charging off)
+```
+
+### Operating modes
+
+| Mode | Charge current | TREG | Who sets it |
+|---|---|---|---|
+| Default (power-on, or watchdog expired) | 1 A | 120 °C | silicon defaults; input limit from D+/D- |
+| Host | 1.8 A (ICHG register) | 60/80/100/120 °C, 100 °C planned | ESP32-S3 over I2C, WD_RST at least every 40 s |
+
+- Watchdog: 40 s default (20 to 160 s). On expiry every "reset by WATCHDOG" register returns to its default, so the firmware re-applies the whole profile whenever WD_STAT is set.
+- Input: 3.6 to 24 V operating, OVP at 26 V. Input limit from BC1.2: SDP 0.5 A, CDP 1.5 A, DCP 3.25 A, unknown adapter 3 A, Apple/Samsung dividers 1 to 2.4 A. No CC detection: R65/R66 5.1 kΩ to GND on CC1/CC2 make the carrier a default-current sink; a PD adapter on a C-to-C cable leaves D+/D- open and reads as unknown (3 A). ILIM_HIZ (R57 47 kΩ from REGN, R58 100 kΩ) caps the hardware input limit at 3.4 V, about 3 A at REGN 4.8 V (2.8 to 3.2 A over the REGN range). VINDPM 4.2 V default.
+- Timers: fast charge 12 h default (5 to 24 h or off), precharge 2 h, trickle 1 h.
+- ADC: 16-bit, die temperature (0.5 °C), IBAT and IBUS (1 mA), VBAT/VSYS/VBUS (1 mV), TS. Off by default, the host enables it.
+- STAT: low while charging, high when done, blinking on a fault. Drives the green LED. INT ends on TP8 (polled, no free module GPIO). The red LED shows USB present through Q10, R63 47 kΩ, R64 100 kΩ.
+- CE: the thermostat chain ends on CE (R12 100 kΩ pull-down, Q2 pulls it to VSYS when the thermostat opens). CE above 1.3 V disables charging; Q2 leakage at the 25 °C maximum leaves CE at 0.1 V (`hardware/sim/thermal/results_ti.md`).
+- No ship FET: SDRV has C49 1 nF, QON is open. The BQ25798 SDRV driver is an option for [issue 0001](../issues/0001-battery-disconnect-switch.md).
+
+### Temperature window (TS)
+
+Same Variohm 100 kΩ NTC on J2. RT1 80.6 kΩ (R59) from REGN and RT2 768 kΩ (R60) to GND put the chip's percent-of-REGN thresholds on the 100 kΩ curve so that the charge window, worst case with typical TS leakage, stays inside the pack's 0 to 45 °C rating. C35 10 nF stays on BAT_TS.
+
+| Transition | TS/REGN | Nominal | Worst case (typical leakage) | Effect (defaults) |
+|---|---|---|---|---|
+| T1 cold | 73.3 % | 3.1 °C (releases 4.7 °C) | 1.1 to 5.0 °C | charging stops below |
+| T2 cool | 68.4 % | 8.9 °C | 7.7 to 10.2 °C | 20 % of ICHG below (JEITA_ISETC) |
+| T3 warm | 44.8 % | 32.2 °C | 31.1 to 33.2 °C | VREG −400 mV above (JEITA_VSET); current stays at 100 % (JEITA_ISETH default) |
+| T5 hot | 34.2 % | 43.0 °C (releases 41.6 °C) | 41.8 to 44.2 °C | charging stops above |
+
+Worst case: parts at 1 %, NTC ±0.2 K and B ±0.5 %, charger thresholds at their limits, TS leakage 0.1 µA typical. With 1 µA (maximum, assumed) the window widens to −0.5 to 44.7 °C. Details in `hardware/sim/thermal/results_ti.md`. The cool and warm points move down with the hot stop (the divider sets one curve); the host can raise T3 to 40 °C and T2 to 15 °C in the TS_T3 and TS_T2 bits.
+
+- Simulated in `hardware/sim/thermal/results_ti.md` with the TS leakage assumed at ±0.1 µA typical, ±1 µA maximum (not specified). Thresholds from the data sheet, T2/T3 options at their defaults (10 °C, 45 °C).
+- Decided: the hardware window is 3 to 43 °C nominal (RT1 80.6 kΩ / RT2 768 kΩ), in default mode too, so the worst case stays inside the pack's 0 to 45 °C rating. The earlier 39 kΩ / 150 kΩ divider charged from −0.2 to 58.7 °C; 71.5 kΩ / 412 kΩ fixed the nominal hot stop at 44.9 °C but its worst case reached 46.2 °C and −2.9 °C.
+- Thermistor unplugged: 79 % of REGN, reads cold, charging suspended. Shorted: 0 %, reads hot, charging suspended.
+
+### Components
+
+| Part | Pin or function | Value | Note |
+|---|---|---|---|
+| C5, C41, C42, C43 | VBUS | 2 x 100 nF 50 V + 2 x 10 µF 25 V | data sheet 2 x 10 µF + 100 nF; C5 was 2.2 µF, merged into the 100 nF part |
+| C6, C33, C44 | PMID | 10 µF 25 V + 22 µF 16 V + 100 nF | data sheet 3 x 10 µF |
+| C8, C45 | BTST1 to SW1, BTST2 to SW2 | 2 x 47 nF 50 V | |
+| L1 | SW1 to SW2 | 2.2 µH, FXL0630-2R2-M (C167218) | 15 mΩ, 9.5 A saturation; 750 kHz |
+| C9, C10, C46 | SYS | 2 x 22 µF 10 V + 100 nF | data sheet 5 x 10 µF |
+| C11, C47 | BAT | 2 x 10 µF 25 V | |
+| R61 | BATP sense | 150 Ω to VBAT | high-impedance input, value shared with R28 |
+| C48 | REGN | 4.7 µF 16 V | |
+| C49 | SDRV | 1 nF 50 V | no ship FET |
+| R56 | PROG | 4.7 kΩ 1 % | 1S, 750 kHz (3.0 kΩ for 1.5 MHz) |
+| R57, R58 | ILIM_HIZ | 47 kΩ / 100 kΩ from REGN | 3.4 V, about 3 A |
+| R59, R60 | TS | 80.6 kΩ / 768 kΩ from REGN (C23249, C2933258) | window 3.1 to 43.0 °C, see above |
+| R62, TP8 | INT | 100 kΩ to ESP_3V3 | polled |
+| Q10, R63, R64 | USB present | 2N7002, 47 kΩ / 100 kΩ | red LED |
+| R65, R66 | CC1, CC2 | 5.1 kΩ Rd | usb_input sheet |
+
+Removed against the MAX77757 board: R6, R37 (IFAST), R8 (THM bias), C7 (VDD), C34 (PVL), Q6 (THM pull-down).
+
+### Layout
+
+Placed and routed against data sheet section 8.4.1 (priority list) after two independent reviews of the first placement. Coordinates in mil, U4 at 4479,4310.
+
+- P1: C46 (SYS 0.1 µF) and C44 (PMID 0.1 µF) sit on F.Cu directly under pins 25 and 29, GND pads next to pin 27; pin 27 continues into the F.Cu pour "U4 GND" with solid pad connections and three vias 55 to 107 mil from the pin. C9, C10 (SYS 22 µF) and C6, C33 (PMID) hang on the pours "U4 VSYS" and "U4 PMID" (34 to 40 mil bands).
+- P2: SW1 and SW2 leave the pins on 10 mil stubs into six vias each under the package (24/12 mil), then In2 traces of 40 mil beside the via groups and 70 mil to L1, five vias per inductor pad. The F.Cu zones CHG_SW1/CHG_SW2 cover the inductor pads only. C8 and C45 (BTST) sit at the inductor ends on the SW copper; the BTST pins reach them through a via at the pin and one B.Cu trace each, as in the data sheet example.
+- P3: C48 (REGN) is 115 mil east of pin 5 on the F.Cu REGN trace, two GND vias at its GND pad. The dividers take REGN through an 18 mil via next to the pin.
+- P4: C43 keeps its place in the VBUS zone; C43, C42, C41 grounds got vias. VBUS pins 2 and 3 share a 15 mil stub into two 28/12 vias to the In2 VBUS copper.
+- P5: C47 (BAT 10 µF) is 150 mil west of pins 22/23 (C49 sits between). The pour "U4 VBAT" (F.Cu) runs from F1 and C11 through an 84 mil corridor between R61 and the SW2 zone to C47; the pour "U4 VBAT stub" widens the 14 mil stub into the pins where INT and SDRV leave room. F1 to the BAT pins: 8.3 mΩ in the heat model.
+- P6: the VSYS pour continues as "U4 VSYS feed" (50 mil band) to L2's input pad; before, a 10 mil track carried the boost input (31 mΩ, now 11 mΩ). The In2 VBUS band "USB5V" outranks the inner GND fill (priority 3) so it carries the input current, not only the 10 mil track inside it (78 mΩ before, 26 mΩ now). The "U6 GND" zone reaches C18/C19's ground pads; the two dead VBUS zones at pins 8/9 fill at 8 mil minimum width.
+- P7: BATP and TS leave west and north on F.Cu/B.Cu, more than 100 mil from switch copper outside the package.
+- DP, DN, REGN, BTST1 fan out on separate lanes east of the pins (clearance 6 mil in the FINE_USB rule area, now x 4250 to 4880, y 4150 to 4620). STAT leaves on a via south-east of pin 1 to B.Cu.
+- Ground stitching at the switch-node layer changes: on In2 the SW runs return on B.Cu, on F.Cu over In1. Ground vias at (4479,4418) south of the pin row and beside both inductor-end via columns hand the return over (1.7 to 2.9 mm from the via groups; under U4 there is no room).
+- Zone priorities: Top GND 2, C36 GND 3, U4 GND 4, USB_VBUS zones 5 to 7 and CHG_SW zones 7, the U4 power pours and SW necks 8. VSYS leaves the cap row through a band south of the caps and a 40 mil leg to TP2. C12 moved onto that leg, R60 out of the VBAT corridor.
+- DRC: 0 errors. Warnings left: four dangling vias elsewhere on the board, three silk overlaps (TP3 label, Q10 reference).
+- Reviewed against the data sheets of U4, U6 and U7 (two independent passes plus one on the result): every hard rule met; reasonable deviations are the 0603 instead of 0402 for the 0.1 µF, C43 reached from pins 2/3 through the In2 band, the inner SW runs at 70 mil 0.5 oz (about 9 mΩ each, 0.2 W at 3.3 A against 0.9 W charger loss), and the BTST caps at the inductor ends. Open: see [open-issues.md](open-issues.md).
+
+### Heat
+
+Heat model, 3 A source, 0.8 A load, 25 °C ambient, closed case with the 5 cm² vents (`hardware/sim/heat/ti/results.md`), on the routed board: every charger path is traced through tracks, vias and pours (F1 to BAT 8.3 mΩ, SYS to L2 11.4 mΩ, FB1 to VBUS 26.1 mΩ, SW1 and SW2 runs 10.5 and 8.6 mΩ).
+
+| Condition | Cell 3.7 V | Cell 3.2 V |
+|---|---|---|
+| Open bench, host 1.8 A, TREG 100 °C: U4 junction, sink / bare | 51 / 63 °C | 57 / 72 °C |
+| Closed case, host 1.8 A, TREG 100 °C, with sink | 1.80 A at 94 °C | 1.71 A at 100 °C |
+| Closed case, host 1.8 A, TREG 100 °C, bare | 1.59 A at 100 °C | 1.22 A at 100 °C |
+| Closed case, default 1 A, TREG 120 °C, sink / bare | 1.00 A at 74 / 83 °C | 1.00 A at 82 / 93 °C |
+| Closed case, device off, 1.8 A, sink / bare | | 1.80 A at 53 / 61 °C |
+
+The sink carries 0.36 to 0.42 W of the 0.9 to 1.1 W charger loss in the closed case and lowers the junction-to-air figure from 51 to 42 K/W (3.7 V) and 41 to 38 K/W (3.2 V).
+
+- Charger loss at 1.8 A is about half the MAX77757's (0.86 against 1.69 W at 3.7 V), from the lower switch resistances and the data sheet efficiency curve (Figure 6-1, fitted switching term). The package's RθJB 9.7 K/W replaces the MAX77757 model's θJC guess.
+- Heatsink: the same 10 x 10 mm sink on the package top as the MAX board ([Heatsink](#heatsink)), with the published RθJC(top) 20.9 K/W in place of the MAX estimate. The sink overhangs the 0.4 mm pitch pins and the 0603 caps at the pins by 3 mm; the 1.5 mm spacer clears them. A bottom-side spreader plate was modelled as an experiment and is not a design: it would need reliefs for the through-hole pins around U4 and bonding to the case to beat the sink.
+- Transients: `hardware/sim/heat/ti/charging.pdf` (default 1 A, host 1.8 A at TREG 100 and 80 °C) and `charging_limits.pdf` (TREG sweep).
+
+### EMI
+
+`hardware/sim/emi/results_ti.md` reports the charger hot loop at 750 kHz and at 1.5 MHz. The hot loop is C44 (0.1 µF at the pins), 1.7 mm² and 2.5 nH with the PMID pour under the run (the loop model measures the pour width across each run). At 750 kHz the conducted-emission fundamental at the LISN is 3 dB over the CISPR 32 class B limit with FB1 at its DC-bias inductance (0.1 µH); the 1.5 MHz fundamental sits in the same 56 dBµV band but with half the line density. The bench with the real adapter decides; PWM_FREQ switches the frequency at runtime, PROG 3.0 kΩ makes 1.5 MHz the default. The receiver-band bound at 868 MHz (FLARM) fails for the boost and the charger loops on both board variants (−116 and −118 dBm against the −121 dBm threshold, the same on the MAX board); it is a worst-case dipole bound, the bench with the antenna in place decides.
+
 ## Input protection
 
 | Part | Net | Value | Note |
 |---|---|---|---|
 | D3 | USB_VBUS | SMAJ12A, unidirectional, cathode to VBUS | breakdown 13.3 V minimum, clamp 19.9 V at 20.8 A |
 | D6 to D9 | CC1, CC2, D+, D- | H5VLD3B, 5 V, SOD-323 (C20615805) | at the connector |
-| C1, C5 | USB_VBUS_J1, USB_VBUS | 4.7 µF at J1, 2.2 µF at U4 | 6.9 µF in total, below the 10 µF hot-plug limit |
+| C1 | USB_VBUS_J1 | 4.7 µF 50 V at J1, before FB1 | the 10 µF hot-plug limit applies at the connector; behind the bead the charger input holds 2 x 10 µF + 2 x 100 nF |
 | FB1 | USB_VBUS_J1 to USB_VBUS | Murata BLM31KN471SZ1L, 470 Ω at 100 MHz, 4 A, 20 mΩ, 1206 (C710518) | with C1, keeps the charger's 1.3 MHz input ripple off the USB cable |
 
 - A USB-C source does not deliver more than 5 V without PD, so D3 only sees ESD and surge.
@@ -254,7 +362,7 @@ THERM_OK -- R10 1 MΩ and C31 100 nF to GND
 
 ## Off-state draw
 
-With the slider off and no USB the board draws about 51 µA from the pack, 0.4 % of the 10 Ah pack per month. The breakdown is in [specs.md](specs.md).
+With the slider off and no USB the carrier-ti-charger draws about 36 µA from the pack (50 µA maximum), 0.26 % of the 10 Ah pack per month; the carrier-max-charger about 49 µA (76 µA maximum). Largest shares: the charger's battery-only quiescent current and the boost feedback divider, which sees the cell through the idle boost. The breakdown per board and cell voltage is in [specs.md](specs.md) (`tools/power_budget.py`).
 
 ## Boost and load switch
 
@@ -269,6 +377,7 @@ U6 TPS61088RHLR (LCSC C87357) converts SYS (3.1 to 4.4 V) to 5.06 V. The load is
 | R18, C21, C22 | compensation | 6.8 kΩ, 10 nF, 100 pF | see [Simulated behaviour](#simulated-behaviour) |
 | C17 | soft start | 47 nF | 11.3 ms to regulation |
 | C18 to C20, C24 | output capacitors | 3 x 22 µF, 10 µF | 38 µF nominal after DC bias, 25 µF minimum |
+| C53 | HF bypass at VOUT | 100 nF 50 V 0603 (C14663) | next to C18, see open-issues for the value |
 | C23 | load switch rise, on CT | 10 nF | 17 ms |
 | R39, C36 | snubber, SW at L2 pin 2 to GND | not fitted; start with 2.2 Ω, 1 nF | |
 
@@ -332,7 +441,7 @@ Four layers, JLCPCB JLC04161H-2116C, 1.6 mm: 1 oz outer, 0.5 oz inner copper, 0.
 
 ### Copper path resistances
 
-At 20 °C, from the heat model (`hardware/sim/heat/results.md`).
+At 20 °C, from the heat model (`hardware/sim/heat/max/results.md`).
 
 | Net | Path | Resistance |
 |---|---|---|
@@ -347,7 +456,7 @@ At 20 °C, from the heat model (`hardware/sim/heat/results.md`).
 
 ### Losses
 
-Closed case, 25 °C ambient, nominal corner (`hardware/sim/heat/results.md`):
+Closed case, 25 °C ambient, nominal corner (`hardware/sim/heat/max/results.md`):
 
 | Operating point | Board loss | Cell to 5 V |
 |---|---|---|
@@ -361,7 +470,7 @@ Closed case, 25 °C ambient, nominal corner (`hardware/sim/heat/results.md`):
 
 ### Temperatures
 
-Heat model at 25 °C ambient unless stated (`hardware/sim/heat/results.md`). The closed case includes a 5 cm² lower inlet and a 5 cm² upper outlet, 50 % open grille and 35 mm vertical separation. The enclosure is not designed yet. U4 is covered under [Heatsink](#heatsink).
+Heat model at 25 °C ambient unless stated (`hardware/sim/heat/max/results.md`). The closed case includes a 5 cm² lower inlet and a 5 cm² upper outlet, 50 % open grille and 35 mm vertical separation. The enclosure is not designed yet. U4 is covered under [Heatsink](#heatsink).
 
 | Item | Open bench | Closed case | Closed case, 50 °C ambient |
 |---|---|---|---|
@@ -384,8 +493,8 @@ Two 3 mm through-hole LEDs next to the USB port, fitted by the user. What the us
 | LED | Part | Supply | On when |
 |---|---|---|---|
 | D5 green | Kingbright L-7104GD | RAIL_5V through R26 470 Ω | the 5 V rail is on |
-| D4 red, pin 1 | Kingbright L-115WEGW | VSYS through Q4 and R23 560 Ω | INOKB is low (pull-up R36 100 kΩ to VSYS) |
-| D4 green, pin 3 | Kingbright L-115WEGW | VSYS through Q3 and R31 560 Ω | STAT is low (pull-up R33 47 kΩ to VSYS) |
+| D4 red, pin 1 | Kingbright L-115WEGW | VSYS through Q4 and R23 470 Ω | INOKB is low (pull-up R36 100 kΩ to VSYS) |
+| D4 green, pin 3 | Kingbright L-115WEGW | VSYS through Q3 and R31 470 Ω | STAT is low (pull-up R33 47 kΩ to VSYS) |
 
 - D4 is common cathode on the middle leg (pin 2 to GND). Q3 and Q4 are AO3401A.
 - With no USB source both charger outputs are high impedance and both FETs are off, so D4 draws nothing from the pack.

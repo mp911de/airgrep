@@ -39,7 +39,7 @@ import simlib  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BENCHES = os.path.join(HERE, "emi")
-RESULTS = os.path.join(BENCHES, "results.md")
+RESULTS = os.path.join(BENCHES, "results_max.md")  # results_<charger>.md, bind()
 BENCH = simlib.Bench(BENCHES)
 
 # --- limits. CISPR 32 class B at 3 m, quasi-peak in dBµV/m; above 1 GHz the average limit.
@@ -63,7 +63,7 @@ R_VIA = 0.5e-3
 
 # --- converter hot loops. Pads in loop order; consecutive pads on the same net are copper runs.
 L_PKG = 1.0e-9  # QFN lead frame and bond wires, two pins in the loop (estimate)
-ESL = {"0805": 0.5e-9, "1206": 0.7e-9}
+ESL = {"0603": 0.4e-9, "0805": 0.5e-9, "1206": 0.7e-9}
 # switch output capacitance, not specified: assumed from the switch size (10 A class for the
 # TPS61088, 3 A for the MAX77757), swept by a factor of two either way
 COSS = {"boost": 1e-9, "buck": 300e-12}
@@ -71,7 +71,35 @@ EDGE_CASES = (2e-9, 5e-9, 10e-9)  # gate ramp, not specified ("very fast" per TI
 EDGE_NOMINAL = 5e-9
 BOOST_VIN, BOOST_IOUT = 3.1, 1.5  # lowest input, short-term peak: highest loop current and duty
 BUCK_VSYS, BUCK_ILOAD = 4.2, 3.0
-CONVERTERS = {
+CONVERTERS, BUCK_KEY = {}, None
+
+
+def bind():
+    """CONVERTERS for the project's charger: the boost, the charger buck at its PROG frequency, and for a
+    charger with a selectable frequency one more row per option."""
+    global CONVERTERS, BUCK_KEY, RESULTS, SPECTRUM
+    chg = run_power.CHG
+    RESULTS = os.path.join(BENCHES, "results_%s.md" % run_heat.CHARGER)
+    SPECTRUM = os.path.join(BENCHES, "spectrum_flarm_%s" % run_heat.CHARGER)
+    l1 = chg["l1"]["l"]
+
+    def buck(fsw):
+        d = BUCK_VSYS / 5.0
+        return dict(dir=-1, mg=0, mb=1, sg=1, sb=0, vbank=5.0, fsw=fsw, d=d, idc=BUCK_ILOAD,
+                    ron_main=chg["r_hs"], ron_sync=chg["r_ls"], cbank=19.2e-6, esr=1.5e-3,
+                    esl=ESL["0805"] * ESL["1206"] / (ESL["0805"] + ESL["1206"]), loop=chg["emi_loop"],
+                    caps=chg["emi_caps"], sw_net=chg["nets"]["sw"], coss=COSS["buck"], snubber=None, inductor="L1",
+                    ripple=(5.0 - BUCK_VSYS) * d / (l1 * fsw),
+                    point="5 V in, %.1f V / %.1f A out, %.2g MHz" % (BUCK_VSYS, BUCK_ILOAD, fsw / 1e6))
+    BUCK_KEY = "buck U4 (%s, L1)" % chg["part"]
+    CONVERTERS = dict(BASE_CONVERTERS)
+    CONVERTERS[BUCK_KEY] = buck(chg["fsw"])
+    for fsw in chg.get("emi_fsw_options", ()):
+        if fsw != chg["fsw"]:
+            CONVERTERS["%s %.2g MHz" % (BUCK_KEY, fsw / 1e6)] = buck(fsw)
+
+
+BASE_CONVERTERS = {
     "boost U6 (TPS61088, L2)": dict(
         dir=1, mg=1, mb=0, sg=0, sb=1, vbank=run_power.VOUT, fsw=run_power.fsw_boost(BOOST_VIN),
         d=1 - 0.96 * BOOST_VIN / run_power.VOUT, idc=run_power.VOUT * BOOST_IOUT / (BOOST_VIN * 0.96),
@@ -82,12 +110,6 @@ CONVERTERS = {
         inductor="L2", ripple=BOOST_VIN * (1 - 0.96 * BOOST_VIN / run_power.VOUT)
         / (run_power.L2 * run_power.fsw_boost(BOOST_VIN)),
         point="%.1f V in, %.1f A out" % (BOOST_VIN, BOOST_IOUT)),
-    "buck U4 (MAX77757, L1)": dict(
-        dir=-1, mg=0, mb=1, sg=1, sb=0, vbank=5.0, fsw=run_power.BUCK_FSW, d=BUCK_VSYS / 5.0, idc=BUCK_ILOAD,
-        ron_main=60e-3, ron_sync=40e-3, cbank=19.2e-6, esr=1.5e-3, esl=ESL["0805"] * ESL["1206"]
-        / (ESL["0805"] + ESL["1206"]), loop=(("C6", "1"), ("U4", "22"), ("U4", "18"), ("C6", "2")),
-        caps=("C6",), sw_net="CHG_SW", coss=COSS["buck"], snubber=None, inductor="L1", ripple=0.5,
-        point="5 V in, %.1f V / %.1f A out" % (BUCK_VSYS, BUCK_ILOAD)),
 }
 INDUCTOR_TURNS, INDUCTOR_AREA, INDUCTOR_LEAK = 5, 10e-6, 0.1  # as in run_power
 
@@ -273,7 +295,8 @@ def segments_cross(a, b):
 # Board
 
 class Board:
-    def __init__(self, path=run_heat.PCB):
+    def __init__(self, path=None):
+        path = path or run_heat.PCB
         self.data = run_heat.read_board(path)
         self.pads = {(p.ref, p.num): p for p in self.data["pads"]}
         self.refs = {}
@@ -331,15 +354,34 @@ class Board:
                 continue
             width = max(0.5e-3, min(a.w, a.h, b.w, b.h) * 1e-3)
             run = math.dist((a.x, a.y), (b.x, b.y)) * 1e-3
+            # a pour under the run: its chord across the run direction at the midpoint sets the width
+            width = max(width, self.pour_width(a.net, (a.x + b.x) / 2, (a.y + b.y) / 2, b.x - a.x, b.y - a.y))
             l_copper += microstrip(width)[1] * run
             runs.append((a.net, run, width))
-        esl = sum(ESL["1206" if "1206" in self.cap_package(c) else "0805"] for c in caps)
+        esl = sum(ESL[self.cap_package(c)] for c in caps)
         return dict(area=area, l_copper=l_copper, esl=esl, l_total=l_copper + esl + L_PKG + L_VIA * len(caps),
                     runs=runs, perimeter=sum(math.dist(p, q) for p, q in zip(points, points[1:] + points[:1])) * 1e-3)
 
     def cap_package(self, ref):
         p = self.refs[ref][0]
-        return "1206" if max(p.w, p.h) > 1.5 else "0805"
+        size = max(p.w, p.h)
+        return "1206" if size > 1.5 else "0805" if size > 1.1 else "0603"
+
+    def pour_width(self, net, x, y, dx, dy, layer="F", limit=5.0):
+        """Chord of the net's pours on the layer through (x, y) across the direction (dx, dy), mm,
+        at most limit. Zero when no pour covers the point."""
+        polys = [pts for n, lay, pts in self.data["zones"] + self.data["polys"] if n == net and lay == layer]
+        if not polys or not any(inside((x, y), pts) for pts in polys):
+            return 0.0
+        norm = math.hypot(dx, dy) or 1.0
+        nx, ny = -dy / norm, dx / norm
+        width = 0.0
+        for sign in (1, -1):
+            step = 0.1
+            while step <= limit / 2 and any(inside((x + sign * nx * step, y + sign * ny * step), pts) for pts in polys):
+                step += 0.1
+            width += step - 0.1
+        return width * 1e-3
 
     def copper_path(self, path):
         """Length of the copper between consecutive pads, for the snubber lead inductance."""
@@ -670,7 +712,7 @@ def receiver_bands(report, board, sources, digital, fast):
     report.add()
 
 
-SPECTRUM = os.path.join(BENCHES, "spectrum_flarm")
+SPECTRUM = os.path.join(BENCHES, "spectrum_flarm_max")  # spectrum_flarm_<charger>, bind()
 FLARM_CHANNELS = (868.2e6, 868.4e6)
 SPECTRUM_COLORS = {"boost U6": "#d9534f", "buck U4": "#337ab7", "digital": "#777777"}
 
@@ -764,8 +806,8 @@ def conducted(report, board, fast):
         report.add()
         return
     length, r_tr, l_tr, _, vias = board.net_parasitics("USB_VBUS")
-    conv = CONVERTERS["buck U4 (MAX77757, L1)"]
-    fb = lambda l: dict(r_fb=FB1[0], l_fb=l, rp_fb=FB1[2])
+    conv = CONVERTERS[BUCK_KEY]
+    fb = lambda l: dict(r_fb=FB1[0], l_fb=l, rp_fb=FB1[2], r_in=run_power.CHG["r_in"])
     cases = [("FB1 %.1f µH, %.0f ns edges" % (FB1[1] * 1e6, EDGE_NOMINAL * 1e9), dict(tedge=EDGE_NOMINAL, **fb(FB1[1]))),
              ("FB1 %.1f µH, 2 ns edges" % (FB1[1] * 1e6), dict(tedge=2e-9, **fb(FB1[1])))]
     cases += [("FB1 %.1f µH (DC bias)" % (l * 1e6), dict(tedge=EDGE_NOMINAL, **fb(l))) for l in FB1_L_BIAS]
@@ -801,14 +843,14 @@ def conducted(report, board, fast):
     m, label, f, level = min(w for w in worst if w[1] in designed)
     report.check(m >= MARGIN, "conducted margin with FB1, worst inductance %.0f dB (%s, %.0f dBµV at %s "
                  "against the LISN)" % (m, label, level, mhz(f)))
-    report.add("- FB1's inductance at 1.3 MHz and up to 3 A is an estimate; the rows with %s show how the margin "
+    report.add("- FB1's inductance at %.2g MHz and up to 3 A is an estimate; the rows with %s show how the margin "
                "follows it. Murata's DC-bias curve for BLM31KN471SZ1L decides; it is not on file."
-               % " and ".join("%.1f µH" % (l * 1e6) for l in FB1_L_BIAS))
+               % (conv["fsw"] / 1e6, " and ".join("%.1f µH" % (l * 1e6) for l in FB1_L_BIAS)))
     report.add("- The LISN is the CISPR 32 method for a DC power port and the worst case for the mains port. "
                "A real adapter's output capacitor absorbs most of the cable current (last row); its mains-side "
-               "filter is designed for its own switching frequency, not for 1.3 MHz. Average limits are "
+               "filter is designed for its own switching frequency, not for %.2g MHz. Average limits are "
                "10 dB lower; steady lines read the same on both detectors. Common-mode current through the "
-               "adapter's parasitic capacitance is not modelled.")
+               "adapter's parasitic capacitance is not modelled." % (conv["fsw"] / 1e6))
     report.add()
 
 
@@ -861,10 +903,10 @@ def rails(report, board, fast):
         report.add()
         return
     boost = CONVERTERS["boost U6 (TPS61088, L2)"]
-    buck = CONVERTERS["buck U4 (MAX77757, L1)"]
+    buck = CONVERTERS[BUCK_KEY]
     runs = [("boost_ripple", dict(vin=BOOST_VIN, iout=BOOST_IOUT, fsw=boost["fsw"], cout=boost["cbank"],
                                   c24=run_power.C24 * run_power.C24_BIAS)),
-            ("buck_ripple", dict(vsys=BUCK_VSYS, iload=BUCK_ILOAD))]
+            ("buck_ripple", dict(vsys=BUCK_VSYS, iload=BUCK_ILOAD, **run_power.buck_bench_params()))]
     results = [run_power.BENCH.simulate(bench, **p) for bench, p in runs]
     # socket ripple: RAIL_5V lines through the load switch and copper into the module capacitance
     arr = np.array(results[0])
@@ -927,11 +969,18 @@ def rails(report, board, fast):
 
 # ------------------------------------------------------------------------------------------
 
+bind()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--write", action="store_true", help="store the report in emi/results.md")
+    parser.add_argument("--write", action="store_true", help="store the report in emi/results_<charger>.md")
     parser.add_argument("--fast", action="store_true", help="skip the ngspice benches")
+    run_heat.project.add_argument(parser)
     args = parser.parse_args()
+    if args.project:
+        run_heat.select_project(args.project)
+    bind()
     version = "closed form only" if args.fast else simlib.require_ngspice()
     board = Board()
     report = simlib.Report()

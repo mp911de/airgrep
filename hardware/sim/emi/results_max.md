@@ -8,37 +8,37 @@ Hot loop through the pad centres (boost U6 (TPS61088, L2): U6.15 C18.1 C18.2 U6.
 
 | Converter | Point | fSW | Duty | Loop current | Loop area | Copper runs | Loop L | Switch-node copper |
 |---|---|---|---|---|---|---|---|---|
-| boost U6 (TPS61088, L2) | 3.1 V in, 1.5 A out | 709 kHz | 0.41 | 2.55 A | 4.6 mm² | BOOST_5V 3.5 mm, GND 4.0 mm | 3.77 nH | 30 mm² |
-| buck U4 (MAX77757, L1) | 5 V in, 4.2 V / 3.0 A out | 1300 kHz | 0.84 | 3.00 A | 3.5 mm² | CHG_BYP 2.1 mm, GND 2.2 mm | 2.94 nH | 19 mm² |
+| boost U6 (TPS61088, L2) | 3.1 V in, 1.5 A out | 709 kHz | 0.41 | 2.55 A | 4.6 mm² | BOOST_5V 3.5 mm, GND 4.0 mm | 3.00 nH | 30 mm² |
+| buck U4 (MAX77757, L1) | 5 V in, 4.2 V / 3.0 A out, 1.3 MHz | 1300 kHz | 0.84 | 3.00 A | 4.2 mm² | CHG_BYP 2.4 mm, GND 2.6 mm | 2.81 nH | 17 mm² |
 
 One period at 10 ps per case. Ring frequency from the zero crossings of the loop current after the main switch turns on, ring current its peak relative to the settled value. Edge is the gate ramp (10 A of current slew per ramp), Coss the output capacitance of each switch (boost 1000 pF, buck 300 pF assumed); both are swept:
 
 | Converter | Case | Ring | Ring current | Switch node max / min | Bank pin max / min |
 |---|---|---|---|---|---|
-| boost U6 | nominal | 80 MHz | 2.58 A | 6.80 V / 0.01 V | 9.08 V / -0.79 V |
-| boost U6 | edge 2 ns | 79 MHz | 2.62 A | 6.24 V / 0.01 V | 9.08 V / -0.79 V |
-| boost U6 | edge 10 ns | 76 MHz | 2.92 A | 6.81 V / 0.01 V | 8.59 V / 0.60 V |
-| boost U6 | Coss 500 pF | 113 MHz | 2.73 A | 7.98 V / 0.01 V | 9.51 V / -0.83 V |
-| boost U6 | Coss 2000 pF | 54 MHz | 3.38 A | 6.45 V / 0.01 V | 8.54 V / -0.33 V |
-| boost U6 | snubber R39 2.2 Ω, C36 1 nF | 80 MHz | 2.53 A | 7.21 V / 0.01 V | 9.02 V / -0.31 V |
-| buck U4 | nominal | 160 MHz | 3.15 A | 8.99 V / -0.90 V | 10.85 V / -0.72 V |
-| buck U4 | edge 2 ns | 161 MHz | 2.99 A | 9.10 V / -0.90 V | 10.92 V / -0.78 V |
-| buck U4 | edge 10 ns | 157 MHz | 3.17 A | 5.96 V / -0.90 V | 10.62 V / -0.04 V |
-| buck U4 | Coss 150 pF | 226 MHz | 3.14 A | 9.32 V / -0.91 V | 13.93 V / -1.74 V |
-| buck U4 | Coss 600 pF | 113 MHz | 3.19 A | 8.58 V / -0.90 V | 8.99 V / -0.65 V |
+| boost U6 | nominal | 88 MHz | 2.81 A | 6.89 V / 0.01 V | 8.91 V / -0.73 V |
+| boost U6 | edge 2 ns | 89 MHz | 2.71 A | 6.06 V / 0.01 V | 8.93 V / -0.77 V |
+| boost U6 | edge 10 ns | 86 MHz | 2.83 A | 6.90 V / 0.02 V | 7.70 V / 1.26 V |
+| boost U6 | Coss 500 pF | 125 MHz | 2.80 A | 7.35 V / 0.01 V | 9.38 V / -0.80 V |
+| boost U6 | Coss 2000 pF | 62 MHz | 3.47 A | 6.44 V / 0.01 V | 8.32 V / 0.38 V |
+| boost U6 | snubber R39 2.2 Ω, C36 1 nF | 86 MHz | 2.61 A | 7.22 V / 0.01 V | 8.66 V / 0.41 V |
+| buck U4 | nominal | 163 MHz | 3.16 A | 8.96 V / -0.90 V | 10.72 V / -0.71 V |
+| buck U4 | edge 2 ns | 163 MHz | 2.99 A | 9.07 V / -0.90 V | 10.79 V / -0.78 V |
+| buck U4 | edge 10 ns | 163 MHz | 3.15 A | 5.75 V / -0.90 V | 10.49 V / 0.11 V |
+| buck U4 | Coss 150 pF | 230 MHz | 3.12 A | 9.28 V / -0.91 V | 13.66 V / -1.73 V |
+| buck U4 | Coss 600 pF | 115 MHz | 3.16 A | 8.55 V / -0.90 V | 8.90 V / -0.63 V |
 
 Cross-check of the bench lines against the closed-form trapezoid at the low harmonics (the bench includes dead time and the diode drops, so a few percent differ):
 
 | Converter | Harmonic | Loop current, closed form | bench | Switch node, closed form | bench |
 |---|---|---|---|---|---|
-| boost U6 | 1 (0.71 MHz) | 1.560 A | 1.551 A | 3.096 V | 3.087 V |
-| boost U6 | 2 (1.42 MHz) | 0.428 A | 0.446 A | 0.850 V | 0.925 V |
+| boost U6 | 1 (0.71 MHz) | 1.560 A | 1.551 A | 3.096 V | 3.088 V |
+| boost U6 | 2 (1.42 MHz) | 0.428 A | 0.446 A | 0.850 V | 0.924 V |
 | boost U6 | 5 (3.55 MHz) | 0.058 A | 0.060 A | 0.115 V | 0.113 V |
-| boost U6 | 10 (7.09 MHz) | 0.057 A | 0.041 A | 0.113 V | 0.039 V |
-| buck U4 | 1 (1.30 MHz) | 0.920 A | 0.977 A | 1.533 V | 1.631 V |
-| buck U4 | 2 (2.60 MHz) | 0.806 A | 0.826 A | 1.343 V | 1.367 V |
-| buck U4 | 5 (6.50 MHz) | 0.224 A | 0.173 A | 0.374 V | 0.238 V |
-| buck U4 | 10 (13 MHz) | 0.180 A | 0.154 A | 0.301 V | 0.230 V |
+| boost U6 | 10 (7.09 MHz) | 0.057 A | 0.041 A | 0.113 V | 0.041 V |
+| buck U4 | 1 (1.30 MHz) | 0.920 A | 0.977 A | 1.533 V | 1.648 V |
+| buck U4 | 2 (2.60 MHz) | 0.806 A | 0.826 A | 1.343 V | 1.382 V |
+| buck U4 | 5 (6.50 MHz) | 0.224 A | 0.173 A | 0.374 V | 0.244 V |
+| buck U4 | 10 (13 MHz) | 0.180 A | 0.154 A | 0.301 V | 0.235 V |
 
 - PASS: boost U6 loop-current harmonic 1: bench 1.551 A against closed form 1.560 A
 - PASS: boost U6 loop-current harmonic 2: bench 0.446 A against closed form 0.428 A
@@ -70,19 +70,19 @@ Each loop as a small magnetic dipole (Ott, E = 2.63e-14 f² A I / r including th
 
 | Source | Case | 30 to 230 MHz | 230 MHz to 1 GHz | 1 to 3 GHz |
 |---|---|---|---|---|
-| boost U6 hot loop | nominal | 19 dB at 84 MHz | 37 dB at 233 MHz | 51 dB at 1228 MHz |
-| boost U6 hot loop | edge 2 ns | 19 dB at 80 MHz | 35 dB at 233 MHz | 46 dB at 1186 MHz |
-| boost U6 hot loop | edge 10 ns | 21 dB at 79 MHz | 39 dB at 233 MHz | 54 dB at 1015 MHz |
-| boost U6 hot loop | Coss 500 pF | 15 dB at 113 MHz | 35 dB at 237 MHz | 47 dB at 1147 MHz |
-| boost U6 hot loop | Coss 2000 pF | 22 dB at 61 MHz | 44 dB at 273 MHz | 51 dB at 1074 MHz |
-| boost U6 hot loop | snubber R39 2.2 Ω, C36 1 nF | 19 dB at 82 MHz | 42 dB at 232 MHz | 51 dB at 1114 MHz |
+| boost U6 hot loop | nominal | 17 dB at 92 MHz | 35 dB at 233 MHz | 48 dB at 1219 MHz |
+| boost U6 hot loop | edge 2 ns | 19 dB at 87 MHz | 33 dB at 233 MHz | 45 dB at 1186 MHz |
+| boost U6 hot loop | edge 10 ns | 21 dB at 96 MHz | 36 dB at 233 MHz | 51 dB at 1003 MHz |
+| boost U6 hot loop | Coss 500 pF | 14 dB at 125 MHz | 32 dB at 232 MHz | 46 dB at 1247 MHz |
+| boost U6 hot loop | Coss 2000 pF | 20 dB at 69 MHz | 43 dB at 273 MHz | 49 dB at 1086 MHz |
+| boost U6 hot loop | snubber R39 2.2 Ω, C36 1 nF | 18 dB at 92 MHz | 39 dB at 237 MHz | 49 dB at 1098 MHz |
 | L2 leakage | 0.82 A ripple | 75 dB at 32 MHz | 83 dB at 240 MHz | 85 dB at 1118 MHz |
-| buck U4 hot loop | nominal | 7 dB at 157 MHz | 29 dB at 233 MHz | 44 dB at 1160 MHz |
-| buck U4 hot loop | edge 2 ns | 7 dB at 162 MHz | 30 dB at 534 MHz | 42 dB at 1206 MHz |
-| buck U4 hot loop | edge 10 ns | 10 dB at 162 MHz | 29 dB at 235 MHz | 47 dB at 1283 MHz |
-| buck U4 hot loop | Coss 150 pF | 2 dB at 225 MHz | 10 dB at 233 MHz | 37 dB at 1006 MHz |
-| buck U4 hot loop | Coss 600 pF | 12 dB at 112 MHz | 31 dB at 231 MHz | 45 dB at 1232 MHz |
-| L1 leakage | 0.50 A ripple | 64 dB at 36 MHz | 72 dB at 231 MHz | 75 dB at 1004 MHz |
+| buck U4 hot loop | nominal | 6 dB at 164 MHz | 27 dB at 233 MHz | 43 dB at 1160 MHz |
+| buck U4 hot loop | edge 2 ns | 5 dB at 162 MHz | 28 dB at 233 MHz | 40 dB at 1206 MHz |
+| buck U4 hot loop | edge 10 ns | 9 dB at 162 MHz | 27 dB at 235 MHz | 46 dB at 1234 MHz |
+| buck U4 hot loop | Coss 150 pF | 1 dB at 225 MHz | 7 dB at 233 MHz | 36 dB at 1006 MHz |
+| buck U4 hot loop | Coss 600 pF | 11 dB at 118 MHz | 29 dB at 231 MHz | 44 dB at 1223 MHz |
+| L1 leakage | 0.52 A ripple | 64 dB at 36 MHz | 72 dB at 231 MHz | 75 dB at 1004 MHz |
 | I2C_SCL | 11.7 ns edge | 76 dB at 217 MHz | 75 dB at 555 MHz | 81 dB at 1000 MHz |
 | I2C_SDA | 11.8 ns edge | 76 dB at 217 MHz | 75 dB at 550 MHz | 80 dB at 1000 MHz |
 | ESP_UART_TX | 2.1 ns edge | 103 dB at 228 MHz | 100 dB at 762 MHz | 97 dB at 1000 MHz |
@@ -95,8 +95,8 @@ Each loop as a small magnetic dipole (Ott, E = 2.63e-14 f² A I / r including th
 | BUZZ_PWM | 2.4 ns edge | 74 dB at 228 MHz | 78 dB at 508 MHz | 63 dB at 1000 MHz |
 | BUZZ_DRV | 2.1 ns edge | 104 dB at 228 MHz | 100 dB at 762 MHz | 98 dB at 1000 MHz |
 
-- PASS: smallest radiated margin as modelled 7 dB: buck U4 (MAX77757, L1), 33 dBµV/m at 157 MHz against 40 dBµV/m
-- Sensitivity: 2 dB margin for buck U4 (MAX77757, L1) with Coss 150 pF (38 dBµV/m at 225 MHz).
+- PASS: smallest radiated margin as modelled 6 dB: buck U4 (MAX77757, L1), 34 dBµV/m at 164 MHz against 40 dBµV/m
+- Sensitivity: 1 dB margin for buck U4 (MAX77757, L1) with Coss 150 pF (39 dBµV/m at 225 MHz).
 - Digital tracks run over the solid In1 ground; their loop is track length times the 0.20 mm dielectric, with the displacement current of the track capacitance below λ/10 and V/Z0 above. Impulsive sources (PPS, UART) are read with the peak detector, which overstates the quasi-peak by 20 to 40 dB.
 - Not in this estimate: common-mode currents on the antenna coax and the USB cable, the modules' own emissions (ESP32-S3 clocks and Wi-Fi, RP2040, CC1312) and the enclosure.
 
@@ -106,43 +106,43 @@ Field of each hot loop at the antenna (free space with the near-field term; dist
 
 | Receiver | Source | Distance | Lines | In-band power | Threshold | Margin |
 |---|---|---|---|---|---|---|
-| ADS-B 1090 MHz | boost U6, nominal | 94 mm | 5 | -113 dBm | -109 dBm | 4 dB |
-| ADS-B 1090 MHz | boost U6, edge 2 ns | 94 mm | 5 | -112 dBm | -109 dBm | 3 dB |
-| ADS-B 1090 MHz | boost U6, snubber R39 2.2 Ω, C36 1 nF | 94 mm | 5 | -112 dBm | -109 dBm | 3 dB |
-| ADS-B 1090 MHz | buck U4, nominal | 106 mm | 4 | -110 dBm | -109 dBm | 1 dB |
-| ADS-B 1090 MHz | buck U4, edge 2 ns | 106 mm | 4 | -109 dBm | -109 dBm | -0 dB |
+| ADS-B 1090 MHz | boost U6, nominal | 96 mm | 5 | -111 dBm | -109 dBm | 2 dB |
+| ADS-B 1090 MHz | boost U6, edge 2 ns | 96 mm | 5 | -112 dBm | -109 dBm | 3 dB |
+| ADS-B 1090 MHz | boost U6, snubber R39 2.2 Ω, C36 1 nF | 96 mm | 5 | -110 dBm | -109 dBm | 1 dB |
+| ADS-B 1090 MHz | buck U4, nominal | 106 mm | 4 | -108 dBm | -109 dBm | -0 dB |
+| ADS-B 1090 MHz | buck U4, edge 2 ns | 106 mm | 4 | -107 dBm | -109 dBm | -2 dB |
 | ADS-B 1090 MHz | worst digital net: ADS_COMMS_TX | 69 mm | - | -131 dBm | -109 dBm | 22 dB |
-| FLARM 868 MHz | boost U6, nominal | 96 mm | 1 | -114 dBm | -121 dBm | -7 dB |
-| FLARM 868 MHz | boost U6, edge 2 ns | 96 mm | 1 | -115 dBm | -121 dBm | -6 dB |
-| FLARM 868 MHz | boost U6, snubber R39 2.2 Ω, C36 1 nF | 96 mm | 1 | -116 dBm | -121 dBm | -5 dB |
-| FLARM 868 MHz | buck U4, nominal | 102 mm | 1 | -112 dBm | -121 dBm | -9 dB |
-| FLARM 868 MHz | buck U4, edge 2 ns | 102 mm | 1 | -103 dBm | -121 dBm | -18 dB |
+| FLARM 868 MHz | boost U6, nominal | 98 mm | 1 | -116 dBm | -121 dBm | -5 dB |
+| FLARM 868 MHz | boost U6, edge 2 ns | 98 mm | 1 | -114 dBm | -121 dBm | -7 dB |
+| FLARM 868 MHz | boost U6, snubber R39 2.2 Ω, C36 1 nF | 98 mm | 1 | -116 dBm | -121 dBm | -5 dB |
+| FLARM 868 MHz | buck U4, nominal | 103 mm | 1 | -110 dBm | -121 dBm | -11 dB |
+| FLARM 868 MHz | buck U4, edge 2 ns | 103 mm | 1 | -101 dBm | -121 dBm | -20 dB |
 | FLARM 868 MHz | worst digital net: GNSS_RXI | 47 mm | - | -138 dBm | -121 dBm | 17 dB |
-| GNSS L1 1575 MHz | boost U6, nominal | 105 mm | 3 | -124 dBm | -115 dBm | 9 dB |
-| GNSS L1 1575 MHz | boost U6, edge 2 ns | 105 mm | 3 | -118 dBm | -115 dBm | 3 dB |
-| GNSS L1 1575 MHz | boost U6, snubber R39 2.2 Ω, C36 1 nF | 105 mm | 3 | -123 dBm | -115 dBm | 8 dB |
-| GNSS L1 1575 MHz | buck U4, nominal | 107 mm | 1 | -123 dBm | -115 dBm | 8 dB |
-| GNSS L1 1575 MHz | buck U4, edge 2 ns | 107 mm | 1 | -116 dBm | -115 dBm | 1 dB |
+| GNSS L1 1575 MHz | boost U6, nominal | 107 mm | 3 | -123 dBm | -115 dBm | 8 dB |
+| GNSS L1 1575 MHz | boost U6, edge 2 ns | 107 mm | 3 | -115 dBm | -115 dBm | 0 dB |
+| GNSS L1 1575 MHz | boost U6, snubber R39 2.2 Ω, C36 1 nF | 107 mm | 3 | -121 dBm | -115 dBm | 6 dB |
+| GNSS L1 1575 MHz | buck U4, nominal | 108 mm | 1 | -120 dBm | -115 dBm | 5 dB |
+| GNSS L1 1575 MHz | buck U4, edge 2 ns | 108 mm | 1 | -113 dBm | -115 dBm | -2 dB |
 | GNSS L1 1575 MHz | worst digital net: GNSS_TXO | 54 mm | - | -139 dBm | -115 dBm | 24 dB |
 
-- **FAIL**: FLARM 868 MHz: boost U6 -114 dBm above -121 dBm; FLARM 868 MHz: buck U4 -112 dBm above -121 dBm
+- **FAIL**: ADS-B 1090 MHz: buck U4 -108 dBm above -109 dBm; FLARM 868 MHz: boost U6 -116 dBm above -121 dBm; FLARM 868 MHz: buck U4 -110 dBm above -121 dBm
 - The ADS-B receiver's data sheet sensitivity is −85 dBm; the threshold here protects the noise floor, which is stricter. GNSS tolerates narrowband interference better than this threshold suggests, because despreading averages it. Digital nets use the mean power of a random edge train in the bandwidth.
 - Bench item: the ADSBee reports its noise floor (trigger level); compare it with the boost and the charger running against both off, and with the snubber fitted.
 
 ## Conducted emission on the USB input (ngspice, emi/usb_lisn.cir)
 
-Buck input current 3.0 A at duty 0.84 and 1300 kHz from BYP; USB_VBUS copper 13 mm, 15.0 mΩ, 5 nH with 6 vias from the board; USB cable 0.3 Ω, 1.0 µH; LISN 50 µH / 50 Ω. Steady state, last 100 µs, Hann window, lines at the harmonics. The quasi-peak limit applies to the mains port; an adapter's own filter is not in the model, so this is the worst case:
+Buck input current 3.0 A at duty 0.84 and 1300 kHz from BYP; USB_VBUS copper 19 mm, 77.5 mΩ, 9 nH with 7 vias from the board; USB cable 0.3 Ω, 1.0 µH; LISN 50 µH / 50 Ω. Steady state, last 100 µs, Hann window, lines at the harmonics. The quasi-peak limit applies to the mains port; an adapter's own filter is not in the model, so this is the worst case:
 
 | Case | BYP ripple (fSW) | LISN at fSW | Worst line | Limit (QP) | Margin |
 |---|---|---|---|---|---|
-| FB1 1.0 µH, 5 ns edges | 4.3 mV | 24.0 dBµV at 1.30 MHz | 24.0 dBµV at 1.30 MHz | 56 dBµV | 32 dB |
-| FB1 1.0 µH, 2 ns edges | 4.3 mV | 24.0 dBµV at 1.30 MHz | 24.0 dBµV at 1.30 MHz | 56 dBµV | 32 dB |
-| FB1 0.3 µH (DC bias) | 4.3 mV | 34.4 dBµV at 1.30 MHz | 34.4 dBµV at 1.30 MHz | 56 dBµV | 22 dB |
-| FB1 0.1 µH (DC bias) | 4.3 mV | 44.0 dBµV at 1.30 MHz | 44.0 dBµV at 1.30 MHz | 56 dBµV | 12 dB |
-| FB1 fitted as 0 Ω | 4.4 mV | 65.3 dBµV at 1.30 MHz | 65.3 dBµV at 1.30 MHz | 56 dBµV | -9 dB |
-| before FB1: 0 Ω, C1 1 µF | 4.3 mV | 72.1 dBµV at 1.30 MHz | 72.1 dBµV at 1.30 MHz | 56 dBµV | -16 dB |
+| FB1 1.0 µH, 5 ns edges | 4.3 mV | 23.9 dBµV at 1.30 MHz | 23.9 dBµV at 1.30 MHz | 56 dBµV | 32 dB |
+| FB1 1.0 µH, 2 ns edges | 4.3 mV | 23.9 dBµV at 1.30 MHz | 23.9 dBµV at 1.30 MHz | 56 dBµV | 32 dB |
+| FB1 0.3 µH (DC bias) | 4.3 mV | 34.3 dBµV at 1.30 MHz | 34.3 dBµV at 1.30 MHz | 56 dBµV | 22 dB |
+| FB1 0.1 µH (DC bias) | 4.3 mV | 43.5 dBµV at 1.30 MHz | 43.5 dBµV at 1.30 MHz | 56 dBµV | 12 dB |
+| FB1 fitted as 0 Ω | 4.4 mV | 59.6 dBµV at 1.30 MHz | 59.6 dBµV at 1.30 MHz | 56 dBµV | -4 dB |
+| before FB1: 0 Ω, C1 1 µF | 4.3 mV | 71.9 dBµV at 1.30 MHz | 71.9 dBµV at 1.30 MHz | 56 dBµV | -16 dB |
 | C33 missing (BYP 6 µF) | 13.2 mV | 33.6 dBµV at 1.30 MHz | 33.6 dBµV at 1.30 MHz | 56 dBµV | 22 dB |
-| 0 Ω, adapter 470 µF / 30 mΩ across the LISN | 4.4 mV | 16.9 dBµV at 1.30 MHz | 16.9 dBµV at 1.30 MHz | 56 dBµV | 39 dB |
+| 0 Ω, adapter 470 µF / 30 mΩ across the LISN | 4.4 mV | 11.2 dBµV at 1.30 MHz | 11.2 dBµV at 1.30 MHz | 56 dBµV | 45 dB |
 
 - PASS: conducted margin with FB1, worst inductance 12 dB (FB1 0.1 µH (DC bias), 44 dBµV at 1.30 MHz against the LISN)
 - FB1's inductance at 1.3 MHz and up to 3 A is an estimate; the rows with 0.3 µH and 0.1 µH show how the margin follows it. Murata's DC-bias curve for BLM31KN471SZ1L decides; it is not on file.
@@ -155,10 +155,10 @@ Top tracks reference In1, bottom tracks In2, both 0.20 mm away. Listed: track le
 | Layer | Net | Over power copper | Track crossings | Gap |
 |---|---|---|---|---|
 | B.Cu | BAT_TS | 2.8 mm | 1 | 1.5 mm |
-| B.Cu | USB_DP | 3.8 mm | 0 | 0.0 mm |
-| B.Cu | USB_DN | 3.0 mm | 0 | 0.0 mm |
-| B.Cu | USB_CC2 | 2.9 mm | 0 | 0.0 mm |
-| B.Cu | USB_CC1 | 2.9 mm | 0 | 0.0 mm |
+| B.Cu | USB_DP | 3.6 mm | 1 | 0.2 mm |
+| B.Cu | USB_DN | 3.5 mm | 1 | 0.2 mm |
+| B.Cu | USB_CC1 | 3.3 mm | 1 | 0.2 mm |
+| B.Cu | USB_CC2 | 2.9 mm | 1 | 0.2 mm |
 | B.Cu | SW_EN | 0.0 mm | 3 | 2.1 mm |
 | B.Cu | CHG_INOK_N | 0.0 mm | 2 | 1.9 mm |
 | B.Cu | PWR_EN | 0.0 mm | 2 | 1.7 mm |
@@ -178,17 +178,17 @@ Track parasitics from the board (all segments of the net, a bound for branching 
 
 | Net | To | Length | R | L | C | Vias |
 |---|---|---|---|---|---|---|
-| RAIL_5V | U11/U12 inputs | 214 mm | 199.7 mΩ | 38 nH | 52 pF | 7 |
+| RAIL_5V | U11/U12 inputs | 220 mm | 204.2 mΩ | 40 nH | 54 pF | 7 |
 | ESP_5V | J7.1 | 18 mm | 9.9 mΩ | 3 nH | 4 pF | 0 |
 | ADS_5V | J10.1 | 11 mm | 6.4 mΩ | 2 nH | 2 pF | 0 |
-| VSYS | L2, J3 | 73 mm | 181.6 mΩ | 31 nH | 9 pF | 29 |
+| VSYS | L2, J3 | 71 mm | 179.5 mΩ | 31 nH | 9 pF | 29 |
 | VBAT | J3 | 64 mm | 47.1 mΩ | 13 nH | 15 pF | 5 |
 
 Boost at 3.1 V in, 1.5 A out: RAIL_5V lines from power/boost_ripple.cir, driven through the LM73100 (28 mΩ) and the RAIL_5V and ESP_5V copper into 20 µF module input capacitance:
 
 | Harmonic | RAIL_5V | Current into the module | At the socket |
 |---|---|---|---|
-| 1 (0.71 MHz) | 7.4 mV | 25 mA | 0.3 mV |
+| 1 (0.71 MHz) | 7.4 mV | 24 mA | 0.3 mV |
 | 2 (1.42 MHz) | 0.4 mV | 1 mA | 0.0 mV |
 | 3 (2.13 MHz) | 0.2 mV | 0 mA | 0.0 mV |
 
@@ -197,9 +197,9 @@ VSYS ripple lines (benches, raw node, valid to about 100 MHz at their time step)
 | Source | VSYS ripple (fSW) | Worst line | VSYS line | Lead current | Field at 3 m | Margin |
 |---|---|---|---|---|---|---|
 | boost, battery | 1.2 mV | 32 MHz | 0.2 µV | 0.0 µA | -92 dBµV/m | 132 dB |
-| buck, charging | 0.3 mV | 87 MHz | 12.4 µV | 0.1 µA | -48 dBµV/m | 88 dB |
+| buck, charging | 0.3 mV | 70 MHz | 14.9 µV | 0.2 µA | -49 dBµV/m | 89 dB |
 
-- PASS: battery harness loop margin 88 dB at 87 MHz
-- The carrier's own VSYS copper adds 73 mm over the plane, a far smaller loop. Twisting the pack leads removes most of the harness area.
+- PASS: battery harness loop margin 89 dB at 70 MHz
+- The carrier's own VSYS copper adds 71 mm over the plane, a far smaller loop. Twisting the pack leads removes most of the harness area.
 
 Result: 1 check(s) failed.

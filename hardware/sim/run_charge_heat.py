@@ -14,17 +14,30 @@ from pathlib import Path
 
 import numpy as np
 
+import chargers
 import run_heat as heat
 import vent_model
 
-OUT = Path(heat.OUT)
-HOT, RESTART = 42.1, 40.8  # nominal pack NTC transitions, thermal/results.md
+project = heat.project
+
+HOT, RESTART = 42.1, 40.8  # nominal pack NTC hot stop and restart; bound to the project's charger below
 PACKS = {
     "5000": {"label": "5,000 mAh / FE105573", "mm": (73, 55, 10.1), "capacity": 80.0},
     "10000": {"label": "10,000 mAh / FE1160100", "mm": (100, 60, 11.1), "capacity": 160.0},
 }
 COLORS = ("#ba4b32", "#2477a6", "#25846c", "#8058a5")
-POLICIES = ("1.8 A + pack JEITA", "1.2 A + pack JEITA", "90-100 °C target + JEITA")
+
+
+def bind_pack_stop():
+    """HOT and RESTART from the project's charger (chargers.py ts_hot, ts_restart)."""
+    global HOT, RESTART
+    chg = chargers.for_project()[1]
+    HOT, RESTART = chg["ts_hot"], chg["ts_restart"]
+
+
+def policies():
+    """{key: (label, imax, treg, early)} of the project's charger (chargers.py transient_policies)."""
+    return {key: (label, imax, treg, early) for key, label, imax, treg, early in heat.CHG["transient_policies"]}
 
 
 @dataclass
@@ -52,19 +65,24 @@ def calibrate():
     model.r_net, model.r_gnd_bat, model.r_gnd_usb = heat.solve_paths(model, board)
     env = heat.ENVIRONMENTS["closed"]
     system = model.thermal_sheet(env).factorize()
-    source = np.zeros(heat.NL * model.grid.nc + len(model.nodes))
+    source = np.zeros(heat.NL * model.grid.nc + len(model.nodes) + (model.plate_node is not None))
     source[model.nodes["U4"]] = 1.0
     r_u4_air = system.solve(source)[model.nodes["U4"]]
-    hs = heat.HEATSINK["U4"]
-    r_top = hs["r_jt"] + hs["r_tim"]
-    r_sink = heat.heatsink_resistance(hs, env) - r_top
-    r_parallel = r_top + r_sink
-    r_board = 1 / (1 / r_u4_air - 1 / r_parallel) - heat.CHG_THETA_JC
+    hs = heat.HEATSINK["U4"] if heat.HEATSINK else None
+    if hs and hs["type"] == "top":
+        r_top = hs["r_jt"] + hs["r_tim"]
+        r_sink = heat.heatsink_resistance(hs, env) - r_top
+        r_parallel = r_top + r_sink
+        r_board = 1 / (1 / r_u4_air - 1 / r_parallel) - heat.CHG_THETA_JC
+    else:
+        # no top sink: a bottom plate (or nothing) is part of the board path the grid model already solved
+        r_top = r_sink = math.inf
+        r_board = r_u4_air - heat.CHG_THETA_JC
     gain_board = r_u4_air * r_board / (r_board + heat.CHG_THETA_JC)
     currents, powers, reference = [], [], []
     case = next(c for c in heat.CASES if c["key"] == "usb37")
     for current in np.linspace(0, heat.CHARGE_A, 7):
-        result = heat.run_case(model, case, "closed", 25, k * heat.BUCK_SW_HIGH,
+        result = heat.run_case(model, case, "closed", 25, heat.buck_k(k) * heat.BUCK_SW_HIGH,
                                charge_current=current, regulation_temperature=math.inf)
         p_u4 = heat.u4_loss(result)
         p_other = result["board_loss"] + result["modules"] - p_u4
@@ -113,7 +131,7 @@ def network(cal, pack, capacity_scale=1.0, pack_r_scale=1.0, spreader_r=math.inf
     r_pack = pack_r_scale / (heat.H_IN * 2 * (a * b + a * d + b * d))
     link(0, 1, heat.CHG_THETA_JC)
     link(0, 2, cal.r_top)
-    link(2, 3, cal.r_sink_air)
+    link(2, 3, cal.r_sink_air if math.isfinite(cal.r_sink_air) else 1e6)  # keeps an unused sink node regular
     link(1, 3, cal.r_board_air)
     link(3, 4, r_pack)
     link(1, 4, direct_pack_r)
@@ -128,12 +146,16 @@ def jeita_hot(hot, pack_temperature):
 
 
 def current_target(tj, pack_hot, policy):
+    """policy: a key of policies() or a (label, imax, treg, early) tuple. The charger folds the current to
+    zero foldback_width kelvin above TREG (20 K for the MAX77757 slope, 2 K for the BQ25798 loop); `early`
+    is a host-side ramp (start, zero) on the junction temperature."""
     if pack_hot:
         return 0.0
-    imax = 1.2 if policy == "low" else 1.8
-    target = imax * max(0.0, min(1.0, (150 - tj) / 20))
-    if policy == "early":
-        target = min(target, imax * max(0.0, min(1.0, (100 - tj) / 10)))
+    _, imax, treg, early = policies()[policy] if isinstance(policy, str) else policy
+    width = heat.CHG["foldback_width"]
+    target = imax * max(0.0, min(1.0, (treg + width - tj) / width))
+    if early:
+        target = min(target, imax * max(0.0, min(1.0, (early[1] - tj) / (early[1] - early[0]))))
     return target
 
 
@@ -166,7 +188,8 @@ class TemperatureSwitch:
         return temperature > threshold - self.hysteresis if was_hot else temperature >= threshold
 
 
-def simulate(cal, pack, ambient=25.0, policy="stock", minutes=90, dt=1.0, limit=None, **kwargs):
+def simulate(cal, pack, ambient=25.0, policy=None, minutes=90, dt=1.0, limit=None, **kwargs):
+    policy = policy or next(iter(policies()))
     net = network(cal, pack, **kwargs)
     step = net.stepper(dt)
     temperature = np.full(5, ambient, dtype=float)
@@ -229,7 +252,8 @@ def save_graphs(cal, out):
                 ax.set_xticks(range(0, 91, 15))
         for ax in axes[0]:
             ax.axhspan(90, 100, color="#d8e9df", alpha=.6)
-            ax.axhline(130, color="#777777", ls=":", lw=1)
+            for treg in sorted({p[2] for p in policies().values()}):
+                ax.axhline(treg, color="#777777", ls=":", lw=1)
         for ax in axes[1]:
             ax.axhline(HOT, color="#777777", ls=":", lw=1)
         for ax in axes[2]:
@@ -248,12 +272,14 @@ def save_graphs(cal, out):
         fig.text(.075, .055, footer, fontsize=9, linespacing=1.5)
         figures.append((stem, fig))
 
+    sink_label = heat.HEATSINK["U4"]["label"] if heat.HEATSINK else "no heatsink"
+    labels = [p[0] for p in policies().values()]
     for key, pack in PACKS.items():
         fig, axes = page(pack["label"] + " | delayed battery heating",
-                         "5 V / 3 A USB, fixed 3.7 V cell, 0.8 A system load, front heatsink and 5 cm² inlet + outlet")
+                         "5 V / 3 A USB, fixed 3.7 V cell, 0.8 A system load, %s, 5 cm² inlet + outlet" % sink_label[:60])
         for column, ambient in enumerate((25, 35)):
             axes[0, column].set_title("Ambient %d °C" % ambient)
-            for policy, color, label in zip(("stock", "low", "early"), COLORS, POLICIES):
+            for (policy, (label, _, _, _)), color in zip(policies().items(), COLORS):
                 data, error = simulate(cal, pack, ambient, policy)
                 curves(axes, column, data, color, label)
                 off = np.flatnonzero(data[:, 5] >= HOT)
@@ -262,18 +288,20 @@ def save_graphs(cal, out):
                                   "first_stop_min": float(data[off[0], 0]) if len(off) else None,
                                   "charge_ah": float(data[-1, 7]), "end_min": float(data[-1, 0]),
                                   "energy_error_j": error})
-        finish(fig, "charging_" + key, POLICIES,
-               "Dotted: U4 native foldback at 130 °C; battery JEITA stop at 42.1 °C, restart at 40.8 °C.\n"
-               "Green band: proposed junction target, not an existing circuit. Curves end at 55 °C pack; no thermostat reset model.")
+        finish(fig, "charging_" + key, labels,
+               "Dotted: U4 regulation set points %s °C; battery JEITA stop at 42.1 °C, restart at 40.8 °C.\n"
+               "Green band: 90 to 100 °C junction target. Curves end at 55 °C pack; no thermostat reset model."
+               % " / ".join("%.0f" % t for t in sorted({p[2] for p in policies().values()})))
 
+    first = next(iter(policies()))
     fig, axes = page("How uncertain is the heating delay?",
-                     "25 °C ambient, 1.8 A setting + JEITA. Separate sensitivity scenarios, not a confidence interval.")
+                     "25 °C ambient, %s. Separate sensitivity scenarios, not a confidence interval." % policies()[first][0])
     labels = ("Base estimate", "Half all heat capacities", "Double all heat capacities", "Extra PCB-to-pack path")
     for column, pack in enumerate(PACKS.values()):
         axes[0, column].set_title(pack["label"])
         for options, color, label, style in zip(({}, {"capacity_scale": .5}, {"capacity_scale": 2},
                                                  {"direct_pack_r": 100.0}), COLORS, labels, ("-", "--", "--", ":")):
-            data, _ = simulate(cal, pack, **options)
+            data, _ = simulate(cal, pack, policy=first, **options)
             curves(axes, column, data, color, label, style)
     finish(fig, "charging_delay", labels,
            "Base battery heat capacities: 80 J/K (5 Ah), 160 J/K (10 Ah). Enclosure surroundings: 100 J/K. All unmeasured.\n"
@@ -281,11 +309,11 @@ def save_graphs(cal, out):
 
     fig, axes = page("What an external heat path could change",
                      "25 °C ambient. Added local PCB-to-outside resistance includes contact, spreader and outside cooling.")
-    labels = ("Front sink only", "Plus 20 K/W external path", "Plus 10 K/W external path")
+    labels = ("As modelled", "Plus 20 K/W external path", "Plus 10 K/W external path")
     for column, pack in enumerate(PACKS.values()):
         axes[0, column].set_title(pack["label"])
         for resistance, color, label in zip((math.inf, 20, 10), COLORS, labels):
-            data, _ = simulate(cal, pack, spreader_r=resistance)
+            data, _ = simulate(cal, pack, policy=first, spreader_r=resistance)
             curves(axes, column, data, color, label)
     finish(fig, "charging_spreader", labels,
            "Illustrative resistances, not ratings or predictions for a selected part. A spreader wholly inside the case is not this path.\n"
@@ -304,7 +332,8 @@ def report(cal, summaries, error):
              "SVGs: [5 Ah](charging_5000.svg), [10 Ah](charging_10000.svg), "
              "[delay sensitivity](charging_delay.svg), [external spreader](charging_spreader.svg).", "",
              "## Model", "",
-             "Five energy-conserving nodes: U4 junction, local PCB, front heatsink, enclosure surroundings, pack. "
+             "Five energy-conserving nodes: U4 junction, local PCB, top heatsink (unused with a bottom plate, which the "
+             "local PCB node then includes), enclosure surroundings, pack. "
              "Thermal resistances and interpolated losses come from seven current points on the current board's "
              "high-corner steady-state model. The enclosure node includes air and the thermally participating "
              "case, main board and modules; it is not air alone. The pack has its own heat capacity and I²R heating. "
@@ -317,14 +346,17 @@ def report(cal, summaries, error):
              "| U4 / local PCB / sink / surroundings heat capacity | 0.02 / 3 / 1.5 / 100 J/K | Assumed |",
              "| Pack DC resistance | 90 mΩ for both | Existing high-corner estimate; both specify <=50 mΩ AC |",
              "| Pack surface heat transfer | 7 W/m²K times all six faces | Existing estimate; mounting can obstruct it |",
-             "| U4 to local PCB | 7.5 K/W | Existing model's interpretation of vendor θJC |",
-             "| Local PCB to surroundings | %.2f K/W | Reduced from live board thermal network |" % cal.r_board_air,
-             "| U4 to front sink / sink to surroundings | %.1f / %.1f K/W | Existing top/spacer/epoxy estimates |" %
-             (cal.r_top, cal.r_sink_air),
+             "| U4 to local PCB | %.1f K/W | %s |" % (heat.CHG_THETA_JC, heat.CHG["theta_note"]),
+             "| Local PCB to surroundings | %.2f K/W | Reduced from live board thermal network%s |"
+             % (cal.r_board_air, ", bottom plate included" if heat.HEATSINK and heat.HEATSINK["U4"]["type"] == "plate" else ""),
+             "| U4 to top sink / sink to surroundings | %s | %s |" %
+             (("%.1f / %.1f K/W" % (cal.r_top, cal.r_sink_air)) if math.isfinite(cal.r_top) else "none",
+              "Existing top/spacer/epoxy estimates" if math.isfinite(cal.r_top) else "no top sink on this board"),
              "| Vents | 5 cm² each, 50% free area, 35 mm height | Existing enclosure model |",
              "| JEITA hot / restart | 42.1 / 40.8 °C | Nominal pack NTC thresholds |",
-             "| Native die foldback | 130 °C, 5% of set current per °C | MAX77757 datasheet |",
-             "| Proposed early limiter | Full below 90 °C, linear to zero at 100 °C | Ideal junction feedback, not fitted hardware |",
+             "| Charger regulation | zero current %.0f K above TREG; policies %s | %s data sheet |"
+             % (heat.CHG["foldback_width"], "; ".join("%s: %.1f A, TREG %.0f °C%s" % (p[0], p[1], p[2], ", host ramp %.0f to %.0f °C" % p[3] if p[3] else "")
+                                                     for p in policies().values()), heat.CHG["part"]),
              "| Current response / thermal timestep | Assumed 5 s / 1 s implicit Euler | Numerical estimate, not vendor timing |",
              "| Earliest pack thermostat trip | 55 °C | Curves stop here; reset behaviour not modelled |", "",
              "The 31.4 °C JEITA warm state lowers termination to 4.05 V, not charge current. "
@@ -344,7 +376,7 @@ def report(cal, summaries, error):
     for item in summaries:
         stop = "%.1f min" % item["first_stop_min"] if item["first_stop_min"] is not None else "none"
         lines.append("| %s mAh | %.0f °C | %s | %.1f °C | %.1f °C | %s | %.2f Ah | %.1f min |" %
-                     (item["pack"], item["ambient"], item["policy"], item["peak_u4"], item["peak_pack"],
+                     (item["pack"], item["ambient"], policies()[item["policy"]][0], item["peak_u4"], item["peak_pack"],
                       stop, item["charge_ah"], item["end_min"]))
     lines += ["", "Charging stops before the old sustained-charge steady temperatures occur. "
               "At this load, module heat keeps warming the pack after JEITA suspends charging. "
@@ -362,8 +394,12 @@ def report(cal, summaries, error):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--write", action="store_true", help="write heat/charging.pdf, SVGs and model report")
+    parser.add_argument("--write", action="store_true", help="write charging.pdf, SVGs and model report to heat/<charger>/")
+    project.add_argument(parser)
     args = parser.parse_args()
+    if args.project:
+        heat.select_project(args.project)
+    bind_pack_stop()
     cal = calibrate()
     error = steady_error(cal)
     if not args.write:
@@ -372,7 +408,8 @@ def main():
             print("%s: U4 peak %.1f °C, pack peak %.1f °C, %.2f Ah, energy residual %.2g J" %
                   (pack["label"], max(data[:, 1]), max(data[:, 5]), data[-1, 7], error))
         return
-    OUT.mkdir(exist_ok=True)
+    OUT = Path(heat.OUT)
+    OUT.mkdir(parents=True, exist_ok=True)
     summaries = save_graphs(cal, OUT)
     payload = {"pcb_sha256": cal.pcb_sha256, "currents": cal.currents.tolist(), "power_w": cal.power.tolist(),
                "r_board_air": cal.r_board_air, "r_top": cal.r_top, "r_sink_air": cal.r_sink_air,
@@ -386,6 +423,9 @@ def main():
     for item in summaries:
         print(item)
 
+
+
+bind_pack_stop()
 
 if __name__ == "__main__":
     main()

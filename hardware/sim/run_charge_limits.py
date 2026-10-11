@@ -14,6 +14,8 @@ import numpy as np
 
 import run_charge_heat as charge
 
+project = charge.project
+
 TRIPS = (80, 90, 100, 110)
 COLORS = ("#236a9f", "#18816d", "#ab7522", "#af4779")
 DT = .25
@@ -242,27 +244,155 @@ def report(cal, results, sensitivities, stems, error):
     return "\n".join(lines)
 
 
+# --- BQ25798: the charger has a programmable TREG and the host reads the die temperature, so the sweep is
+# over the regulation set point and the host current, not over an external temperature switch.
+TREGS = (80.0, 100.0, 120.0)
+
+
+def run_treg(cal):
+    results = {}
+    for pack_key, pack in charge.PACKS.items():
+        for ambient in (25, 35):
+            for imax, mode in ((1.8, "host"), (1.0, "default")):
+                for treg in TREGS:
+                    policy = ("%s %.1f A, TREG %.0f" % (mode, imax, treg), imax, treg, None)
+                    data, error = charge.simulate(cal, pack, ambient, policy=policy, dt=DT)
+                    results[(pack_key, ambient, mode, treg)] = (data, summary(data, error))
+    return results
+
+
+def graphs_treg(cal, results, out):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_pdf import PdfPages
+
+    plt.rcParams.update({"font.size": 10, "axes.spines.top": False, "axes.spines.right": False,
+                         "axes.grid": True, "grid.alpha": .18, "svg.fonttype": "none", "pdf.fonttype": 42})
+    figures, sensitivities = [], []
+
+    def page(title, subtitle):
+        fig, axes = plt.subplots(3, 2, figsize=(11.7, 8.3), sharex=True)
+        fig.subplots_adjust(top=.82, bottom=.18, left=.075, right=.975, hspace=.22, wspace=.23)
+        fig.suptitle(title, x=.075, ha="left", fontsize=18, weight="bold", y=.98)
+        fig.text(.075, .922, subtitle, fontsize=10)
+        for row, label, limits in ((0, "U4 junction (°C)", (20, 135)), (1, "Battery (°C)", (20, 56)),
+                                   (2, "Charge current (A)\n60-second mean", (-.05, 1.95))):
+            for ax in axes[row]:
+                ax.set_ylabel(label)
+                ax.set_ylim(*limits)
+                ax.set_xlim(0, 90)
+                ax.set_xticks(range(0, 91, 15))
+        for ax in axes[1]:
+            ax.axhline(charge.HOT, color="#888888", ls=":", lw=1)
+        for ax in axes[2]:
+            ax.set_xlabel("Time after cold start (minutes)")
+        return fig, axes
+
+    def curves(axes, column, data, color, label, style="-"):
+        for row, value in ((0, 1), (1, 5)):
+            axes[row, column].plot(data[:, 0], data[:, value], color=color, label=label, lw=1.1, ls=style)
+        times, current = average_current(data)
+        axes[2, column].plot(times, current, color=color, label=label, lw=1.4, ls=style)
+
+    def finish(fig, stem, labels, footer):
+        handles = [line for line in fig.axes[0].get_lines() if line.get_label() in labels]
+        fig.legend(handles, labels, loc="upper left", bbox_to_anchor=(.07, .904), ncol=len(labels), frameon=False, fontsize=9)
+        fig.text(.075, .055, footer, fontsize=9, linespacing=1.5)
+        figures.append((stem, fig))
+
+    labels = ["TREG %.0f °C" % t for t in TREGS]
+    for pack_key, pack in charge.PACKS.items():
+        for ambient in (25, 35):
+            fig, axes = page(pack["label"] + " | BQ25798 regulation set point",
+                             "%d °C ambient; 0.8 A system load; bottom plate; existing vents; fixed 3.7 V cell" % ambient)
+            for column, (imax, mode) in enumerate(((1.8, "host"), (1.0, "default"))):
+                axes[0, column].set_title("%s mode, %.1f A" % (mode, imax), weight="bold")
+                for ax in axes[0]:
+                    for treg in TREGS:
+                        ax.axhline(treg, color="#888888", ls=":", lw=.8)
+                for treg, color in zip(TREGS, COLORS):
+                    curves(axes, column, results[(pack_key, ambient, mode, treg)][0], color, "TREG %.0f °C" % treg)
+            stem = "charging_limits_" + pack_key + ("_warm" if ambient == 35 else "")
+            finish(fig, stem, labels, "Host mode: ESP32-S3 sets ICHG 1.8 A and TREG over I2C. Default mode: after power-on or watchdog "
+                   "expiry, 1 A and TREG 120 °C.\nThe chip holds the junction at TREG by reducing the charge current. "
+                   "Curves end at 55 °C pack; thermostat reset is not modelled.")
+
+    fig, axes = page("How uncertain is the heating delay?", "25 °C ambient; host mode 1.8 A, TREG 100 °C")
+    labels2 = ("Base estimate", "Half thermal mass", "Double thermal mass", "Extra PCB-to-pack path")
+    policy = ("host 1.8 A, TREG 100", 1.8, 100.0, None)
+    for column, (pack_key, pack) in enumerate(charge.PACKS.items()):
+        axes[0, column].set_title(pack["label"], weight="bold")
+        for options, color, label, style in zip(({}, {"capacity_scale": .5}, {"capacity_scale": 2}, {"direct_pack_r": 100.0}),
+                                                COLORS, labels2, ("-", "--", "--", ":")):
+            data, error = charge.simulate(cal, pack, policy=policy, dt=DT, **options)
+            curves(axes, column, data, color, label, style)
+            sensitivities.append({"pack": pack_key, "scenario": label, **summary(data, error)})
+    finish(fig, "charging_limits_delay", labels2, "Heat capacities and the pack path are assumptions, not measurements.")
+
+    with PdfPages(out / "charging_limits.pdf", metadata={"Title": "BQ25798 regulation set point sweep"}) as pdf:
+        for stem, fig in figures:
+            fig.savefig(out / (stem + ".svg"))
+            pdf.savefig(fig)
+            plt.close(fig)
+    return sensitivities, [stem for stem, _ in figures]
+
+
+def report_treg(cal, results, sensitivities, stems, error):
+    lines = ["# Fast charging against the BQ25798 regulation set point", "",
+             "Generated by `hardware/sim/run_charge_limits.py --write`. [Combined PDF](charging_limits.pdf).", "",
+             "SVGs: " + ", ".join("[%s](%s.svg)" % (s, s) for s in stems) + ".", "",
+             "## Control and assumptions", "",
+             "Host mode: the ESP32-S3 writes ICHG 1.8 A and the TREG register (60/80/100/120 °C) and pets the watchdog. "
+             "Default mode: 1 A and TREG 120 °C, what the chip does after power-on or when the watchdog expires. "
+             "The charger holds the junction at TREG with its analog loop (zero current %.0f K above TREG in this model). "
+             "The nominal pack JEITA stop/restart at 42.1/40.8 °C takes priority. USB keeps supplying the system when "
+             "charging is reduced." % charge.heat.CHG["foldback_width"], "",
+             "Other assumptions as in [charging.md](charging.md): fixed 3.7 V cell, USB 5 V / 3 A, 0.8 A system load, "
+             "bottom plate, 5 cm² inlet/outlet, estimated thermal masses, unrouted copper paths assumed where the board "
+             "has none yet. No SOC evolution, CV taper, charger timer or battery ageing.", "",
+             "## Nominal 25 °C ambient results", "",
+             "| Pack | Mode | TREG | Peak U4 | Pack stop | Charge added |", "|---|---|---|---|---|---|"]
+    for (pack_key, ambient, mode, treg), (_, s) in results.items():
+        if ambient != 25:
+            continue
+        stop = "%.1f min" % s["pack_stop_min"] if s["pack_stop_min"] is not None else "none"
+        lines.append("| %s mAh | %s | %.0f °C | %.1f °C | %s | %.2f Ah |" % (pack_key, mode, treg, s["peak_u4"], stop, s["charge_ah"]))
+    lines += ["", "## Validation", "",
+              "Reduced steady model agrees with its board calibration within %.3g K. Maximum energy residual %.3g J per step." %
+              (error, max(s["energy_error_j"] for _, s in results.values())), "",
+              "Board SHA256: `%s`. Full inputs, 35 °C results and sensitivity results: [charging_limits.json](charging_limits.json)." % cal.pcb_sha256, ""]
+    return "\n".join(lines)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--write", action="store_true")
+    project.add_argument(parser)
     args = parser.parse_args()
+    if args.project:
+        charge.heat.select_project(args.project)
+        charge.bind_pack_stop()
+    out = Path(charge.heat.OUT)
     cal = charge.calibrate()
     error = charge.steady_error(cal)
-    results = run(cal)
+    treg_mode = len(charge.heat.CHG["treg_options"]) > 1
+    results = run_treg(cal) if treg_mode else run(cal)
     if args.write:
-        sensitivities, stems = graphs(cal, results, charge.OUT)
+        sensitivities, stems = (graphs_treg if treg_mode else graphs)(cal, results, out)
         root = Path(charge.heat.HERE).parents[1]
-        payload = {"pcb_sha256": cal.pcb_sha256, "dt_s": DT, "trips_c": TRIPS, "hysteresis_c": [5, 10],
-                   "sensor_tau_s": 2, "sensor_node": "local PCB", "calibration": asdict(cal),
+        payload = {"pcb_sha256": cal.pcb_sha256, "dt_s": DT, "calibration": asdict(cal),
                    "input_sha256": {str(Path(p).resolve().relative_to(root)): hashlib.sha256(Path(p).read_bytes()).hexdigest()
                                     for p in (charge.heat.PARAMS, charge.heat.__file__, charge.__file__, __file__)},
-                   "scenarios": [{"pack": k[0], "ambient": k[1], "hysteresis": k[2], "trip": k[3], **v[1]}
-                                 for k, v in results.items()], "sensitivity": sensitivities}
-        (charge.OUT / "charging_limits.json").write_text(json.dumps(payload, indent=2,
-                                                                    default=lambda a: a.tolist()) + "\n")
-        (charge.OUT / "charging_limits.md").write_text(report(cal, results, sensitivities, stems, error))
+                   "scenarios": [{"pack": k[0], "ambient": k[1], ("mode" if treg_mode else "hysteresis"): k[2],
+                                  ("treg" if treg_mode else "trip"): k[3], **v[1]} for k, v in results.items()],
+                   "sensitivity": sensitivities}
+        if not treg_mode:
+            payload.update({"trips_c": TRIPS, "hysteresis_c": [5, 10], "sensor_tau_s": 2, "sensor_node": "local PCB"})
+        (out / "charging_limits.json").write_text(json.dumps(payload, indent=2, default=lambda a: a.tolist()) + "\n")
+        (out / "charging_limits.md").write_text((report_treg if treg_mode else report)(cal, results, sensitivities, stems, error))
     for key, (_, stats) in results.items():
-        if key[1] == 25 and key[2] == 10:
+        if key[1] == 25 and key[2] in (10, "host"):
             print(key, stats, flush=True)
 
 

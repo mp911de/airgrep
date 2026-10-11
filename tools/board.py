@@ -10,7 +10,8 @@
 
 Output is one line per item. Units are mil, rounded to integers. Widths and pad sizes that are
 not a whole mil keep 2 decimals. --mm switches to mm with 3 decimals, and the window arguments
-follow the same unit. --pcb FILE reads another board.
+follow the same unit. --project NAME reads hardware/NAME (default $CARRIER_PROJECT or
+carrier-ti-charger), --pcb FILE reads another board file.
 render plots a temporary copy of the board with kicad-cli and crops it with pdftoppm.
 Runs from any directory. Without pcbnew it restarts itself through tools/kpy.
 """
@@ -25,7 +26,9 @@ except ImportError:
     kpy = os.path.join(HERE, "kpy")
     os.execv(kpy, [kpy, os.path.abspath(__file__)] + sys.argv[1:])
 
-DEFAULT_PCB = os.path.join(os.path.dirname(HERE), "hardware", "carrier-max-charger", "carrier.kicad_pcb")
+sys.path.insert(0, HERE)
+import project  # noqa: E402
+
 MIL = 25400          # nm per mil
 MM = 1000000         # nm per mm
 unit = MIL
@@ -204,7 +207,9 @@ def main():
     # The shared options are accepted before and after the subcommand.
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--pcb", default=argparse.SUPPRESS, metavar="FILE",
-                        help="board file (default hardware/carrier-max-charger/carrier.kicad_pcb)")
+                        help="board file (default the project's carrier.kicad_pcb)")
+    common.add_argument("--project", default=argparse.SUPPRESS, metavar="NAME",
+                        help="project under hardware/ (default $CARRIER_PROJECT or %s)" % project.DEFAULT)
     common.add_argument("--mm", action="store_true", default=argparse.SUPPRESS,
                         help="mm with 3 decimals instead of integer mil")
     ap = argparse.ArgumentParser(description="Read-only queries on a KiCad board.", parents=[common])
@@ -228,7 +233,7 @@ def main():
 
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)   # quiet exit under `| head`
     unit = MM if getattr(a, "mm", False) else MIL
-    pcb = getattr(a, "pcb", DEFAULT_PCB)
+    pcb = getattr(a, "pcb", None) or project.pcb(project.resolve(getattr(a, "project", None)))
     if not os.path.isfile(pcb):
         sys.exit(f"no board file {pcb}")
     if a.cmd == "render":

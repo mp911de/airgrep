@@ -2,14 +2,15 @@
 """Power loss and temperature estimate for the carrier, from the routed board.
 
     python3 hardware/sim/run_heat.py            # print the report
-    python3 hardware/sim/run_heat.py --write    # also store heat/results.md and heat/*.svg
+    python3 hardware/sim/run_heat.py --write    # also store heat/<charger>/results.md and map_*.svg
+    python3 hardware/sim/run_heat.py --project carrier-max-charger   # the other board
 
 Operating points: battery only at low battery, and USB operation while charging.
 
   1. Converter losses from data sheet switch resistances (MAX77757, TPS61088, TPS22975), the
      inductor DCR, and a switching term fitted to the TPS61088 efficiency curve used by
      tools/power_budget.py (specs/power_params.json).
-  2. Copper losses: every power track of hardware/carrier-max-charger/carrier.kicad_pcb as a resistor
+  2. Copper losses: every power track of the project's carrier.kicad_pcb as a resistor
      network on all four layers, the GND pour as a four-layer sheet solved on a grid, plus the
      contact resistances of USB-C, JST-PH, fuse, shunts and module sockets.
   3. Temperatures: the board as four copper sheets on FR4 (stackup LAYERS / CU_T / DIEL), the
@@ -32,22 +33,38 @@ import time
 
 try:
     import numpy as np
-    from scipy.sparse import coo_matrix, csc_matrix
+    from scipy.sparse import coo_matrix, csc_matrix, csr_matrix
+    from scipy.sparse.csgraph import connected_components
     from scipy.sparse.linalg import factorized
 except ImportError as exc:
     raise SystemExit("The heat model needs NumPy and SciPy. Install hardware/sim/requirements.txt "
                      "in your Python environment; see hardware/sim/README.md.") from exc
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tools"))
+import chargers  # noqa: E402
+import project  # noqa: E402
 import simlib  # noqa: E402
 import run_power  # noqa: E402  (boost constants and switching frequency)
 import vent_model  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "heat")
-RESULTS = os.path.join(OUT, "results.md")
-PCB = os.path.join(HERE, "..", "carrier-max-charger", "carrier.kicad_pcb")
 PARAMS = os.path.join(HERE, "..", "..", "specs", "power_params.json")
+
+
+def select_project(name=None):
+    """Bind PROJECT, CHARGER, PCB, OUT and RESULTS to a carrier project (name, path or environment).
+    Outputs go to heat/<charger>/. Scripts that import this module read these names at call time."""
+    global PROJECT, CHARGER, PCB, OUT, RESULTS, CHG
+    PROJECT = project.select(name) if name else project.resolve()
+    CHARGER = project.charger(PROJECT)
+    PCB = project.pcb(PROJECT)
+    OUT = os.path.join(HERE, "heat", CHARGER)
+    RESULTS = os.path.join(OUT, "results.md")
+    CHG = chargers.CHARGERS[CHARGER]
+    bind_charger(CHG)
+    run_power.bind_charger(CHARGER)
+    vent_model.bind(CHARGER)
 
 # --- Materials and stackup (board file, JLC04161H-2116C: four layers, 1.6 mm)
 LAYERS = ("F", "In1", "In2", "B")
@@ -62,23 +79,35 @@ K_CU, K_FR4_PLANE, K_FR4_THROUGH = 390.0, 0.8, 0.3  # W/m·K
 T_PLATING = 20e-6  # via barrel plating, JLCPCB minimum 18 µm
 TC_RDSON = 0.004  # 1/K, MOSFET on-resistance rise, typical for low-voltage silicon (estimate)
 
-# --- MAX77757 (data sheet 19-100xxx, Electrical Characteristics)
-CHG_R_IN = 45e-3  # RCHGIN2BYP typ
-CHG_R_HS, CHG_R_LS = 60e-3, 60e-3  # RHS, RLS typ
-CHG_R_BATFET = 20e-3  # RBAT2SYS typ
-CHG_IQ = 2.7e-3  # CHGIN supply current, not switching, typ
-CHG_FSW = 1.3e6
-CHG_VSYSMIN = 3.5  # 4.1 to 4.5 V termination variants
-CHG_TREG = 130.0  # thermal regulation: charge current folds back above this junction temperature
-TREG_SLOPE = 50.0  # K/A, junction rise per ampere of charge current, for the regulation loop (estimate)
-BULK_CAPS = ("C1", "C5", "C6", "C7", "C9", "C10", "C11", "C13", "C14", "C15", "C18", "C19", "C20", "C24", "C25",
-             "C26", "C33", "C34")  # X7R (LCSC C105174, C415535, C3039694, C385906, C907991)
+# --- Charger (hardware/sim/chargers.py, bound by bind_charger). The names stay for the report and the tests.
+BULK_CAPS = ()  # X7R bulk capacitors checked against CAP_RATING
 CAP_RATING = 125.0  # °C, X7R upper limit
 THERMOSTAT_MIN = 55.0  # LIM-P-82-60: 60 °C ± 5 K
-CHG_THETA_JC = 7.5  # K/W
-CHG_THETA_JA_JEDEC = 31.0  # K/W, four-layer JESD51-7 board, comparison only
-L1_DCR, L1_L = 7.4e-3, 1.0e-6  # FXL0630-1R0-M (docs/power.md)
-BUCK_SW_HIGH = 1.3  # high corner: switching term 30 % above the TPS61088 coefficient (no MAX77757 curve)
+TREG_SLOPE = 50.0  # K/A, junction rise per ampere of charge current: relaxation of the regulation loop (estimate)
+ASSUMED_PATH_R = 5e-3  # Ω, stands in for a copper path of a net that is not routed yet
+
+
+def bind_charger(chg):
+    """Module names that depend on the charger of the selected project."""
+    global CHG_R_IN, CHG_R_HS, CHG_R_LS, CHG_R_SERIES, CHG_R_BATFET, CHG_IQ, CHG_FSW, CHG_VSYSMIN, CHG_TREG
+    global CHG_THETA_JC, CHG_THETA_JA_JEDEC, L1_DCR, L1_L, BUCK_SW_HIGH, BULK_CAPS, HEATSINK, CHARGE_A, CASES
+    global U4_LOSSES, CHG_PADS, CHG_NETS, CHG_K_SW, CHG_P0
+    CHG_R_IN, CHG_R_HS, CHG_R_LS = chg["r_in"], chg["r_hs"], chg["r_ls"]
+    CHG_R_SERIES, CHG_R_BATFET, CHG_IQ = chg["r_series"], chg["r_batfet"], chg["iq"]
+    CHG_FSW, CHG_VSYSMIN, CHG_TREG = chg["fsw"], chg["vsysmin"], chg["treg"]
+    CHG_THETA_JC, CHG_THETA_JA_JEDEC = chg["theta_jc"], chg["theta_ja_jedec"]
+    L1_DCR, L1_L = chg["l1"]["dcr"], chg["l1"]["l"]
+    BUCK_SW_HIGH, BULK_CAPS = chg["sw_high"], chg["bulk_caps"]
+    HEATSINK = chg["heatsink"]
+    CHARGE_A, CASES, U4_LOSSES = chg["charge_a"], chargers.case_table(chg), chg["losses"]
+    CHG_PADS, CHG_NETS = chg["pads"], chg["nets"]
+    CHG_K_SW, CHG_P0 = fit_buck(chg["efficiency"]) if chg["efficiency"] else (None, 0.0)
+
+
+def buck_k(k_boost):
+    """Switching coefficient of the charger buck: its own fit, or the boost's when no curve exists."""
+    return CHG_K_SW if CHG_K_SW is not None else k_boost
+
 
 # --- TPS61088 (SLVSCM8D) and L2 (CENKER CKST0603-2.2uH/M)
 BST_R_HS, BST_R_LS = 13e-3, 11e-3  # typ at VCC 6 V
@@ -116,57 +145,50 @@ ENVIRONMENTS = {
     "closed": {"label": "closed 3D-printed case", "h_top": 6.0, "h_bot": 6.0, "enclosed": True},
 }
 
-# U4 heatsink: a 10 x 10 mm aluminium sink (Fischer ICK S 10 x 10 x 6.5 or ICK BGA 10 x 10 x 6) on the
-# FC2QFN top. The package is 0.65 mm tall and the 0805 capacitors around it 1.25 mm, so the sink stands on a
-# copper spacer bonded with thermal epoxy on both faces. Junction to package top is not published for the
-# FC2QFN; the resistances below are estimates.
-HEATSINK = {
-    "U4": {
-        "label": "10 x 10 mm aluminium sink (Fischer ICK S 10 x 10 x 6.5) on a 1.5 mm copper spacer, thermal epoxy",
-        "size_mm": 10.0,
-        "r_jt": 35.0,  # K/W, junction to package top (estimate, 25 to 45)
-        "r_tim": 20.0,  # K/W, two 0.1 mm epoxy layers (k 1.2 W/m·K) on the 9 mm² top plus the copper spacer
-        "r_sink_open": 35.0,  # K/W, sink to still air; Fischer gives about 30 K/W at data sheet rise, derated for 30 to 40 K
-    }
-}
+# U4 heatsink or bottom plate: HEATSINK comes from chargers.py per project.
+HEATSINK = None
 
 
 def heatsink_resistance(hs, env):
-    """Junction to the surrounding air through package top, epoxy, spacer and sink; the sink's own resistance
-    scales with the environment's convection coefficient (6 W/m²K inside the case against 10 on the bench)."""
+    """Top sink: junction to the surrounding air through package top, epoxy, spacer and sink; the sink's own
+    resistance scales with the environment's convection coefficient (6 W/m²K inside the case against 10 on
+    the bench). A bottom plate has no direct junction path; see Model.thermal_sheet."""
+    if hs["type"] == "plate":
+        return math.inf
     return hs["r_jt"] + hs["r_tim"] + hs["r_sink_open"] * ENVIRONMENTS["open"]["h_top"] / env["h_top"]
 
 
-def under_heatsink(board, ref, size_mm):
-    """References with a pad inside the square footprint of the sink on `ref` (collision check)."""
+def plate_conductances(hs, env):
+    """(per-cell conductance board to plate through mask and pad, plate to its surroundings) in W/K."""
+    cell = (GRID_MM * 1e-3) ** 2
+    g_cell = cell / (hs["t_pad"] / hs["k_pad"] + hs["t_mask"] / hs["k_mask"])
+    area = (hs["size_mm"] * 1e-3) ** 2
+    g_air = env["h_bot"] * area  # free face to the surrounding air; the edges are ignored
+    if hs["wall"] and env["enclosed"]:
+        # plate bonded to the case floor: wall conduction, then the outside face over twice the plate area
+        g_air += 1 / (WALL_MM * 1e-3 / (K_WALL * area) + 1 / (H_OUT * 2 * area))
+    return g_cell, g_air
+
+
+def under_heatsink(board, ref, size_mm, bottom=False):
+    """References with a pad inside the square footprint of the sink on `ref` (collision check). For a
+    bottom plate only through-hole pads matter, every SMD part sits on the top."""
     pads = pads_of(board, ref)
     cx = sum(p.x for p in pads) / len(pads)
     cy = sum(p.y for p in pads) / len(pads)
     h = size_mm / 2
-    return sorted({p.ref for p in board["pads"] if p.ref != ref and abs(p.x - cx) <= h and abs(p.y - cy) <= h})
+    return sorted({p.ref for p in board["pads"] if p.ref != ref and abs(p.x - cx) <= h and abs(p.y - cy) <= h
+                   and (not bottom or "B" in p.layers)})
 
 
 # --- Operating points
 VOUT = run_power.VOUT
-CHARGE_A = 1.8  # R6 + R37 = 12.4 kΩ
+CHARGE_A = None  # design charge current, chargers.py
 LED_5V_A = 0.0064  # D5 through R26
 LED_SYS_A = 0.0035  # each of the D4 halves through R23 / R31
-CASES = [
-    {"key": "battyp", "label": "Battery 3.1 V, typical 1.22 W load", "mode": "battery", "vin": 3.1,
-     "load": 1.22 / 5.06, "ambients": (25.0, 50.0)},
-    {"key": "bat08", "label": "Battery 3.1 V, 0.8 A load", "mode": "battery", "vin": 3.1, "load": 0.8,
-     "ambients": (25.0, 50.0)},
-    {"key": "bat10", "label": "Battery 3.1 V, 1.0 A load", "mode": "battery", "vin": 3.1, "load": 1.0,
-     "ambients": (25.0, 50.0)},
-    {"key": "usb37", "label": "USB 3 A source, cell 3.7 V, charging, 0.8 A load", "mode": "usb",
-     "vcell": 3.7, "load": 0.8, "limit": 3.0, "ambients": (25.0,)},
-    {"key": "usb32", "label": "USB 3 A source, cell 3.2 V, charging, 0.8 A load", "mode": "usb",
-     "vcell": 3.2, "load": 0.8, "limit": 3.0, "ambients": (25.0,)},
-    {"key": "usb32off", "label": "USB 3 A source, cell 3.2 V, charging, device off", "mode": "usb",
-     "vcell": 3.2, "load": 0.0, "limit": 3.0, "ambients": (25.0,)},
-]
+CASES = []  # chargers.case_table
 CORNERS = ("nominal", "high")  # index into the (nominal, high) pairs above
-U4_LOSSES = ("MAX77757 buck", "MAX77757 BATT-SYS switch")
+U4_LOSSES = ()  # loss labels of the charger, chargers.py
 
 
 # ------------------------------------------------------------------------------------------
@@ -177,7 +199,8 @@ class Pad:
     __slots__ = ("ref", "num", "x", "y", "w", "h", "layers", "net", "tht", "drill")
 
 
-def read_board(path=PCB):
+def read_board(path=None):
+    path = path or PCB
     with open(path) as pcb:
         text = pcb.read()
     board = {"segments": [], "vias": [], "pads": [], "zones": [], "polys": []}
@@ -387,6 +410,33 @@ class LinearSystem:
             raise RuntimeError("conductance solve residual %.3g exceeds tolerance %.3g" % (residual, tol))
         return x.tolist()
 
+    def solve_near(self, matrix, b, tol=1e-8, rtol=1e-12, max_iterations=200):
+        """Solve a nearby symmetric positive definite matrix by conjugate gradients, this factorization as
+        the preconditioner. Returns an array."""
+        a = csc_matrix(matrix, dtype=float)
+        rhs = np.asarray(b, dtype=float)
+        x = self._solve(rhs)
+        r = rhs - a @ x
+        z = self._solve(r)
+        p, rz = z.copy(), r @ z
+        target = 0.01 * tol * (np.linalg.norm(rhs) or 1.0)
+        for _ in range(max_iterations):
+            if np.linalg.norm(r) <= target and np.linalg.norm(z) <= rtol * np.linalg.norm(x):
+                break
+            ap = a @ p
+            step = rz / (p @ ap)
+            x += step * p
+            r -= step * ap
+            z = self._solve(r)
+            rz, rz_old = r @ z, rz
+            p = z + rz / rz_old * p
+        else:
+            raise RuntimeError("preconditioned solve did not converge")
+        residual = np.linalg.norm(a @ x - rhs) / (np.linalg.norm(rhs) or 1.0)
+        if not np.isfinite(x).all() or not math.isfinite(residual) or residual > tol:
+            raise RuntimeError("conductance solve residual %.3g exceeds tolerance %.3g" % (residual, tol))
+        return x
+
 
 class Sheet:
     """NL-layer grid network: sheet conductances in x and y per layer, a vertical link per cell
@@ -404,15 +454,18 @@ class Sheet:
 
     def set_sheet(self, layer, conductance):
         """Square cells: edge conductance is the harmonic mean of the two sheet values."""
-        g, nx = self.grid, self.grid.nx
-        for i in range(g.nc):
-            a = conductance[i]
-            if (i + 1) % nx:
-                b = conductance[i + 1]
-                self.gx[layer][i] = 0.0 if a <= 0 or b <= 0 else 2 * a * b / (a + b)
-            if i + nx < g.nc:
-                b = conductance[i + nx]
-                self.gy[layer][i] = 0.0 if a <= 0 or b <= 0 else 2 * a * b / (a + b)
+        nc, nx = self.grid.nc, self.grid.nx
+        c = np.asarray(conductance, dtype=float)
+
+        def mean(a, b):
+            out = np.zeros(nc)
+            both = (a > 0) & (b > 0)
+            out[:len(a)][both] = 2 * a[both] * b[both] / (a[both] + b[both])
+            return out
+
+        self.gx[layer] = mean(c[:-1], c[1:])
+        self.gx[layer][nx - 1::nx] = 0.0
+        self.gy[layer] = mean(c[:nc - nx], c[nx:])
 
     def add_node(self, gref, links):
         self.extra.append((gref, links))
@@ -420,6 +473,9 @@ class Sheet:
 
     def factorize(self):
         """Snapshot the conductances; later sheet edits need a new factorization."""
+        return LinearSystem(self.matrix())
+
+    def matrix(self):
         nc, nx = self.grid.nc, self.grid.nx
         n = NL * nc + len(self.extra)
         diagonal = np.concatenate([np.asarray(g) for g in self.gref]
@@ -448,7 +504,7 @@ class Sheet:
             links(np.full(len(cells), NL * nc + k), cells, [g for _, _, g in node_links])
         matrix = coo_matrix((np.concatenate(values), (np.concatenate(rows), np.concatenate(cols))),
                             shape=(n, n))
-        return LinearSystem(matrix)
+        return matrix
 
     def solve(self, b, tol=1e-8):
         """Solve one source vector using the current conductances."""
@@ -543,6 +599,10 @@ def area_cells(polygons, res=AREA_RES):
                 for ix in range(int(math.ceil(a / res - 0.5)), int(math.floor(b / res - 0.5)) + 1):
                     cells.add((ix, iy))
     return cells
+
+
+class Unrouted(RuntimeError):
+    """A copper path the board does not have yet (unrouted net or terminals without copper)."""
 
 
 class TrackNet:
@@ -660,9 +720,21 @@ class TrackNet:
                                               "r0": r_sq, "layers": (LAYERS.index(layer),),
                                               "cells": {grid.cell((ix + 0.5) * res, (iy + 0.5) * res): 1.0}})
 
-            def cell_of(x, y):
+            def cell_of(x, y, reach=0.0):
+                """The cell under a point, else the nearest cell within reach (a pour narrower than a
+                cell, or a fill drawn back from its outline, still joins a track end or via on it)."""
                 c = (int(math.floor(x / res)), int(math.floor(y / res)))
-                return ("cell", layer) + c if c in cells else None
+                if c in cells:
+                    return ("cell", layer) + c
+                if reach:
+                    n = int(math.ceil(reach / res))
+                    near = [(math.hypot(max(abs((ix + 0.5) * res - x) - res / 2, 0.0), max(abs((iy + 0.5) * res - y) - res / 2, 0.0)),
+                             (ix, iy))
+                            for ix in range(c[0] - n, c[0] + n + 1) for iy in range(c[1] - n, c[1] + n + 1)
+                            if (ix, iy) in cells]
+                    if near and min(near)[0] <= reach:
+                        return ("cell", layer) + min(near)[1]
+                return None
 
             for p in self.pads:
                 if layer not in p.layers:
@@ -674,19 +746,46 @@ class TrackNet:
                     self.elements.append({"a": ("pad", p.ref, p.num), "b": key, "r0": 0.0, "layers": (LAYERS.index(layer),),
                                           "cells": {}})
             for i, v in enumerate(vias):
-                key = cell_of(v[0], v[1])
+                key = cell_of(v[0], v[1], v[2] / 2)
                 if key:
                     self.elements.append({"a": ("via", i, layer), "b": key, "r0": 0.0, "layers": (LAYERS.index(layer),), "cells": {}})
             for s, e in zip(segs, ends):
                 if s[5] != layer:
                     continue
                 for (x, y), end in zip(((s[0], s[1]), (s[2], s[3])), e):
-                    key = cell_of(x, y)
+                    key = cell_of(x, y, s[4] / 2)
                     if key:
                         self.elements.append({"a": end, "b": key, "r0": 0.0, "layers": (LAYERS.index(layer),), "cells": {}})
         self.nodes = sorted({e["a"] for e in self.elements} | {e["b"] for e in self.elements}
                             | {("pad", p.ref, p.num) for p in self.pads}, key=str)
         self.index = {k: i for i, k in enumerate(self.nodes)}
+        self._topology = None
+        self._systems = {}  # active component: (node index, element mask and ends, size, 20 °C factorization)
+
+    def topology(self):
+        """Element ends, resistances, copper islands, zero-resistance node groups and the element-to-cell
+        weights, fixed for the net."""
+        if self._topology is None:
+            n, nc = len(self.nodes), self.grid.nc
+            ea = np.array([self.index[e["a"]] for e in self.elements], dtype=int)
+            eb = np.array([self.index[e["b"]] for e in self.elements], dtype=int)
+            r0 = np.array([e["r0"] for e in self.elements], dtype=float)
+
+            def groups(mask):
+                graph = coo_matrix((np.ones(mask.sum()), (ea[mask], eb[mask])), shape=(n, n))
+                return connected_components(graph, directed=False)[1]
+
+            rows, cols, weights = [], [], []
+            for k, e in enumerate(self.elements):
+                for layer in e["layers"] if e["cells"] else ():
+                    for c, f in e["cells"].items():
+                        rows.append(k)
+                        cols.append(layer * nc + c)
+                        weights.append(f / len(e["layers"]))
+            cells = csr_matrix((weights, (rows, cols)), shape=(len(self.elements), NL * nc))
+            warm = np.array([bool(e["cells"]) for e in self.elements], dtype=bool)
+            self._topology = ea, eb, r0, groups(np.ones(len(r0), dtype=bool)), groups(r0 == 0), cells, warm
+        return self._topology
 
     def _cells(self, ax, ay, bx, by):
         n = max(1, int(math.hypot(bx - ax, by - ay) / (self.grid.dx / 4)))
@@ -701,96 +800,65 @@ class TrackNet:
         """injections: {pad key or (ref, [nums]): current into the net}. Returns node voltages
         (relative), per-element loss, and the cell-wise loss map."""
         n = len(self.nodes)
-        inj = [0.0] * n
+        inj = np.zeros(n)
         for (ref, nums), current in injections.items():
             keys = [("pad", p.ref, p.num) for p in self.pads if p.ref == ref and (nums is None or p.num in nums)]
             if not keys:
-                sys.exit("%s: no pad %s %s on the net" % (self.net, ref, nums))
+                raise Unrouted("%s: no pad %s %s on the net" % (self.net, ref, nums))
             for k in keys:
                 inj[self.index[k]] += current / len(keys)
-        if not all(math.isfinite(i) for i in inj):
+        if not np.isfinite(inj).all():
             raise ValueError("%s: currents must be finite" % self.net)
-        if abs(sum(inj)) > 1e-10 * max(1.0, sum(abs(i) for i in inj)):
+        if abs(inj.sum()) > 1e-10 * max(1.0, np.abs(inj).sum()):
             raise ValueError("%s: source and sink currents must balance" % self.net)
-        if not any(inj):
+        if not inj.any():
             return dict.fromkeys(self.nodes, 0.0), 0.0, {}
-        # connectivity: drop islands without injections
-        adj = [[] for _ in range(n)]
-        for e in self.elements:
-            a, b = self.index[e["a"]], self.index[e["b"]]
-            adj[a].append(b)
-            adj[b].append(a)
-        comp = [-1] * n
-        for start in range(n):
-            if comp[start] >= 0:
-                continue
-            stack = [start]
-            comp[start] = start
-            while stack:
-                u = stack.pop()
-                for w in adj[u]:
-                    if comp[w] < 0:
-                        comp[w] = start
-                        stack.append(w)
-        active = {comp[i] for i in range(n) if abs(inj[i]) > 0}
+        ea, eb, r0, comp, merged, cells, warm = self.topology()
+        # islands without injections drop out
+        active = np.unique(comp[inj != 0])
         if len(active) > 1:
-            sys.exit("%s: terminals are not connected by copper" % self.net)
-        live = [i for i in range(n) if comp[i] in active]
-        # zero-resistance joints merge their nodes (union-find), the rest is the conductance matrix
-        parent = {i: i for i in live}
+            raise Unrouted("%s: terminals are not connected by copper" % self.net)
+        key = int(active[0])
+        live = comp == key
+        if key not in self._systems:
+            # zero-resistance joints merge their nodes, the rest is the conductance matrix, node 0 grounded
+            reps = np.unique(merged[live])
+            idx = np.full(n, -1)
+            idx[live] = np.searchsorted(reps, merged[live])
+            used = live[ea] & (r0 != 0) & (idx[ea] != idx[eb])
+            m = len(reps)
+            system = LinearSystem(self._matrix(idx[ea[used]], idx[eb[used]], 1.0 / r0[used], m)) if m > 1 else None
+            self._systems[key] = idx, used, m, system
+        idx, used, m, system = self._systems[key]
+        r = r0.copy()
+        if temps is not None:
+            tc = cells @ np.asarray(temps, dtype=float)
+            r[warm] *= 1 + ALPHA_CU * (tc[warm] - 20)
+        rhs = np.bincount(idx[live], inj[live], minlength=m)
+        v = np.zeros(m)
+        if m > 1:
+            if temps is None:
+                v[1:] = system.solve(rhs[1:], tol=1e-11)
+            else:
+                matrix = self._matrix(idx[ea[used]], idx[eb[used]], 1.0 / r[used], m)
+                v[1:] = system.solve_near(matrix, rhs[1:], tol=1e-11)
+        node_v = v[np.maximum(idx, 0)]
+        live_nodes = np.flatnonzero(live)
+        volts = dict(zip((self.nodes[i] for i in live_nodes), node_v[live_nodes].tolist()))
+        lossy = live[ea] & (ea != eb) & (r != 0)
+        p = np.zeros(len(r))
+        p[lossy] = (node_v[ea[lossy]] - node_v[eb[lossy]]) ** 2 / r[lossy]
+        heat = cells.T @ p
+        hot = np.flatnonzero(heat)
+        loss_map = {(int(i) // self.grid.nc, int(i) % self.grid.nc): float(heat[i]) for i in hot}
+        return volts, float(p.sum()), loss_map
 
-        def find(i):
-            while parent[i] != i:
-                parent[i] = parent[parent[i]]
-                i = parent[i]
-            return i
-
-        for e in self.elements:
-            a, b = self.index[e["a"]], self.index[e["b"]]
-            if e["r0"] == 0.0 and a in parent and a != b:
-                ra, rb = find(a), find(b)
-                if ra != rb:
-                    parent[ra] = rb
-        reps = sorted({find(i) for i in live})
-        pos = {r: k for k, r in enumerate(reps)}
-        m = len(reps)
-        rows = [dict() for _ in range(m)]
-        rvals = []
-        for e in self.elements:
-            r = e["r0"]
-            if temps is not None and e["cells"]:
-                tc = sum(temps[layer * self.grid.nc + c] * f
-                         for layer in e["layers"] for c, f in e["cells"].items()) / len(e["layers"])
-                r *= 1 + ALPHA_CU * (tc - 20)
-            rvals.append(r)
-            a, b = self.index[e["a"]], self.index[e["b"]]
-            if a == b or a not in parent or r == 0.0:
-                continue
-            i, j = pos[find(a)], pos[find(b)]
-            if i == j:
-                continue
-            gg = 1.0 / r
-            rows[i][i] = rows[i].get(i, 0.0) + gg
-            rows[j][j] = rows[j].get(j, 0.0) + gg
-            rows[i][j] = rows[i].get(j, 0.0) - gg
-            rows[j][i] = rows[j].get(i, 0.0) - gg
-        rhs = [0.0] * m
-        for i in live:
-            rhs[pos[find(i)]] += inj[i]
-        ground = min(range(m), key=lambda k: rhs[k])
-        v = solve_grounded(rows, rhs, ground)
-        volts = {self.nodes[i]: v[pos[find(i)]] for i in live}
-        loss_map, total = {}, 0.0
-        for e, r in zip(self.elements, rvals):
-            if e["a"] == e["b"] or e["a"] not in volts or r == 0:
-                continue
-            p = (volts[e["a"]] - volts[e["b"]]) ** 2 / r
-            total += p
-            for layer in e["layers"]:
-                for c, f in e["cells"].items():
-                    key = (layer, c)
-                    loss_map[key] = loss_map.get(key, 0.0) + p * f / len(e["layers"])
-        return volts, total, loss_map
+    @staticmethod
+    def _matrix(i, j, g, m):
+        """Conductance matrix of the merged nodes without node 0."""
+        matrix = coo_matrix((np.concatenate((g, g, -g, -g)),
+                             (np.concatenate((i, j, i, j)), np.concatenate((i, j, j, i)))), shape=(m, m)).tocsc()
+        return matrix[1:, 1:]
 
     def resistance(self, src, dst, temps=None):
         volts, _, _ = self.solve({src: 1.0, dst: -1.0}, temps)
@@ -799,24 +867,6 @@ class TrackNet:
                     if p.ref == ref and (nums is None or p.num in nums)]
             return sum(vals) / len(vals)
         return mean(*src) - mean(*dst)
-
-
-def solve_grounded(rows, rhs, ground, tol=1e-11):
-    """Solve a resistor network with one reference node held at zero volts."""
-    n = len(rows)
-    a, b, conductance = [], [], []
-    for i, row in enumerate(rows):
-        for j, value in row.items():
-            a.append(i)
-            b.append(j)
-            conductance.append(value)
-    matrix = coo_matrix((conductance, (a, b)), shape=(n, n)).tocsc()
-    keep = np.arange(n) != ground
-    result = np.zeros(n)
-    if keep.any():
-        system = LinearSystem(matrix[keep][:, keep])
-        result[keep] = system.solve(np.asarray(rhs)[keep], tol)
-    return result.tolist()
 
 
 # ------------------------------------------------------------------------------------------
@@ -857,6 +907,26 @@ def fit_boost(curve):
     return max(k, 0.0), max(p0, 0.0), rows
 
 
+def fit_buck(curve, vbus=5.0, vbat=4.0):
+    """Fit P_sw = K · VBUS · ISYS · fSW + P0 to what the charger's own efficiency curve (VBUS 5 V, VBAT 4 V,
+    no system load) leaves after the conduction losses of the switches, BATFET and inductor."""
+    rows = []
+    for ichg, eta in curve:
+        if not 0.5 <= ichg <= 3.0:
+            continue
+        tj = 25 + 25 * ichg
+        vsys = vbat + ichg * CHG_R_BATFET * (1 + TC_RDSON * (tj - 25))
+        b = buck_losses(vbus, vsys, ichg, tj, 25 + 15 * ichg, 0.0, 0.0)
+        p_in = vbat * ichg / eta
+        resid = p_in - vbat * ichg - b["ic"] - b["l1"] - ichg ** 2 * CHG_R_BATFET * (1 + TC_RDSON * (tj - 25))
+        rows.append((vbus * ichg * CHG_FSW, resid))
+    n = len(rows)
+    mx = sum(r[0] for r in rows) / n
+    my = sum(r[1] for r in rows) / n
+    k = sum((r[0] - mx) * (r[1] - my) for r in rows) / sum((r[0] - mx) ** 2 for r in rows)
+    return max(k, 0.0), max(my - k * mx, 0.0)
+
+
 def boost_losses(vin, iout, tj, tl, fit):
     if not iout:
         c = boost_conduction(vin, 0.0, tj, tl)
@@ -872,8 +942,10 @@ def boost_losses(vin, iout, tj, tl, fit):
             "eta": VOUT * iout / (vin * iin)}
 
 
-def buck_losses(vbus, vsys, isys, tj, tl, k_sw):
-    """MAX77757 buck from CHGIN to SYS, delivering isys out of L1."""
+def buck_losses(vbus, vsys, isys, tj, tl, k_sw, p0=None):
+    """Charger buck from the input pin to SYS, delivering isys. r_series is a switch in series with the
+    inductor that stays on (BQ25798 Q3 in buck mode), zero for the MAX77757."""
+    p0 = CHG_P0 if p0 is None else p0
     rs = 1 + TC_RDSON * (tj - 25)
     r_in, r_hs, r_ls = CHG_R_IN * rs, CHG_R_HS * rs, CHG_R_LS * rs
     dcr = L1_DCR * (1 + ALPHA_CU * (tl - 25))
@@ -883,8 +955,8 @@ def buck_losses(vbus, vsys, isys, tj, tl, k_sw):
         d = min(1.0, (vsys + isys * (dcr + r_ls)) / (vbyp + isys * (r_ls - r_hs)))
         ripple = (vbyp - vsys) * d / (L1_L * CHG_FSW)
         i2 = isys ** 2 + ripple ** 2 / 12
-        cond = i2 * (d * r_hs + (1 - d) * r_ls)
-        p_sw = k_sw * vbyp * isys * CHG_FSW
+        cond = i2 * (d * r_hs + (1 - d) * r_ls + CHG_R_SERIES * rs)
+        p_sw = k_sw * vbyp * isys * CHG_FSW + p0
         p_in = iin ** 2 * r_in
         p_q = vbus * CHG_IQ
         l1 = i2 * dcr + CORE_LOSS
@@ -903,21 +975,26 @@ class Model:
         self.corner = corner  # 0 nominal, 1 high
         self.heatsink = heatsink or {}  # {ref: HEATSINK entry}
         self.nets = {n: TrackNet(board, self.grid, n) for n in
-                     ("USB_VBUS", USB_J1, "CHG_SW", "VSYS", "VBAT", "BAT_IN", "BOOST_SW", "BOOST_5V", "RAIL_5V",
-                      "ESP_5V_D", "ADS_5V_D", "ESP_5V", "ADS_5V")}
+                     ("USB_VBUS", USB_J1, CHG_NETS["sw"], "VSYS", "VBAT", "BAT_IN", "BOOST_SW", "BOOST_5V",
+                      "RAIL_5V", "ESP_5V_D", "ADS_5V_D", "ESP_5V", "ADS_5V") + ((CHG_NETS["sw2"],) if CHG_NETS["sw2"] else ())}
+        self.unrouted = set()  # nets whose copper path is replaced by ASSUMED_PATH_R (solve_paths)
+        self.plate_node = None
         ads = next(l for l in params["loads_5v"] if l["name"].startswith("ADSBee"))
         gnss = params["gnss"]
         ads_ma = ads["wifi_on_ma"] + gnss["module_tracking_ma"] + gnss["breakout_led_ma"] + gnss["active_antenna_ma"]
         esp_ma = sum(l["ma"] for l in params["loads_5v"] if l["name"].startswith("Display"))
         self.ads_share = ads_ma / (ads_ma + esp_ma)
+        self._gnd = {}  # reference cells: (25 °C sheet, its factorization)
+        self._thermal = {}  # environment: (factorization, nodes, plate node, plate conductance)
 
     # -- electrical: GND pour
     def gnd_sheet(self, temps):
         g = self.grid
         sheet = Sheet(g)
+        t = np.full(NL * g.nc, 25.0) if temps is None else np.asarray(temps, dtype=float)
         for li, name in enumerate(LAYERS):
-            cond = [5.8e7 / (1 + ALPHA_CU * ((temps[li * g.nc + c] if temps else 25) - 20)) * CU_T[name] * f
-                    for c, f in enumerate(self.copper.gnd[li])]
+            cond = 5.8e7 / (1 + ALPHA_CU * (t[li * g.nc:(li + 1) * g.nc] - 20)) * CU_T[name] \
+                * np.asarray(self.copper.gnd[li], dtype=float)
             sheet.set_sheet(li, cond)
             sheet.gref[li] = [1e-3] * g.nc  # regularisation, far below the copper conductances
         for k in range(NL - 1):
@@ -927,40 +1004,60 @@ class Model:
 
     def gnd_solve(self, injections, temps):
         """injections: list of (pads, current into GND); the last entry balances the others and is
-        also the reference. Returns node voltages, loss and loss map."""
+        also the reference. Returns node voltages, loss and loss map. The 25 °C sheet is factored once
+        per reference; warm copper is solved with it as the preconditioner."""
         g = self.grid
-        sheet = self.gnd_sheet(temps)
-        for p in injections[-1][0]:
-            for c in g.rect_cells(p.x, p.y, p.w, p.h):
+        ref = tuple(sorted({c for p in injections[-1][0] for c in g.rect_cells(p.x, p.y, p.w, p.h)}))
+
+        def sheet_at(t):
+            sheet = self.gnd_sheet(t)
+            for c in ref:
                 sheet.gref[0][c] = 1e4
+            return sheet
+
+        if ref not in self._gnd:
+            sheet = sheet_at(None)
+            self._gnd[ref] = sheet, sheet.factorize()
+        sheet, system = self._gnd[ref]
         b = [0.0] * (NL * g.nc)
         for pads, current in injections:
             area = sum(p.w * p.h for p in pads)
             for p in pads:
                 for c, f in g.rect_cells(p.x, p.y, p.w, p.h).items():
                     b[c] += current * p.w * p.h / area * f
-        v = sheet.solve(b, tol=1e-7)
+        if temps is None:
+            v = np.asarray(system.solve(b, tol=1e-7))
+        else:
+            sheet = sheet_at(temps)
+            v = system.solve_near(sheet.matrix(), b, tol=1e-7)
         nc, nx = g.nc, g.nx
-        loss_map, total = {}, 0.0
+        heat = np.zeros((NL, nc))
+        total = 0.0
         for li in range(NL):
-            off = li * nc
-            for i in range(nc):
-                for j, gg in ((i + 1, sheet.gx[li][i]), (i + nx, sheet.gy[li][i])):
-                    if gg and j < nc:
-                        p = gg * (v[off + i] - v[off + j]) ** 2
-                        total += p
-                        for c in (i, j):
-                            loss_map[(li, c)] = loss_map.get((li, c), 0.0) + p / 2
+            vl = v[li * nc:(li + 1) * nc]
+            for gg, step in ((np.asarray(sheet.gx[li]), 1), (np.asarray(sheet.gy[li]), nx)):
+                p = gg[:nc - step] * (vl[:nc - step] - vl[step:]) ** 2
+                total += p.sum()
+                heat[li, :nc - step] += p / 2
+                heat[li, step:] += p / 2
         for k in range(NL - 1):
-            for i in range(nc):
-                if sheet.gz[k][i]:
-                    p = sheet.gz[k][i] * (v[k * nc + i] - v[(k + 1) * nc + i]) ** 2
-                    total += p
-                    for layer in (k, k + 1):
-                        loss_map[(layer, i)] = loss_map.get((layer, i), 0.0) + p / 2
-        return v, total, loss_map
+            p = np.asarray(sheet.gz[k], dtype=float) * (v[k * nc:(k + 1) * nc] - v[(k + 1) * nc:(k + 2) * nc]) ** 2
+            total += p.sum()
+            heat[k] += p / 2
+            heat[k + 1] += p / 2
+        layers, cells = np.nonzero(heat)
+        return v.tolist(), float(total), dict(zip(zip(layers.tolist(), cells.tolist()), heat[layers, cells].tolist()))
 
     # -- thermal sheet
+    def thermal_system(self, env):
+        """The factored thermal sheet, cached per environment."""
+        key = tuple(sorted(env.items()))
+        if key not in self._thermal:
+            system = self.thermal_sheet(env).factorize()
+            self._thermal[key] = system, self.nodes, self.plate_node, getattr(self, "plate_g_air", None)
+        system, self.nodes, self.plate_node, self.plate_g_air = self._thermal[key]
+        return system
+
     def thermal_sheet(self, env):
         g = self.grid
         sheet = Sheet(g)
@@ -983,9 +1080,22 @@ class Model:
             for p in pads:
                 for c, f in g.rect_cells(p.x, p.y, p.w, p.h).items():
                     links[c] = links.get(c, 0.0) + p.w * p.h / total * f / theta
-            # junction to the surrounding air directly: only through a heatsink
+            # junction to the surrounding air directly: only through a top heatsink
             gref = 1.0 / heatsink_resistance(self.heatsink[ref], env) if ref in self.heatsink else 0.0
             self.nodes[ref] = sheet.add_node(gref, [(0, c, gg) for c, gg in links.items()])
+        # a bottom plate: one isothermal node on the bottom-layer cells under its square
+        self.plate_node = None
+        for ref, hs in self.heatsink.items():
+            if hs["type"] != "plate":
+                continue
+            pads = pads_of(self.board, ref)
+            cx = sum(p.x for p in pads) / len(pads)
+            cy = sum(p.y for p in pads) / len(pads)
+            g_cell, g_air = plate_conductances(hs, env)
+            h = hs["size_mm"] / 2
+            links = [(NL - 1, c, g_cell) for c in g.rect_cells(cx, cy, 2 * h, 2 * h)]
+            self.plate_g_air = g_air
+            self.plate_node = sheet.add_node(g_air, links)
         return sheet
 
 
@@ -1010,42 +1120,55 @@ def pack_resistance():
 def solve_paths(model, board):
     """Copper path resistances at 20 °C that run_case uses for its voltage bookkeeping:
     (r_net, r_gnd_bat, r_gnd_usb). Assign them to every Model before run_case."""
+    def path(key, net, src, dst):
+        try:
+            return model.nets[net].resistance(src, dst)
+        except Unrouted:
+            model.unrouted.add(key)
+            return ASSUMED_PATH_R
+
+    u4 = CHG_PADS
     r_net = {
-        "USB_VBUS J1": model.nets[USB_J1].resistance(("J1", ("A4", "A9", "B4", "B9")), ("FB1", ("1",))),
-        "USB_VBUS": model.nets["USB_VBUS"].resistance(("FB1", ("2",)), ("U4", ("23", "24"))),
-        "CHG_SW": model.nets["CHG_SW"].resistance(("U4", ("20", "21")), ("L1", ("1",))),
-        "VSYS": model.nets["VSYS"].resistance(("U4", ("15", "16")), ("L2", ("1",))),
-        "VSYS L1": model.nets["VSYS"].resistance(("L1", ("2",)), ("U4", ("15", "16"))),
-        "VBAT": model.nets["VBAT"].resistance(("F1", ("2",)), ("U4", ("13", "14"))),
-        "BAT_IN": model.nets["BAT_IN"].resistance(("J3", ("1",)), ("F1", ("1",))),
-        "BOOST_SW": model.nets["BOOST_SW"].resistance(("L2", ("2",)), ("U6", ("4", "5", "6", "7"))),
-        "BOOST_5V": model.nets["BOOST_5V"].resistance(("U6", ("14", "15", "16")), ("U7", ("1", "2", "4"))),
-        "RAIL_5V": model.nets["RAIL_5V"].resistance(("U7", ("7", "8")), ("U11", ("5",))),
-        "ESP_5V_D": model.nets["ESP_5V_D"].resistance(("U12", ("6",)), ("JP1", ("1",))),
-        "ADS_5V_D": model.nets["ADS_5V_D"].resistance(("U11", ("6",)), ("JP2", ("1",))),
-        "ADS_5V": model.nets["ADS_5V"].resistance(("JP2", ("2",)), ("J10", ("1",))),
-        "ESP_5V": model.nets["ESP_5V"].resistance(("JP1", ("2",)), ("J7", ("1",))),
+        "USB_VBUS J1": path("USB_VBUS J1", USB_J1, ("J1", ("A4", "A9", "B4", "B9")), ("FB1", ("1",))),
+        "USB_VBUS": path("USB_VBUS", "USB_VBUS", ("FB1", ("2",)), ("U4", u4["vin"])),
+        "CHG_SW": path("CHG_SW", CHG_NETS["sw"], ("U4", u4["sw"]), ("L1", ("1",))),
+        "VSYS": path("VSYS", "VSYS", ("U4", u4["sys"]), ("L2", ("1",))),
+        "VSYS L1": path("VSYS L1", CHG_NETS["sw2"] or "VSYS", ("L1", ("2",)), ("U4", u4["sw2"] or u4["sys"])),
+        "VBAT": path("VBAT", "VBAT", ("F1", ("2",)), ("U4", u4["bat"])),
+        "BAT_IN": path("BAT_IN", "BAT_IN", ("J3", ("1",)), ("F1", ("1",))),
+        "BOOST_SW": path("BOOST_SW", "BOOST_SW", ("L2", ("2",)), ("U6", ("4", "5", "6", "7"))),
+        "BOOST_5V": path("BOOST_5V", "BOOST_5V", ("U6", ("14", "15", "16")), ("U7", ("1", "2", "4"))),
+        "RAIL_5V": path("RAIL_5V", "RAIL_5V", ("U7", ("7", "8")), ("U11", ("5",))),
+        "ESP_5V_D": path("ESP_5V_D", "ESP_5V_D", ("U12", ("6",)), ("JP1", ("1",))),
+        "ADS_5V_D": path("ADS_5V_D", "ADS_5V_D", ("U11", ("6",)), ("JP2", ("1",))),
+        "ADS_5V": path("ADS_5V", "ADS_5V", ("JP2", ("2",)), ("J10", ("1",))),
+        "ESP_5V": path("ESP_5V", "ESP_5V", ("JP1", ("2",)), ("J7", ("1",))),
     }
     # GND at 1 A: the loss in W equals the resistance in Ω
     _, r_gnd_bat, _ = model.gnd_solve([(pads_of(board, "U6", net="GND"), 1.0),
                                        (pads_of(board, "J3", ("2",)), -1.0)], None)
-    _, r_gnd_usb, _ = model.gnd_solve([(pads_of(board, "U4", ("18", "19")), 1.0),
+    _, r_gnd_usb, _ = model.gnd_solve([(pads_of(board, "U4", u4["gnd"]), 1.0),
                                        (pads_of(board, "J1", ("A1", "A12", "B1", "B12")), -1.0)], None)
     return r_net, r_gnd_bat, r_gnd_usb
 
 
 def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
-             vent_area_cm2=vent_model.VENT_AREA_CM2, charge_current=CHARGE_A,
-             regulation_temperature=CHG_TREG):
-    """Solve an independent operating point; reject an unconverged thermal iteration."""
+             vent_area_cm2=vent_model.VENT_AREA_CM2, charge_current=None, regulation_temperature=None):
+    """Solve an independent operating point; reject an unconverged thermal iteration. The charge current
+    and regulation temperature default to the case's (chargers.case_table), then to the charger's."""
     if max_iterations < 1:
         raise ValueError("thermal iteration limit must be positive")
+    if charge_current is None:
+        charge_current = case.get("charge", CHARGE_A)
+    if regulation_temperature is None:
+        regulation_temperature = case.get("treg", CHG_TREG)
+    u4 = CHG_PADS
     env = ENVIRONMENTS[env_key]
     g, board, nets = model.grid, model.board, model.nets
     corner = model.corner
-    thermal = model.thermal_sheet(env).factorize()
+    thermal = model.thermal_system(env)
     nc = g.nc
-    temps = None  # board cell temperatures, all layers
+    temps = cell_t = None  # board cell temperatures, all layers, as list and array
     tj = {"U4": ambient + 30, "U6": ambient + 30, "U7": ambient + 10, "L1": ambient + 20, "L2": ambient + 20}
     r_enc, _ = enclosure_resistance()
     vsys_drop = 0.0
@@ -1056,11 +1179,25 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
     for outer in range(max_iterations):
         losses, heat = {}, {}
 
-        def track(net, inj):
-            _, p, lmap = nets[net].solve(inj, temps)
-            losses["copper " + net] = losses.get("copper " + net, 0.0) + p
-            for k, v in lmap.items():
-                heat[k] = heat.get(k, 0.0) + v
+        def track(net, inj, key=None):
+            key = key or net
+            if key not in model.unrouted:
+                try:
+                    _, p, lmap = nets[net].solve(inj, cell_t)
+                    losses["copper " + net] = losses.get("copper " + net, 0.0) + p
+                    for k, v in lmap.items():
+                        heat[k] = heat.get(k, 0.0) + v
+                    return
+                except Unrouted:
+                    model.unrouted.add(key)
+            if True:
+                # no copper yet: the assumed path resistance, its heat shared by the terminal pads
+                current = max(abs(i) for i in inj.values())
+                p = current ** 2 * ASSUMED_PATH_R
+                losses["copper " + net] = losses.get("copper " + net, 0.0) + p
+                for (ref, nums) in inj:
+                    pad_heat(heat, g, pads_of(board, ref, nums), p / len(inj))
+                return
 
         def contact(label, pads, current, r):
             p = current ** 2 * r
@@ -1116,9 +1253,9 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
                   "charger efficiency": vsys * i_l1 / (vbus * i_in)}
             if load:
                 op["boost efficiency"] = b["eta"]
-            losses["MAX77757 buck"] = buck["ic"]
+            losses[U4_LOSSES[0]] = buck["ic"]
             losses["L1"] = buck["l1"]
-        losses["MAX77757 BATT-SYS switch"] = p_batfet
+        losses[U4_LOSSES[1]] = p_batfet
         if load:
             losses["TPS61088"] = b["ic"]
             losses["L2"] = b["l2"]
@@ -1131,21 +1268,29 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
 
         # copper and contacts
         if case["mode"] == "battery":
-            track("VSYS", {("U4", ("15", "16")): i_bat, ("L2", ("1",)): -i_bat})
+            track("VSYS", {("U4", u4["sys"]): i_bat, ("L2", ("1",)): -i_bat})
         else:
-            track(USB_J1, {("J1", ("A4", "A9", "B4", "B9")): i_in, ("FB1", ("1",)): -i_in})
+            track(USB_J1, {("J1", ("A4", "A9", "B4", "B9")): i_in, ("FB1", ("1",)): -i_in}, "USB_VBUS J1")
             contact("FB1 ferrite bead", pads_of(board, "FB1"), i_in, FB_R[corner])
-            track("USB_VBUS", {("FB1", ("2",)): i_in, ("U4", ("23", "24")): -i_in})
-            track("CHG_SW", {("U4", ("20", "21")): i_l1, ("L1", ("1",)): -i_l1})
-            inj = {("L1", ("2",)): i_l1, ("U4", ("15", "16")): -i_chg}
-            if b["iin"]:
-                inj[("L2", ("1",))] = -(i_l1 - i_chg)
+            track("USB_VBUS", {("FB1", ("2",)): i_in, ("U4", u4["vin"]): -i_in})
+            track(CHG_NETS["sw"], {("U4", u4["sw"]): i_l1, ("L1", ("1",)): -i_l1}, "CHG_SW")
+            if CHG["inductor_on_vsys"]:
+                # MAX77757: L1 feeds the VSYS copper, the SYS pins take the charge current into the BATFET
+                inj = {("L1", ("2",)): i_l1, ("U4", u4["sys"]): -i_chg}
+                if b["iin"]:
+                    inj[("L2", ("1",))] = -(i_l1 - i_chg)
+                else:
+                    inj[("U4", u4["sys"])] = -i_l1
+                track("VSYS", inj)
             else:
-                inj[("U4", ("15", "16"))] = -i_l1
-            track("VSYS", inj)
+                # BQ25798: L1 returns to SW2, SYS sources only what the boost and LEDs draw
+                track(CHG_NETS["sw2"], {("L1", ("2",)): i_l1, ("U4", u4["sw2"]): -i_l1}, "VSYS L1")
+                i_sys = i_l1 - i_chg
+                if abs(i_sys) > 1e-9:
+                    track("VSYS", {("U4", u4["sys"]): i_sys, ("L2", ("1",)): -i_sys})
             contact("USB-C contacts", pads_of(board, "J1", ("A4", "A9", "B4", "B9", "A1", "A12", "B1", "B12")),
                     i_in, 2 * USB_CONTACT[corner] / 4)
-        track("VBAT", {("F1", ("2",)): i_b, ("U4", ("13", "14")): -i_b})
+        track("VBAT", {("F1", ("2",)): i_b, ("U4", u4["bat"]): -i_b})
         track("BAT_IN", {("J3", ("1",)): i_b, ("F1", ("1",)): -i_b})
         contact("F1 fuse", pads_of(board, "F1"), i_b, FUSE_R[corner])
         contact("JST-PH battery contacts", pads_of(board, "J3"), i_b, 2 * JST_CONTACT[corner])
@@ -1174,9 +1319,9 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
             gnd_inj.append((pads_of(board, "J3", ("2",)), -sum(c for _, c in gnd_inj)))
         else:
             gnd_inj.append((pads_of(board, "J3", ("2",)), i_chg))
-            gnd_inj.append((pads_of(board, "U4", ("18", "19")), -(1 - buck["d"]) * i_l1))
+            gnd_inj.append((pads_of(board, "U4", u4["gnd"]), -(1 - buck["d"]) * i_l1))
             gnd_inj.append((pads_of(board, "J1", ("A1", "A12", "B1", "B12")), -sum(c for _, c in gnd_inj)))
-        _, p_gnd, gmap = model.gnd_solve(gnd_inj, temps)
+        _, p_gnd, gmap = model.gnd_solve(gnd_inj, cell_t)
         losses["copper GND pour"] = p_gnd
         for k, v in gmap.items():
             heat[k] = heat.get(k, 0.0) + v
@@ -1203,7 +1348,7 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
                            if env["enclosed"] else 0.0)
 
         # thermal solve
-        b_vec = [0.0] * (NL * nc + len(model.nodes))
+        b_vec = [0.0] * (NL * nc + len(model.nodes) + (model.plate_node is not None))
         for (li, c), p in heat.items():
             b_vec[li * nc + c] += p
         for ref, keys in (("U4", U4_LOSSES), ("U6", ("TPS61088",)), ("U7", ("TPS22975",)),
@@ -1211,12 +1356,13 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
             b_vec[model.nodes[ref]] += sum(losses.get(k, 0.0) for k in keys)
         rise = thermal.solve(b_vec, tol=1e-7)
         temps = [t_air + r for r in rise[:NL * nc]]
+        cell_t = np.asarray(temps)
         new_tj = {ref: t_air + rise[model.nodes[ref]] for ref in tj}
         converged = all(abs(new_tj[r] - tj[r]) < 0.2 for r in tj)
         tj = new_tj
         if case["mode"] == "usb":
-            # MAX77757 junction regulation: the charge current, then the input current, folds back
-            # so that the junction stays at TREG; a negative value means the battery supplements
+            # junction regulation: the charge current, then the input current, folds back so that the
+            # junction stays at TREG; a negative value means the battery supplements
             if tj["U4"] > regulation_temperature + 0.5 or (chg_cap < charge_current and tj["U4"] < regulation_temperature - 0.5):
                 chg_cap = min(charge_current, chg_cap - 0.8 * (tj["U4"] - regulation_temperature) / TREG_SLOPE)
                 chg_cap = max(chg_cap, -(b["iin"] + 2 * LED_SYS_A))  # the buck cannot sink current
@@ -1231,10 +1377,18 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
         raise RuntimeError("%s (%s, %.0f °C, corner %d): thermal iteration did not converge after %d iterations"
                            % (case["key"], env_key, ambient, corner, max_iterations))
     battery = case["mode"] == "battery"
-    sink = {ref: (tj[ref] - t_air) / heatsink_resistance(hs, env) for ref, hs in model.heatsink.items()}
+    sink = {}
+    t_plate = None
+    for ref, hs in model.heatsink.items():
+        if hs["type"] == "plate":
+            t_plate = t_air + rise[model.plate_node]
+            sink[ref] = (t_plate - t_air) * model.plate_g_air
+        else:
+            sink[ref] = (tj[ref] - t_air) / heatsink_resistance(hs, env)
     return {"op": op, "losses": losses, "board_loss": board_loss, "modules": p_modules, "pack": p_pack, "sink": sink,
             "inside": inside, "t_air": t_air, "tj": tj, "temps": temps,
             "board_max": max(temps), "t_pack": t_air + p_pack * pack_resistance(), "iterations": outer + 1,
+            "t_plate": t_plate, "unrouted": sorted(model.unrouted),
             "efficiency": VOUT * load / (vcell * i_bat) if battery else None, "i_bat": i_b,
             "i_in": op.get("input current", 0.0), "regulated": regulated, "i_chg": 0.0 if battery else i_chg,
             "caps": max((max(temps[g.cell(p.x, p.y)] for p in pads_of(board, ref)), ref) for ref in BULK_CAPS)}
@@ -1346,12 +1500,19 @@ def u4_loss(result):
     return sum(result["losses"].get(k, 0.0) for k in U4_LOSSES)
 
 
+select_project()  # after the definitions bind_charger needs
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--write", action="store_true", help="store heat/results.md and the heat maps")
-    ap.add_argument("--pcb", default=PCB, help="board file to read, e.g. a copy with refilled zones")
+    ap.add_argument("--write", action="store_true", help="store heat/<charger>/results.md and the heat maps")
+    project.add_argument(ap)
+    ap.add_argument("--pcb", default=None, help="board file to read, e.g. a copy with refilled zones")
     ap.add_argument("--no-heatsink", action="store_true", help="model the board without the U4 heatsink")
     args = ap.parse_args()
+    if args.project:
+        select_project(args.project)
+    args.pcb = args.pcb or PCB
     started = time.time()
     with open(PARAMS) as f:
         params = json.load(f)
@@ -1361,8 +1522,9 @@ def main():
     rep = simlib.Report()
     rep.add("# Power loss and temperature estimate")
     rep.add()
-    rep.add("Generated by `hardware/sim/run_heat.py` from `hardware/carrier-max-charger/carrier.kicad_pcb`. "
-            "See `hardware/sim/README.md` for what is and is not modelled.")
+    rep.add("Generated by `hardware/sim/run_heat.py` from `%s` (charger %s). See `hardware/sim/README.md` for "
+            "what is and is not modelled." % (os.path.relpath(os.path.abspath(args.pcb), os.path.dirname(os.path.dirname(HERE))),
+                                             CHG["part"]))
     rep.add()
 
     # -- board
@@ -1397,15 +1559,21 @@ def main():
     # -- inputs
     rep.add("## Loss model inputs")
     rep.add()
+    part = CHG["part"]
     rep.table(["Element", "Value", "Source"], [
-        ["MAX77757 CHGIN-BYP / high side / low side / BATT-SYS", "45 / 60 / 60 / 20 mΩ typ",
-         "data sheet, Electrical Characteristics"],
-        ["MAX77757 switching", "1.3 MHz; edge loss with the TPS61088 coefficient below", "estimate, no efficiency curve published"],
-        ["MAX77757 CHGIN supply current", "2.7 mA", "data sheet, typ"],
-        ["MAX77757 VSYSMIN", "3.5 V; below it the BATT-SYS switch regulates linearly", "data sheet, SYS Regulation Voltage"],
+        ["%s input / high side / low side%s / BATFET" % (part, " / series switch" if CHG_R_SERIES else ""),
+         "%.0f / %.0f / %.0f%s / %.0f mΩ typ" % (CHG_R_IN * 1e3, CHG_R_HS * 1e3, CHG_R_LS * 1e3,
+                                                 " / %.0f" % (CHG_R_SERIES * 1e3) if CHG_R_SERIES else "", CHG_R_BATFET * 1e3),
+         CHG["datasheet"]],
+        ["%s switching" % part, "%.2g MHz; %s" % (CHG_FSW / 1e6, "K %.2f ns and P0 %.0f mW fitted to the data sheet efficiency curve"
+                                                   % (CHG_K_SW * 1e9, CHG_P0 * 1e3) if CHG_K_SW is not None
+                                                   else "edge loss with the TPS61088 coefficient below"),
+         "data sheet section 6.7, VBUS 5 V, VBAT 4 V" if CHG_K_SW is not None else "estimate, no efficiency curve published"],
+        ["%s input supply current" % part, "%.1f mA" % (CHG_IQ * 1e3), "data sheet, typ"],
+        ["%s VSYSMIN" % part, "%.1f V; below it the BATFET regulates linearly" % CHG_VSYSMIN, "data sheet"],
         ["TPS61088 high side / low side", "13 / 11 mΩ typ", "SLVSCM8D"],
-        ["L1 FXL0630-1R0-M / L2 CKST0603-2.2uH", "7.4 / 15.5 mΩ DCR, core loss %.0f mW each" % (CORE_LOSS * 1e3),
-         "docs/power.md, CENKER table; core loss estimate"],
+        ["L1 %s / L2 CKST0603-2.2uH" % CHG["l1"]["label"], "%.1f / 15.5 mΩ DCR, core loss %.0f mW each" % (L1_DCR * 1e3, CORE_LOSS * 1e3),
+         "docs/power.md, vendor tables; core loss estimate"],
         ["TPS22975", "16 mΩ typ", "SLVSCI1"],
         ["LM73100 ideal diodes U11, U12", "drop regulated to %.1f / %.1f mV, %.1f / %.1f mΩ above that" % (
             ID_VFWD[0] * 1e3, ID_VFWD[1] * 1e3, ID_RON[0] * 1e3, ID_RON[1] * 1e3), "SNOSDC0A, typ / max over temperature"],
@@ -1440,28 +1608,35 @@ def main():
     r_net, r_gnd_bat, r_gnd_usb = solve_paths(nominal, board)
     for m in (nominal, high) + bare:
         m.r_net, m.r_gnd_bat, m.r_gnd_usb = r_net, r_gnd_bat, r_gnd_usb
+        m.unrouted = set(nominal.unrouted)
     rep.add("## Copper path resistances at 20 °C")
     rep.add()
     rep.add("Each power net is solved as a resistor network of its tracks and vias. Pads are nodes, and the "
             "pins of a group share the current equally. GND is a four-layer sheet on the grid.")
     rep.add()
-    rep.table(["Path", "Resistance"], [[k, "%.1f mΩ" % (v * 1e3)] for k, v in (
-        ("USB_VBUS_J1: J1 VBUS pins to FB1", r_net["USB_VBUS J1"]),
-        ("USB_VBUS: FB1 to U4 CHGIN", r_net["USB_VBUS"]),
-        ("CHG_SW: U4 LX to L1", r_net["CHG_SW"]),
-        ("VSYS: L1 to U4 SYS", r_net["VSYS L1"]),
-        ("VSYS: U4 SYS to L2", r_net["VSYS"]),
-        ("VBAT: F1 to U4 BATT", r_net["VBAT"]),
-        ("BAT_IN: J3 to F1", r_net["BAT_IN"]),
-        ("BOOST_SW: L2 to U6 SW", r_net["BOOST_SW"]),
-        ("BOOST_5V: U6 VOUT to U7 VIN", r_net["BOOST_5V"]),
-        ("RAIL_5V: U7 VOUT to U11 IN", r_net["RAIL_5V"]),
-        ("U12 OUT to JP1", r_net["ESP_5V_D"]),
-        ("U11 OUT to JP2", r_net["ADS_5V_D"]),
-        ("ADS_5V: JP2 to J10", r_net["ADS_5V"]),
-        ("ESP_5V: JP1 to J7", r_net["ESP_5V"]),
-        ("GND: J3 pin 2 to U6 ground pads", r_gnd_bat),
-        ("GND: J1 GND pins to U4 PGND", r_gnd_usb))])
+    pin = CHG["pin_names"]
+    if nominal.unrouted:
+        rep.add("Not routed yet, replaced by the assumed %.0f mΩ: %s. Rerun after routing."
+                % (ASSUMED_PATH_R * 1e3, ", ".join(sorted(nominal.unrouted))))
+        rep.add()
+    rep.table(["Path", "Resistance"], [[k, "%.1f mΩ" % (v * 1e3) + (" (assumed)" if key in nominal.unrouted else "")]
+                                       for key, k, v in (
+        ("USB_VBUS J1", "USB_VBUS_J1: J1 VBUS pins to FB1", r_net["USB_VBUS J1"]),
+        ("USB_VBUS", "USB_VBUS: FB1 to U4 %s" % pin["vin"], r_net["USB_VBUS"]),
+        ("CHG_SW", "%s: U4 %s to L1" % (CHG_NETS["sw"], pin["sw"]), r_net["CHG_SW"]),
+        ("VSYS L1", "%s: L1 to U4 %s" % (CHG_NETS["sw2"] or "VSYS", "SW2" if CHG_NETS["sw2"] else pin["sys"]), r_net["VSYS L1"]),
+        ("VSYS", "VSYS: U4 %s to L2" % pin["sys"], r_net["VSYS"]),
+        ("VBAT", "VBAT: F1 to U4 %s" % pin["bat"], r_net["VBAT"]),
+        ("BAT_IN", "BAT_IN: J3 to F1", r_net["BAT_IN"]),
+        ("BOOST_SW", "BOOST_SW: L2 to U6 SW", r_net["BOOST_SW"]),
+        ("BOOST_5V", "BOOST_5V: U6 VOUT to U7 VIN", r_net["BOOST_5V"]),
+        ("RAIL_5V", "RAIL_5V: U7 VOUT to U11 IN", r_net["RAIL_5V"]),
+        ("ESP_5V_D", "U12 OUT to JP1", r_net["ESP_5V_D"]),
+        ("ADS_5V_D", "U11 OUT to JP2", r_net["ADS_5V_D"]),
+        ("ADS_5V", "ADS_5V: JP2 to J10", r_net["ADS_5V"]),
+        ("ESP_5V", "ESP_5V: JP1 to J7", r_net["ESP_5V"]),
+        ("GND bat", "GND: J3 pin 2 to U6 ground pads", r_gnd_bat),
+        ("GND usb", "GND: J1 GND pins to U4 %s" % pin["gnd"], r_gnd_usb))])
 
     # -- cases
     r_enc, a_enc = enclosure_resistance()
@@ -1481,10 +1656,20 @@ def main():
             "with the wall path; no fan."
             % (vent_model.VENT_AREA_CM2, vent_model.BLOCKAGE * 100, vent_model.VENT_HEIGHT_M * 1000,
                vent_model.CD))
-    rep.add("- Junction to board: MAX77757 θJC %.1f K/W onto its pins, TPS61088 RθJC(bot) 3.1 K/W plus 1 K/W "
+    rep.add("- Junction to board: %s %s, TPS61088 RθJC(bot) 3.1 K/W plus 1 K/W "
             "solder onto its pad, TPS22975 RθJC(bot) %.1f K/W; inductor winding to terminals %.0f K/W."
-            % (CHG_THETA_JC, LS_THETA_JC, INDUCTOR_THETA_BODY))
+            % (part, CHG["theta_note"], LS_THETA_JC, INDUCTOR_THETA_BODY))
     for ref, hs in (heatsink or {}).items():
+        if hs["type"] == "plate":
+            g_cell, g_air_open = plate_conductances(hs, ENVIRONMENTS["open"])
+            _, g_air_closed = plate_conductances(hs, ENVIRONMENTS["closed"])
+            under = under_heatsink(board, ref, hs["size_mm"], bottom=True)
+            rep.add("- %s bottom plate: %s. Board to plate %.2f K/W over the %.0f x %.0f mm square (mask and pad), "
+                    "plate to its surroundings %.0f K/W on the bench and %.0f K/W in the case air%s. Through-hole "
+                    "pins inside the square: %s. The plate reaches the junction only through the board."
+                    % (ref, hs["label"], 1 / (g_cell * hs["size_mm"] ** 2), hs["size_mm"], hs["size_mm"], 1 / g_air_open,
+                       1 / g_air_closed, " (bonded to the case floor)" if hs["wall"] else "", ", ".join(under) or "none"))
+            continue
         under = under_heatsink(board, ref, hs["size_mm"])
         rep.add("- %s heatsink: %s. Junction to package top %.0f K/W, epoxy and spacer %.0f K/W, sink to air "
                 "%.0f K/W on the bench and %.0f K/W in the case air. That gives %.0f and %.0f K/W from the junction, "
@@ -1511,14 +1696,14 @@ def main():
                     if corner and env_key == "open":
                         continue
                     results[(case["key"], env_key, ambient, corner)] = run_case(
-                        model, case, env_key, ambient, k_sw * (1.0, BUCK_SW_HIGH)[corner])
+                        model, case, env_key, ambient, buck_k(k_sw) * (1.0, BUCK_SW_HIGH)[corner])
 
     rep.add("## Operating points and losses")
     rep.add()
     rep.add("Board losses for the closed case at 25 °C ambient, with copper and on-resistance at their computed "
             "temperatures. Battery cases: the boost input is held at 3.1 V, the low-battery design point of "
             "docs/power.md. The cell open-circuit voltage that gives it follows from the path. USB cases: 5.0 V at "
-            "the connector (cable drop not included), charge current 1.8 A unless the 3 A input limit reduces it.")
+            "the connector (cable drop not included), charge current as labelled unless the 3 A input limit reduces it.")
     rep.add()
     for case in CASES:
         rn = results[(case["key"], "closed", 25.0, 0)]
@@ -1585,9 +1770,10 @@ def main():
     bat = [c["key"] for c in CASES if c["mode"] == "battery"]
     for ck in usb:
         r = results[(ck, "open", 25.0, 0)]
+        case = next(c for c in CASES if c["key"] == ck)
         rep.check(not r["regulated"], "%s, open bench, 25 °C: %s (U4 junction %.0f °C, regulation at %.0f °C)"
-                  % (label[ck], "full %.1f A charge current" % CHARGE_A if not r["regulated"]
-                     else "thermal regulation cuts the charge current to %.2f A" % r["i_chg"], r["tj"]["U4"], CHG_TREG))
+                  % (label[ck], "full %.1f A charge current" % case["charge"] if not r["regulated"]
+                     else "thermal regulation cuts the charge current to %.2f A" % r["i_chg"], r["tj"]["U4"], case["treg"]))
     for ref, limit, what in (("U6", 125.0, "TPS61088 junction"), ("U7", 125.0, "TPS22975 junction"),
                              ("L1", 125.0, "L1 winding"), ("L2", 125.0, "L2 winding")):
         v, ck, amb, corner = worst(lambda r: r["tj"][ref])
@@ -1617,24 +1803,27 @@ def main():
     # -- thermal regulation
     rep.add("## Charger thermal regulation")
     rep.add()
-    rep.add("The MAX77757 holds its junction at %.0f °C by reducing the charge current. Below zero charge "
-            "current it reduces the input current, so that the battery supplements the system (data sheet, "
-            "Thermal Regulation and Thermal Shutdown State). The model applies the same rule. The table gives the "
-            "charge current the board sustains in steady state. Negative: the battery discharges into the load "
-            "although USB is present." % CHG_TREG)
+    rep.add("The %s holds its junction at TREG by reducing the charge current (%s). Below zero charge "
+            "current the model lets the input current fall so that the battery supplements the system. The table "
+            "gives the charge current the board sustains in steady state at the TREG of each case. Negative: the "
+            "battery discharges into the load although USB is present."
+            % (part, "fixed %.0f °C" % CHG_TREG if len(CHG["treg_options"]) == 1
+               else "register setting, default %.0f °C, options %s °C" % (CHG_TREG, " / ".join("%.0f" % v for v in CHG["treg_options"]))))
     rep.add()
-    rep.table(["Case", "Environment", "Corner", "Charge current", "Input current", "U4 Tj", "U4 loss"],
-              [[label[ck], ENVIRONMENTS[env_key]["label"], CORNERS[corner], "%.2f A" % r["i_chg"], "%.2f A" % r["i_in"],
-                "%.0f °C" % r["tj"]["U4"], "%.2f W" % u4_loss(r)]
+    rep.table(["Case", "Environment", "Corner", "TREG", "Charge current", "Input current", "U4 Tj", "U4 loss"],
+              [[label[ck], ENVIRONMENTS[env_key]["label"], CORNERS[corner], "%.0f °C" % next(c for c in CASES if c["key"] == ck)["treg"],
+                "%.2f A" % r["i_chg"], "%.2f A" % r["i_in"], "%.0f °C" % r["tj"]["U4"], "%.2f W" % u4_loss(r)]
                for (ck, env_key, _, corner), r in results.items() if ck in usb])
 
     # -- heatsink against the bare package
     bare_results = {}
+    sink_kind = "bottom plate" if heatsink and heatsink["U4"]["type"] == "plate" else "heatsink"
     if heatsink:
-        rep.add("## U4 heatsink against the bare package")
+        rep.add("## U4 %s against the bare board" % sink_kind)
         rep.add()
-        rep.add("The same operating points solved without the heatsink. The sink moves heat from the die into the "
-                "surrounding air. In the closed case that air is the case air, whose temperature it does not change.")
+        rep.add("The same operating points solved without the %s. It moves heat from the %s into the "
+                "surrounding air. In the closed case that air is the case air, whose temperature it does not change."
+                % (sink_kind, "die" if sink_kind == "heatsink" else "board's bottom copper"))
         rep.add()
         rows = []
         for ck in usb + ["bat08", "bat10"]:
@@ -1643,7 +1832,7 @@ def main():
                 if ck.startswith("bat") and corner:
                     continue
                 r = results[(ck, env_key, 25.0, corner)]
-                r0 = bare_results[(ck, env_key, 25.0, corner)] = run_case(bare[corner], case, env_key, 25.0, k_sw)
+                r0 = bare_results[(ck, env_key, 25.0, corner)] = run_case(bare[corner], case, env_key, 25.0, buck_k(k_sw))
                 p_u4 = u4_loss(r)
                 rows.append([label[ck], ENVIRONMENTS[env_key]["label"], CORNERS[corner],
                              "%.0f to %.0f °C" % (r0["tj"]["U4"], r["tj"]["U4"]),
@@ -1651,10 +1840,15 @@ def main():
                              "%.2f W of %.2f W" % (r["sink"]["U4"], p_u4) if p_u4 else "-",
                              "%.0f to %.0f K/W" % ((r0["tj"]["U4"] - r0["t_air"]) / p_u4,
                                                    (r["tj"]["U4"] - r["t_air"]) / p_u4) if p_u4 else "-"])
-        rep.table(["Case", "Environment", "Corner", "U4 junction, bare to sink", "Charge current, bare to sink",
-                   "Heat through the sink", "U4 junction to air, bare to sink"], rows)
+        rep.table(["Case", "Environment", "Corner", "U4 junction, bare to %s" % sink_kind, "Charge current, bare to %s" % sink_kind,
+                   "Heat through the %s" % sink_kind, "U4 junction to air, bare to %s" % sink_kind], rows)
         rep.add("Junction to air is the junction rise over the surrounding air divided by the U4 loss at the "
-                "operating point with the sink. In regulation the loss differs between the two solutions.")
+                "operating point with the %s. In regulation the loss differs between the two solutions."
+                % sink_kind)
+        if sink_kind == "bottom plate":
+            r = results[(usb[0], "closed", 25.0, 0)]
+            rep.add("Plate temperature in the closed case at 25 °C, nominal corner, %s: %.0f °C."
+                    % (label[usb[0]], r["t_plate"]))
         rep.add()
     rep.add("## Charging and the pack temperature window")
     rep.add()
@@ -1683,14 +1877,20 @@ def main():
         "the heat in it.",
         "Board-to-air coefficients are lumped (one value per face). Modules on the top side shade the board; their "
         "own heat reaches the board only through the case air, not through the header pins.",
-        "The MAX77757 has no published efficiency curve. Its switching loss uses the edge coefficient fitted to "
-        "the TPS61088, scaled with voltage, current and frequency. The fit itself rests on the project's curve, "
-        "which is TI's Figure 6-2 less an estimated 2 points.",
-        "θJC values are JEDEC figures. For the flip-chip MAX77757 (no exposed pad) the 7.5 K/W is applied from "
-        "the junction to its pins as a group.",
-        "The U4 heatsink path is an estimate on top of that: junction to package top is not published for the "
-        "FC2QFN (25 to 45 K/W assumed), the epoxy layers depend on the assembly, and the sink rating is a free-air "
-        "figure derated for the lower temperature rise and the case air. Bench item: thermocouple on the sink base.",
+        ("The %s switching loss is fitted to the data sheet efficiency curve at 5 V in and 4 V out (read off the "
+         "figure, about half a point of accuracy), so it carries the data sheet's test board and inductor." % part)
+        if CHG_K_SW is not None else
+        ("The %s has no published efficiency curve. Its switching loss uses the edge coefficient fitted to "
+         "the TPS61088, scaled with voltage, current and frequency. The fit itself rests on the project's curve, "
+         "which is TI's Figure 6-2 less an estimated 2 points." % part),
+        "%s: %s." % (part, CHG["theta_note"]),
+        ("The U4 heatsink path is an estimate on top of that: junction to package top is not published for the "
+         "FC2QFN (25 to 45 K/W assumed), the epoxy layers depend on the assembly, and the sink rating is a free-air "
+         "figure derated for the lower temperature rise and the case air. Bench item: thermocouple on the sink base.")
+        if heatsink and heatsink["U4"]["type"] == "top" else
+        ("The bottom plate is coupled to the board through an assumed gap pad over the solder mask and loses its "
+         "heat to still case air unless it is bonded to the case floor. In a plastic case that air path is weak; "
+         "the plate mainly spreads heat over the board's bottom copper. Bench item: thermocouple on the plate."),
         "Contact, fuse and pack resistances are data sheet maxima or estimates (see the input table). The USB "
         "cable is not included; its drop lowers CHGIN towards the 4.5 V input regulation threshold.",
         "Only DC currents are solved in the copper. Ripple currents in the capacitor loops and their ESR losses "
@@ -1716,11 +1916,56 @@ def main():
                 r0 = bare_results.get((ck, env_key, amb, 0)) or run_case(bare[0], case, env_key, amb, k_sw)
                 both = r["temps"][:g.nc] + r0["temps"][:g.nc]
                 rng = (min(both), max(both))
-                heat_map(os.path.join(OUT, name + ".svg"), nominal, r, head + ", with the U4 heatsink", rng, heatsink)
-                heat_map(os.path.join(OUT, name + "_bare.svg"), bare[0], r0, head + ", without heatsink", rng)
+                heat_map(os.path.join(OUT, name + ".svg"), nominal, r, head + ", with the U4 " + sink_kind, rng, heatsink)
+                heat_map(os.path.join(OUT, name + "_bare.svg"), bare[0], r0, head + ", without " + sink_kind, rng)
             else:
                 heat_map(os.path.join(OUT, name + ".svg"), nominal, r, head + ", without heatsink")
+        write_calibration(results, r_net, nominal, high, k_sw, label)
     return rep.finish(RESULTS if args.write else None)
+
+
+def write_calibration(results, r_net, nominal, high, k_sw, label):
+    """heat/<charger>/calibration.json: what vent_model.py and run_power.py copy from this model."""
+    scen = {}
+    mapping = {"bat_typ": "battyp", "bat08": "bat08", "bat10": "bat10", "usb32": "usb32", "usb37": "usb37",
+               "usb_off": "usb32off"}
+    k_b = buck_k(k_sw) * BUCK_SW_HIGH
+    for name, key in mapping.items():
+        if (key, "closed", 25.0, 1) not in results:
+            continue
+        case = next(c for c in CASES if c["key"] == key)
+        # the lumped model is calibrated on the sealed case (its vent path is added on top)
+        r = run_case(high, case, "closed", 25.0, k_b, vent_area_cm2=0.0)
+        entry = dict(label=label[key], p_in=r["inside"] - u4_loss(r), u6=r["tj"]["U6"] - r["t_air"],
+                     u7=r["tj"]["U7"] - r["t_air"], cap=r["caps"][0] - r["t_air"], p_pack=r["pack"], r_pack=PACK_R[1],
+                     chg=None)
+        if case["mode"] == "usb":
+            # U4 loss as a line through the regulated sealed point and a lower unregulated point, as the
+            # lumped vent model expects; the line is exact where the lumped model settles. The
+            # junction-to-air figure from the regulated sealed result.
+            i_mid, p_mid = r["i_chg"], u4_loss(r)
+            if i_mid < 0.3:
+                # regulated down to nothing (or the battery supplements): fit two unregulated points instead
+                i_mid = 0.6
+                p_mid = u4_loss(run_case(high, case, "closed", 25.0, k_b, vent_area_cm2=0.0, charge_current=i_mid,
+                                         regulation_temperature=math.inf))
+            i_lo = 1.2 if i_mid > 1.5 else 0.6 if i_mid > 0.9 else 0.3
+            lo = run_case(high, case, "closed", 25.0, k_b, vent_area_cm2=0.0, charge_current=i_lo, regulation_temperature=math.inf)
+            slope = (p_mid - u4_loss(lo)) / (i_mid - i_lo)
+            entry["chg"] = dict(p0=u4_loss(lo) - slope * i_lo, k=slope, imax=case["charge"], treg=case["treg"],
+                                r_u4=(r["tj"]["U4"] - r["t_air"]) / p_mid)
+        scen[name] = entry
+    payload = {"charger": CHARGER, "pcb_sha256": simlib_sha(PCB), "r_board": {k: r_net[k] for k in ("BAT_IN", "VBAT", "VSYS")},
+               "unrouted": sorted(nominal.unrouted), "treg": CHG_TREG, "r_batfet": CHG_R_BATFET, "ts_hot": CHG["ts_hot"], "scen": scen}
+    with open(os.path.join(OUT, "calibration.json"), "w") as f:
+        json.dump(payload, f, indent=2)
+        f.write("\n")
+
+
+def simlib_sha(path):
+    import hashlib
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
 
 
 if __name__ == "__main__":

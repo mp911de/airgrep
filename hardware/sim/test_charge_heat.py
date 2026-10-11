@@ -10,6 +10,9 @@ import run_heat as heat
 import run_charge_limits as limits
 import vent_model
 
+FULL = ("1.8 A test", 1.8, 130.0, None)  # charger-independent policy for the switch and limit tests
+EARLY = ("early test", 1.8, 130.0, (90.0, 100.0))
+
 
 def calibration():
     return charge.Calibration(np.array([0.0, 1.8]), np.array([[.3, .1, 4.5], [1.8, .2, 5.0]]),
@@ -50,14 +53,16 @@ class TransientTests(unittest.TestCase):
         self.assertAlmostEqual(sum(power), np.dot(net.ambient_g, temperature - ambient), places=9)
 
     def test_jeita_hysteresis(self):
-        self.assertTrue(charge.jeita_hot(False, 42.1))
-        self.assertTrue(charge.jeita_hot(True, 41.5))
-        self.assertFalse(charge.jeita_hot(True, 40.8))
-        self.assertFalse(charge.jeita_hot(False, 41.5))
-        self.assertEqual(charge.current_target(80, True, "stock"), 0)
+        hot, restart = charge.HOT, charge.RESTART
+        mid = (hot + restart) / 2
+        self.assertTrue(charge.jeita_hot(False, hot))
+        self.assertTrue(charge.jeita_hot(True, mid))
+        self.assertFalse(charge.jeita_hot(True, restart))
+        self.assertFalse(charge.jeita_hot(False, mid))
+        self.assertEqual(charge.current_target(80, True, FULL), 0)
 
     def test_step_size_and_energy_residual(self):
-        runs = [charge.simulate(calibration(), charge.PACKS["5000"], policy="early", dt=dt)
+        runs = [charge.simulate(calibration(), charge.PACKS["5000"], policy=EARLY, dt=dt)
                 for dt in (1.0, .5)]
         for _, error in runs:
             self.assertLess(error, 1e-8)
@@ -93,14 +98,14 @@ class TemperatureSwitchTests(unittest.TestCase):
                 self.assertEqual(state, expected)
 
     def test_no_effect_below_threshold(self):
-        plain, _ = charge.simulate(calibration(), charge.PACKS["5000"], minutes=3)
-        switched, _ = charge.simulate(calibration(), charge.PACKS["5000"], minutes=3,
+        plain, _ = charge.simulate(calibration(), charge.PACKS["5000"], policy=FULL, minutes=3)
+        switched, _ = charge.simulate(calibration(), charge.PACKS["5000"], policy=FULL, minutes=3,
                                      limit=charge.TemperatureSwitch(125))
         np.testing.assert_array_equal(plain, switched[:, :8])
 
     def test_stop_restart_and_pack_precedence(self):
         switch = charge.TemperatureSwitch(80, 10)
-        data, error = charge.simulate(calibration(), charge.PACKS["5000"], limit=switch, dt=.25)
+        data, error = charge.simulate(calibration(), charge.PACKS["5000"], policy=FULL, limit=switch, dt=.25)
         state = data[:, 9].astype(bool)
         rising = np.flatnonzero(np.diff(state.astype(int), prepend=0) == 1)
         falling = np.flatnonzero(np.diff(state.astype(int), prepend=0) == -1)
@@ -118,7 +123,7 @@ class TemperatureSwitchTests(unittest.TestCase):
     def test_wider_hysteresis_reduces_cycle_frequency(self):
         stats = []
         for width in (5, 10):
-            data, error = charge.simulate(calibration(), charge.PACKS["10000"],
+            data, error = charge.simulate(calibration(), charge.PACKS["10000"], policy=FULL,
                                          limit=charge.TemperatureSwitch(85, width), dt=.25)
             stats.append(limits.summary(data, error))
         self.assertLess(stats[1]["charger_stops"], stats[0]["charger_stops"])
@@ -127,7 +132,7 @@ class TemperatureSwitchTests(unittest.TestCase):
     def test_local_sensor_is_not_a_junction_ceiling(self):
         peaks = []
         for node, tau in ((0, 0), (1, 2)):
-            data, _ = charge.simulate(calibration(), charge.PACKS["10000"], minutes=20, dt=.25,
+            data, _ = charge.simulate(calibration(), charge.PACKS["10000"], policy=FULL, minutes=20, dt=.25,
                                      limit=charge.TemperatureSwitch(90, sensor_node=node, sensor_tau=tau))
             peaks.append(max(data[:, 1]))
         self.assertLess(peaks[0], 91)
@@ -136,7 +141,7 @@ class TemperatureSwitchTests(unittest.TestCase):
     def test_switching_converges_with_smaller_timestep(self):
         results = []
         for dt in (.25, .125):
-            data, error = charge.simulate(calibration(), charge.PACKS["10000"], dt=dt, minutes=35,
+            data, error = charge.simulate(calibration(), charge.PACKS["10000"], policy=FULL, dt=dt, minutes=35,
                                          limit=charge.TemperatureSwitch(90))
             results.append(limits.summary(data, error))
         a, b = results

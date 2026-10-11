@@ -25,9 +25,13 @@ from pathlib import Path
 
 import pcbnew
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import project  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
-BOARD = ROOT / "hardware/carrier-max-charger/carrier.kicad_pcb"
-CPL = ROOT / "hardware/carrier-max-charger/jlcpcb/production_files/CPL-carrier.csv"
+PROJECT = Path(project.resolve())  # --project is not parsed here; set CARRIER_PROJECT
+BOARD = PROJECT / "carrier.kicad_pcb"
+CPL = PROJECT / "jlcpcb/production_files/CPL-carrier.csv"
 
 # footprint name: (rotation added to the board rotation, JLC origin in footprint-local mm)
 FIXES = {

@@ -7,6 +7,7 @@ import unittest
 import numpy as np
 
 import run_emi as emi
+import run_power
 import simlib
 
 
@@ -124,7 +125,7 @@ class BoardTests(unittest.TestCase):
             self.assertEqual(len(loop["runs"]), 2, name)
             nets = {self.board.pad(*p).net for p in conv["loop"]}
             self.assertIn("GND", nets)
-            self.assertIn(conv["loop"][0][0] if conv["dir"] < 0 else conv["loop"][1][0], ("C6", "C18"))
+            self.assertIn(conv["loop"][0][0] if conv["dir"] < 0 else conv["loop"][1][0], ("C18",) + tuple(run_power.CHG["emi_caps"]))
 
     def test_in1_is_solid_ground(self):
         self.assertEqual({n for n, lay, _ in self.board.data["zones"] if lay == "In1"}, {"GND"})

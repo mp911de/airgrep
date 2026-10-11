@@ -4,7 +4,8 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 
 | PDF | Part | Source | Host |
 |---|---|---|---|
-| [max77757.pdf](max77757.pdf) | U4 charger, Rev 2 | [Original](https://www.analog.com/media/en/technical-documentation/data-sheets/MAX77757.pdf) | Manufacturer, browser download |
+| [max77757.pdf](max77757.pdf) | U4 charger of carrier-max-charger, Rev 2 | [Original](https://www.analog.com/media/en/technical-documentation/data-sheets/MAX77757.pdf) | Manufacturer, browser download |
+| [bq25798.pdf](bq25798.pdf) | U4 charger of carrier-ti-charger, SLUSDV2C | [Original](https://www.ti.com/lit/ds/symlink/bq25798.pdf) | Manufacturer |
 | [tps61088.pdf](tps61088.pdf) | U6 boost | [Original](https://www.ti.com/lit/ds/symlink/tps61088.pdf) | Manufacturer |
 | [tps22975.pdf](tps22975.pdf) | U7 load switch | [Original](https://www.ti.com/lit/ds/symlink/tps22975.pdf) | Manufacturer |
 | [tlv840.pdf](tlv840.pdf) | U5 supervisor | [Original](https://www.ti.com/lit/ds/symlink/tlv840.pdf) | Manufacturer |

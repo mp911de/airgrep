@@ -666,7 +666,7 @@
 			(color 0 0 0 0)
 		)
 		(uuid "ca5da11d-56a4-4cac-94d5-ee3030474f4d")
-		(property "Sheetname" "Charger MAX77757"
+		(property "Sheetname" "Charger BQ25798"
 			(at 73.66 50.04 0)
 			(show_name no)
 			(do_not_autoplace no)

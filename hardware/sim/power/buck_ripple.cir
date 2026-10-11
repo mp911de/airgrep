@@ -1,4 +1,4 @@
-MAX77757 buck power stage: switching ripple on VSYS from the charger
+Charger buck power stage: switching ripple on VSYS (MAX77757, or BQ25798 in buck mode)
 *
 * Ideal switches, L1 with its DCR, the VSYS capacitors (C9, C10 at the charger and C13, C14
 * at the boost) with DC-bias derating, ESR and ESL. The MAX77757 control loop is internal
@@ -23,9 +23,11 @@ MAX77757 buck power stage: switching ripple on VSYS from the charger
 * At 5 V, -40 % DC bias assumed for both (no curves on file).
 .param cin=19.2u
 .param esr_in=1.5m
-* Data sheet does not give the switch resistances; assumed
+* Switch resistances from run_power.buck_bench_params (chargers.py); r_series is the BQ25798's
+* always-on Q3 between the inductor and SYS, zero for the MAX77757
 .param ron_ls=40m
 .param ron_hs=60m
+.param r_series=0
 .param tedge=5n
 .param d0={vsys/vin}
 .param idc={iload}
@@ -43,7 +45,8 @@ Dls    0 CHG_SW DBODY
 .model DBODY D(is=1e-12 n=1.2 rs=0.5 cjo=200p)
 
 L1     CHG_SW L1_X {lval} ic={idc}
-Rdcr   L1_X VSYS_N {dcr}
+Rdcr   L1_X VSYS_Q {dcr}
+Rser   VSYS_Q VSYS_N {r_series+1u}
 Lloop  VSYS_N LLOOP_X {lloop}
 Rloop  LLOOP_X VSYS 3m
 Rf1a   VSYS F1A 1k

@@ -18,16 +18,18 @@ The thermal cut-off, converter and EMI suites need ngspice on the PATH (`brew in
 ## Running
 
 ```sh
-python3 hardware/sim/run_thermal.py --write    # thermal charge cut-off, report in thermal/results.md
-python3 hardware/sim/run_power.py --write      # converters, report in power/results.md
-python3 hardware/sim/run_heat.py --write       # power loss and temperatures, report in heat/results.md
-python3 hardware/sim/run_charge_heat.py --write # battery heating delay, heat/charging.pdf and SVGs
-python3 hardware/sim/run_charge_limits.py --write # TMP300 threshold/hysteresis sweeps, separate charging_limits outputs
-python3 hardware/sim/run_emi.py --write        # emission estimate, report in emi/results.md, FLARM spectrum in emi/spectrum_flarm.svg/.pdf
+python3 hardware/sim/run_thermal.py --write    # thermal charge cut-off, report in thermal/results_<charger>.md
+python3 hardware/sim/run_power.py --write      # converters, report in power/results_<charger>.md
+python3 hardware/sim/run_heat.py --write       # power loss and temperatures, report in heat/<charger>/results.md
+python3 hardware/sim/run_charge_heat.py --write # battery heating delay, heat/<charger>/charging.pdf and SVGs
+python3 hardware/sim/run_charge_limits.py --write # MAX: TMP300 trip sweeps; TI: TREG and host-mode sweeps
+python3 hardware/sim/run_emi.py --write        # emission estimate, report in emi/results_<charger>.md, FLARM spectrum in emi/spectrum_flarm_<charger>.svg/.pdf
 python3 hardware/sim/vent_model.py             # vented enclosure sweep, prints to the terminal
 ```
 
 Without `--write` a script prints its report and stores nothing. `vent_model.py` has no options and writes no file.
+
+Every board-reading script takes `--project NAME` (or `CARRIER_PROJECT`), default `carrier-ti-charger`. The heat outputs land in `heat/ti/` or `heat/max/` after the project's charger; the shared folders carry the charger tag in the file name (`results_ti.md`, `results_max.md`). `chargers.py` holds the per-charger constants (switch resistances, frequency, TREG, package thermal figures, pad numbers, heatsink or bottom plate, efficiency curve); `run_heat.py --write` also writes `heat/<charger>/calibration.json`, which `vent_model.py` and `run_power.py` read instead of hand-copied numbers. An unrouted net (the TI board until Mark routes it) is replaced by an assumed 5 mΩ path and listed in the report.
 
 | Script | Option | Effect |
 |---|---|---|
@@ -54,11 +56,12 @@ Shared and scripts:
 | Path | Content |
 |---|---|
 | `simlib.py` | ngspice batch runs with `.param` overrides, waveform helpers, Markdown report |
+| `chargers.py` | One entry per charger (MAX77757, BQ25798): data sheet constants with their sources, operating cases, heatsink or plate, transient policies |
 | `run_thermal.py` | Thermal charge cut-off: runs the benches over all corners and checks them against data sheet thresholds |
 | `run_power.py` | Converters: TPS61088 loop gain in closed form, ripple and transient benches, undervoltage cut-off, switch-node coupling read from the board file |
-| `run_heat.py` | Power loss and temperatures on the routed board inside an assumed enclosure, with and without the U4 heatsink |
+| `run_heat.py` | Power loss and temperatures on the routed board inside an assumed enclosure, with and without the U4 heatsink (MAX) or bottom plate (TI) |
 | `run_charge_heat.py` | Five-node transient charging model, pack inertia and JEITA cutoff, 5 Ah and 10 Ah graphs |
-| `run_charge_limits.py` | Full-current charging with 80/90/100/110 °C TMP300 sensor trips, 5/10 °C hysteresis, thermal-mass and sensor uncertainty |
+| `run_charge_limits.py` | MAX: full-current charging with 80/90/100/110 °C TMP300 sensor trips and 5/10 °C hysteresis. TI: 1.8 A host and 1 A default mode over TREG 80/100/120 °C. Thermal-mass sensitivity for both |
 | `run_emi.py` | Emission estimate: converter hot loops and edges, digital signals, radiated and conducted levels against CISPR 32 class B, converter lines in the receiver bands, return paths and rail ripple, all with geometry from the board |
 | `vent_model.py` | Lumped vented-enclosure model: stack-effect vents and a fan against case air, pack and U4 temperature |
 | `test_power.py` | Module-feed forward drop, branch currents, reverse isolation and shutdown solver regressions |
@@ -71,11 +74,12 @@ Thermal charge cut-off:
 
 | Path | Content |
 |---|---|
-| `thermal/carrier_thermal.inc` | The network as drawn: R8, thermistor, R43 and the THERM_FEED lead, Q2, Q6, R10, R12, C31, R13. Net and reference names match the schematic |
-| `thermal/jeita_sweep.cir` | THM/PVL ratio over pack temperature, thermostat closed |
-| `thermal/thermostat_trip.cir` | Transient: thermostat opens at 10 ms and closes at 600 ms |
+| `thermal/carrier_thermal.inc` | MAX77757 network as drawn: R8, thermistor, R43 and the THERM_FEED lead, Q2, Q6, R10, R12, C31, R13. Net and reference names match the schematic |
+| `thermal/carrier_thermal_ti.inc` | BQ25798 network: REGN, RT1/RT2 (R59/R60), thermistor, the thermostat chain to CE with its 1 µA pin leakage |
+| `thermal/jeita_sweep.cir`, `ts_sweep_ti.cir` | THM/PVL or TS/REGN ratio over pack temperature, thermostat closed |
+| `thermal/thermostat_trip.cir`, `thermostat_trip_ti.cir` | Transient: thermostat opens at 10 ms and closes at 600 ms |
 | `thermal/fet_check.cir` | Checks the FET models against the data sheet points they are fitted to |
-| `thermal/results.md` | Last stored report |
+| `thermal/results_<charger>.md` | Last stored report per charger |
 | `models/ntc_entc_eb_100k4262.lib` | Variohm ENTC-EB-100K4262-02, B model with interchangeability offset and B tolerance |
 | `models/fets.lib` | AO3401A and 2N7002 with the threshold as a parameter |
 
@@ -88,18 +92,20 @@ Converters:
 | `power/boost_transient.cir` | TPS61088 averaged closed-loop model with soft start, TPS22975 slew and discharge, module capacitance: start-up, load steps, 1.5 A pulses, shutdown |
 | `power/module_feeds.inc` | Shared U11/U12 LM73100 forward-drop and reverse-blocking model, C38/C39 and separate module loads |
 | `power/undervoltage.cir` | Battery with pack and harness resistance, TLV840 with hysteresis and reset delay, the latch, and the model above: cut-off, rebound, load burst near cut-off |
-| `power/results.md` | Last stored report |
+| `power/results_<charger>.md` | Last stored report per charger |
 
 Power loss and temperatures:
 
 | Path | Content |
 |---|---|
-| `heat/results.md` | Last stored report |
-| `heat/map_*.svg` | Top-copper temperature maps, see below |
-| `heat/charging.pdf`, `heat/charging_*.svg` | Both pack sizes, current limits, heating-delay sensitivity and illustrative external spreader paths |
-| `heat/charging.md`, `heat/charging.json` | Transient assumptions, results, board/input hashes and steady calibration points |
-| `heat/charging_limits.pdf`, `heat/charging_limits_*.svg` | Separate TMP300 comparison graphs for both packs, 25/35 °C ambient, delay/tolerance scenarios and raw switching cycles |
-| `heat/charging_limits.md`, `heat/charging_limits.json` | Threshold-sweep assumptions, results and input hashes; original charging outputs remain untouched |
+| `heat/max/`, `heat/ti/` | One folder per charger, contents below |
+| `heat/*/results.md` | Last stored report |
+| `heat/*/map_*.svg` | Top-copper temperature maps, see below |
+| `heat/*/charging.pdf`, `heat/*/charging_*.svg` | Both pack sizes, current limits, heating-delay sensitivity and illustrative external spreader paths |
+| `heat/*/charging.md`, `heat/*/charging.json` | Transient assumptions, results, board/input hashes and steady calibration points |
+| `heat/*/calibration.json` | Sealed-case scenario constants and copper path resistances for `vent_model.py` and `run_power.py` |
+| `heat/*/charging_limits.pdf`, `heat/*/charging_limits_*.svg` | MAX: TMP300 comparison graphs for both packs, 25/35 °C ambient, delay/tolerance scenarios and raw switching cycles. TI: TREG sweep in host and default mode |
+| `heat/*/charging_limits.md`, `heat/*/charging_limits.json` | Threshold-sweep assumptions, results and input hashes; original charging outputs remain untouched |
 
 EMI:
 
@@ -107,8 +113,8 @@ EMI:
 |---|---|
 | `emi/switch_edge.cir` | One switching period of a converter hot loop at 10 ps: gate-limited switches, body diodes, switch output capacitances, the loop inductance from the board, capacitor bank, optional snubber. Serves both converters through gate weights |
 | `emi/usb_lisn.cir` | Buck input current pulses into the BYP, CHGIN and J1 capacitors, the USB_VBUS copper, a USB cable and a CISPR 16 LISN; optional bead at J1 and adapter output capacitor |
-| `emi/results.md` | Last stored report |
-| `emi/spectrum_flarm.svg`, `.pdf` | Converter and digital lines at the FLARM antenna, 1 MHz to 2 GHz and a zoom on 868.2 / 868.4 MHz |
+| `emi/results_<charger>.md` | Last stored report per charger |
+| `emi/spectrum_flarm_<charger>.svg`, `.pdf` | Converter and digital lines at the FLARM antenna, 1 MHz to 2 GHz and a zoom on 868.2 / 868.4 MHz |
 
 The maps cover four cases at 25 °C ambient:
 
@@ -119,7 +125,7 @@ The maps cover four cases at 25 °C ambient:
 | `map_bat08_closed_25` | Battery, 0.8 A load, closed case |
 | `map_bat08_open_25` | Battery, 0.8 A load, open bench |
 
-Each case is a pair on one colour scale. The plain file includes the U4 heatsink, with a dashed square at its footprint. The `_bare` file is the same case without it.
+Each case is a pair on one colour scale. The plain file includes the U4 heatsink (the 10 x 10 mm top sink on both boards; `type="plate"` in chargers.py models a bottom-side plate instead), with a dashed square at its footprint. The `_bare` file is the same case without it.
 
 ## Running a bench on its own
 
@@ -133,13 +139,13 @@ A standalone run uses the `.param` defaults in the netlist, not the values the s
 For the thermal benches the defaults are the nominal design values.
 The boost benches default to the board's switching frequency (721 kHz at 3.7 V input, 707 kHz at 3.0 V in `undervoltage.cir`). Other defaults in `undervoltage.cir` differ from the scenario `run_power.py` reports.
 
-The thermal network is not read from the schematic. After a schematic change to it, update `carrier_thermal.inc` by hand.
+The thermal network is not read from the schematic. After a schematic change to it, update `carrier_thermal.inc` or `carrier_thermal_ti.inc` by hand.
 
 ## What the results mean
 
 ### Converters
 
-There is no usable SPICE model for either converter. TI's TPS61088 models are for PSpice for TI, and ADI publishes none for the MAX77757.
+There is no usable SPICE model for any converter. TI's TPS61088 models are for PSpice for TI, ADI publishes none for the MAX77757, and TI none for the BQ25798.
 
 The boost loop is evaluated in closed form with the small-signal model from the data sheet (SLVSCM8D, Equations 13 to 20).
 That model is a current-mode power stage with load pole, ESR zero and right-half-plane zero, plus the error amplifier with R18, C21 and C22.
@@ -169,7 +175,7 @@ Both are order-of-magnitude estimates.
 
 ### Thermal charge cut-off
 
-The MAX77757 has no SPICE model. It is represented by an ideal PVL source, a THM leakage current and its data sheet thresholds:
+Neither charger has a SPICE model. For the BQ25798 the TS divider from REGN is evaluated against its percent-of-REGN thresholds (T1 73.3, T2 68.4, T3 44.8, T5 34.2 %), and the thermostat chain against the CE pin thresholds (1.3 V high, 0.4 V low). The MAX77757 has no SPICE model. It is represented by an ideal PVL source, a THM leakage current and its data sheet thresholds:
 
 | Threshold | THM/PVL |
 |---|---|
@@ -204,7 +210,7 @@ Losses:
 - MAX77757, TPS61088 and TPS22975 from their data sheet switch resistances with a temperature coefficient
 - the inductors from DCR plus an estimated core loss
 - a switching term fitted to the TPS61088 efficiency curve in `specs/power_params.json`, borrowed for the MAX77757, which publishes no curve
-- every power net as a resistor network of its tracks and vias, the GND pour as a four-layer sheet
+- every power net as a resistor network of its tracks, vias and pours (zone fills as 0.25 mm cells; a track end or via within its own copper radius of a pour cell joins it), the GND pour as a four-layer sheet
 - contacts (USB-C, JST-PH, shunts, module sockets), the fuse and the pack with their resistance
 
 Temperatures:

@@ -1,0 +1,22 @@
+TS window: TS/REGN ratio over thermistor temperature, thermostat closed
+*
+* Sweeps the pack temperature and records the TS/REGN ratio the BQ25798 sees,
+* together with the CE voltage (CHG_DIS). run_thermal.py finds the threshold crossings.
+*
+*   ngspice -b ts_sweep_ti.cir        (writes ts_sweep_ti.txt into the current directory)
+
+.include carrier_thermal_ti.inc
+
+.param vsys=4.2
+
+Vsys    VSYS 0 {vsys}
+* Thermostat closed, slider on
+Rtherm  THERM_FEED THERM_OK 50m
+Rslider THERM_OK SW_EN 50m
+Vtc     TC 0 25
+
+.control
+dc Vtc -30 80 0.1
+wrdata ts_sweep_ti.txt v(ratio) v(chg_dis)
+.endc
+.end

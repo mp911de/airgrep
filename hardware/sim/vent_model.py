@@ -5,11 +5,17 @@ inside and 9 W/m2K outside) and adds two paths in parallel with the wall: a natu
 (stack effect, inlet low, outlet high) and a fan. Steady state. Estimate only: the enclosure does not
 exist yet.
 
-The constants below are copied by hand from the heat model, sealed case, 25 C ambient, high corner.
-Recompute with run_case(..., vent_area_cm2=0) after a layout or loss model change; the default heat
-report now includes vents.
+The scenario constants come from heat/<charger>/calibration.json, written by run_heat.py --write (sealed
+case, 25 C ambient, high corner). bind(tag) reloads them for another project; the literals below are the
+MAX77757 values and stand in when no calibration file exists.
 """
+import json
 import math
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tools"))
+import project  # noqa: E402
 
 RHO, CP, G = 1.18, 1005.0, 9.81     # air at 25 to 30 C
 CD = 0.6                            # orifice discharge coefficient
@@ -37,6 +43,31 @@ SCEN = {
     "usb_off": dict(label="USB 3 A, cell 3.2 V, charging, device off", p_in=0.64, u6=0.0, u7=0.0, cap=19.6,
                     p_pack=0.292, chg=dict(p0=0.05, k=0.44, imax=1.8)),
 }
+
+
+CALIBRATION = None  # path of the calibration file in use, None for the literals above
+
+
+def bind(tag=None):
+    """Load SCEN, TREG and R_U4 of a charger's calibration file (default: the project's)."""
+    global SCEN, TREG, R_U4, CALIBRATION
+    tag = tag or project.charger(project.resolve())
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "heat", tag, "calibration.json")
+    if not os.path.exists(path):
+        return
+    with open(path) as f:
+        cal = json.load(f)
+    SCEN = {k: dict(label=v["label"], p_in=v["p_in"], u6=v["u6"], u7=v["u7"], cap=v["cap"], p_pack=v["p_pack"],
+                    r_pack=v.get("r_pack"), chg=dict(v["chg"]) if v["chg"] else None)
+            for k, v in cal["scen"].items()}
+    TREG = cal["treg"]
+    global JEITA_HOT
+    JEITA_HOT = cal.get("ts_hot", JEITA_HOT)
+    R_U4 = cal["scen"]["usb32"]["chg"]["r_u4"] if cal["scen"].get("usb32", {}).get("chg") else R_U4
+    CALIBRATION = path
+
+
+bind()
 
 
 def vent_power(dT, area_cm2, height_m, t_amb):
@@ -72,22 +103,29 @@ def solve(scen, t_amb, area_cm2=VENT_AREA_CM2, height_m=VENT_HEIGHT_M, fan_m3h=0
     chg = s["chg"]
     i_chg = chg["imax"] if chg else 0.0
 
+    r_u4 = chg.get("r_u4", R_U4) if chg else R_U4
+
     def u4_loss():
         return chg["p0"] + chg["k"] * i_chg if chg else 0.0
 
+    def p_pack():
+        # the pack's own I²R follows the regulated current when the calibration gives the pack resistance
+        return i_chg ** 2 * s["r_pack"] if chg and s.get("r_pack") else s["p_pack"]
+
     dT = 10.0
     for _ in range(200):
-        p_in = s["p_in"] + u4_loss()
+        p_in = s["p_in"] + u4_loss() + (p_pack() - s["p_pack"])
         previous, dT = dT, air_rise(p_in, t_amb, area_cm2, height_m, fan_m3h)
         if chg:
             # thermal regulation: the charge current settles where Tj = TREG, between zero and the set current
-            i_treg = (TREG - t_amb - dT - R_U4 * chg["p0"]) / (R_U4 * chg["k"])
+            treg = chg.get("treg", TREG)
+            i_treg = (treg - t_amb - dT - r_u4 * chg["p0"]) / (r_u4 * chg["k"])
             if i_treg < i_chg or i_chg < chg["imax"]:
                 i_chg = min(chg["imax"], max(0.0, i_treg))
         if abs(dT - previous) < 0.01:
             break
     t_air = t_amb + dT
-    return dict(t_air=t_air, t_pack=t_air + s["p_pack"] * R_PACK, tj_u4=t_air + R_U4 * u4_loss() if chg else None,
+    return dict(t_air=t_air, t_pack=t_air + p_pack() * R_PACK, tj_u4=t_air + r_u4 * u4_loss() if chg else None,
                 i_chg=i_chg, tj_u6=t_air + s["u6"], tj_u7=t_air + s["u7"], t_cap=t_air + s["cap"])
 
 

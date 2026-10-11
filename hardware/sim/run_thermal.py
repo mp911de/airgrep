@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """Thermal charge cut-off verification for the carrier, simulated with ngspice.
 
-Runs the benches in hardware/sim/thermal, evaluates them against the MAX77757 THM
-thresholds and the EN/ON thresholds of the boost and load switch, and prints a
-Markdown report. The exit code is 1 if a check fails.
+Runs the benches in hardware/sim/thermal, evaluates them against the charger's thermistor
+thresholds and the EN/ON thresholds of the boost and load switch, and prints a Markdown
+report. The exit code is 1 if a check fails.
 
     python3 hardware/sim/run_thermal.py            # print the report
-    python3 hardware/sim/run_thermal.py --write    # also store thermal/results.md
+    python3 hardware/sim/run_thermal.py --write    # also store thermal/results_<charger>.md
+    python3 hardware/sim/run_thermal.py --project carrier-max-charger
 
-What is simulated (see thermal/carrier_thermal.inc for the netlist):
-  1. The thermistor divider PVL - R8 - THM - NTC over pack temperature, giving
-     the THM/PVL ratio the charger compares against its JEITA thresholds.
-  2. The thermostat chain VSYS - R43 - thermostat - THERM_OK - Q2 - CHG_DIS - Q6 - THM
-     and THERM_OK - slider - R13 - PWR_EN, as DC states and as a transient when the
-     contact opens and closes.
-The MAX77757 itself is not simulated (no SPICE model exists). Its reaction is taken
-from the data sheet thresholds, so the results verify the network around the chip,
-not the chip.
+What is simulated (see thermal/carrier_thermal.inc and carrier_thermal_ti.inc):
+  1. The thermistor divider over pack temperature: MAX77757 PVL - R8 - THM - NTC, or BQ25798
+     REGN - RT1 - TS - RT2 || NTC, giving the ratio the charger compares against its thresholds.
+  2. The thermostat chain VSYS - R43 - thermostat - THERM_OK - Q2 - CHG_DIS and
+     THERM_OK - slider - R13 - PWR_EN, as DC states and as a transient when the contact opens
+     and closes. CHG_DIS drives Q6 onto THM (MAX77757) or the CE pin (BQ25798).
+The charger itself is not simulated (no SPICE model exists). Its reaction is taken from the
+data sheet thresholds, so the results verify the network around the chip, not the chip.
 
 Requires ngspice on the PATH (brew install ngspice). Only the standard library is used.
 """
@@ -29,39 +29,58 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(HERE, "..", "..", "tools"))
+import project  # noqa: E402
 import simlib  # noqa: E402
 
 BENCHES = os.path.join(HERE, "thermal")
-RESULTS = os.path.join(BENCHES, "results.md")
 
-# MAX77757 THM thresholds as a fraction of PVL: (min, typ, max), 1 % hysteresis.
-# Data sheet, Electrical Characteristics. Cold and cool act on a rising ratio
-# (temperature falling), warm and hot on a falling ratio (temperature rising).
-THRESHOLDS = {
-    "cold": (0.725, 0.74, 0.755),
-    "cool": (0.635, 0.65, 0.665),
-    "warm": (0.31, 0.325, 0.34),
-    "hot": (0.215, 0.23, 0.245),
+# Per charger: thresholds as a fraction of the bias rail (min, typ, max), what each one does, the
+# nominal transitions documented in docs/power.md, the bias resistors and the bench names.
+# MAX77757 (THM/PVL, data sheet Electrical Characteristics, 1 % hysteresis): cold and cool act on a
+# rising ratio (temperature falling), warm and hot on a falling ratio (temperature rising).
+# BQ25798 (TS/REGN, SLUSDV2C Electrical Characteristics and REG18 defaults): T1 cold 73.3 %, T2 cool
+# 68.4 % (10 C option), T3 warm 44.8 % (45 C option), T5 hot 34.2 %, about 1.3 points of hysteresis.
+# The T2/T3 spreads are the ±0.5 point of the specified rows; T1/T5 are specified.
+CHARGERS = {
+    "max": dict(part="MAX77757", rail="PVL", pin="THM", include="carrier_thermal.inc", sweep="jeita_sweep",
+                trip="thermostat_trip", thresholds={"cold": (0.725, 0.74, 0.755), "cool": (0.635, 0.65, 0.665),
+                                                    "warm": (0.31, 0.325, 0.34), "hot": (0.215, 0.23, 0.245)},
+                disable=(0.045, 0.06, 0.075), hysteresis=0.01,
+                effect={"cold": "charging stops below", "cool": "half current below",
+                        "warm": "4.05 V termination above", "hot": "charging stops above"},
+                documented={"cold": -2.9, "cool": 4.6, "warm": 31.4, "hot": 42.1},
+                bias={"r8": 154e3}, pull_down="Q6 2N7002 onto THM"),
+    "ti": dict(part="BQ25798", rail="REGN", pin="TS", include="carrier_thermal_ti.inc", sweep="ts_sweep_ti",
+               trip="thermostat_trip_ti", thresholds={"cold": (0.724, 0.733, 0.742), "cool": (0.679, 0.684, 0.689),
+                                                      "warm": (0.443, 0.448, 0.453), "hot": (0.337, 0.342, 0.347)},
+               disable=None, hysteresis=0.013,
+               effect={"cold": "charging stops below", "cool": "20 % current below (JEITA_ISETC default)",
+                       "warm": "VREG - 400 mV above (JEITA_VSET default)", "hot": "charging stops above"},
+               documented={"cold": 3.1, "cool": 8.9, "warm": 32.2, "hot": 43.0},
+               bias={"rt1": 80.6e3, "rt2": 768e3}, pull_down="the CE pin"),
 }
-CHARGER_DISABLE = (0.045, 0.06, 0.075)
-HYSTERESIS = 0.01
-EFFECT = {
-    "cold": "charging stops below",
-    "cool": "half current below",
-    "warm": "4.05 V termination above",
-    "hot": "charging stops above",
-}
+CE_VIH, CE_VIL = 1.3, 0.4  # BQ25798 CE logic thresholds
 
-# Nominal transitions stated in docs/power.md. The nominal run must reproduce them.
-DOCUMENTED = {"cold": -2.9, "cool": 4.6, "warm": 31.4, "hot": 42.1}
+
+def select(tag=None):
+    global TAG, CHG, RESULTS, THRESHOLDS, CHARGER_DISABLE, HYSTERESIS, EFFECT, DOCUMENTED, BIAS
+    TAG = tag or project.charger(project.resolve())
+    CHG = CHARGERS[TAG]
+    RESULTS = os.path.join(BENCHES, "results_%s.md" % TAG)
+    THRESHOLDS, CHARGER_DISABLE, HYSTERESIS = CHG["thresholds"], CHG["disable"], CHG["hysteresis"]
+    EFFECT, DOCUMENTED, BIAS = CHG["effect"], CHG["documented"], CHG["bias"]
+
+
+select()
 PACK_CHARGE_MIN, PACK_CHARGE_MAX = 0.0, 45.0
 
 # Tolerances
 NTC_DT = 0.2  # ENTC-EB-100K4262-02 interchangeability, K, 0 to 70 deg C
 NTC_BTOL = 0.005  # B25/85 tolerance
-BIAS_TOL = 0.01  # R8, 1 %
-R8 = 154e3
-THM_LEAK_MAX, THM_LEAK_TYP = 1e-6, 0.1e-6  # MAX77757 THM input leakage
+BIAS_TOL = 0.01  # bias resistors, 1 %
+R8 = 154e3  # MAX77757 bias resistor; the design-check binding reads this literal
+THM_LEAK_MAX, THM_LEAK_TYP = 1e-6, 0.1e-6  # MAX77757 THM input leakage; assumed the same for the BQ25798 TS pin
 Q6_IDSS_MAX, Q6_IDSS_TYP = 1e-6, 10e-9  # 2N7002, 25 deg C
 Q2_IDSS_25, Q2_IDSS_55 = 1e-6, 5e-6  # AO3401A maximum at 25 and 55 deg C
 Q2_VTH = (0.5, 0.9, 1.3)
@@ -94,17 +113,27 @@ def transitions(rows, pick=1):
     return {name: crossing(rows, 1, limits[pick]) for name, limits in THRESHOLDS.items()}
 
 
+def bias_corners():
+    """Every ±1 % combination of the bias resistors."""
+    names = sorted(BIAS)
+    return [{n: BIAS[n] * (1 + s * BIAS_TOL) for n, s in zip(names, signs)}
+            for signs in itertools.product((-1, 1), repeat=len(names))]
+
+
+def leak_params(ithm, idss):
+    return {"ithm": ithm, "q6_idss": idss} if TAG == "max" else {"ithm": ithm}
+
+
 def part_corners(leakages=((0.0, 0.0),)):
-    """All extreme combinations of thermistor offset, B value, bias resistor and leakage."""
-    return [{"r8": R8 * (1 + s * BIAS_TOL), "ntc_dt": d * NTC_DT, "ntc_btol": b * NTC_BTOL,
-             "ithm": ithm, "q6_idss": idss}
-            for d, b, s, (ithm, idss) in itertools.product((-1, 1), (-1, 1), (-1, 1), leakages)]
+    """All extreme combinations of thermistor offset, B value, bias resistors and leakage."""
+    return [dict(bias, ntc_dt=d * NTC_DT, ntc_btol=b * NTC_BTOL, **leak_params(ithm, idss))
+            for d, b, bias, (ithm, idss) in itertools.product((-1, 1), (-1, 1), bias_corners(), leakages)]
 
 
 def transition_ranges(runs):
     """Lowest and highest temperature of each transition over runs and threshold limits."""
     found = {name: [] for name in THRESHOLDS}
-    for rows in simulate_all("jeita_sweep", runs):
+    for rows in simulate_all(CHG["sweep"], runs):
         for pick in (0, 2):
             for name, t in transitions(rows, pick).items():
                 found[name].append(t)
@@ -133,7 +162,7 @@ def fet_models(report):
 def jeita_window(report, mc_runs, seed):
     report.add("## JEITA window from the thermistor divider")
     report.add()
-    nominal = simulate("jeita_sweep")
+    nominal = simulate(CHG["sweep"])
     typ = transitions(nominal)
     table = []
     for name, limits in THRESHOLDS.items():
@@ -143,7 +172,7 @@ def jeita_window(report, mc_runs, seed):
                       deg(release) + " °C", deg(DOCUMENTED[name]) + " °C"])
     report.add("Nominal parts, typical thresholds, no leakage:")
     report.add()
-    report.table(["Transition", "THM/PVL", "Acts at", "Releases at", "docs/power.md"], table)
+    report.table(["Transition", "%s/%s" % (CHG["pin"], CHG["rail"]), "Acts at", "Releases at", "docs/power.md"], table)
     report.check(all(abs(typ[n] - DOCUMENTED[n]) <= 0.1 for n in THRESHOLDS),
                  "nominal transitions match docs/power.md within 0.1 °C")
     report.add()
@@ -152,10 +181,11 @@ def jeita_window(report, mc_runs, seed):
     typical = transition_ranges(part_corners(((-THM_LEAK_TYP, 0.0), (THM_LEAK_TYP, Q6_IDSS_TYP))))
     # THM pin leakage in either direction; Q6 off-state leakage only pulls THM down
     maximum = transition_ranges(part_corners(((-THM_LEAK_MAX, 0.0), (THM_LEAK_MAX, Q6_IDSS_MAX))))
-    report.add("Worst case in °C. Parts and thresholds: thermistor ±0.2 K and B ±0.5 %, bias "
-               "resistor ±1 %, charger thresholds at their data sheet minimum and maximum. "
-               "Leakage: THM pin 0.1 µA typical and 1 µA maximum, Q6 off-state 10 nA typical "
-               "and 1 µA maximum.")
+    report.add("Worst case in °C. Parts and thresholds: thermistor ±0.2 K and B ±0.5 %%, bias "
+               "resistor%s ±1 %%, charger thresholds at their data sheet minimum and maximum. "
+               "Leakage: %s pin 0.1 µA typical and 1 µA maximum%s."
+               % ("s" if len(BIAS) > 1 else "", CHG["pin"],
+                  ", Q6 off-state 10 nA typical and 1 µA maximum" if TAG == "max" else " (assumed, not specified)"))
     report.add()
     report.table(["Transition", "Nominal", "Parts and thresholds", "plus typical leakage",
                   "plus maximum leakage"],
@@ -175,15 +205,17 @@ def jeita_window(report, mc_runs, seed):
 
     currents = (-THM_LEAK_MAX, -THM_LEAK_TYP, THM_LEAK_TYP, THM_LEAK_MAX, THM_LEAK_MAX + Q6_IDSS_MAX)
     table = []
-    for current, rows in zip(currents, simulate_all("jeita_sweep", [{"ithm": i} for i in currents])):
+    for current, rows in zip(currents, simulate_all(CHG["sweep"], [{"ithm": i} for i in currents])):
         found = transitions(rows)
         table.append([simlib.minus("%+.1f µA" % (1e6 * current))]
                      + [deg(found[name]) for name in THRESHOLDS])
     report.add("Leakage alone, nominal parts and typical thresholds, °C. Positive current flows out "
-               "of the THM node to ground (THM pin or Q6 drain), negative current into it. The "
-               "THM pin is specified at 0.1 µA typical, 1 µA maximum:")
+               "of the %s node to ground (%s pin%s), negative current into it. The "
+               "%s pin is %s at 0.1 µA typical, 1 µA maximum:"
+               % (CHG["pin"], CHG["pin"], " or Q6 drain" if TAG == "max" else "", CHG["pin"],
+                  "specified" if TAG == "max" else "assumed"))
     report.add()
-    report.table(["THM node leakage"] + list(THRESHOLDS), table)
+    report.table(["%s node leakage" % CHG["pin"]] + list(THRESHOLDS), table)
 
     if mc_runs:
         monte_carlo(report, mc_runs, seed)
@@ -193,16 +225,13 @@ def monte_carlo(report, count, seed):
     rng = random.Random(seed)
     runs, limits = [], []
     for _ in range(count):
-        runs.append({
-            "ntc_dt": rng.uniform(-NTC_DT, NTC_DT),
-            "ntc_btol": rng.uniform(-NTC_BTOL, NTC_BTOL),
-            "r8": R8 * (1 + rng.uniform(-BIAS_TOL, BIAS_TOL)),
-            "ithm": rng.uniform(-THM_LEAK_TYP, THM_LEAK_TYP),
-            "q6_idss": Q6_IDSS_TYP,
-        })
+        run = {"ntc_dt": rng.uniform(-NTC_DT, NTC_DT), "ntc_btol": rng.uniform(-NTC_BTOL, NTC_BTOL),
+               **leak_params(rng.uniform(-THM_LEAK_TYP, THM_LEAK_TYP), Q6_IDSS_TYP)}
+        run.update({n: v * (1 + rng.uniform(-BIAS_TOL, BIAS_TOL)) for n, v in BIAS.items()})
+        runs.append(run)
         limits.append({n: rng.uniform(lo, hi) for n, (lo, _, hi) in THRESHOLDS.items()})
     found = {name: [] for name in THRESHOLDS}
-    for rows, limit in zip(simulate_all("jeita_sweep", runs), limits):
+    for rows, limit in zip(simulate_all(CHG["sweep"], runs), limits):
         for name in THRESHOLDS:
             found[name].append(crossing(rows, 1, limit[name]))
     table = []
@@ -212,8 +241,8 @@ def monte_carlo(report, count, seed):
         table.append([name, deg(temps[0]), quantile(0.01), quantile(0.5), quantile(0.99), deg(temps[-1])])
     report.add("Monte Carlo, %d units, seed %d, °C. Every tolerance is uniform over its full range: "
                "thermistor ±0.2 K and B ±0.5 %%, bias ±1 %%, thresholds between minimum and "
-               "maximum. THM leakage is within the typical ±0.1 µA, Q6 leakage is the typical 10 nA."
-               % (count, seed))
+               "maximum. %s leakage is within the typical ±0.1 µA%s."
+               % (count, seed, CHG["pin"], ", Q6 leakage is the typical 10 nA" if TAG == "max" else ""))
     report.add()
     report.table(["Transition", "Lowest", "1 %", "Median", "99 %", "Highest"], table)
     above = sum(t > PACK_CHARGE_MAX for t in found["hot"]) / count
@@ -226,19 +255,51 @@ def monte_carlo(report, count, seed):
 def sensor_faults(report):
     report.add("## Thermistor unplugged or shorted")
     report.add()
-    leak = {"ithm": THM_LEAK_MAX, "q6_idss": Q6_IDSS_MAX}
-    unplugged = min(row[1] for row in simulate("jeita_sweep", ntc_r25=1e12, **leak))
-    shorted = max(row[1] for row in simulate("jeita_sweep", ntc_r25=1.0))
+    ratio = "%s/%s" % (CHG["pin"], CHG["rail"])
+    leak = leak_params(THM_LEAK_MAX, Q6_IDSS_MAX)
+    unplugged = min(row[1] for row in simulate(CHG["sweep"], ntc_r25=1e12, **leak))
+    shorted = max(row[1] for row in simulate(CHG["sweep"], ntc_r25=1.0))
     report.check(unplugged > THRESHOLDS["cold"][2],
-                 "unplugged: THM/PVL = %s with 2 µA leakage pulling down, above the highest cold "
-                 "threshold (%s), charging suspended" % (pct(unplugged), pct(THRESHOLDS["cold"][2])))
-    report.check(shorted < CHARGER_DISABLE[0],
-                 "shorted: THM/PVL = %s, below the lowest disable threshold (%s), charger disabled"
-                 % (pct(shorted, 2), pct(CHARGER_DISABLE[0])))
+                 "unplugged: %s = %s with %s leakage pulling down, above the highest cold "
+                 "threshold (%s), charging suspended" % (ratio, pct(unplugged), "2 µA" if TAG == "max" else "1 µA",
+                                                        pct(THRESHOLDS["cold"][2])))
+    if CHARGER_DISABLE:
+        report.check(shorted < CHARGER_DISABLE[0],
+                     "shorted: %s = %s, below the lowest disable threshold (%s), charger disabled"
+                     % (ratio, pct(shorted, 2), pct(CHARGER_DISABLE[0])))
+    else:
+        report.check(shorted < THRESHOLDS["hot"][0],
+                     "shorted: %s = %s, below the lowest hot threshold (%s), charging suspended"
+                     % (ratio, pct(shorted, 2), pct(THRESHOLDS["hot"][0])))
+    report.add()
+
+
+def q2_leakage_ce(report):
+    """BQ25798: Q2 off-state leakage raises the CE pin through R12; it must stay below VIL."""
+    report.add("## Thermostat closed: Q2 leakage into R12 and the CE pin")
+    report.add()
+    report.add("With the thermostat closed Q2 is off and only R12 (100 kΩ) holds CE (CHG_DIS) low. The "
+               "AO3401A data sheet allows 1 µA at 25 °C and 5 µA at 55 °C at VDS = −30 V; at the 3 to 4.4 V "
+               "here it is normally far lower. CE must stay below VIL %.1f V, charging is disabled above "
+               "VIH %.1f V." % (CE_VIL, CE_VIH))
+    report.add()
+    cases = [0.1e-6, 0.5e-6, Q2_IDSS_25, Q2_IDSS_55]
+    results = simulate_all(CHG["sweep"], [{"q2_idss": i} for i in cases])
+    table, worst = [], 0.0
+    for idss, rows in zip(cases, results):
+        v = value_at(rows, 25.0, 2)
+        worst = max(worst, v) if idss <= Q2_IDSS_25 else worst
+        table.append(["%.1f µA" % (1e6 * idss), "%.3f V" % v, "below VIL" if v < CE_VIL else
+                      ("undefined" if v < CE_VIH else "charging disabled")])
+    report.table(["Q2 IDSS", "CE (CHG_DIS)", "State"], table)
+    report.check(worst < CE_VIL, "CE at most %.3f V with Q2 leakage at the 25 °C data sheet maximum, below VIL %.1f V; "
+                                 "the 55 °C maximum (5 µA, %.1f V) would disable charging" % (worst, CE_VIL, 5e-6 * 100e3))
     report.add()
 
 
 def q2_leakage(report):
+    if TAG != "max":
+        return q2_leakage_ce(report)
     report.add("## Thermostat closed: Q2 leakage into R12")
     report.add()
     report.add("With the thermostat closed Q2 is off and only R12 holds the Q6 gate (CHG_DIS) low. "
@@ -252,7 +313,7 @@ def q2_leakage(report):
     cases = [(idss, 100e3, vth) for vth in (Q6_VTH[0], Q6_VTH[1])
              for idss in (0.1e-6, 0.5e-6, Q2_IDSS_25, Q2_IDSS_55)]
     cases += [(idss, 1e6, Q6_VTH[0]) for idss in (0.5e-6, Q2_IDSS_25, Q2_IDSS_55)]
-    results = simulate_all("jeita_sweep",
+    results = simulate_all(CHG["sweep"],
                            [{"q2_idss": i, "r12": r, "q6_vth": v} for i, r, v in cases])
     table, shifts = [], {}
     for (idss, r12, vth), rows in zip(cases, results):
@@ -277,8 +338,8 @@ def thermostat_trip(report):
     report.add("## Thermostat opens and closes")
     report.add()
     cases = list(itertools.product((3.0, 3.5, 4.4), (Q2_VTH[0], Q2_VTH[2]),
-                                   (Q6_VTH[0], Q6_VTH[2]), (0.0, 40.0)))
-    results = simulate_all("thermostat_trip",
+                                   (Q6_VTH[0], Q6_VTH[2]) if TAG == "max" else (Q6_VTH[1],), (0.0, 40.0)))
+    results = simulate_all(CHG["trip"],
                            [{"vsys": v, "q2_vth": q2, "q6_vth": q6, "tntc": t} for v, q2, q6, t in cases])
     m = {key: [] for key in ("en_closed", "ratio_open", "en_open", "disabled", "en_high", "en_low",
                              "charge_back", "en_back")}
@@ -288,18 +349,29 @@ def thermostat_trip(report):
         m["en_closed"].append(value_at(rows, before, 4))
         m["ratio_open"].append(value_at(rows, settled, 3))
         m["en_open"].append(value_at(rows, settled, 4))
-        m["disabled"].append(crossing(rows, 3, CHARGER_DISABLE[0], T_OPEN) - T_OPEN)
+        if TAG == "max":
+            m["disabled"].append(crossing(rows, 3, CHARGER_DISABLE[0], T_OPEN) - T_OPEN)
+        else:
+            m["disabled"].append(crossing(rows, 2, CE_VIH, T_OPEN) - T_OPEN)
         m["en_high"].append(crossing(rows, 4, EN_HIGH, T_OPEN) - T_OPEN)
         m["en_low"].append(crossing(rows, 4, EN_LOW, T_OPEN) - T_OPEN)
-        restored = value_at(rows, before, 3) - 0.005
-        m["charge_back"].append(crossing(rows, 3, restored, T_CLOSE) - T_CLOSE)
+        if TAG == "max":
+            restored = value_at(rows, before, 3) - 0.005
+            m["charge_back"].append(crossing(rows, 3, restored, T_CLOSE) - T_CLOSE)
+        else:
+            m["charge_back"].append(crossing(rows, 2, CE_VIL, T_CLOSE) - T_CLOSE)
         m["en_back"].append(crossing(rows, 4, EN_HIGH, T_CLOSE) - T_CLOSE)
-    report.add("%d corners: VSYS 3.0 / 3.5 / 4.4 V, Q2 and Q6 at minimum and maximum VGS(th), "
-               "thermistor at 0 and 40 °C, slider on." % len(cases))
+    report.add("%d corners: VSYS 3.0 / 3.5 / 4.4 V, Q2%s at minimum and maximum VGS(th), "
+               "thermistor at 0 and 40 °C, slider on." % (len(cases), " and Q6" if TAG == "max" else ""))
     report.add()
-    report.check(max(m["ratio_open"]) < CHARGER_DISABLE[0],
-                 "open: THM/PVL at most %s, below the lowest disable threshold (%s), charger disabled"
-                 % (pct(max(m["ratio_open"]), 3), pct(CHARGER_DISABLE[0])))
+    if TAG == "max":
+        report.check(max(m["ratio_open"]) < CHARGER_DISABLE[0],
+                     "open: THM/PVL at most %s, below the lowest disable threshold (%s), charger disabled"
+                     % (pct(max(m["ratio_open"]), 3), pct(CHARGER_DISABLE[0])))
+    else:
+        ce_open = [value_at(rows, settled, 2) for rows in results]
+        report.check(min(ce_open) > CE_VIH, "open: CE at least %.2f V, above VIH %.1f V, charging disabled"
+                     % (min(ce_open), CE_VIH))
     report.check(max(m["en_open"]) < EN_LOW,
                  "open: PWR_EN at most %.3f V, below %.1f V, boost and load switch off"
                  % (max(m["en_open"]), EN_LOW))
@@ -310,32 +382,37 @@ def thermostat_trip(report):
     report.add()
     dwell = [low - high for low, high in zip(m["en_low"], m["en_high"])]
     report.table(["After the contact opens", "Delay"], [
-        ["THM below %s (charger disabled)" % pct(CHARGER_DISABLE[0]), ms_span(m["disabled"])],
+        ["THM below %s (charger disabled)" % pct(CHARGER_DISABLE[0]) if TAG == "max"
+         else "CE above %.1f V (charging disabled)" % CE_VIH, ms_span(m["disabled"])],
         ["PWR_EN below %.1f V (loads may switch off)" % EN_HIGH, ms_span(m["en_high"])],
         ["PWR_EN below %.1f V (loads off)" % EN_LOW, ms_span(m["en_low"])],
         ["PWR_EN between %.1f and %.1f V (either IC may be on or off)" % (EN_HIGH, EN_LOW),
          ms_span(dwell)],
     ])
     report.table(["After the contact closes", "Delay"], [
-        ["THM back within 0.5 % of PVL (charging resumes)", ms_span(m["charge_back"])],
+        ["THM back within 0.5 % of PVL (charging resumes)" if TAG == "max"
+         else "CE below %.1f V (charging resumes)" % CE_VIL, ms_span(m["charge_back"])],
         ["PWR_EN above %.1f V (loads on)" % EN_HIGH, ms_span(m["en_back"])],
     ])
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--write", action="store_true", help="store the report in thermal/results.md")
+    parser.add_argument("--write", action="store_true", help="store the report in thermal/results_<charger>.md")
     parser.add_argument("--mc", type=int, default=400, metavar="N", help="Monte Carlo units (0 = skip)")
     parser.add_argument("--seed", type=int, default=1)
+    project.add_argument(parser)
     args = parser.parse_args()
+    if args.project:
+        select(project.charger(project.select(args.project)))
     version = simlib.require_ngspice()
 
     report = simlib.Report()
     report.add("# Thermal charge cut-off, simulation results")
     report.add()
-    report.add("Generated by `hardware/sim/run_thermal.py` with %s. The MAX77757 is represented by "
-               "its data sheet THM thresholds, see `hardware/sim/README.md`."
-               % version)
+    report.add("Generated by `hardware/sim/run_thermal.py` with %s for the %s board (charger %s). The charger "
+               "is represented by its data sheet %s thresholds, see `hardware/sim/README.md`."
+               % (version, os.path.basename(project.resolve()), CHG["part"], CHG["pin"]))
     report.add()
     fet_models(report)
     jeita_window(report, args.mc, args.seed)

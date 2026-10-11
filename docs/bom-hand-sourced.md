@@ -34,6 +34,7 @@ D4, D5, J2 to J12, JP1 and JP2 are marked DNP, so the assembly BOM and position 
 | 2 pieces | J12 | Pin header 2.54 mm, 1x4, straight, cut from the SL 1X40G strip | Fit side by side in the 2x4 footprint; six dry-contact inputs and two grounds. Eight additional pins from the existing strips. | Reichelt SL 1X40G 2,54 (link above) | included in strip |
 | 2 | JP1, JP2 | Jumper 2.54 mm, closed, with grip | Shunts | Reichelt [Jumper 2.54 mm closed with handle](https://www.reichelt.com/de/en/shop/product/jumper_2_54_mm_closed_with_handle_black-119938) | €0.10 each |
 | 1 | U4 | Fischer ICK S 10 x 10 x 6.5 (or ICK BGA 10 x 10 x 6) heatsink, a 2.5 x 2.5 x 1.5 mm copper spacer and thermal epoxy (two layers, about 0.1 mm each) | Heatsink on the MAX77757 charger; the spacer lifts it above the neighbouring capacitors. See [power.md](power.md#heatsink) | RS 674-4784 / Bürklin (ICK S), RS 057-7631, DigiKey, Farnell (ICK BGA); spacer cut from 1.5 mm copper sheet | about €2 |
+| 1 | U4 (carrier-ti-charger) | same Fischer sink and spacer as above | The VQFN-HR has no exposed pad; the sink sits on the package top as on the MAX board. A bottom-side plate was a model experiment only, not a design. |
 
 Samtec SSQ sockets (8.51 mm, Mouser or Digi-Key) are an alternative to the BL 1X20G8 strips, with the same height and pitch.
 

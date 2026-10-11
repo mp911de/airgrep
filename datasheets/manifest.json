@@ -336,5 +336,15 @@
     "bytes": 456881,
     "sha256": "50364c6a67349b07f82a4135d54bd2c2b3bf3b41e2c122b9ec17997b31540489",
     "note": "C33 EMK316BB7226ML-T (22 uF 1206, LCSC C385906). Taiyo Yuden now lists it as MSASE31LBB7226MTNA01"
+  },
+  {
+    "file": "bq25798.pdf",
+    "manufacturer_url": "https://www.ti.com/lit/ds/symlink/bq25798.pdf",
+    "download_url": "https://www.ti.com/lit/ds/symlink/bq25798.pdf",
+    "downloaded": "2026-10-09",
+    "pages": 151,
+    "bytes": 3331938,
+    "sha256": "163e45683f62f208545920e1470054b352b4a4b0cdc201e1f19fcb1007f1e222",
+    "note": "U4 charger of carrier-ti-charger. SLUSDV2C, revised June 2026. Downloaded by Mark in a browser"
   }
 ]

@@ -1,8 +1,25 @@
 # Charger candidates
 
-Stock and datasheets checked 2026-10-08. Research only. No replacement selected and no circuit changes.
+Stock and datasheets checked 2026-10-08, updated 2026-10-09.
 
-**Retain MAX77757 and investigate hardware control through IFAST. No additional MCU.** Its existing adaptive loops reduce charge current, but none provides a documented adjustable 90-100°C junction target.
+**Decision 2026-10-09: a second board variant, `hardware/carrier-ti-charger/`, uses the BQ25798.** The display's ESP32-S3 is the I2C host; without it the chip charges at its 1 A default. Reasons and the open points are in [decisions.md](decisions.md#charger-variant-carrier-ti-charger-with-the-bq25798). The MAX77757 board stays as `hardware/carrier-max-charger/`. The sections below are the research that led there.
+
+## Chargers with a host (2026-10-09)
+
+Requirements for this round: power-on default charge current without a host, a host can raise it, fallback when the host stops, BC1.2 on chip, no BGA/WLP, JLCPCB stock.
+
+| Part | Package | Default without host | Host | Fallback | TREG | Extras | Verdict |
+|---|---|---|---|---|---|---|---|
+| **BQ25798** | VQFN-HR 29, 4x4, 0.4 mm pitch | 1 A, 4.2 V, 12 h timer, input limit from D+/D- | I2C 0x6B, up to 1 MHz | watchdog 40 s (20 to 160 s) resets every register | 60/80/100/120 °C | 16-bit ADC: die temperature 0.5 °C, IBAT, IBUS, VBAT, VBUS, TS | selected |
+| BQ25611D | WQFN-24 4x4 | 1.02 A, 10 h timer | I2C 0x6B | watchdog 40 s | 90/110 °C | none, no ADC | simpler, cooler; no die temperature readout |
+| BQ25895M | QFN-24 4x4 | 2.05 A | I2C | watchdog 40 s | 60/80/100/120 °C | ILIM resistor caps the input | default too fast |
+| BQ25601D | QFN-24 4x4 | 2.04 A | I2C | watchdog 40 s | 90/110 °C | | default too fast |
+| MAX77840 | 81-bump WLP 0.4 mm | 450 mA, 8 h timer, no NTC control | I2C | registers reset at SYS UVLO | 85 to 130 °C | ModelGauge m5 gauge | WLP: not routable on a JLCPCB 4-layer board (no via fits a 0.4 mm grid), no CC detection, no thermal data |
+| MAX77975/76/85/86 | FC2QFN-32 4x4 | 500 mA input limit | I2C | | 5 °C steps to 130 °C | 85/86 add BC1.2 | 75/76 have no D+/D-; 85/86 datasheet not reachable from here |
+| MAX77972 | WLP | resistor | I2C | | 85 to 130 °C | CC and BC1.2 | WLP |
+
+No TI charger integrates a fuel gauge; the MAX17048 stays on the board and the BQ25798 ADC adds die temperature and currents.
+
 
 ## MAX77757 without an MCU
 

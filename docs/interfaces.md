@@ -54,8 +54,8 @@ J7 signals:
 
 - D11 to D13 are the only free GPIOs the module exposes. Charger STAT and INOKB are therefore not wired to the display. The firmware reads the charging state from the fuel gauge.
 - D14 and D15 on J6 are used inside the module (IMU interrupt, button B). The carrier leaves them unconnected.
-- The I2C bus on J8 serves U13 (TCA9534, 0x20), U8 (MAX17048, 0x36) and U10 (BMP581, 0x46). The display shares it with AXS5106L touch (0x63) and LSM6DS3 IMU (0x6A), as documented by [Seeed](https://wiki.seeedstudio.com/function_1.47_inch_touch_display_esp32s3/). These addresses do not conflict.
-- The I2C pull-ups are the module's own, 5.1 kΩ. R19 and R20 (4.7 kΩ) on the carrier are not fitted. The firmware therefore runs the bus at 100 kHz.
+- The I2C bus on J8 serves U13 (TCA9534, 0x20), U8 (MAX17048, 0x36), U10 (BMP581, 0x46) and, on carrier-ti-charger, U4 (BQ25798, 0x6B; its INT pin ends on TP8 and is polled). The display shares it with AXS5106L touch (0x63) and LSM6DS3 IMU (0x6A), as documented by [Seeed](https://wiki.seeedstudio.com/function_1.47_inch_touch_display_esp32s3/). These addresses do not conflict.
+- The I2C pull-ups are the module's own, 5.1 kΩ. R19 and R20 (4.7 kΩ) on the carrier are not fitted. The firmware therefore runs the bus at 100 kHz.  Bus rules per slave are in [firmware.md](firmware.md#i2c-bus).
 
 ## Physical control inputs
 
@@ -70,7 +70,7 @@ U13 is TI TCA9534PWR (C783615), powered by ESP_3V3 with C40, 100 nF. A0, A1 and 
 | P4 | CTRL_P4 | J12 pin 3 | contact closed | open |
 | P5 | CTRL_P5 | J12 pin 4 | contact closed | open |
 | P6 | CTRL_P6 | J12 pin 5 | contact closed | open |
-| P7 | CTRL_P7 | J12 pin 6 | contact closed | open |
+| P7 | SW_ON_N | POWER slider through Q11 (J12 pin 6 unused) | slider on | slider off |
 
 J12 pins 7 and 8 are GND. R48 to R55 are 100 kΩ pull-ups to ESP_3V3, one per input in P0 to P7 order. Each grounded input draws 33 µA nominal at 3.3 V. SW2 and SW3 connect common to GND through pin 3; pin 1 is unconnected. Both maintained positions are therefore defined without switching directly between power rails. The switch footprint numbers are our convention; the manufacturer drawing does not number the terminals.
 
