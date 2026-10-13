@@ -4265,10 +4265,10 @@
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
-		(in_bom no)
+		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
-		(dnp yes)
+		(dnp no)
 		(uuid "47640ba9-b272-4744-9310-c0cf15c6c136")
 		(property "Reference" "R19"
 			(at 217.17 92.71 0)
@@ -4281,7 +4281,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "4.7k"
+		(property "Value" "2.2k"
 			(at 217.17 95.25 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4315,6 +4315,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 215.9 93.98 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C4190"
 			(at 215.9 93.98 0)
 			(hide yes)
 			(show_name no)
@@ -4577,10 +4588,10 @@
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
-		(in_bom no)
+		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
-		(dnp yes)
+		(dnp no)
 		(uuid "793451c5-7866-413f-a48b-8b1017da3da9")
 		(property "Reference" "R20"
 			(at 240.03 92.71 0)
@@ -4593,7 +4604,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "4.7k"
+		(property "Value" "2.2k"
 			(at 240.03 95.25 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4627,6 +4638,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 238.76 93.98 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C4190"
 			(at 238.76 93.98 0)
 			(hide yes)
 			(show_name no)

@@ -2482,7 +2482,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "4.7u 50V X7R"
+		(property "Value" "4.7u 16V X5R"
 			(at 101.6 62.23 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2493,7 +2493,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 99.06 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -2526,7 +2526,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C437557"
+		(property "LCSC" "C19666"
 			(at 99.06 60.96 0)
 			(hide yes)
 			(show_name no)
