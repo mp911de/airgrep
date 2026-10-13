@@ -20,7 +20,9 @@ import project  # noqa: E402
 RHO, CP, G = 1.18, 1005.0, 9.81     # air at 25 to 30 C
 CD = 0.6                            # orifice discharge coefficient
 BLOCKAGE = 0.5                      # grille / mesh open-area fraction
-VENT_AREA_CM2 = 5.0                 # geometric area of each opening, before grille blockage
+VENTS_PER_SIDE = 2                  # two lower inlets and two upper outlets
+VENT_OPENING_CM2 = 8.0              # geometric area per opening, before grille blockage
+VENT_AREA_CM2 = VENTS_PER_SIDE * VENT_OPENING_CM2  # total area per inlet/outlet group
 VENT_HEIGHT_M = 0.035               # vertical separation of inlet and outlet
 R_WALL = 6.3                        # K/W, sealed case to ambient (run_heat.enclosure_resistance)
 R_PACK = 9.2                        # K/W, pack to case air (run_heat.pack_resistance)

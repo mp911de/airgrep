@@ -221,7 +221,7 @@ class EnclosureTests(unittest.TestCase):
         self.assertAlmostEqual(cooling, 5.)
         self.assertGreater(rise, 0.)
         self.assertLess(rise, vent_model.air_rise(5., 25., area_cm2=0.))
-        self.assertLess(vent_model.air_rise(5., 25., area_cm2=10.), rise)
+        self.assertLess(vent_model.air_rise(5., 25., area_cm2=2 * vent_model.VENT_AREA_CM2), rise)
 
 
 if __name__ == "__main__":

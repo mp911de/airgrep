@@ -260,7 +260,9 @@ Placed and routed against data sheet section 8.4.1 (priority list) after two ind
 
 ### Heat
 
-Heat model, 3 A source, 0.8 A load, 25 °C ambient, closed case with the 5 cm² vents (`hardware/sim/heat/ti/results.md`), on the routed board: every charger path is traced through tracks, vias and pours (F1 to BAT 8.3 mΩ, SYS to L2 11.4 mΩ, FB1 to VBUS 26.1 mΩ, SW1 and SW2 runs 10.5 and 8.6 mΩ).
+Current enclosure: four 8 cm² vents, two lower inlets and two upper outlets, 50 % open grilles and 35 mm separation. Updated [TI heat results](../hardware/sim/heat/ti/results.md) give high-corner pack temperatures of 45.7 °C at 0.8 A and 50.9 °C at sustained 1 A, at 25 °C ambient; both pass the 55 °C thermostat check. Charging while running still reaches the pack charge-temperature stop.
+
+The comparison below records the previous enclosure with two 5 cm² vents. Heat model, 3 A source, 0.8 A load, 25 °C ambient, closed case with the previous 5 cm² vents (`hardware/sim/heat/ti/results.md`), on the routed board: every charger path is traced through tracks, vias and pours (F1 to BAT 8.3 mΩ, SYS to L2 11.4 mΩ, FB1 to VBUS 26.1 mΩ, SW1 and SW2 runs 10.5 and 8.6 mΩ).
 
 | Condition | Cell 3.7 V | Cell 3.2 V |
 |---|---|---|
@@ -480,7 +482,7 @@ Heat model at 25 °C ambient unless stated (`hardware/sim/heat/max/results.md`).
 | Pack at 1.0 A load | 27 °C | 57 to 58 °C | 82 to 84 °C |
 
 - L2 and U7 stay below 100 °C, the X7R capacitors below their 125 °C rating.
-- With the selected vents, the pack stays below the thermostat's lowest opening point (55 °C) at 0.8 A and 25 °C ambient, but exceeds it at 1.0 A. These estimates do not simulate thermostat or JEITA shutdown; see [open-issues.md](open-issues.md).
+- In the historical MAX77757 result with two 5 cm² vents, the pack stays below the thermostat's lowest opening point (55 °C) at 0.8 A and 25 °C ambient, but exceeds it at 1.0 A. These estimates do not simulate thermostat or JEITA shutdown; see [open-issues.md](open-issues.md).
 
 ## Gauge
 

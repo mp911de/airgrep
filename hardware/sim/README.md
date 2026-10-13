@@ -231,7 +231,7 @@ Solver:
 
 Assumptions that decide the numbers:
 
-- The enclosure does not exist yet. The closed case is a 115 x 105 x 40 mm printed box holding board, modules and pack, with a 5 cm² inlet and a 5 cm² outlet. The wall path is 6.3 K/W to ambient. Natural draft through the vents adds a parallel heat path. Everything dissipated inside heats its air.
+- The enclosure does not exist yet. The closed case is a 115 x 105 x 40 mm printed box holding board, modules and pack, with two lower inlet vents and two upper outlet vents, 8 cm² each. The wall path is 6.3 K/W to ambient. Natural draft through the vents adds a parallel heat path. Everything dissipated inside heats its air.
 - The open case is the board on a bench. Real numbers lie between the two and depend on vents.
 - The MAX77757 switching loss is an estimate. The TPS61088 fit rests on the project's curve, which is TI's figure less an estimated 2 points.
 - Contact, fuse and pack DC resistances are data sheet maxima or estimates. The USB cable is not included.
@@ -263,4 +263,4 @@ Not modelled: common-mode currents on the antenna coax and the USB cable, the mo
 It is a lumped steady-state estimate of case air, pack and U4 temperature over vent area.
 
 - The lumped model's enclosure parameters and component rises over case air are copied from the sealed heat model (25 °C, high corner). Its consistency test explicitly disables vents in both models. Temperature tolerance is 1 °C; charge-current tolerance is 0.05 A.
-- Both models default to 5 cm² per opening, inlet low and outlet high, 35 mm vertical separation and a 50 % open grille. Each opening therefore has 2.5 cm² free area. `VENT_AREA_CM2` and `VENT_HEIGHT_M` in `vent_model.py` set these assumptions. Pass zero vent area for the sealed reference.
+- Both models default to four 8 cm² openings, two inlets low and two outlets high, 35 mm vertical separation and a 50 % open grille. Each opening has 4 cm² free area, giving 8 cm² free area per inlet/outlet group. `VENTS_PER_SIDE`, `VENT_OPENING_CM2`, and `VENT_HEIGHT_M` in `vent_model.py` set these assumptions; `VENT_AREA_CM2` is the combined geometric area per group. Pass zero vent area for the sealed reference.

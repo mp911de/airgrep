@@ -1651,10 +1651,11 @@ def main():
             "5 V power and the pack's own I²R. The pack: %.1f K/W to the case air."
             % (ENCLOSURE_MM + (WALL_MM, K_WALL, H_IN, H_OUT, r_enc, a_enc * 1e4,
                                ENVIRONMENTS["closed"]["h_top"], pack_resistance())))
-    rep.add("- Vents: %.1f cm² each for the lower inlet and upper outlet, %.0f %% open grille, "
+    rep.add("- Vents: %d lower inlets and %d upper outlets, %.1f cm² each (%.1f cm² per group), %.0f %% open grille, "
             "%.0f mm vertical separation, discharge coefficient %.1f. Natural draft acts in parallel "
             "with the wall path; no fan."
-            % (vent_model.VENT_AREA_CM2, vent_model.BLOCKAGE * 100, vent_model.VENT_HEIGHT_M * 1000,
+            % (vent_model.VENTS_PER_SIDE, vent_model.VENTS_PER_SIDE, vent_model.VENT_OPENING_CM2,
+               vent_model.VENT_AREA_CM2, vent_model.BLOCKAGE * 100, vent_model.VENT_HEIGHT_M * 1000,
                vent_model.CD))
     rep.add("- Junction to board: %s %s, TPS61088 RθJC(bot) 3.1 K/W plus 1 K/W "
             "solder onto its pad, TPS22975 RθJC(bot) %.1f K/W; inductor winding to terminals %.0f K/W."

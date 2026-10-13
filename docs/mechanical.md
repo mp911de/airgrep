@@ -141,7 +141,7 @@ From front to back:
 
 ## Enclosure vents
 
-Provide a 5 cm² lower inlet and a 5 cm² upper outlet. These are geometric areas before the grille; the thermal model assumes 50 % free area and 35 mm vertical separation between the openings. Keep the internal airflow path clear of the battery, boards and wiring.
+Provide four 8 cm² vents: two lower inlets and two upper outlets, 16 cm² per group. These are geometric areas before the grille; the thermal model assumes 50 % free area and 35 mm vertical separation between the openings. Keep the internal airflow path clear of the battery, boards and wiring.
 
 The model assumes a 115 x 105 x 40 mm enclosure with 2 mm printed walls. Geometry and cooling remain to be verified in the actual enclosure.
 

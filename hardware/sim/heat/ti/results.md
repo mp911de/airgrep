@@ -56,7 +56,7 @@ Each power net is solved as a resistor network of its tracks and vias. Pads are 
 
 | Path | Resistance |
 |---|---|
-| USB_VBUS_J1: J1 VBUS pins to FB1 | 2.8 mΩ |
+| USB_VBUS_J1: J1 VBUS pins to FB1 | 2.9 mΩ |
 | USB_VBUS: FB1 to U4 VBUS | 8.3 mΩ |
 | CHG_SW1: U4 SW1 to L1 | 9.3 mΩ |
 | CHG_SW2: L1 to U4 SW2 | 9.2 mΩ |
@@ -77,7 +77,7 @@ Each power net is solved as a resistor network of its tracks and vias. Pads are 
 
 - Open bench: board in still air, 10 W/m²K on both faces (convection plus radiation), no enclosure.
 - Closed case (not yet designed; assumed): 115 x 105 x 40 mm outside, 2 mm printed wall (k 0.2 W/m·K), 7 W/m²K inside and 9 W/m²K outside. Wall path to ambient 6.3 K/W over 418 cm². Inside it the board loses 6 W/m²K per face to the case air (modules above, battery below). The air carries everything dissipated in the case: board losses, the modules' 5 V power and the pack's own I²R. The pack: 9.2 K/W to the case air.
-- Vents: 5.0 cm² each for the lower inlet and upper outlet, 50 % open grille, 35 mm vertical separation, discharge coefficient 0.6. Natural draft acts in parallel with the wall path; no fan.
+- Vents: 2 lower inlets and 2 upper outlets, 8.0 cm² each (16.0 cm² per group), 50 % open grille, 35 mm vertical separation, discharge coefficient 0.6. Natural draft acts in parallel with the wall path; no fan.
 - Junction to board: BQ25798 RθJB 9.7 K/W from junction to pins (RθJC(top) 20.9, ψJT 0.5 K/W), TPS61088 RθJC(bot) 3.1 K/W plus 1 K/W solder onto its pad, TPS22975 RθJC(bot) 16.4 K/W; inductor winding to terminals 12 K/W.
 - U4 heatsink: 10 x 10 mm aluminium sink (Fischer ICK S 10 x 10 x 6.5) on a 1.5 mm copper spacer, thermal epoxy. Junction to package top 21 K/W, epoxy and spacer 20 K/W, sink to air 35 K/W on the bench and 58 K/W in the case air. That gives 76 and 99 K/W from the junction, in parallel with the pins. Parts with pads inside the 10 x 10 mm footprint of the sink: C42, C43, C44, C46, C49, C6, R58, R59. The spacer must lift the sink base above the tallest of them.
 
@@ -120,22 +120,22 @@ Cell to 5 V output: 90.0 % nominal, 89.4 % high corner.
 
 ### Battery 3.1 V, 0.8 A load
 
-Nominal corner: VSYS at L2 3.10 V, cell open-circuit voltage 3.26 V, battery current 1.39 A, boost input current 1.39 A, boost duty 39.5 %, boost efficiency 94.1 %.
+Nominal corner: VSYS at L2 3.10 V, cell open-circuit voltage 3.25 V, battery current 1.39 A, boost input current 1.39 A, boost duty 39.5 %, boost efficiency 94.1 %.
 
 | Element | Nominal | High |
 |---|---|---|
 | TPS61088 | 201 mW | 201 mW |
-| L2 | 55 mW | 55 mW |
+| L2 | 54 mW | 54 mW |
 | LEDs and series resistors | 32 mW | 32 mW |
-| BQ25798 BATFET | 24 mW | 24 mW |
-| copper VSYS | 22 mW | 23 mW |
+| BQ25798 BATFET | 23 mW | 23 mW |
+| copper VSYS | 22 mW | 22 mW |
 | F1 fuse | 21 mW | 29 mW |
-| JST-PH battery contacts | 19 mW | 39 mW |
+| JST-PH battery contacts | 19 mW | 38 mW |
 | shunts and module sockets | 16 mW | 33 mW |
 | LM73100 ideal diodes | 15 mW | 24 mW |
-| copper VBAT | 14 mW | 14 mW |
-| TPS22975 | 12 mW | 12 mW |
-| copper RAIL_5V | 11 mW | 11 mW |
+| copper VBAT | 13 mW | 13 mW |
+| TPS22975 | 11 mW | 11 mW |
+| copper RAIL_5V | 10 mW | 10 mW |
 | copper BOOST_5V | 4 mW | 4 mW |
 | copper BAT_IN | 3 mW | 3 mW |
 | copper ADS_5V_D | 2 mW | 2 mW |
@@ -144,123 +144,123 @@ Nominal corner: VSYS at L2 3.10 V, cell open-circuit voltage 3.26 V, battery cur
 | copper GND pour | 1 mW | 1 mW |
 | copper ESP_5V | 0 mW | 0 mW |
 | copper ESP_5V_D | 0 mW | 0 mW |
-| **Board total** | **455 mW** | **508 mW** |
+| **Board total** | **452 mW** | **504 mW** |
 | Modules (5 V power, heat inside the case) | 3.98 W | 3.96 W |
-| Battery pack I²R | 116 mW | 173 mW |
+| Battery pack I²R | 115 mW | 173 mW |
 | Inside the case | 4.55 W | 4.64 W |
 
-Cell to 5 V output: 89.6 % nominal, 87.9 % high corner.
+Cell to 5 V output: 89.6 % nominal, 88.0 % high corner.
 
 ### Battery 3.1 V, 1.0 A load
 
-Nominal corner: VSYS at L2 3.10 V, cell open-circuit voltage 3.29 V, battery current 1.74 A, boost input current 1.74 A, boost duty 39.8 %, boost efficiency 94.0 %.
+Nominal corner: VSYS at L2 3.10 V, cell open-circuit voltage 3.29 V, battery current 1.73 A, boost input current 1.73 A, boost duty 39.7 %, boost efficiency 94.0 %.
 
 | Element | Nominal | High |
 |---|---|---|
-| TPS61088 | 249 mW | 249 mW |
-| L2 | 75 mW | 75 mW |
-| BQ25798 BATFET | 38 mW | 38 mW |
-| copper VSYS | 36 mW | 36 mW |
+| TPS61088 | 247 mW | 248 mW |
+| L2 | 74 mW | 74 mW |
+| BQ25798 BATFET | 37 mW | 37 mW |
+| copper VSYS | 35 mW | 35 mW |
 | F1 fuse | 33 mW | 45 mW |
 | LEDs and series resistors | 32 mW | 32 mW |
 | JST-PH battery contacts | 30 mW | 60 mW |
 | shunts and module sockets | 26 mW | 51 mW |
 | LM73100 ideal diodes | 23 mW | 36 mW |
-| copper VBAT | 22 mW | 22 mW |
-| TPS22975 | 19 mW | 19 mW |
+| copper VBAT | 21 mW | 21 mW |
+| TPS22975 | 18 mW | 18 mW |
 | copper RAIL_5V | 17 mW | 17 mW |
 | copper BOOST_5V | 6 mW | 6 mW |
-| copper BAT_IN | 5 mW | 5 mW |
+| copper BAT_IN | 4 mW | 4 mW |
 | copper ADS_5V_D | 4 mW | 4 mW |
-| copper BOOST_SW | 3 mW | 3 mW |
+| copper BOOST_SW | 2 mW | 2 mW |
 | copper ADS_5V | 2 mW | 2 mW |
 | copper GND pour | 2 mW | 2 mW |
 | copper ESP_5V | 0 mW | 0 mW |
 | copper ESP_5V_D | 0 mW | 0 mW |
-| **Board total** | **620 mW** | **703 mW** |
+| **Board total** | **614 mW** | **696 mW** |
 | Modules (5 V power, heat inside the case) | 4.96 W | 4.92 W |
 | Battery pack I²R | 181 mW | 271 mW |
-| Inside the case | 5.76 W | 5.90 W |
+| Inside the case | 5.76 W | 5.89 W |
 
-Cell to 5 V output: 88.4 % nominal, 86.4 % high corner.
+Cell to 5 V output: 88.5 % nominal, 86.5 % high corner.
 
 ### USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load
 
-Nominal corner: charge current allowed by thermal regulation 1.80 A, VBUS at the connector 5.00 V, CHGIN at U4 4.90 V, VSYS 3.89 V, BATT at U4 3.86 V, input current 2.50 A, charge current 1.80 A, buck output current 2.91 A, buck duty 82.7 %, boost input current 1.10 A, BATFET mode: closed, charger efficiency 92.0 %, boost efficiency 95.0 %.
+Nominal corner: charge current allowed by thermal regulation 1.80 A, VBUS at the connector 5.00 V, CHGIN at U4 4.90 V, VSYS 3.89 V, BATT at U4 3.86 V, input current 2.50 A, charge current 1.80 A, buck output current 2.91 A, buck duty 82.6 %, boost input current 1.10 A, BATFET mode: closed, charger efficiency 92.2 %, boost efficiency 95.0 %.
 
 | Element | Nominal | High |
 |---|---|---|
-| BQ25798 buck | 806 mW | 801 mW |
-| L1 | 176 mW | 175 mW |
-| TPS61088 | 169 mW | 167 mW |
-| copper CHG_SW1 | 98 mW | 98 mW |
-| copper CHG_SW2 | 96 mW | 96 mW |
+| BQ25798 buck | 789 mW | 783 mW |
+| L1 | 172 mW | 171 mW |
+| TPS61088 | 168 mW | 166 mW |
+| copper CHG_SW1 | 96 mW | 95 mW |
+| copper CHG_SW2 | 94 mW | 93 mW |
 | FB1 ferrite bead | 94 mW | 130 mW |
-| copper USB_VBUS | 65 mW | 68 mW |
-| USB-C contacts | 63 mW | 130 mW |
+| copper USB_VBUS | 63 mW | 66 mW |
+| USB-C contacts | 62 mW | 130 mW |
 | LEDs and series resistors | 60 mW | 60 mW |
-| BQ25798 BATFET | 45 mW | 45 mW |
+| BQ25798 BATFET | 44 mW | 44 mW |
 | L2 | 43 mW | 42 mW |
 | F1 fuse | 36 mW | 49 mW |
 | JST-PH battery contacts | 32 mW | 65 mW |
-| copper VBAT | 25 mW | 25 mW |
+| copper VBAT | 24 mW | 25 mW |
 | copper USB_VBUS_J1 | 22 mW | 23 mW |
 | shunts and module sockets | 16 mW | 33 mW |
-| copper VSYS | 16 mW | 15 mW |
+| copper VSYS | 15 mW | 15 mW |
 | LM73100 ideal diodes | 15 mW | 24 mW |
 | TPS22975 | 12 mW | 12 mW |
 | copper RAIL_5V | 11 mW | 11 mW |
 | copper GND pour | 6 mW | 6 mW |
 | copper BAT_IN | 5 mW | 5 mW |
 | copper BOOST_5V | 4 mW | 4 mW |
-| copper ADS_5V_D | 3 mW | 3 mW |
+| copper ADS_5V_D | 2 mW | 2 mW |
 | copper ADS_5V | 1 mW | 1 mW |
 | copper BOOST_SW | 1 mW | 1 mW |
 | copper ESP_5V | 0 mW | 0 mW |
 | copper ESP_5V_D | 0 mW | 0 mW |
-| **Board total** | **1.92 W** | **2.09 W** |
+| **Board total** | **1.89 W** | **2.06 W** |
 | Modules (5 V power, heat inside the case) | 3.98 W | 3.96 W |
 | Battery pack I²R | 194 mW | 292 mW |
-| Inside the case | 6.10 W | 6.34 W |
+| Inside the case | 6.07 W | 6.31 W |
 
 ### USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load
 
-Nominal corner: charge current allowed by thermal regulation 1.78 A, VBUS at the connector 5.00 V, CHGIN at U4 4.91 V, VSYS 3.50 V, BATT at U4 3.36 V, input current 2.36 A, charge current 1.78 A, buck output current 3.01 A, buck duty 75.0 %, boost input current 1.23 A, BATFET mode: linear (VSYS held at VSYSMIN), charger efficiency 90.8 %, boost efficiency 94.5 %.
+Nominal corner: charge current allowed by thermal regulation 1.80 A, VBUS at the connector 5.00 V, CHGIN at U4 4.91 V, VSYS 3.50 V, BATT at U4 3.36 V, input current 2.38 A, charge current 1.80 A, buck output current 3.03 A, buck duty 74.9 %, boost input current 1.23 A, BATFET mode: linear (VSYS held at VSYSMIN), charger efficiency 91.0 %, boost efficiency 94.6 %.
 
 | Element | Nominal | High |
 |---|---|---|
-| BQ25798 buck | 871 mW | 879 mW |
+| BQ25798 buck | 864 mW | 859 mW |
 | BQ25798 BATFET | 251 mW | 108 mW |
-| L1 | 191 mW | 194 mW |
-| TPS61088 | 184 mW | 185 mW |
-| copper CHG_SW1 | 107 mW | 109 mW |
-| copper CHG_SW2 | 105 mW | 107 mW |
-| FB1 ferrite bead | 84 mW | 115 mW |
-| copper USB_VBUS | 59 mW | 61 mW |
+| L1 | 189 mW | 189 mW |
+| TPS61088 | 184 mW | 184 mW |
+| copper CHG_SW1 | 106 mW | 106 mW |
+| copper CHG_SW2 | 104 mW | 104 mW |
+| FB1 ferrite bead | 85 mW | 115 mW |
+| copper USB_VBUS | 58 mW | 59 mW |
 | LEDs and series resistors | 57 mW | 57 mW |
-| USB-C contacts | 56 mW | 115 mW |
-| L2 | 49 mW | 50 mW |
-| F1 fuse | 35 mW | 49 mW |
+| USB-C contacts | 57 mW | 115 mW |
+| L2 | 49 mW | 49 mW |
+| F1 fuse | 36 mW | 49 mW |
 | JST-PH battery contacts | 32 mW | 65 mW |
 | copper VBAT | 25 mW | 25 mW |
-| copper VSYS | 20 mW | 20 mW |
-| copper USB_VBUS_J1 | 19 mW | 20 mW |
+| copper USB_VBUS_J1 | 20 mW | 21 mW |
+| copper VSYS | 19 mW | 19 mW |
 | shunts and module sockets | 16 mW | 33 mW |
 | LM73100 ideal diodes | 15 mW | 24 mW |
-| TPS22975 | 12 mW | 13 mW |
-| copper RAIL_5V | 11 mW | 12 mW |
+| TPS22975 | 12 mW | 12 mW |
+| copper RAIL_5V | 11 mW | 11 mW |
 | copper GND pour | 7 mW | 7 mW |
 | copper BAT_IN | 5 mW | 5 mW |
 | copper BOOST_5V | 4 mW | 4 mW |
-| copper ADS_5V_D | 3 mW | 3 mW |
+| copper ADS_5V_D | 2 mW | 3 mW |
 | copper ADS_5V | 1 mW | 1 mW |
 | copper BOOST_SW | 1 mW | 1 mW |
 | copper ESP_5V | 0 mW | 0 mW |
 | copper ESP_5V_D | 0 mW | 0 mW |
-| **Board total** | **2.22 W** | **2.26 W** |
+| **Board total** | **2.21 W** | **2.22 W** |
 | Modules (5 V power, heat inside the case) | 3.98 W | 3.96 W |
-| Battery pack I²R | 189 mW | 292 mW |
-| Inside the case | 6.39 W | 6.51 W |
+| Battery pack I²R | 194 mW | 292 mW |
+| Inside the case | 6.39 W | 6.47 W |
 
 ### USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off
 
@@ -268,7 +268,7 @@ Nominal corner: charge current allowed by thermal regulation 1.80 A, VBUS at the
 
 | Element | Nominal | High |
 |---|---|---|
-| BQ25798 buck | 384 mW | 381 mW |
+| BQ25798 buck | 383 mW | 381 mW |
 | BQ25798 BATFET | 251 mW | 108 mW |
 | L1 | 73 mW | 73 mW |
 | F1 fuse | 36 mW | 49 mW |
@@ -284,35 +284,74 @@ Nominal corner: charge current allowed by thermal regulation 1.80 A, VBUS at the
 | copper BAT_IN | 5 mW | 5 mW |
 | copper GND pour | 3 mW | 3 mW |
 | copper VSYS | 0 mW | 0 mW |
-| **Board total** | **966 mW** | **895 mW** |
+| **Board total** | **965 mW** | **894 mW** |
 | Modules (5 V power, heat inside the case) | 0 mW | 0 mW |
 | Battery pack I²R | 194 mW | 292 mW |
 | Inside the case | 1.16 W | 1.19 W |
 
 ### USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load
 
-Nominal corner: charge current allowed by thermal regulation 1.00 A, VBUS at the connector 5.00 V, CHGIN at U4 4.93 V, VSYS 3.80 V, BATT at U4 3.79 V, input current 1.76 A, charge current 1.00 A, buck output current 2.13 A, buck duty 79.5 %, boost input current 1.12 A, BATFET mode: closed, charger efficiency 93.2 %, boost efficiency 95.0 %.
+Nominal corner: charge current allowed by thermal regulation 1.00 A, VBUS at the connector 5.00 V, CHGIN at U4 4.93 V, VSYS 3.80 V, BATT at U4 3.79 V, input current 1.76 A, charge current 1.00 A, buck output current 2.13 A, buck duty 79.4 %, boost input current 1.12 A, BATFET mode: closed, charger efficiency 93.3 %, boost efficiency 95.0 %.
 
 | Element | Nominal | High |
 |---|---|---|
-| BQ25798 buck | 491 mW | 488 mW |
-| TPS61088 | 171 mW | 170 mW |
-| L1 | 100 mW | 100 mW |
+| BQ25798 buck | 484 mW | 480 mW |
+| TPS61088 | 171 mW | 169 mW |
+| L1 | 99 mW | 98 mW |
 | LEDs and series resistors | 59 mW | 59 mW |
-| copper CHG_SW1 | 51 mW | 50 mW |
-| copper CHG_SW2 | 50 mW | 49 mW |
+| copper CHG_SW1 | 49 mW | 49 mW |
+| copper CHG_SW2 | 48 mW | 48 mW |
 | FB1 ferrite bead | 47 mW | 63 mW |
-| L2 | 43 mW | 43 mW |
+| L2 | 43 mW | 42 mW |
 | USB-C contacts | 31 mW | 63 mW |
-| copper USB_VBUS | 31 mW | 31 mW |
+| copper USB_VBUS | 30 mW | 31 mW |
 | shunts and module sockets | 16 mW | 33 mW |
-| copper VSYS | 16 mW | 15 mW |
+| copper VSYS | 15 mW | 15 mW |
 | LM73100 ideal diodes | 15 mW | 24 mW |
 | BQ25798 BATFET | 13 mW | 13 mW |
 | TPS22975 | 12 mW | 12 mW |
 | F1 fuse | 11 mW | 15 mW |
 | copper RAIL_5V | 11 mW | 11 mW |
-| copper USB_VBUS_J1 | 10 mW | 11 mW |
+| copper USB_VBUS_J1 | 11 mW | 11 mW |
+| JST-PH battery contacts | 10 mW | 20 mW |
+| copper VBAT | 7 mW | 7 mW |
+| copper BOOST_5V | 4 mW | 4 mW |
+| copper GND pour | 3 mW | 3 mW |
+| copper ADS_5V_D | 2 mW | 2 mW |
+| copper BAT_IN | 1 mW | 2 mW |
+| copper ADS_5V | 1 mW | 1 mW |
+| copper BOOST_SW | 1 mW | 1 mW |
+| copper ESP_5V | 0 mW | 0 mW |
+| copper ESP_5V_D | 0 mW | 0 mW |
+| **Board total** | **1.19 W** | **1.28 W** |
+| Modules (5 V power, heat inside the case) | 3.98 W | 3.96 W |
+| Battery pack I²R | 60 mW | 90 mW |
+| Inside the case | 5.24 W | 5.33 W |
+
+### USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load
+
+Nominal corner: charge current allowed by thermal regulation 1.00 A, VBUS at the connector 5.00 V, CHGIN at U4 4.93 V, VSYS 3.50 V, BATT at U4 3.29 V, input current 1.71 A, charge current 1.00 A, buck output current 2.23 A, buck duty 73.5 %, boost input current 1.23 A, BATFET mode: linear (VSYS held at VSYSMIN), charger efficiency 92.5 %, boost efficiency 94.6 %.
+
+| Element | Nominal | High |
+|---|---|---|
+| BQ25798 buck | 524 mW | 524 mW |
+| BQ25798 BATFET | 211 mW | 167 mW |
+| TPS61088 | 183 mW | 183 mW |
+| L1 | 108 mW | 108 mW |
+| LEDs and series resistors | 57 mW | 57 mW |
+| copper CHG_SW1 | 55 mW | 55 mW |
+| copper CHG_SW2 | 54 mW | 54 mW |
+| L2 | 48 mW | 48 mW |
+| FB1 ferrite bead | 44 mW | 59 mW |
+| USB-C contacts | 29 mW | 59 mW |
+| copper USB_VBUS | 29 mW | 29 mW |
+| copper VSYS | 18 mW | 19 mW |
+| shunts and module sockets | 16 mW | 33 mW |
+| LM73100 ideal diodes | 15 mW | 24 mW |
+| TPS22975 | 12 mW | 12 mW |
+| F1 fuse | 11 mW | 15 mW |
+| copper RAIL_5V | 11 mW | 11 mW |
+| copper USB_VBUS_J1 | 10 mW | 10 mW |
 | JST-PH battery contacts | 10 mW | 20 mW |
 | copper VBAT | 7 mW | 7 mW |
 | copper BOOST_5V | 4 mW | 4 mW |
@@ -323,49 +362,10 @@ Nominal corner: charge current allowed by thermal regulation 1.00 A, VBUS at the
 | copper BOOST_SW | 1 mW | 1 mW |
 | copper ESP_5V | 0 mW | 0 mW |
 | copper ESP_5V_D | 0 mW | 0 mW |
-| **Board total** | **1.21 W** | **1.29 W** |
+| **Board total** | **1.47 W** | **1.51 W** |
 | Modules (5 V power, heat inside the case) | 3.98 W | 3.96 W |
 | Battery pack I²R | 60 mW | 90 mW |
-| Inside the case | 5.25 W | 5.34 W |
-
-### USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load
-
-Nominal corner: charge current allowed by thermal regulation 1.00 A, VBUS at the connector 5.00 V, CHGIN at U4 4.93 V, VSYS 3.50 V, BATT at U4 3.29 V, input current 1.72 A, charge current 1.00 A, buck output current 2.23 A, buck duty 73.5 %, boost input current 1.23 A, BATFET mode: linear (VSYS held at VSYSMIN), charger efficiency 92.4 %, boost efficiency 94.6 %.
-
-| Element | Nominal | High |
-|---|---|---|
-| BQ25798 buck | 533 mW | 532 mW |
-| BQ25798 BATFET | 211 mW | 167 mW |
-| TPS61088 | 183 mW | 184 mW |
-| L1 | 110 mW | 110 mW |
-| LEDs and series resistors | 57 mW | 57 mW |
-| copper CHG_SW1 | 56 mW | 57 mW |
-| copper CHG_SW2 | 55 mW | 55 mW |
-| L2 | 48 mW | 48 mW |
-| FB1 ferrite bead | 44 mW | 59 mW |
-| copper USB_VBUS | 29 mW | 30 mW |
-| USB-C contacts | 29 mW | 59 mW |
-| copper VSYS | 19 mW | 19 mW |
-| shunts and module sockets | 16 mW | 33 mW |
-| LM73100 ideal diodes | 15 mW | 24 mW |
-| TPS22975 | 12 mW | 12 mW |
-| copper RAIL_5V | 11 mW | 11 mW |
-| F1 fuse | 11 mW | 15 mW |
-| JST-PH battery contacts | 10 mW | 20 mW |
-| copper USB_VBUS_J1 | 10 mW | 10 mW |
-| copper VBAT | 7 mW | 8 mW |
-| copper BOOST_5V | 4 mW | 4 mW |
-| copper GND pour | 3 mW | 3 mW |
-| copper ADS_5V_D | 2 mW | 2 mW |
-| copper BAT_IN | 2 mW | 2 mW |
-| copper ADS_5V | 1 mW | 1 mW |
-| copper BOOST_SW | 1 mW | 1 mW |
-| copper ESP_5V | 0 mW | 0 mW |
-| copper ESP_5V_D | 0 mW | 0 mW |
-| **Board total** | **1.48 W** | **1.52 W** |
-| Modules (5 V power, heat inside the case) | 3.98 W | 3.96 W |
-| Battery pack I²R | 60 mW | 90 mW |
-| Inside the case | 5.53 W | 5.57 W |
+| Inside the case | 5.51 W | 5.56 W |
 
 ## Temperatures
 
@@ -374,35 +374,35 @@ Hot spots from the grid solution. "θJA" is the naive figure from the data sheet
 | Case | Environment | Ambient | Corner | Case air | U4 Tj | U6 Tj | U7 Tj | L1 | L2 | Board max | Hottest X7R | Pack |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Battery 3.1 V, typical 1.22 W load | open | 25 °C | nominal | 25.0 | 26 (θJA 25) | 29 (θJA 29) | 27 | - | 28 | 29 | 27 (C18) | 25.1 |
-| Battery 3.1 V, typical 1.22 W load | closed | 25 °C | nominal | 32.9 | 34 (θJA 25) | 37 (θJA 29) | 36 | - | 36 | 37 | 36 (C18) | 33.0 |
-|  |  |  | high | 33.0 | 34 (θJA 25) | 38 (θJA 29) | 36 | - | 36 | 37 | 36 (C18) | 33.1 |
-| Battery 3.1 V, typical 1.22 W load | closed | 50 °C | nominal | 58.0 | 59 (θJA 50) | 62 (θJA 54) | 61 | - | 61 | 62 | 61 (C18) | 58.1 |
-|  |  |  | high | 58.0 | 59 (θJA 50) | 63 (θJA 54) | 61 | - | 61 | 62 | 61 (C18) | 58.2 |
+| Battery 3.1 V, typical 1.22 W load | closed | 25 °C | nominal | 31.7 | 33 (θJA 25) | 36 (θJA 29) | 34 | - | 35 | 36 | 35 (C18) | 31.8 |
+|  |  |  | high | 31.7 | 33 (θJA 25) | 36 (θJA 29) | 35 | - | 35 | 36 | 35 (C18) | 31.9 |
+| Battery 3.1 V, typical 1.22 W load | closed | 50 °C | nominal | 56.7 | 58 (θJA 50) | 61 (θJA 54) | 59 | - | 60 | 61 | 60 (C18) | 56.8 |
+|  |  |  | high | 56.8 | 58 (θJA 50) | 61 (θJA 54) | 60 | - | 60 | 61 | 60 (C18) | 56.9 |
 | Battery 3.1 V, 0.8 A load | open | 25 °C | nominal | 25.0 | 28 (θJA 26) | 34 (θJA 33) | 30 | - | 31 | 33 | 31 (C18) | 26.1 |
-| Battery 3.1 V, 0.8 A load | closed | 25 °C | nominal | 49.2 | 53 (θJA 26) | 60 (θJA 33) | 57 | - | 57 | 59 | 57 (C18) | 50.3 |
-|  |  |  | high | 49.7 | 54 (θJA 26) | 61 (θJA 33) | 58 | - | 58 | 60 | 58 (C18) | 51.3 |
-| Battery 3.1 V, 0.8 A load | closed | 50 °C | nominal | 74.4 | 79 (θJA 51) | 85 (θJA 58) | 82 | - | 83 | 85 | 82 (C18) | 75.5 |
-|  |  |  | high | 74.9 | 80 (θJA 51) | 86 (θJA 58) | 83 | - | 84 | 86 | 83 (C18) | 76.5 |
+| Battery 3.1 V, 0.8 A load | closed | 25 °C | nominal | 43.8 | 48 (θJA 26) | 54 (θJA 33) | 51 | - | 52 | 54 | 51 (C18) | 44.9 |
+|  |  |  | high | 44.1 | 49 (θJA 26) | 55 (θJA 33) | 52 | - | 53 | 55 | 52 (C18) | 45.7 |
+| Battery 3.1 V, 0.8 A load | closed | 50 °C | nominal | 69.1 | 73 (θJA 51) | 80 (θJA 58) | 77 | - | 77 | 80 | 77 (C18) | 70.1 |
+|  |  |  | high | 69.4 | 74 (θJA 51) | 81 (θJA 58) | 78 | - | 78 | 80 | 78 (C18) | 71.0 |
 | Battery 3.1 V, 1.0 A load | open | 25 °C | nominal | 25.0 | 29 (θJA 26) | 36 (θJA 34) | 32 | - | 33 | 36 | 32 (C18) | 26.7 |
-| Battery 3.1 V, 1.0 A load | closed | 25 °C | nominal | 55.1 | 61 (θJA 27) | 69 (θJA 35) | 65 | - | 66 | 68 | 65 (C18) | 56.8 |
-|  |  |  | high | 55.8 | 62 (θJA 27) | 70 (θJA 35) | 67 | - | 67 | 70 | 67 (C18) | 58.3 |
-| Battery 3.1 V, 1.0 A load | closed | 50 °C | nominal | 80.4 | 87 (θJA 52) | 95 (θJA 60) | 91 | - | 92 | 94 | 91 (C18) | 82.1 |
-|  |  |  | high | 81.1 | 88 (θJA 52) | 96 (θJA 60) | 92 | - | 93 | 96 | 92 (C18) | 83.6 |
+| Battery 3.1 V, 1.0 A load | closed | 25 °C | nominal | 48.0 | 54 (θJA 27) | 62 (θJA 35) | 58 | - | 59 | 61 | 58 (C18) | 49.6 |
+|  |  |  | high | 48.4 | 55 (θJA 27) | 63 (θJA 35) | 59 | - | 60 | 62 | 59 (C18) | 50.9 |
+| Battery 3.1 V, 1.0 A load | closed | 50 °C | nominal | 73.3 | 79 (θJA 52) | 87 (θJA 60) | 84 | - | 84 | 87 | 84 (C18) | 75.0 |
+|  |  |  | high | 73.8 | 80 (θJA 52) | 89 (θJA 60) | 85 | - | 86 | 88 | 85 (C18) | 76.3 |
 | USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | open | 25 °C | nominal | 25.0 | 50 (θJA 59) | 41 (θJA 31) | 37 | 44 | 40 | 47 | 43 (C6) | 26.8 |
-| USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed | 25 °C | nominal | 56.7 | 91 (θJA 63) | 80 (θJA 32) | 76 | 84 | 79 | 87 | 84 (C6) | 58.5 |
-|  |  |  | high | 57.9 | 94 (θJA 62) | 83 (θJA 31) | 80 | 87 | 83 | 90 | 86 (C6) | 60.6 |
+| USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed | 25 °C | nominal | 49.0 | 83 (θJA 62) | 72 (θJA 32) | 68 | 76 | 71 | 79 | 75 (C6) | 50.8 |
+|  |  |  | high | 49.8 | 85 (θJA 62) | 75 (θJA 31) | 71 | 78 | 74 | 81 | 78 (C6) | 52.5 |
 | USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | open | 25 °C | nominal | 25.0 | 57 (θJA 71) | 43 (θJA 32) | 39 | 47 | 42 | 52 | 47 (C6) | 26.8 |
-| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed | 25 °C | nominal | 58.1 | 100 (θJA 75) | 84 (θJA 32) | 80 | 89 | 84 | 95 | 90 (C6) | 59.9 |
-|  |  |  | high | 58.7 | 99 (θJA 69) | 86 (θJA 32) | 82 | 90 | 85 | 94 | 90 (C6) | 61.4 |
+| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed | 25 °C | nominal | 50.1 | 92 (θJA 74) | 76 (θJA 32) | 72 | 81 | 75 | 87 | 81 (C6) | 51.9 |
+|  |  |  | high | 50.3 | 89 (θJA 68) | 77 (θJA 32) | 73 | 81 | 76 | 85 | 81 (C6) | 53.0 |
 | USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | open | 25 °C | nominal | 25.0 | 42 (θJA 53) | - | - | 35 | - | 39 | 36 (C6) | 26.8 |
-| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | closed | 25 °C | nominal | 31.7 | 53 (θJA 53) | - | - | 45 | - | 49 | 46 (C6) | 33.5 |
-|  |  |  | high | 31.8 | 49 (θJA 47) | - | - | 44 | - | 47 | 44 (C6) | 34.5 |
-| USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | open | 25 °C | nominal | 25.0 | 40 (θJA 46) | 37 (θJA 32) | 34 | 37 | 35 | 38 | 36 (C6) | 25.6 |
-| USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed | 25 °C | nominal | 52.7 | 73 (θJA 47) | 69 (θJA 32) | 66 | 69 | 68 | 71 | 69 (C6) | 53.2 |
-|  |  |  | high | 53.1 | 74 (θJA 47) | 71 (θJA 32) | 68 | 71 | 69 | 72 | 70 (C6) | 53.9 |
+| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | closed | 25 °C | nominal | 30.7 | 52 (θJA 53) | - | - | 44 | - | 48 | 45 (C6) | 32.5 |
+|  |  |  | high | 30.8 | 48 (θJA 47) | - | - | 43 | - | 46 | 43 (C6) | 33.5 |
+| USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | open | 25 °C | nominal | 25.0 | 40 (θJA 46) | 37 (θJA 32) | 34 | 37 | 36 | 38 | 37 (C6) | 25.6 |
+| USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed | 25 °C | nominal | 46.2 | 67 (θJA 47) | 63 (θJA 32) | 60 | 63 | 61 | 64 | 62 (C6) | 46.7 |
+|  |  |  | high | 46.5 | 68 (θJA 47) | 64 (θJA 32) | 61 | 64 | 63 | 65 | 64 (C6) | 47.3 |
 | USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | open | 25 °C | nominal | 25.0 | 46 (θJA 56) | 39 (θJA 32) | 35 | 39 | 37 | 43 | 40 (C6) | 25.6 |
-| USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed | 25 °C | nominal | 54.0 | 82 (θJA 58) | 73 (θJA 32) | 70 | 74 | 72 | 78 | 75 (C6) | 54.5 |
-|  |  |  | high | 54.2 | 81 (θJA 56) | 74 (θJA 32) | 71 | 75 | 73 | 78 | 75 (C6) | 55.0 |
+| USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed | 25 °C | nominal | 47.1 | 74 (θJA 57) | 66 (θJA 32) | 63 | 67 | 65 | 71 | 67 (C6) | 47.7 |
+|  |  |  | high | 47.3 | 74 (θJA 56) | 67 (θJA 32) | 64 | 67 | 66 | 71 | 68 (C6) | 48.1 |
 
 All temperatures in °C. Board max is the hottest grid cell (1 mm), not a pad.
 
@@ -413,16 +413,16 @@ All temperatures in °C. Board max is the hottest grid cell (1 mm), not a pad.
 - PASS: USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off, open bench, 25 °C: full 1.8 A charge current (U4 junction 42 °C, regulation at 100 °C)
 - PASS: USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load, open bench, 25 °C: full 1.0 A charge current (U4 junction 40 °C, regulation at 120 °C)
 - PASS: USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load, open bench, 25 °C: full 1.0 A charge current (U4 junction 46 °C, regulation at 120 °C)
-- PASS: TPS61088 junction at most 96 °C (Battery 3.1 V, 1.0 A load, 50 °C ambient, high corner, closed case), limit 125 °C
-- PASS: TPS22975 junction at most 92 °C (Battery 3.1 V, 1.0 A load, 50 °C ambient, high corner, closed case), limit 125 °C
-- PASS: L1 winding at most 90 °C (USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load, 25 °C ambient, high corner, closed case), limit 125 °C
-- PASS: L2 winding at most 93 °C (Battery 3.1 V, 1.0 A load, 50 °C ambient, high corner, closed case), limit 125 °C
-- PASS: hottest board cell 95.6 °C (Battery 3.1 V, 1.0 A load, 50 °C ambient, high corner, closed case); limit 125 °C (FR4 Tg 130 °C and up)
-- PASS: X7R bulk capacitors at 25 °C ambient, closed case: hottest C6 at 90 °C (USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load, high corner), rating 125 °C
-- PASS: X7R bulk capacitors at 50 °C ambient, closed case: hottest C18 at 92 °C (Battery 3.1 V, 1.0 A load, high corner), rating 125 °C
-- PASS: Battery 3.1 V, typical 1.22 W load, closed case, 25 °C ambient, high corner: pack at 33.1 °C; it must stay below the thermostat's lowest opening point 55 °C (60 °C ± 5 K)
-- PASS: Battery 3.1 V, 0.8 A load, closed case, 25 °C ambient, high corner: pack at 51.3 °C; it must stay below the thermostat's lowest opening point 55 °C (60 °C ± 5 K)
-- **FAIL**: Battery 3.1 V, 1.0 A load, closed case, 25 °C ambient, high corner: pack at 58.3 °C; it must stay below the thermostat's lowest opening point 55 °C (60 °C ± 5 K)
+- PASS: TPS61088 junction at most 89 °C (Battery 3.1 V, 1.0 A load, 50 °C ambient, high corner, closed case), limit 125 °C
+- PASS: TPS22975 junction at most 85 °C (Battery 3.1 V, 1.0 A load, 50 °C ambient, high corner, closed case), limit 125 °C
+- PASS: L1 winding at most 81 °C (Battery 3.1 V, 1.0 A load, 50 °C ambient, high corner, closed case), limit 125 °C
+- PASS: L2 winding at most 86 °C (Battery 3.1 V, 1.0 A load, 50 °C ambient, high corner, closed case), limit 125 °C
+- PASS: hottest board cell 88.2 °C (Battery 3.1 V, 1.0 A load, 50 °C ambient, high corner, closed case); limit 125 °C (FR4 Tg 130 °C and up)
+- PASS: X7R bulk capacitors at 25 °C ambient, closed case: hottest C6 at 81 °C (USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load, nominal corner), rating 125 °C
+- PASS: X7R bulk capacitors at 50 °C ambient, closed case: hottest C18 at 85 °C (Battery 3.1 V, 1.0 A load, high corner), rating 125 °C
+- PASS: Battery 3.1 V, typical 1.22 W load, closed case, 25 °C ambient, high corner: pack at 31.9 °C; it must stay below the thermostat's lowest opening point 55 °C (60 °C ± 5 K)
+- PASS: Battery 3.1 V, 0.8 A load, closed case, 25 °C ambient, high corner: pack at 45.7 °C; it must stay below the thermostat's lowest opening point 55 °C (60 °C ± 5 K)
+- PASS: Battery 3.1 V, 1.0 A load, closed case, 25 °C ambient, high corner: pack at 50.9 °C; it must stay below the thermostat's lowest opening point 55 °C (60 °C ± 5 K)
 - PASS: battery current at most 1.80 A through J3, JST PH rating 2 A (AWG 24)
 - PASS: USB input current at most 2.55 A, MC-107DMS rating 5 A
 
@@ -433,20 +433,20 @@ The BQ25798 holds its junction at TREG by reducing the charge current (register 
 | Case | Environment | Corner | TREG | Charge current | Input current | U4 Tj | U4 loss |
 |---|---|---|---|---|---|---|---|
 | USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | open bench, no enclosure | nominal | 100 °C | 1.80 A | 2.48 A | 50 °C | 0.76 W |
-| USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | nominal | 100 °C | 1.80 A | 2.50 A | 91 °C | 0.85 W |
-| USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | high | 100 °C | 1.80 A | 2.55 A | 94 °C | 0.85 W |
+| USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | nominal | 100 °C | 1.80 A | 2.50 A | 83 °C | 0.83 W |
+| USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | high | 100 °C | 1.80 A | 2.55 A | 85 °C | 0.83 W |
 | USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | open bench, no enclosure | nominal | 100 °C | 1.80 A | 2.36 A | 57 °C | 1.04 W |
-| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | nominal | 100 °C | 1.78 A | 2.36 A | 100 °C | 1.12 W |
-| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | high | 100 °C | 1.80 A | 2.40 A | 99 °C | 0.99 W |
+| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | nominal | 100 °C | 1.80 A | 2.38 A | 92 °C | 1.11 W |
+| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | high | 100 °C | 1.80 A | 2.40 A | 89 °C | 0.97 W |
 | USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | open bench, no enclosure | nominal | 100 °C | 1.80 A | 1.37 A | 42 °C | 0.63 W |
-| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | closed 3D-printed case | nominal | 100 °C | 1.80 A | 1.37 A | 53 °C | 0.63 W |
-| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | closed 3D-printed case | high | 100 °C | 1.80 A | 1.38 A | 49 °C | 0.49 W |
+| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | closed 3D-printed case | nominal | 100 °C | 1.80 A | 1.37 A | 52 °C | 0.63 W |
+| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | closed 3D-printed case | high | 100 °C | 1.80 A | 1.38 A | 48 °C | 0.49 W |
 | USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | open bench, no enclosure | nominal | 120 °C | 1.00 A | 1.75 A | 40 °C | 0.47 W |
-| USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | nominal | 120 °C | 1.00 A | 1.76 A | 73 °C | 0.50 W |
-| USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | high | 120 °C | 1.00 A | 1.78 A | 74 °C | 0.50 W |
+| USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | nominal | 120 °C | 1.00 A | 1.76 A | 67 °C | 0.50 W |
+| USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | high | 120 °C | 1.00 A | 1.78 A | 68 °C | 0.49 W |
 | USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | open bench, no enclosure | nominal | 120 °C | 1.00 A | 1.70 A | 46 °C | 0.70 W |
-| USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | nominal | 120 °C | 1.00 A | 1.72 A | 82 °C | 0.74 W |
-| USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | high | 120 °C | 1.00 A | 1.72 A | 81 °C | 0.70 W |
+| USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | nominal | 120 °C | 1.00 A | 1.71 A | 74 °C | 0.73 W |
+| USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | high | 120 °C | 1.00 A | 1.72 A | 74 °C | 0.69 W |
 
 ## U4 heatsink against the bare board
 
@@ -455,24 +455,24 @@ The same operating points solved without the heatsink. It moves heat from the di
 | Case | Environment | Corner | U4 junction, bare to heatsink | Charge current, bare to heatsink | Heat through the heatsink | U4 junction to air, bare to heatsink |
 |---|---|---|---|---|---|---|
 | USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | open bench, no enclosure | nominal | 62 to 50 °C | 1.80 to 1.80 A | 0.33 W of 0.76 W | 49 to 33 K/W |
-| USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | nominal | 100 to 91 °C | 1.65 to 1.80 A | 0.35 W of 0.85 W | 52 to 40 K/W |
-| USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | high | 100 to 94 °C | 1.58 to 1.80 A | 0.36 W of 0.85 W | 52 to 42 K/W |
-| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | open bench, no enclosure | nominal | 72 to 57 °C | 1.80 to 1.80 A | 0.42 W of 1.04 W | 45 to 31 K/W |
-| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | nominal | 100 to 100 °C | 1.24 to 1.78 A | 0.43 W of 1.12 W | 40 to 38 K/W |
-| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | high | 100 to 99 °C | 1.29 to 1.80 A | 0.40 W of 0.99 W | 45 to 40 K/W |
+| USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | nominal | 97 to 83 °C | 1.80 to 1.80 A | 0.34 W of 0.83 W | 58 to 40 K/W |
+| USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | high | 100 to 85 °C | 1.80 to 1.80 A | 0.35 W of 0.83 W | 60 to 42 K/W |
+| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | open bench, no enclosure | nominal | 72 to 57 °C | 1.80 to 1.80 A | 0.42 W of 1.04 W | 46 to 31 K/W |
+| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | nominal | 100 to 92 °C | 1.50 to 1.80 A | 0.42 W of 1.11 W | 46 to 38 K/W |
+| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | closed 3D-printed case | high | 100 to 89 °C | 1.58 to 1.80 A | 0.39 W of 0.97 W | 52 to 40 K/W |
 | USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | open bench, no enclosure | nominal | 50 to 42 °C | 1.80 to 1.80 A | 0.23 W of 0.63 W | 40 to 27 K/W |
-| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | closed 3D-printed case | nominal | 61 to 53 °C | 1.80 to 1.80 A | 0.21 W of 0.63 W | 46 to 33 K/W |
-| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | closed 3D-printed case | high | 56 to 49 °C | 1.80 to 1.80 A | 0.18 W of 0.49 W | 50 to 36 K/W |
+| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | closed 3D-printed case | nominal | 60 to 52 °C | 1.80 to 1.80 A | 0.21 W of 0.63 W | 46 to 33 K/W |
+| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | closed 3D-printed case | high | 55 to 48 °C | 1.80 to 1.80 A | 0.18 W of 0.49 W | 50 to 36 K/W |
 | USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | open bench, no enclosure | nominal | 48 to 40 °C | 1.00 to 1.00 A | 0.20 W of 0.47 W | 48 to 33 K/W |
-| USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | nominal | 82 to 73 °C | 1.00 to 1.00 A | 0.21 W of 0.50 W | 58 to 41 K/W |
-| USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | high | 83 to 74 °C | 1.00 to 1.00 A | 0.21 W of 0.50 W | 60 to 43 K/W |
+| USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | nominal | 75 to 67 °C | 1.00 to 1.00 A | 0.21 W of 0.50 W | 58 to 41 K/W |
+| USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | high | 76 to 68 °C | 1.00 to 1.00 A | 0.21 W of 0.49 W | 60 to 43 K/W |
 | USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | open bench, no enclosure | nominal | 56 to 46 °C | 1.00 to 1.00 A | 0.28 W of 0.70 W | 44 to 30 K/W |
-| USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | nominal | 93 to 82 °C | 1.00 to 1.00 A | 0.28 W of 0.74 W | 52 to 37 K/W |
-| USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | high | 92 to 81 °C | 1.00 to 1.00 A | 0.27 W of 0.70 W | 55 to 39 K/W |
+| USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | nominal | 86 to 74 °C | 1.00 to 1.00 A | 0.28 W of 0.73 W | 52 to 37 K/W |
+| USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | closed 3D-printed case | high | 85 to 74 °C | 1.00 to 1.00 A | 0.27 W of 0.69 W | 55 to 39 K/W |
 | Battery 3.1 V, 0.8 A load | open bench, no enclosure | nominal | 29 to 28 °C | - | 0.04 W of 0.02 W | 183 to 126 K/W |
-| Battery 3.1 V, 0.8 A load | closed 3D-printed case | nominal | 55 to 53 °C | - | 0.04 W of 0.02 W | 247 to 178 K/W |
+| Battery 3.1 V, 0.8 A load | closed 3D-printed case | nominal | 50 to 48 °C | - | 0.04 W of 0.02 W | 250 to 180 K/W |
 | Battery 3.1 V, 1.0 A load | open bench, no enclosure | nominal | 30 to 29 °C | - | 0.05 W of 0.03 W | 161 to 111 K/W |
-| Battery 3.1 V, 1.0 A load | closed 3D-printed case | nominal | 63 to 61 °C | - | 0.06 W of 0.04 W | 215 to 155 K/W |
+| Battery 3.1 V, 1.0 A load | closed 3D-printed case | nominal | 56 to 54 °C | - | 0.06 W of 0.04 W | 217 to 157 K/W |
 
 Junction to air is the junction rise over the surrounding air divided by the U4 loss at the operating point with the heatsink. In regulation the loss differs between the two solutions.
 
@@ -482,16 +482,16 @@ The charger reads the pack NTC. Above 31.4 °C it lowers the termination voltage
 
 | Case | Corner | Pack above ambient | Ambient for 4.05 V limit | Ambient for charge stop |
 |---|---|---|---|---|
-| USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | nominal | 33.5 K | -2.1 °C | 8.6 °C |
-|  | high | 35.6 K | -4.2 °C | 6.5 °C |
-| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | nominal | 34.9 K | -3.5 °C | 7.2 °C |
-|  | high | 36.4 K | -5.0 °C | 5.7 °C |
-| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | nominal | 8.5 K | 22.9 °C | 33.6 °C |
-|  | high | 9.5 K | 21.9 °C | 32.6 °C |
-| USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | nominal | 28.2 K | 3.2 °C | 13.9 °C |
-|  | high | 28.9 K | 2.5 °C | 13.2 °C |
-| USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | nominal | 29.5 K | 1.9 °C | 12.6 °C |
-|  | high | 30.0 K | 1.4 °C | 12.1 °C |
+| USB 3 A source, cell 3.7 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | nominal | 25.8 K | 5.6 °C | 16.3 °C |
+|  | high | 27.5 K | 3.9 °C | 14.6 °C |
+| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, 0.8 A load | nominal | 26.9 K | 4.5 °C | 15.2 °C |
+|  | high | 28.0 K | 3.4 °C | 14.1 °C |
+| USB 3 A source, cell 3.2 V, 1.8 A host mode, TREG 100 °C, device off | nominal | 7.5 K | 23.9 °C | 34.6 °C |
+|  | high | 8.5 K | 22.9 °C | 33.6 °C |
+| USB 3 A source, cell 3.7 V, 1 A default mode, TREG 120 °C, 0.8 A load | nominal | 21.7 K | 9.7 °C | 20.4 °C |
+|  | high | 22.3 K | 9.1 °C | 19.8 °C |
+| USB 3 A source, cell 3.2 V, 1 A default mode, TREG 120 °C, 0.8 A load | nominal | 22.7 K | 8.7 °C | 19.4 °C |
+|  | high | 23.1 K | 8.3 °C | 19.0 °C |
 
 On the open bench the pack rises only by its own I²R loss (a few tenths of a kelvin at 1.8 A).
 
@@ -507,6 +507,6 @@ On the open bench the pack rises only by its own I²R loss (a few tenths of a ke
 - Only DC currents are solved in the copper. Ripple currents in the capacitor loops and their ESR losses are small and stay inside the converter footprints.
 - Bench verification: thermocouple or IR camera on U4, U6, L1, L2 and the pack at the charging case with the real enclosure, and at the 3.1 V / 0.8 A battery case.
 
-Run time 7 s, grid 105 x 95 x 4 nodes.
+Run time 6 s, grid 105 x 95 x 4 nodes.
 
-Result: 1 check(s) failed.
+Result: all checks pass.

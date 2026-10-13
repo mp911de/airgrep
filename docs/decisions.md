@@ -75,7 +75,7 @@ One entry per decision, with its reason. The design is described in [power.md](p
 - All case and module holes are 2.7 mm for M2.5 hardware, on KiCad stock footprints. The module holes take M2.5 as delivered and are not enlarged for M3.
 - The GNSS has two standoffs, the display one. The header rows carry the rest.
 - The ADSBee holes follow the manufacturer's enclosure pattern. MH12 and MH14 use the 23.0 x 40.5 mm pattern of the enclosure STEP file, not the 22.6 x 40.4 mm photo estimate. The delivered module decides.
-- A UART connects display and ADSBee. Traffic data then does not depend on Wi-Fi. Custom ADSBee firmware must add wired Wi-Fi command intake and responses on that UART.
+- A UART connects display and ADSBee. Traffic data then does not depend on Wi-Fi. The custom ADSBee UART console provides wired commands and replies at 115200 baud, 8E1, alongside CSBEE traffic.
 - Maintained mute and Wi-Fi sliders use a TCA9534PWR input expander on the existing I2C bus. Its eight inputs meet the requirement for six while leaving six spare after the two sliders. It uses no extra ESP GPIO; INT is unused and firmware polls. TSSOP-16, low standby current and the available C783615 assembly listing favor it over PCF8574.
 - Mute gates ESP buzzer PWM in firmware. The POWER slider remains independent and is the recovery control for a firmware hang. A failed expander read retains both last known states. Low battery does not override the Wi-Fi slider.
 - All three sliders use K3-1280S-F1, C92658. The local footprint follows the manufacturer drawing, including its peg offsets; the generic supplier CAD is inconsistent and needs a sample/assembly-preview check before production.
