@@ -23,12 +23,11 @@ bring-up remain open. The hardware is not a fabrication release.
 
 ## Firmware dependency
 
-Keep the display-to-ADSBee UART wiring. Stock ADSBee firmware has not established
-AT command intake on COMMS_UART: the local datasheet describes AT commands on
-CONSOLE, and the inspected upstream parser reads stdio/network-console input.
-Custom ADSBee firmware is already planned for FLARM; it must add wired Wi-Fi
-command intake and responses alongside traffic output. No expander coordination
-protocol or additional hardware signal is required.
+Keep the display-to-ADSBee UART wiring. The local custom ADSBee `airgrep` build profile accepts
+AT commands on COMMS_UART and returns replies there alongside traffic output.
+The agreed link is 115200 baud, 8E1, no flow control, with CSBEE traffic and CRC16.
+Display integration and physical verification remain open. See the
+[UART contract](../docs/firmware.md#adsbee-uart).
 
 Sources: [AT implementation](https://github.com/PantsForBirds/adsbee/blob/main/firmware/adsbee_1090/pico/application/comms/at/comms_at.cc),
 [application build configuration](https://github.com/PantsForBirds/adsbee/blob/main/firmware/adsbee_1090/pico/application/CMakeLists.txt).
