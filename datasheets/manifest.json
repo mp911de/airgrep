@@ -346,5 +346,48 @@
     "bytes": 3331938,
     "sha256": "163e45683f62f208545920e1470054b352b4a4b0cdc201e1f19fcb1007f1e222",
     "note": "U4 charger of carrier-ti-charger. SLUSDV2C, revised June 2026. Downloaded by Mark in a browser"
+  },
+  {
+    "file": "um10204.pdf",
+    "manufacturer_url": "https://www.nxp.com/docs/en/user-guide/UM10204.pdf",
+    "download_url": null,
+    "downloaded": "2026-10-13",
+    "bytes": 750958,
+    "sha256": "dc91f00f65584e06ef36e26c93bf9d91a95fb3c8a1830a9223e53caf678b36af",
+    "note": "Governing I2C standard. Rev 7.0, 1 October 2021. Supplied by Mark."
+  },
+  {
+    "file": "esp32-s3.pdf",
+    "manufacturer_url": "https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf",
+    "download_url": "https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf",
+    "downloaded": "2026-10-13",
+    "bytes": 1098115,
+    "sha256": "2d5a7cb7fd559d8d972bd88db32669c0196d23f22d7afaafb0f63d099b589a3f",
+    "note": "Display module host. ESP32-S3 Series Datasheet v2.2."
+  },
+  {
+    "file": "lsm6ds3.pdf",
+    "manufacturer_url": "https://www.st.com/resource/en/datasheet/lsm6ds3.pdf",
+    "download_url": "https://content.arduino.cc/assets/st_imu_lsm6ds3_datasheet.pdf",
+    "downloaded": "2026-10-13",
+    "bytes": 1487637,
+    "sha256": "fe0f148006f671402b93f3625ed6574cdbd7ce720b4c1e2239ee0e371ed1919d",
+    "note": "Display module IMU. ST DocID026899 Rev 10, Arduino mirror; original LSM6DS3, not LSM6DS3TR-C."
+  },
+  {
+    "file": "axs5106l.pdf",
+    "manufacturer_url": "https://www.chipsourcetek.com/DataSheet/AXS5106L.pdf",
+    "downloaded": "2026-10-13",
+    "bytes": 1192842,
+    "sha256": "d7c2d0ff411c715989e3e64acfaff66099b4c174f13722d6268413ead69eb44e",
+    "note": "User-supplied manufacturer datasheet, V1.0, 2023-03-22. Display touch controller identified by Seeed."
+  },
+  {
+    "file": "cst5106l.pdf",
+    "manufacturer_url": "https://www.chipsourcetek.com/DataSheet/CST5106L.pdf",
+    "downloaded": "2026-10-13",
+    "bytes": 1370600,
+    "sha256": "28b2a993f850d9ae3e4d6012c9cc76040cbcc98f2292bfee3c278094eae21958",
+    "note": "User-supplied manufacturer datasheet, V1.0, 2022-11-02. Related controller for comparison only; not established as the fitted part."
   }
 ]
