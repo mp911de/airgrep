@@ -9,3 +9,4 @@ carrier_drc_violations.json
 ~*.*
 *.rpt
 netmap/
+pdf2text/
