@@ -17,6 +17,15 @@ The display gets 5 V from two ideal diodes: U12 from the 5 V rail (POWER slider 
 - In charger mode the ESP must not set EN_HIZ on the charger. PMID, and with it the ESP's own supply, drops in HIZ.
 - In charger mode drive ESP_UART_TX (D13) low or set it as input. The ADSBee is unpowered and would be fed through R30 (1 kΩ, about 3 mA).
 
+## ADSBee UART
+
+- D12 RX, D13 TX. 115200 baud, 8E1, no RTS/CTS. ESP-IDF: `UART_DATA_8_BITS`, `UART_PARITY_EVEN`, `UART_STOP_BITS_1`, `UART_HW_FLOWCTRL_DISABLE`.
+- Provision ADSBee through USB: `AT+BAUD_RATE=COMMS_UART,115200`, `AT+PROTOCOL_OUT=COMMS_UART,CSBEE`, `AT+SETTINGS=SAVE`. Existing saved baud rates survive firmware updates.
+- Send AT commands with LF or CRLF. Keep one command outstanding. Separate CSBEE lines (`#` prefix) from AT replies and verify CSBEE CRC16.
+- On parity, framing or buffer-overrun errors, discard through a clean LF. For a missing/corrupt reply, query state before retrying a state change. Parity cannot detect every corruption.
+- The link carries at most 10472 bytes/s. Check dense-traffic load on hardware before accepting the reporting rate.
+- Build the local ADSBee fork with `ADSBEE_PROFILE=airgrep bash firmware/build.sh adsbee_1090`. Default builds use 8N1 without UART commands. Deployment, display integration and physical UART verification remain open.
+
 ## Charger host control (BQ25798, I2C 0x6B)
 
 - Without a host the charger runs its defaults: 1 A, TREG 120 °C, watchdog 40 s. The hardware TS window is 3 to 43 °C.

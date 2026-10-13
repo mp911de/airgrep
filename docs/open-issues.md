@@ -77,7 +77,7 @@ The simulations rest on these. Each one changes a result if it is far off.
 
 - [ ] FLARM 868 MHz decoding is not demonstrated in the ADSBee firmware.
 - [ ] Display firmware: gauge readout, traffic input and buzzer PWM on D11; poll and debounce U13 at 0x20. Apply both sliders at startup, keep PWM silent until mute is read, and retain both last known states on read failure. Show the shared failure icon for expander, gauge or BMP faults.
-- [ ] Custom ADSBee firmware: add Wi-Fi command/response support to the existing COMMS_UART alongside traffic output. Stock AT intake on this port is not established.
+- [ ] Deploy and bench-test the custom ADSBee UART console: 115200 8E1, CSBEE plus AT replies. Verify Wi-Fi control, CRC/parity error recovery and dense-traffic throughput with the display. Source support is implemented in the local ADSBee checkout.
 - [ ] BMP581: keep the interrupt output disabled; the INT pin is tied to GND.
 - [ ] Low state of charge: warning and optional backlight dimming. Do not override the Wi-Fi slider.
 

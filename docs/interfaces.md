@@ -117,7 +117,7 @@ GNSS header (module J4, 1x5) on carrier socket J11:
 | 4 | PPS | GNSS_PPS |
 | 5 | GND | GND |
 
-- COMMS_UART runs at 3.3 V, 115200 baud by default, and carries traffic output to the display without Wi-Fi. Stock firmware has not demonstrated AT command intake on this port. The planned custom ADSBee firmware must add wired Wi-Fi commands and responses alongside traffic output; see [physical controls](../workflows/physical-controls.md).
+- COMMS_UART uses 3.3 V, 115200 baud, 8E1 (8 data bits, even parity, 1 stop bit), no flow control. The custom ADSBee `airgrep` build profile accepts AT commands and returns replies on this port alongside CSBEE traffic. GNSS uses its separate UART. Provisioning and error handling are in [firmware.md](firmware.md#adsbee-uart).
 - Keep the module's 5VIN reverse-polarity bypass jumper open.
 
 ## Silkscreen labels
