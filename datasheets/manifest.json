@@ -389,5 +389,25 @@
     "bytes": 1370600,
     "sha256": "28b2a993f850d9ae3e4d6012c9cc76040cbcc98f2292bfee3c278094eae21958",
     "note": "User-supplied manufacturer datasheet, V1.0, 2022-11-02. Related controller for comparison only; not established as the fitted part."
+  },
+  {
+    "file": "bst-bmp580-ds004.pdf",
+    "manufacturer_url": "https://www.bosch-sensortec.com/en/products/environmental-sensors/pressure-sensors/bmp580",
+    "download_url": "https://datasheet.lcsc.com/datasheet/pdf/303124af4a2336172cdd9343ee718907.pdf?productCode=C22391138",
+    "downloaded": "2026-10-13",
+    "pages": 74,
+    "bytes": 3871894,
+    "sha256": "07d1fad211499e259374e9725bc55fb69f6c820f30ab1cbb5ca360904772439d",
+    "note": "U10 on active TI carrier, BMP580 C22391138. Bosch BST-BMP580-DS004-02 supplied through LCSC. Pinout, package, 3.3 V supply and 100 kHz I2C checked; SDO grounded gives 0x46, CHIP_ID 0x50, grounded INT must remain disabled. Existing BMP581-named symbol and footprint retained as compatible geometry."
+  },
+  {
+    "file": "tps25947.pdf",
+    "manufacturer_url": "https://www.ti.com/lit/ds/symlink/tps25947.pdf",
+    "download_url": "https://www.ti.com/lit/ds/symlink/tps25947.pdf",
+    "downloaded": "2026-10-13",
+    "pages": 75,
+    "bytes": 5316794,
+    "sha256": "8f96de389903091650d4f462dcfad3210071c3ae7093623a7978f34baf8a65b4",
+    "note": "U11/U12/U14 on active TI carrier. TPS259474L, SLVSFC9C."
   }
 ]

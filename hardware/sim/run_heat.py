@@ -55,7 +55,7 @@ PARAMS = os.path.join(HERE, "..", "..", "specs", "power_params.json")
 def select_project(name=None):
     """Bind PROJECT, CHARGER, PCB, OUT and RESULTS to a carrier project (name, path or environment).
     Outputs go to heat/<charger>/. Scripts that import this module read these names at call time."""
-    global PROJECT, CHARGER, PCB, OUT, RESULTS, CHG
+    global PROJECT, CHARGER, PCB, OUT, RESULTS, CHG, ID_RON, ID_VFWD
     PROJECT = project.select(name) if name else project.resolve()
     CHARGER = project.charger(PROJECT)
     PCB = project.pcb(PROJECT)
@@ -64,6 +64,7 @@ def select_project(name=None):
     CHG = chargers.CHARGERS[CHARGER]
     bind_charger(CHG)
     run_power.bind_charger(CHARGER)
+    ID_RON, ID_VFWD = run_power.ID_RON, run_power.ID_VFWD
     vent_model.bind(CHARGER)
 
 # --- Materials and stackup (board file, JLC04161H-2116C: four layers, 1.6 mm)
@@ -1263,7 +1264,7 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
             # ideal diodes: regulated drop at light load, resistive above VFWD / RON
             for ref, i in (("U11", i_ads), ("U12", i_esp)):
                 p = max(i * ID_VFWD[corner], i * i * ID_RON[corner])
-                losses["LM73100 ideal diodes"] = losses.get("LM73100 ideal diodes", 0.0) + p
+                losses["Module feed ideal diodes"] = losses.get("Module feed ideal diodes", 0.0) + p
                 pad_heat(heat, g, pads_of(board, ref, ("5", "6")), p)
 
         # copper and contacts
@@ -1339,7 +1340,7 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
         # inside the case: board losses, modules, battery
         board_loss = sum(losses.values())
         p_modules = VOUT * load - sum(v for k, v in losses.items()
-                                      if k in ("TPS22975", "LM73100 ideal diodes", "copper BOOST_5V", "copper RAIL_5V",
+                                      if k in ("TPS22975", "Module feed ideal diodes", "copper BOOST_5V", "copper RAIL_5V",
                                                "copper ESP_5V_D", "copper ADS_5V_D", "copper ESP_5V",
                                                "copper ADS_5V", "shunts and module sockets"))
         p_pack = i_b ** 2 * r_pack
@@ -1575,8 +1576,8 @@ def main():
         ["L1 %s / L2 CKST0603-2.2uH" % CHG["l1"]["label"], "%.1f / 15.5 mΩ DCR, core loss %.0f mW each" % (L1_DCR * 1e3, CORE_LOSS * 1e3),
          "docs/power.md, vendor tables; core loss estimate"],
         ["TPS22975", "16 mΩ typ", "SLVSCI1"],
-        ["LM73100 ideal diodes U11, U12", "drop regulated to %.1f / %.1f mV, %.1f / %.1f mΩ above that" % (
-            ID_VFWD[0] * 1e3, ID_VFWD[1] * 1e3, ID_RON[0] * 1e3, ID_RON[1] * 1e3), "SNOSDC0A, typ / max over temperature"],
+        [run_power.ID_NAME + " ideal diodes U11, U12", "drop regulated to %.1f / %.1f mV, %.1f / %.1f mΩ above that" % (
+            ID_VFWD[0] * 1e3, ID_VFWD[1] * 1e3, ID_RON[0] * 1e3, ID_RON[1] * 1e3), "SLVSFC9C, high forward drop assumed, no specified maximum" if CHARGER == "ti" else "SNOSDC0A, typ / max over temperature"],
         ["On-resistance temperature coefficient", "+%.1f %%/K" % (TC_RDSON * 100), "estimate"],
         ["USB-C contacts (4 VBUS, 4 GND)", "%.0f / %.0f mΩ each" % (USB_CONTACT[0] * 1e3, USB_CONTACT[1] * 1e3),
          "Hanbo MC-107DMS: 40 mΩ max"],

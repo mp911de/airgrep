@@ -127,7 +127,7 @@ Verified circuit [S]: VSYS, R43 1 kΩ, J4 thermostat, THERM_OK. R10 1 MΩ and C3
 | T7 | R8 wrong value, lower than 154 kΩ | Reads colder. With 100 kΩ the hot stop moves to about 52 °C [A, B-value model] | B | J2 resistance sweep (listed) | 4 | 1 | 3 | 12 | Keep the sweep in the bring-up test | A |
 | T8 | Thermostat fails closed | No 60 °C load cut-off. NTC still stops charging at 45 °C or below | B | None | 4 | 1 | 5 | 20 | Trip-test each thermostat with hot air before fitting | A |
 | T9 | Thermostat contact resistance rises. It runs at about 4 µA (R10 1 MΩ). The Limitor data names 20 mA minimum current [D] | Q2 turns on above about 170 kΩ contact resistance (VGS(th) -0.5 V minimum [D]). Loads off, charging off. Fail-safe | IL | Device switches off | 3 | 1 | 4 | 12 | None at rev A. Accept or ask Limitor about dry-circuit use | B |
-| T10 | Thermostat opens in flight from sun heat (by design) | Typical load at 50 °C ambient gives a 58 °C pack, inside the 55 to 65 °C opening band [Sim]. Device off. Auto reset after cooling [D] | IL | Screen dark. No audible warning | 3 | 4 | 3 | 36 | Firmware: read BMP581 temperature and warn above about 50 °C. Enclosure: light colour, shade, vents | A |
+| T10 | Thermostat opens in flight from sun heat (by design) | Typical load at 50 °C ambient gives a 58 °C pack, inside the 55 to 65 °C opening band [Sim]. Device off. Auto reset after cooling [D] | IL | Screen dark. No audible warning | 3 | 4 | 3 | 36 | Firmware: read BMP580 temperature and warn above about 50 °C. Enclosure: light colour, shade, vents | A |
 | | | | | | | | | | Pack temperature readout to firmware (issue 0003) | B |
 | T11 | R43 open | No feed to THERM_OK. Device never starts, no charging | N | Device does not start | 2 | 1 | 1 | 2 | None needed | |
 | T12 | R10 open or missing | Slider ON: THERM_OK still discharges through R13 and the 800 kΩ U6 EN pull-down [D], so loads still go off, slower. Slider OFF: THERM_OK floats high, Q2 stays off, thermostat no longer stops charging. NTC remains | B | None (latent) | 3 | 2 | 4 | 24 | Bring-up: open J4 with slider OFF and USB present, confirm red-only LED | A |
@@ -229,7 +229,7 @@ Items that look like real design gaps, checked in the schematic or data sheet:
 
 ## Rev A actions (no board change)
 
-1. Firmware: ADSBee heartbeat with "RECEIVER LOST" alarm, GNSS fix status, VCELL low-battery fallback, I2C bus recovery, BMP581 over-temperature warning, "charge incomplete" hint.
+1. Firmware: ADSBee heartbeat with "RECEIVER LOST" alarm, GNSS fix status, VCELL low-battery fallback, I2C bus recovery, BMP580 over-temperature warning, "charge incomplete" hint.
 2. Bring-up per board: X-ray U4. First power without modules and with a current-limited bench supply in place of the pack. TP7 at 5.0 to 5.1 V, TP7 at 0 V with slider OFF. Termination at 4.20 V. Thermostat trip with slider ON and with slider OFF plus USB. J2 resistance sweep.
 3. Harness: colour code and label J2, J3, J4 and their plugs. Cut leads so wrong plugs cannot reach. Grommet and strain relief. Meter check of each pack lead.
 4. Assembly rules: module screws fitted before power. Insulating epoxy and clearance check on the U4 heatsink. Conformal coat around the THM and THERM_OK parts.
@@ -259,7 +259,7 @@ Ranked by RPN, then by severity.
 | 5 | A1 | U4 solder fault, up to loss of charge control | 5 2 4 | 40 | X-ray, staged first power-up. Maxim land pattern | A, B |
 | 6 | T3 | NTC detached from the pack, charging above 45 °C | 4 2 5 | 40 | Bonding, hot-air check. Pack temperature to firmware | A, B |
 | 7 | I1 | GNSS module reversed in J5 | 4 3 3 | 36 | Screws before power, "no GNSS" display. Integrate GNSS | A, B |
-| 8 | T10 | Thermostat shuts the device down in flight from sun heat | 3 4 3 | 36 | BMP581 temperature warning, shade, vents | A |
+| 8 | T10 | Thermostat shuts the device down in flight from sun heat | 3 4 3 | 36 | BMP580 temperature warning, shade, vents | A |
 | 9 | B6 | J3 contact heat above its 2 A rating | 4 2 4 | 32 | Temperature check at 1 A. JST-XH | A, B |
 | 10 | M4 | Socket or jumper contact loss under vibration | 4 2 4 | 32 | Screws, vibration test, heartbeat. Solder modules | A, B |
 

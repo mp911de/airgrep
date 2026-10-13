@@ -6,7 +6,7 @@ One entry per decision, with its reason. The design is described in [power.md](p
 
 - A separate boost supplies the 5 V rail. The charger's reverse boost is not used. It drives the USB port, runs only without a USB source and is limited to 1.5 A. A boost on SYS keeps the rail regulated through plug and unplug.
 - The boost is not bypassed on USB power. A power mux would save heat while charging. It would also add a switchover to validate and take the load out of the charger's input current limit.
-- Each module feed has an LM73100 ideal diode, U11 and U12. A module powered from its own USB port then cannot feed the 5 V rail when its shunt is left in.
+- Each module feed has a TPS259474L eFuse with reverse blocking, U11 and U12 (LM73100 on the frozen MAX carrier). A module powered from its own USB port then cannot feed the 5 V rail when its shunt is left in.
 
 ## Charger
 

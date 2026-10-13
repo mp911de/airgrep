@@ -7,11 +7,13 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 | [max77757.pdf](max77757.pdf) | U4 charger of carrier-max-charger, Rev 2 | [Original](https://www.analog.com/media/en/technical-documentation/data-sheets/MAX77757.pdf) | Manufacturer, browser download |
 | [bq25798.pdf](bq25798.pdf) | U4 charger of carrier-ti-charger, SLUSDV2C | [Original](https://www.ti.com/lit/ds/symlink/bq25798.pdf) | Manufacturer |
 | [tps61088.pdf](tps61088.pdf) | U6 boost | [Original](https://www.ti.com/lit/ds/symlink/tps61088.pdf) | Manufacturer |
+| [tps25947.pdf](tps25947.pdf) | U11/U12/U14 on active TI carrier, TPS259474L | [Original](https://www.ti.com/lit/ds/symlink/tps25947.pdf) | Manufacturer |
 | [tps22975.pdf](tps22975.pdf) | U7 load switch | [Original](https://www.ti.com/lit/ds/symlink/tps22975.pdf) | Manufacturer |
 | [tlv840.pdf](tlv840.pdf) | U5 supervisor | [Original](https://www.ti.com/lit/ds/symlink/tlv840.pdf) | Manufacturer |
 | [max17048.pdf](max17048.pdf) | U8 fuel gauge | [Original](https://www.analog.com/media/en/technical-documentation/data-sheets/MAX17048-MAX17049.pdf) | Adafruit mirror |
 | [sn74lvc1g17.pdf](sn74lvc1g17.pdf) | U9 buffer | [Original](https://www.ti.com/lit/ds/symlink/sn74lvc1g17.pdf) | Manufacturer |
-| [bst-bmp581-ds004.pdf](bst-bmp581-ds004.pdf) | U10 barometer | [Original](https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp581-ds004.pdf) | Manufacturer |
+| [bst-bmp580-ds004.pdf](bst-bmp580-ds004.pdf) | U10 on active TI carrier, BMP580 C22391138 | Bosch BST-BMP580-DS004-02 | LCSC mirror |
+| [bst-bmp581-ds004.pdf](bst-bmp581-ds004.pdf) | U10 on frozen MAX carrier, previous TI part | [Original](https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp581-ds004.pdf) | Manufacturer |
 | [ao3401a.pdf](ao3401a.pdf) | Q2, Q3, Q4, Q7 | [Original](https://www.aosmd.com/pdfs/datasheet/AO3401A.pdf) | Manufacturer |
 | [2n7002-nexperia.pdf](2n7002-nexperia.pdf) | Q6, Q8, Q9, reference for the JSCJ part | [Original](https://assets.nexperia.com/documents/data-sheet/2N7002.pdf) | Manufacturer |
 | [cenker-ckst-series.pdf](cenker-ckst-series.pdf) | L2 | [Manufacturer source](https://www.cenkersz.com/file/upload/products/CKSTPDF.pdf) | LCSC mirror |

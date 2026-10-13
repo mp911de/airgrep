@@ -6598,7 +6598,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "BMP581"
+		(property "Value" "BMP580"
 			(at 190.5 91.44 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6619,7 +6619,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://www.lcsc.com/datasheet/C5362283.pdf"
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C22391138.pdf"
 			(at 190.5 66.04 0)
 			(hide yes)
 			(show_name no)
@@ -6641,7 +6641,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C5362283"
+		(property "LCSC" "C22391138"
 			(at 190.5 66.04 0)
 			(hide yes)
 			(show_name no)
@@ -6652,7 +6652,7 @@
 				)
 			)
 		)
-		(property "MPN" "BMP581"
+		(property "MPN" "BMP580"
 			(at 190.5 66.04 0)
 			(hide yes)
 			(show_name no)

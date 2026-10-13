@@ -65,8 +65,9 @@ C_MAIN, C_MAIN_TOL, C_MAIN_BIAS = 3 * 22e-6, 0.20, 0.48
 C24, C24_TOL, C24_BIAS = 10e-6, 0.10, 0.60
 C_TEMP, C_AC = 0.90, 0.92
 C_MODULES = 40e-6
-C_INPUT = 100e-9  # C39/C38, each LM73100 input bypass
+C_INPUT = 100e-9  # C39/C38, each module-feed input bypass
 # LM73100 SNOSDC0A: typical and maximum over -40 to 125 C, as in run_heat.py.
+ID_NAME = "LM73100"
 ID_RON = (28.4e-3, 44.85e-3)
 ID_VFWD = (16.4e-3, 28.4e-3)
 ID_CORNERS = {name: dict(id_ron=ron, id_vfwd=vfwd)
@@ -107,7 +108,14 @@ CHG = None
 def bind_charger(tag=None):
     """Charger buck constants and the battery path copper of the project's board."""
     global BUCK_FSW, CHG, R_B2S, R_BOARD, R_SWITCH_BOARD, R_BOARD_SOURCE, RESULTS
+    global ID_NAME, ID_RON, ID_VFWD, ID_CORNERS
     tag = tag or project.charger(project.resolve())
+    ID_NAME = "TPS259474L" if tag == "ti" else "LM73100"
+    ID_RON = (28.2e-3, 45e-3) if tag == "ti" else (28.4e-3, 44.85e-3)
+    # TPS25947 specifies no maximum VFWD; retain 28.4 mV as a modelling assumption.
+    ID_VFWD = (16.9e-3, 28.4e-3) if tag == "ti" else (16.4e-3, 28.4e-3)
+    ID_CORNERS = {name: dict(id_ron=ron, id_vfwd=vfwd)
+                  for name, ron, vfwd in zip(("typical", "maximum"), ID_RON, ID_VFWD)}
     CHG = chargers.CHARGERS[tag]
     RESULTS = os.path.join(BENCHES, "results_%s.md" % tag)
     BUCK_FSW = CHG["fsw"]
@@ -468,13 +476,15 @@ def boost_transient_corner(report, diode):
                   C17 / 1e-9, ISS / 1e-6, T_SS * 1e3))
     report.add()
 
-    report.add("LM73100 %s corner: regulated forward drop %.1f mV, on-resistance %.2f mΩ; "
+    if CHG is chargers.CHARGERS["ti"]:
+        report.add("TPS259474L: the maximum corner uses an assumed 28.4 mV forward drop, not a guaranteed datasheet maximum.")
+    report.add("%s %s corner: regulated forward drop %.1f mV, on-resistance %.2f mΩ; "
                "quasistatic reverse blocking with less than 0.6 mV of numerical diode drop. ADSBee (including GNSS) takes %.1f %% of the load "
                "and input capacitance, the display the rest, using the heat model's Wi-Fi-on split. "
                "C39/C38 add 100 nF each at the diode inputs. Minimum and maximum terminal "
                "figures are envelopes across both branches. The module capacitances and load "
-               "split remain assumptions; diode switching delays, UVLO and parasitics are not modelled."
-               % (diode, ID_CORNERS[diode]["id_vfwd"] * 1e3,
+               "split remain assumptions; diode switching delays, UVLO, startup slew, circuit-breaker operation and parasitics are not modelled."
+               % (ID_NAME, diode, ID_CORNERS[diode]["id_vfwd"] * 1e3,
                   ID_CORNERS[diode]["id_ron"] * 1e3, ADS_SHARE * 100))
     report.add()
 

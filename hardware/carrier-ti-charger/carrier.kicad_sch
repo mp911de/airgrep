@@ -31,7 +31,7 @@
 		)
 		(uuid "261cab37-fd58-41b7-8661-135b40da75ce")
 	)
-	(text "Piezo, Schmitt driver, mute switch\nBMP581 barometer on I2C"
+	(text "Piezo, Schmitt driver, mute switch\nBMP580 barometer on I2C"
 		(exclude_from_sim no)
 		(at 234.95 109.22 0)
 		(effects

@@ -104,7 +104,8 @@ Steady state, last 10 µs of each run. Ripple is read through a 20 MHz bandwidth
 
 Averaged closed-loop model of the TPS61088: peak current command from COMP with the data sheet clamps, error amplifier 190 µA/V against the soft-start ramp, and the fitted R18 6.8 kΩ / C21 10 nF / C22 100 pF. The TPS22975 is a slew-controlled switch (C23 10 nF on CT: 17 ms rise per data sheet Table 1, 16 mΩ, 230 Ω discharge when off). U11/U12 feed separate ADSBee and display branches. The modules are a programmed current above 3 V behind 40 µF of total input capacitance and 20 mΩ of connector per branch. Output capacitance is 32 µF (C18 to C20 derated) plus 6 µF (C24), or 21 + 4 µF in the minimum corner. PWR_EN enables U6 and U7 together. Soft start: C17 47 nF at 5 µA, 11.3 ms to the 1.204 V reference. Switching ripple, the sampling poles and the inductor energy at shutdown are not in this model.
 
-LM73100 typical corner: regulated forward drop 16.4 mV, on-resistance 28.40 mΩ; quasistatic reverse blocking with less than 0.6 mV of numerical diode drop. ADSBee (including GNSS) takes 84.0 % of the load and input capacitance, the display the rest, using the heat model's Wi-Fi-on split. C39/C38 add 100 nF each at the diode inputs. Minimum and maximum terminal figures are envelopes across both branches. The module capacitances and load split remain assumptions; diode switching delays, UVLO and parasitics are not modelled.
+TPS259474L: the maximum corner uses an assumed 28.4 mV forward drop, not a guaranteed datasheet maximum.
+TPS259474L typical corner: regulated forward drop 16.9 mV, on-resistance 28.20 mΩ; quasistatic reverse blocking with less than 0.6 mV of numerical diode drop. ADSBee (including GNSS) takes 84.0 % of the load and input capacitance, the display the rest, using the heat model's Wi-Fi-on split. C39/C38 add 100 nF each at the diode inputs. Minimum and maximum terminal figures are envelopes across both branches. The module capacitances and load split remain assumptions; diode switching delays, UVLO, startup slew, circuit-breaker operation and parasitics are not modelled.
 
 Start-up from PWR_EN, the modules drawing their load as soon as the terminal passes 3 V:
 
@@ -126,13 +127,13 @@ Load steps at the module terminal (10 µs edges), from steady state, 10 ms apart
 
 | VIN | Capacitance | Step | Terminal minimum | Margin to 4.75 V | Settled (±1 %) | Terminal maximum | Settled (±1 %) | Peak inductor current |
 |---|---|---|---|---|---|---|---|---|
-| 3.1 V | nominal | 0.1 to 0.8 to 0.1 A | 4.809 V | 59 mV | 0.2 ms | 5.240 V | 0.2 ms | 2.06 A |
+| 3.1 V | nominal | 0.1 to 0.8 to 0.1 A | 4.809 V | 59 mV | 0.2 ms | 5.239 V | 0.2 ms | 2.07 A |
 | 3.1 V | minimum | 0.1 to 0.8 to 0.1 A | 4.803 V | 53 mV | 0.2 ms | 5.246 V | 0.2 ms | 2.04 A |
-| 3.7 V | nominal | 0.1 to 0.8 to 0.1 A | 4.836 V | 86 mV | 0.2 ms | 5.211 V | 0.2 ms | 1.70 A |
+| 3.7 V | nominal | 0.1 to 0.8 to 0.1 A | 4.836 V | 86 mV | 0.2 ms | 5.210 V | 0.2 ms | 1.70 A |
 | 4.4 V | nominal | 0.1 to 0.8 to 0.1 A | 4.861 V | 111 mV | 0.2 ms | 5.186 V | 0.1 ms | 1.32 A |
 | 3.1 V | nominal | 0.8 to 1.0 to 0.8 A | 4.940 V | 190 mV | 0.1 ms | 5.078 V | 0.1 ms | 2.29 A |
-| 3.1 V | minimum | 0.8 to 1.0 to 0.8 A | 4.938 V | 188 mV | 0.1 ms | 5.080 V | 0.1 ms | 2.28 A |
-| 3.7 V | nominal | 0.8 to 1.0 to 0.8 A | 4.947 V | 197 mV | 0.1 ms | 5.070 V | 0.0 ms | 1.89 A |
+| 3.1 V | minimum | 0.8 to 1.0 to 0.8 A | 4.938 V | 188 mV | 0.1 ms | 5.079 V | 0.1 ms | 2.28 A |
+| 3.7 V | nominal | 0.8 to 1.0 to 0.8 A | 4.948 V | 198 mV | 0.1 ms | 5.070 V | 0.0 ms | 1.89 A |
 
 - PASS: terminal stays above 4.75 V through the steps between 0.1 and 0.8 A and between 0.8 and 1 A (lowest 4.803 V, margin 53 mV)
 - PASS: terminal stays below 5.5 V on load release (highest 5.25 V; inside the 5.25 V USB window by 4 mV)
@@ -143,14 +144,14 @@ Load steps at the module terminal (10 µs edges), from steady state, 10 ms apart
 
 | VIN | Capacitance | Pulse | Current limit | Terminal minimum | Terminal at pulse end | Peak inductor current | VSYS minimum | Maximum after release | Settled (±1 %) |
 |---|---|---|---|---|---|---|---|---|---|
-| 3.1 V | nominal | 1 ms | 5.84 A | 4.773 V | 4.98 V | 3.35 A | 3.01 V | 5.22 V | 0.2 ms |
-| 3.1 V | nominal | 10 ms | 5.84 A | 4.773 V | 4.98 V | 3.35 A | 3.01 V | 5.22 V | 0.2 ms |
-| 3.1 V | minimum | 10 ms | 5.84 A | 4.767 V | 4.98 V | 3.32 A | 3.01 V | 5.23 V | 0.2 ms |
-| 3.1 V | minimum | 10 ms | 4.54 A | 4.767 V | 4.98 V | 3.32 A | 3.01 V | 5.23 V | 0.2 ms |
+| 3.1 V | nominal | 1 ms | 5.84 A | 4.774 V | 4.98 V | 3.35 A | 3.01 V | 5.22 V | 0.2 ms |
+| 3.1 V | nominal | 10 ms | 5.84 A | 4.774 V | 4.98 V | 3.35 A | 3.01 V | 5.22 V | 0.2 ms |
+| 3.1 V | minimum | 10 ms | 5.84 A | 4.768 V | 4.98 V | 3.32 A | 3.01 V | 5.23 V | 0.2 ms |
+| 3.1 V | minimum | 10 ms | 4.54 A | 4.768 V | 4.98 V | 3.32 A | 3.01 V | 5.23 V | 0.2 ms |
 | 3.7 V | nominal | 10 ms | 5.84 A | 4.800 V | 4.98 V | 2.76 A | 3.63 V | 5.19 V | 0.2 ms |
 | 4.4 V | nominal | 10 ms | 5.84 A | 4.824 V | 4.98 V | 2.21 A | 4.34 V | 5.17 V | 0.1 ms |
 
-- PASS: terminal stays above 4.50 V during the 1.5 A pulses (lowest 4.767 V)
+- PASS: terminal stays above 4.50 V during the 1.5 A pulses (lowest 4.768 V)
 - PASS: terminal stays below 5.5 V after the pulses (highest 5.23 V)
 - PASS: the current limit does not engage during the pulses
 
@@ -169,7 +170,8 @@ Shutdown: PWR_EN low at 30 ms, U7 opens and discharges the rail through 230 Ω, 
 
 Averaged closed-loop model of the TPS61088: peak current command from COMP with the data sheet clamps, error amplifier 190 µA/V against the soft-start ramp, and the fitted R18 6.8 kΩ / C21 10 nF / C22 100 pF. The TPS22975 is a slew-controlled switch (C23 10 nF on CT: 17 ms rise per data sheet Table 1, 16 mΩ, 230 Ω discharge when off). U11/U12 feed separate ADSBee and display branches. The modules are a programmed current above 3 V behind 40 µF of total input capacitance and 20 mΩ of connector per branch. Output capacitance is 32 µF (C18 to C20 derated) plus 6 µF (C24), or 21 + 4 µF in the minimum corner. PWR_EN enables U6 and U7 together. Soft start: C17 47 nF at 5 µA, 11.3 ms to the 1.204 V reference. Switching ripple, the sampling poles and the inductor energy at shutdown are not in this model.
 
-LM73100 maximum corner: regulated forward drop 28.4 mV, on-resistance 44.85 mΩ; quasistatic reverse blocking with less than 0.6 mV of numerical diode drop. ADSBee (including GNSS) takes 84.0 % of the load and input capacitance, the display the rest, using the heat model's Wi-Fi-on split. C39/C38 add 100 nF each at the diode inputs. Minimum and maximum terminal figures are envelopes across both branches. The module capacitances and load split remain assumptions; diode switching delays, UVLO and parasitics are not modelled.
+TPS259474L: the maximum corner uses an assumed 28.4 mV forward drop, not a guaranteed datasheet maximum.
+TPS259474L maximum corner: regulated forward drop 28.4 mV, on-resistance 45.00 mΩ; quasistatic reverse blocking with less than 0.6 mV of numerical diode drop. ADSBee (including GNSS) takes 84.0 % of the load and input capacitance, the display the rest, using the heat model's Wi-Fi-on split. C39/C38 add 100 nF each at the diode inputs. Minimum and maximum terminal figures are envelopes across both branches. The module capacitances and load split remain assumptions; diode switching delays, UVLO, startup slew, circuit-breaker operation and parasitics are not modelled.
 
 Start-up from PWR_EN, the modules drawing their load as soon as the terminal passes 3 V:
 
@@ -210,12 +212,12 @@ Load steps at the module terminal (10 µs edges), from steady state, 10 ms apart
 |---|---|---|---|---|---|---|---|---|---|
 | 3.1 V | nominal | 1 ms | 5.84 A | 4.753 V | 4.96 V | 3.35 A | 3.01 V | 5.21 V | 0.2 ms |
 | 3.1 V | nominal | 10 ms | 5.84 A | 4.753 V | 4.96 V | 3.35 A | 3.01 V | 5.21 V | 0.2 ms |
-| 3.1 V | minimum | 10 ms | 5.84 A | 4.748 V | 4.96 V | 3.32 A | 3.01 V | 5.21 V | 0.2 ms |
-| 3.1 V | minimum | 10 ms | 4.54 A | 4.748 V | 4.96 V | 3.32 A | 3.01 V | 5.21 V | 0.2 ms |
+| 3.1 V | minimum | 10 ms | 5.84 A | 4.747 V | 4.96 V | 3.32 A | 3.01 V | 5.21 V | 0.2 ms |
+| 3.1 V | minimum | 10 ms | 4.54 A | 4.747 V | 4.96 V | 3.32 A | 3.01 V | 5.21 V | 0.2 ms |
 | 3.7 V | nominal | 10 ms | 5.84 A | 4.780 V | 4.96 V | 2.76 A | 3.63 V | 5.18 V | 0.2 ms |
 | 4.4 V | nominal | 10 ms | 5.84 A | 4.804 V | 4.96 V | 2.21 A | 4.34 V | 5.16 V | 0.1 ms |
 
-- PASS: terminal stays above 4.50 V during the 1.5 A pulses (lowest 4.748 V)
+- PASS: terminal stays above 4.50 V during the 1.5 A pulses (lowest 4.747 V)
 - PASS: terminal stays below 5.5 V after the pulses (highest 5.21 V)
 - PASS: the current limit does not engage during the pulses
 
@@ -233,45 +235,45 @@ Shutdown: PWR_EN low at 30 ms, U7 opens and discharges the rail through 230 Ω, 
 ## Undervoltage cut-off, rebound and restart (ngspice, power/undervoltage.cir)
 U11/U12 use the maximum diode-drop corner and the same separate module branches as the transient bench. Module readiness requires both terminals above 4.75 V.
 
-The battery is an open-circuit voltage behind the pack resistance and the harness. Then follow the BQ25798 BATT-to-SYS switch (11 mΩ) and the board copper (20 mΩ from the routed tracks, J3 to L2). The TLV840 on VSYS (VIT− 2.9 V, hysteresis 72 mV, 145 mV, 203 mV, 30 µs propagation, 40 µs reset delay with CT open) pulls PWR_EN low against R13 100 kΩ. R13 is fed from VSYS through R43 1 kΩ, the closed thermostat and the closed slider. The boost, load switch and modules are those of the transient bench. The open-circuit voltage ramps from 3.30 to 2.95 V in 400 ms, holds, then ramps back to 3.30 V (restore). The ramp stands for a discharge; it is fast only against the electrical time constants. The thermal bench holds the supervisor released; this one does not.
+The battery is an open-circuit voltage behind the pack resistance and the harness. Then follow the BQ25798 BATT-to-SYS switch (11 mΩ) and the board copper (18 mΩ from the routed tracks, J3 to L2). The TLV840 on VSYS (VIT− 2.9 V, hysteresis 72 mV, 145 mV, 203 mV, 30 µs propagation, 40 µs reset delay with CT open) pulls PWR_EN low against R13 100 kΩ. R13 is fed from VSYS through R43 1 kΩ, the closed thermostat and the closed slider. The boost, load switch and modules are those of the transient bench. The open-circuit voltage ramps from 3.30 to 2.95 V in 400 ms, holds, then ramps back to 3.30 V (restore). The ramp stands for a discharge; it is fast only against the electrical time constants. The thermal bench holds the supervisor released; this one does not.
 
 Voltage the load drops across the path at the trip point against the hysteresis. When the drop exceeds the hysteresis, cutting the load lifts VSYS above the release threshold and the supervisor restarts the system:
 
 | Load | Path resistance | Path current at 2.9 V | Drop I·R | Hysteresis 2.5 % (minimum) | Hysteresis 5 % (typical) | Hysteresis 7 % (maximum) |
 |---|---|---|---|---|---|---|
-| Wi-Fi off 0.23 A | pack 50 + harness 60 mΩ | 0.45 A | 63 mV | clean | clean | clean |
-| Wi-Fi off 0.23 A | pack 100 + harness 60 mΩ | 0.45 A | 85 mV | chatter | clean | clean |
-| Wi-Fi off 0.23 A | pack 150 + harness 100 mΩ | 0.45 A | 125 mV | chatter | clean | clean |
-| nominal 0.80 A | pack 50 + harness 60 mΩ | 1.55 A | 219 mV | chatter | chatter | chatter |
-| nominal 0.80 A | pack 100 + harness 60 mΩ | 1.55 A | 296 mV | chatter | chatter | chatter |
-| nominal 0.80 A | pack 150 + harness 100 mΩ | 1.55 A | 436 mV | chatter | chatter | chatter |
-| peak 1.00 A | pack 50 + harness 60 mΩ | 1.94 A | 273 mV | chatter | chatter | chatter |
-| peak 1.00 A | pack 100 + harness 60 mΩ | 1.94 A | 370 mV | chatter | chatter | chatter |
-| peak 1.00 A | pack 150 + harness 100 mΩ | 1.94 A | 545 mV | chatter | chatter | chatter |
+| Wi-Fi off 0.23 A | pack 50 + harness 60 mΩ | 0.45 A | 62 mV | clean | clean | clean |
+| Wi-Fi off 0.23 A | pack 100 + harness 60 mΩ | 0.45 A | 84 mV | chatter | clean | clean |
+| Wi-Fi off 0.23 A | pack 150 + harness 100 mΩ | 0.45 A | 124 mV | chatter | clean | clean |
+| nominal 0.80 A | pack 50 + harness 60 mΩ | 1.55 A | 216 mV | chatter | chatter | chatter |
+| nominal 0.80 A | pack 100 + harness 60 mΩ | 1.55 A | 293 mV | chatter | chatter | chatter |
+| nominal 0.80 A | pack 150 + harness 100 mΩ | 1.55 A | 433 mV | chatter | chatter | chatter |
+| peak 1.00 A | pack 50 + harness 60 mΩ | 1.94 A | 270 mV | chatter | chatter | chatter |
+| peak 1.00 A | pack 100 + harness 60 mΩ | 1.94 A | 367 mV | chatter | chatter | chatter |
+| peak 1.00 A | pack 150 + harness 100 mΩ | 1.94 A | 541 mV | chatter | chatter | chatter |
 
 
 Simulated discharge and restore ramps, PWR_EN counted through 1.2 V:
 
 | Load | Path resistance | Hysteresis | Trips while discharging | Open-circuit voltage band of the trips | Cycle | On-time in the band | Trips while restoring | VSYS minimum |
 |---|---|---|---|---|---|---|---|---|
-| nominal | pack 100 + harness 60 mΩ | 5 % (typical) | 17 | 3.195 to 3.043 V | 10.9 ms | 99 % | 15 | 2.87 V |
-| nominal | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 44 | 3.300 to 2.971 V | 8.9 ms | 99 % | 48 | 2.86 V |
-| nominal | pack 50 + harness 60 mΩ | 7 % (maximum) | 3 | 3.118 to 3.095 V | 13.3 ms | 98 % | 1 | 2.89 V |
-| Wi-Fi off | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 2.985 to 2.985 V | none | none | 0 | 2.90 V |
-| Wi-Fi off | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 7 | 3.025 to 2.969 V | 10.6 ms | 99 % | 5 | 2.89 V |
-| peak | pack 100 + harness 60 mΩ | 5 % (typical) | 26 | 3.269 to 3.041 V | 10.5 ms | 99 % | 24 | 2.87 V |
+| nominal | pack 100 + harness 60 mΩ | 5 % (typical) | 17 | 3.193 to 3.041 V | 10.9 ms | 99 % | 15 | 2.87 V |
+| nominal | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 44 | 3.300 to 2.971 V | 8.9 ms | 99 % | 47 | 2.86 V |
+| nominal | pack 50 + harness 60 mΩ | 7 % (maximum) | 2 | 3.115 to 3.103 V | 14.0 ms | 99 % | 1 | 2.89 V |
+| Wi-Fi off | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 2.984 to 2.984 V | none | none | 0 | 2.90 V |
+| Wi-Fi off | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 7 | 3.024 to 2.968 V | 10.6 ms | 99 % | 5 | 2.89 V |
+| peak | pack 100 + harness 60 mΩ | 5 % (typical) | 25 | 3.266 to 3.045 V | 10.5 ms | 99 % | 23 | 2.87 V |
 
-- Without the latch: cycling at nominal load, pack 100 + harness 60 mΩ, hysteresis 5 % (typical): 16 restarts; nominal load, pack 150 + harness 100 mΩ, hysteresis 2.5 % (minimum): 43 restarts; nominal load, pack 50 + harness 60 mΩ, hysteresis 7 % (maximum): 2 restarts; Wi-Fi off load, pack 150 + harness 100 mΩ, hysteresis 2.5 % (minimum): 6 restarts; peak load, pack 100 + harness 60 mΩ, hysteresis 5 % (typical): 25 restarts.
+- Without the latch: cycling at nominal load, pack 100 + harness 60 mΩ, hysteresis 5 % (typical): 16 restarts; nominal load, pack 150 + harness 100 mΩ, hysteresis 2.5 % (minimum): 43 restarts; nominal load, pack 50 + harness 60 mΩ, hysteresis 7 % (maximum): 1 restarts; Wi-Fi off load, pack 150 + harness 100 mΩ, hysteresis 2.5 % (minimum): 6 restarts; peak load, pack 100 + harness 60 mΩ, hysteresis 5 % (typical): 24 restarts.
 - PASS: the supervisor cuts the load before VSYS reaches the boost UVLO (2.4 V)
 - Duration estimate for the nominal case: the trips span 152 mV of open-circuit voltage. The pack is assumed to lose about 1.0 V per Ah near 3 V, and the average path current while cycling is roughly 0.77 A. That gives about 12 minutes of restarts every 10.9 ms at the end of every discharge.
 
-1.5 A burst from the nominal load with the open-circuit voltage held just above the band (band top 3.20 V for the typical path), typical hysteresis:
+1.5 A burst from the nominal load with the open-circuit voltage held just above the band (band top 3.19 V for the typical path), typical hysteresis:
 
 | Open-circuit voltage | Burst | VSYS minimum | Trips | PWR_EN low for | Module terminal back at 4.75 V after burst start |
 |---|---|---|---|---|---|
-| 3.23 V | 10 ms | 2.57 V | 1 | 0.1 ms | 22.3 ms |
-| 3.30 V | 10 ms | 2.66 V | 1 | 0.1 ms | 22.3 ms |
-| 3.23 V | 1 ms | 2.57 V | 1 | 0.1 ms | 22.3 ms |
+| 3.22 V | 10 ms | 2.57 V | 1 | 0.1 ms | 22.3 ms |
+| 3.29 V | 10 ms | 2.66 V | 1 | 0.1 ms | 21.2 ms |
+| 3.22 V | 1 ms | 2.57 V | 1 | 0.1 ms | 22.3 ms |
 
 - PASS: a load burst near cut-off causes at most one shutdown and restart (most: 1)
 
@@ -279,7 +281,7 @@ The same discharge and restore with a larger hysteresis (a comparator with exter
 
 | Hysteresis | Trips while discharging | Trips while restoring |
 |---|---|---|
-| 300 mV | 8 | 7 |
+| 300 mV | 8 | 6 |
 | 400 mV | 3 | 1 |
 | 500 mV | 1 | 0 |
 
@@ -288,10 +290,10 @@ With the latch fitted (Q7 AO3401A from the R40/C37 delayed hold supply, Q8 2N700
 
 | Load | Path resistance | Hysteresis | Trips | Restarts | Open-circuit voltage at the trip | PWR_EN at the end (voltage restored) |
 |---|---|---|---|---|---|---|
-| nominal | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.195 V | 0.00 V |
+| nominal | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.193 V | 0.00 V |
 | nominal | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 1 | 0 | 3.300 V | 0.00 V |
-| peak | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.269 V | 0.00 V |
-| nominal, 1.5 A burst at 3.23 V | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.226 V | 0.00 V |
+| peak | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.266 V | 0.00 V |
+| nominal, 1.5 A burst at 3.22 V | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.223 V | 0.00 V |
 | nominal, Q8 VGS(th) 2.5 V (max) | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 1 | 0 | 3.300 V | 0.00 V |
 
 - PASS: with the latch: at most one shutdown per discharge and no restart until the slider is cycled (trips 1, restarts 0)
@@ -310,16 +312,16 @@ For each sensitive net: the edge-to-edge distance from the switch-node copper (p
 | CHG_SW1 | BAT_TS | 1.96 mm | 0.0 mm | 0.004 pF | 4 mV |
 | CHG_SW1 | CHG_PROG | 1.72 mm | 0.0 mm | 0.004 pF | 4 mV |
 | CHG_SW1 | CHG_ILIM | 1.63 mm | 0.0 mm | 0.004 pF | 4 mV |
-| CHG_SW1 | CHG_REGN | 0.27 mm | 1.2 mm | 0.042 pF | 41 mV |
-| CHG_SW1 | THERM_OK | 2.63 mm | 0.0 mm | 0.004 pF | 4 mV |
-| CHG_SW1 | CHG_DIS | 0.62 mm | 0.0 mm | 0.005 pF | 5 mV |
-| CHG_SW1 | I2C_SDA | 1.13 mm | 0.0 mm | 0.005 pF | 5 mV |
+| CHG_SW1 | CHG_REGN | 0.28 mm | 1.2 mm | 0.041 pF | 41 mV |
+| CHG_SW1 | THERM_OK | 2.11 mm | 0.0 mm | 0.004 pF | 4 mV |
+| CHG_SW1 | CHG_DIS | 0.63 mm | 0.0 mm | 0.005 pF | 5 mV |
+| CHG_SW1 | I2C_SDA | 1.14 mm | 0.0 mm | 0.005 pF | 5 mV |
 | CHG_SW1 | I2C_SCL | 0.84 mm | 0.0 mm | 0.005 pF | 5 mV |
 | CHG_SW2 | BAT_TS | 0.71 mm | 0.0 mm | 0.005 pF | 5 mV |
 | CHG_SW2 | CHG_PROG | 0.29 mm | 0.1 mm | 0.007 pF | 7 mV |
 | CHG_SW2 | CHG_ILIM | 0.24 mm | 0.1 mm | 0.007 pF | 7 mV |
 | CHG_SW2 | CHG_REGN | 1.41 mm | 0.0 mm | 0.004 pF | 4 mV |
-| CHG_SW2 | THERM_OK | 3.95 mm | 0.0 mm | 0.003 pF | 3 mV |
+| CHG_SW2 | THERM_OK | 3.84 mm | 0.0 mm | 0.003 pF | 3 mV |
 | CHG_SW2 | CHG_DIS | 0.53 mm | 0.0 mm | 0.006 pF | 6 mV |
 | CHG_SW2 | I2C_SDA | 0.53 mm | 0.0 mm | 0.006 pF | 6 mV |
 | CHG_SW2 | I2C_SCL | 0.53 mm | 0.0 mm | 0.006 pF | 6 mV |
@@ -344,14 +346,14 @@ Magnetic pickup bound at the real centre distances (dipole field of the ripple c
 
 | Victim | Source | Distance | EMF peak |
 |---|---|---|---|
-| thermistor lead pair at J2, untwisted, 500 mm² loop | L1 | 14 mm | 0.137 mV |
+| thermistor lead pair at J2, untwisted, 500 mm² loop | L1 | 14 mm | 0.134 mV |
 | thermistor lead pair at J2, untwisted, 500 mm² loop | L2 | 32 mm | 0.017 mV |
 | boost feedback divider, 10 mm² loop | L1 | 32 mm | 0.000 mV |
 | boost feedback divider, 10 mm² loop | L2 | 12 mm | 0.007 mV |
 | L2 winding (from L1) | L1 | 20 mm | 0.004 mV |
 | L1 winding (from L2) | L2 | 20 mm | 0.006 mV |
 
-- PASS: magnetic pickup into the THM network at most 0.14 mV, below 10 % of the 27 mV threshold spacing
+- PASS: magnetic pickup into the THM network at most 0.13 mV, below 10 % of the 27 mV threshold spacing
 - PASS: magnetic pickup into the boost feedback divider at most 0.01 mV, below 1 % of the 1.204 V reference
 - L1 and L2: each winding picks up an EMF from the other, which adds to its own ripple. The two switching frequencies differ, so it shows as a beat on VSYS. The bound is for the axial direction, the worst case.
 

@@ -10,9 +10,9 @@ battery -- fuse --+-- MAX77757 BATT -- SYS -- TPS61088 boost -- TPS22975 load sw
                   +-- MAX17048 gauge -- I2C -- display ESP32
                   +-- NTC -- MAX77757 THM
 SYS -- R43 -- thermostat contact -- THERM_OK
-5 V rail -- LM73100 U12 --+-- shunt JP1 --+-- display VBUS (ESP_5V, C51/C52 2 x 22 µF)
-charger PMID -- LM73100 U14 --+   (charger mode only: Q12 holds U14 off while the slider is on)
-5 V rail -- LM73100 U11 -- shunt JP2 -- ADSBee 5VIN
+5 V rail -- module-feed ideal diode U12 --+-- shunt JP1 --+-- display VBUS (ESP_5V, C51/C52 2 x 22 µF)
+charger PMID -- module-feed ideal diode U14 --+   (charger mode only: Q12 holds U14 off while the slider is on)
+5 V rail -- module-feed ideal diode U11 -- shunt JP2 -- ADSBee 5VIN
 ADSBee 3V3 out -- GNSS 3.3 V
 ```
 
@@ -174,6 +174,12 @@ Heat-spreader materials to evaluate:
 For a first prototype, compare a thin copper or aluminium plate plus an insulating gap pad with graphite. Connect the spreader to exposed metal or outside airflow. A strip's lateral resistance depends on thickness and width, not just conductivity. Keep metal clear of the module antennas and avoid a thermal bridge into the battery.
 
 ## Charger variant: BQ25798 (carrier-ti-charger)
+
+The active TI carrier uses TPS259474LRPWR (C2864845) at U11/U12/U14 in the shared RPW0010A footprint; the frozen MAX carrier retains LM73100. R70/R71/R72 are 1.65 kΩ, 1%, setting a nominal circuit-breaker threshold of 3334 / 1650 = 2.02 A, approximately 1.78–2.22 A including the specified 1.8–2.2 A threshold range and resistor tolerance. C56/C54/C55 are 2.2 nF, 50 V X7R, setting nominal slew to 2000 / 2200 = 0.909 V/ms, about 5.6 ms to 5.06 V. ITIMER is open for the shortest trip delay; the L variant latches off after overcurrent or thermal shutdown until IN is power-cycled or EN/UVLO is pulled below its shutdown threshold. Overvoltage recovery remains automatic. Existing enable dividers and Q12 remain.
+
+R73/R74, R75/R76 and R77/R78 implement IN-to-OVLO-to-GND dividers on U11, U12 and U14 respectively. U11/U12 sense RAIL_5V; U14 senses CHG_PMID. Each uses 5.1 kΩ above 1.5 kΩ, both 0402, 1%, ±100 ppm/°C: JLCPCB Basic [C25905](https://jlcpcb.com/partdetail/26648-0402WGF5101TCE/C25905) and [C25867](https://jlcpcb.com/partdetail/0402WGF1501TCE/C25867). Nominal trip is 1.20 × (1 + 5.1/1.5) = 5.28 V; automatic release is 1.09 × 4.4 = 4.796 V. Including IC threshold limits, resistor tolerance and ±0.1 µA OVLO leakage gives a 5.125–5.466 V trip range at the resistor reference temperature. Independent worst-case resistor drift over −40 to +125 °C widens it to approximately 5.047–5.551 V. Basic parts take priority over the earlier 5.25 V minimum-trip requirement. This does not guarantee a 5.5 V output ceiling: OVLO response is 1.2 µs typical, and transient overshoot needs measurement.
+
+The power and thermal models use 28.2 mΩ typical and 45 mΩ maximum on-resistance. Forward regulation is 16.9 mV typical; the 28.4 mV high model corner is an assumption because this datasheet specifies no maximum. These models do not validate startup, inrush, trip/retry timing or module capacitance; those require prototype measurements.
 
 U4 is a TI BQ25798RQMR (LCSC C2876593, VQFN-HR 29, 4 x 4 mm, 0.4 mm pitch, no exposed pad). It is an I2C charger with a complete default mode: it charges at 1 A with no host, the display's ESP32-S3 raises the current to 1.8 A, and the watchdog returns every register to its default when the host stops writing. Data sheet SLUSDV2C in `datasheets/bq25798.pdf`.
 
@@ -406,7 +412,7 @@ Worst case over 3.1 to 4.4 V input and all component corners, from `hardware/sim
 | 1.5 A pulses from 0.8 A | terminal not below 4.748 V |
 
 - U11 (ADSBee) and U12 (display) have local 100 nF 0603 input bypass capacitors, C39 and C38 respectively (LCSC C14663), from RAIL_5V to GND.
-- The transient and undervoltage models include both LM73100 feeds, regulated forward drop, on-resistance and reverse blocking. At maximum diode drop the load-step minimum is 4.792 V, leaving 42 mV above the assumed 4.75 V limit. The typical corner leaves 53 mV.
+- The transient and undervoltage models include both TPS259474L feeds, regulated forward drop, on-resistance and reverse blocking. At the assumed high diode-drop corner the load-step minimum is 4.792 V, leaving 42 mV above the assumed 4.75 V limit. The typical corner leaves 53 mV.
 - The transient results assume 40 µF of total input capacitance, split with the load as 83.5 % ADSBee/GNSS and 16.5 % display. These quantities and the module voltage window are unmeasured. The model omits diode switching delays and parasitics.
 - The boost loss figures rest on a switching term fitted to TI's efficiency curve, not on a measurement.
 

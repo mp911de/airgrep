@@ -34,7 +34,7 @@ The GNSS and ADSBee modules have arrived. The display is ordered. The carrier bo
 
 The simulations rest on these. Each one changes a result if it is far off.
 
-- [ ] **Module input capacitance on the 5 V rail** (assumed 40 µF) and the modules' input voltage window (assumed 4.75 to 5.25 V, 5.5 V absolute). The diode-inclusive load-step model leaves only 42 mV above the lower limit at maximum LM73100 drop. Measure each branch's capacitance and load share as well as the voltage window; they set the load-step and start-up results.
+- [ ] **Module input capacitance on the 5 V rail** (assumed 40 µF) and the modules' input voltage window (assumed 4.75 to 5.25 V, 5.5 V absolute). The diode-inclusive load-step model leaves only 42 mV above the lower limit at the assumed high module-feed diode drop. Measure each branch's capacitance and load share as well as the voltage window; they set the load-step and start-up results.
 - [ ] **Peak 5 V current**, in particular ADSBee Wi-Fi bursts (assumed 1.0 A peak, 1.5 A short-term headroom).
 - [ ] **Battery pack DC resistance** near empty, new and aged, warm and cold (assumed 50 to 150 mΩ), and harness resistance (assumed 60 to 100 mΩ). They set the voltage at which the undervoltage latch trips.
 - [ ] **Converter noise in the receiver bands.** `hardware/sim/emi/results_max.md` (and `results_ti.md`) puts the edge tails of the boost and the charger within a few dB of the ADS-B and FLARM noise floors, with assumed edges and switch capacitances. Measure the ADSBee noise floor (trigger level) with each converter on and off, then with the snubber R39/C36 fitted (start with 2.2 Ω and 1 nF). The snubber gains under 1 dB at 868 MHz (`emi/spectrum_flarm.pdf`). Moving the switching frequency does not help: U4 is fixed, and the U6 lines sweep 27 MHz with VIN. A shield can over U6/L2 and U4/L1 is the remaining fix. Deferred: it conflicts with the heat sinks. Decide after the heat problem is solved and the bench shows a loss.
@@ -78,7 +78,7 @@ The simulations rest on these. Each one changes a result if it is far off.
 - [ ] FLARM 868 MHz decoding is not demonstrated in the ADSBee firmware.
 - [ ] Display firmware: gauge readout, traffic input and buzzer PWM on D11; poll and debounce U13 at 0x20. Apply both sliders at startup, keep PWM silent until mute is read, and retain both last known states on read failure. Show the shared failure icon for expander, gauge or BMP faults.
 - [ ] Deploy and bench-test the custom ADSBee UART console: 115200 8E1, CSBEE plus AT replies. Verify Wi-Fi control, CRC/parity error recovery and dense-traffic throughput with the display. Source support is implemented in the local ADSBee checkout.
-- [ ] BMP581: keep the interrupt output disabled; the INT pin is tied to GND.
+- [ ] BMP580: keep the interrupt output disabled; the INT pin is tied to GND.
 - [ ] Low state of charge: warning and optional backlight dimming. Do not override the Wi-Fi slider.
 
 ## Enclosure
@@ -87,12 +87,12 @@ The enclosure is not designed yet. The carrier does not depend on these, the fin
 
 - [ ] **Vents.** Implement four 8 cm² vents, two lower inlets and two upper outlets. The model assumes a 50 % open grille and 35 mm vertical separation. At 25 °C ambient, high-corner pack estimates are 45.7 °C at 0.8 A and 50.9 °C at sustained 1.0 A; both pass the 55 °C check. Charging while running still exceeds the charge-temperature stop. Verify airflow and temperatures in the actual enclosure.
 - [ ] **Antenna parts.** Confirm the bulkhead cables from the BOM in the 6.5 mm holes MH6 to MH8, the coax bend radius and the routing.
-- [ ] **Barometer vent and Wi-Fi antennas.** The case needs an opening for the BMP581 and no metal near the module antennas.
+- [ ] **Barometer vent and Wi-Fi antennas.** The case needs an opening for the BMP580 and no metal near the module antennas.
 
 ## Optional improvements
 
 - [ ] **Lower battery path resistance** to delay the undervoltage cut-off: a connector with two contacts per pole or JST-XH, and AWG 22 leads. The same change settles the connector rating above.
-- [ ] **Overvoltage lockout on U11 and U12 (rev B).** OVLO (pin 2) is tied to GND, so the overvoltage cut-off does nothing. If the boost feedback divider R14/R15 fails, the 5 V rail can rise toward 13 V and U7 and the modules see it. Fix: a divider from RAIL_5V on each OVLO pin, two resistors per chip.
+- [ ] **OVLO transient validation.** U11/U12/U14 now have 5.1 kΩ / 1.5 kΩ Basic-part dividers, nominal trip 5.28 V and automatic release 4.80 V. Measure overshoot and recovery under supply faults; resistor and IC tolerances do not guarantee the assumed 5.5 V module ceiling. See [power design](power.md#charger-variant-bq25798-carrier-ti-charger).
 - [ ] **SMAJ10A instead of SMAJ12A** for D3 if 12 V adapters need not be tolerated. The charger locks out at 13.7 V and withstands 16 V.
 
 ## Housekeeping outside the docs

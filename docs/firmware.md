@@ -36,14 +36,14 @@ The display gets 5 V from two ideal diodes: U12 from the 5 V rail (POWER slider 
 
 ## I2C bus
 
-Bus at 3.3 V, 100 kHz, the module's 5.1 kΩ pull-ups. Datasheet cross-check of all four carrier slaves (TCA9534, MAX17048, BMP581, BQ25798): levels, speed and timing are compatible, nothing to change on the board. Rules the parts impose:
+Bus at 3.3 V, 100 kHz, the module's 5.1 kΩ pull-ups. Datasheet cross-check of all four carrier slaves (TCA9534, MAX17048, BMP580, BQ25798): levels, speed and timing are compatible, nothing to change on the board. Rules the parts impose:
 
 - 100 kHz only. Estimated bus capacitance is about 130 pF per line (the MAX17048 alone is 60 pF per pin), rise time about 560 ns with 5.1 kΩ. Fast mode needs R19/R20 fitted and is still marginal.
-- Never address 0x7E. It is the I3C broadcast address and locks the BMP581 into I3C mode until power-off. Bus scans run 0x08 to 0x77 only.
+- Never address 0x7E. It is the I3C broadcast address and locks the BMP580 into I3C mode until power-off. Bus scans run 0x08 to 0x77 only.
 - MAX17048: 16-bit words only, both bytes in one transaction. Keep MODE.EnSleep at 0 (default); with it set, the bus at 0 V while the display is off puts the gauge to sleep after 2.5 s. Check STATUS.RI at each power-up; set means the gauge lost power, reload the config.
-- No ACK is normal for the MAX17048 POR command (0x5400 to 0xFE) and the BMP581 soft reset (0xB6 to 0x7E). Do not treat it as a bus error.
+- No ACK is normal for the MAX17048 POR command (0x5400 to 0xFE) and the BMP580 soft reset (0xB6 to 0x7E). Do not treat it as a bus error.
 - BQ25798: a transaction not finished within 1.5 s is dropped and the chip returns to idle. WD_FLAG clears on read. Thresholds are absolute (VIH 1.3 V, VIL 0.4 V), fine at 3.3 V. I2C works on battery only, in HIZ and in ship mode, not in shutdown.
-- BMP581: wait 2 ms after ESP_3V3 before the first access, then check CHIP_ID and STATUS.nvm_rdy.
+- BMP580: wait 2 ms after ESP_3V3 before the first access, then check CHIP_ID = 0x50 and STATUS.nvm_rdy. Keep INT_CONFIG.int_en disabled because INT is grounded.
 - TCA9534: reads NACK until the first command byte has been written after power-up.
 
 ## Charger-mode display
