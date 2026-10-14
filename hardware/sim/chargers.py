@@ -61,6 +61,7 @@ CHARGERS = {
         nets=dict(sw="CHG_SW1", sw2="CHG_SW2"),
         pin_names=dict(vin="VBUS", sw="SW1", sys="SYS", bat="BAT", gnd="GND"),
         inductor_on_vsys=False,  # L1 sits between SW1 and SW2; SYS is a separate pin behind Q3
+        ship_fet=dict(ref="Q13", net="CHG_BAT", r_on=(2.6e-3, 6.4e-3)),  # CSD17575Q3: 4.5 V typical; high includes 2x hot derating
         r_in=8e-3, r_hs=24e-3, r_ls=35e-3, r_series=28e-3, r_batfet=11e-3,  # RSNS, Q1, Q2, Q3 (on in buck mode), BATFET typ
         iq=3e-3,  # VBUS supply current, converter switching, no load, typ
         fsw=750e3, vsysmin=3.5, treg=120.0, treg_options=(60.0, 80.0, 100.0, 120.0),

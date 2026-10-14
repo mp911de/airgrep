@@ -22,10 +22,11 @@ Everything that JLCPCB does not assemble, per board, with order sources and orde
 
 ## Through-hole parts on the carrier (hand-soldered)
 
-D4, D5, J2 to J12, JP1 and JP2 are marked DNP, so the assembly BOM and position files leave them out. Their footprints are on the board; fit the parts below by hand. The mounting holes (MH1 to MH4, MH6 to MH8, MH10 to MH14) are board-only footprints and are excluded from the assembly files as well.
+D4, D5, J2 to J12, JP1, JP2 and SW4 are marked DNP, so the assembly BOM and position files leave them out. Their footprints are on the board; fit the parts below by hand. The mounting holes (MH1 to MH4, MH6 to MH8, MH10 to MH14) are board-only footprints and are excluded from the assembly files as well.
 
 | Qty | Ref | Part | Description | Where | Approx. price |
 |---|---|---|---|---|---|
+| 1 | SW4 | 6 x 6 mm tactile, normally open | Reset button below BZ1. Standard 6.5 x 4.5 mm pin spacing, 1 mm holes; verify the available button fits before fabrication. | Existing stock, hand-soldered | already owned |
 | 3 | J2, J3, J4 | JST B2B-PH-K-S | JST-PH 2-pin header, vertical, 2 mm | Reichelt [JST PH2P ST](https://www.reichelt.com/de/en/shop/product/jst_pin_header_straight_1x2-pin_ph-185049) | €0.16 each |
 | 1 | D5 | Kingbright L-7104GD | LED 3 mm green, diffused, 20 mcd, 40° (power) | Reichelt [KBT L-7104GD](https://www.reichelt.com/de/en/led-3-mm-leaded-green-20-mcd-40--kbt-l-7104gd-p230824.html) | €0.10 |
 | 1 | D4 | Kingbright L-115WEGW | LED 3 mm red/green, 3-pin, **common cathode**, diffused, 60° (red USB power, green charging or charged) | Reichelt [KBT L-115WEGW](https://www.reichelt.com/de/en/shop/product/led_3_mm_tht_3-pin_red_green_627_565_nm_40_40_mcd_60_-231039) | €0.28 |

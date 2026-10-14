@@ -27,6 +27,7 @@ Notes:
 
 - J3 carries the full battery current. JST rates the PH series at 2 A per contact with AWG 24 wire ([data sheet](../datasheets/jst-ph-series.pdf)). The battery currents are in [power.md](power.md#connector-and-fuse); the peaks above 2 A are an open item in [open-issues.md](open-issues.md).
 - JP1 and JP2 connect RAIL_5V to ESP_5V and ADS_5V. Remove the jumper before powering that module from its own USB port.
+- SW4 is the hand-fitted RESET button below BZ1: QON to GND, about 10 s hold. It power-cycles the system rails after firmware enables SFET_PRESENT; the charger and gauge stay powered.
 - SW1 switches SW_EN between THERM_OK and GND. SW2 and SW3 are logic inputs; neither carries buzzer or radio power.
 - BZ1 is driven directly by U9 (SN74LVC1G17) through R28, 150 Ω, on BUZZ_LIM. D11 remains the PWM source; firmware implements mute.
 

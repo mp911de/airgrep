@@ -152,6 +152,14 @@ class TrackTests(unittest.TestCase):
         for layer, expected in enumerate(expected_heat):
             self.assertAlmostEqual(sum(p for (li, _), p in loss_map.items() if li == layer), expected)
 
+    def test_track_end_overlaps_via_without_its_center_entering_the_annulus(self):
+        board = track_board(layer="F", length=1.)
+        board["pads"][1].layers = ("B",)
+        board["vias"] = [(1.5, 0.5, 0.6, 0.3, "TEST")]
+        board["segments"] = [(0.5, 0.5, 1.1, 0.5, 0.3, "F", "TEST")]
+        net = heat.TrackNet(board, self.grid, "TEST")
+        self.assertTrue(math.isfinite(net.resistance(self.src, self.dst)))
+
 
 class OperatingPointTests(unittest.TestCase):
     @classmethod

@@ -28,6 +28,9 @@ The display gets 5 V from two ideal diodes: U12 from the 5 V rail (POWER slider 
 
 ## Charger host control (BQ25798, I2C 0x6B)
 
+- Set REG14 bit 7 (`SFET_PRESENT`) using read-modify-write during initialization and after register reset. Q13 is populated; the POR default is zero and disables ship-FET features. Read back the bit before treating the QON reset button as available. Firmware implementation remains required.
+- SW4 held for about 10 s requests the charger's hardware system power reset, about 350 ms off. D10 holds the USB/PMID display feed off until release. Reinitialize peripherals after boot; the charger and MAX17048 stay powered and retain state.
+
 - Without a host the charger runs its defaults: 1 A, TREG 120 °C, watchdog 40 s. The hardware TS window is 3 to 43 °C.
 - The host may raise ICHG to 1.8 A and set TREG to 100 °C (or 80 °C). Every register marked "reset by WATCHDOG" falls back when the watchdog expires: reset the watchdog well inside 40 s, and re-apply the whole profile whenever WD_STAT is set.
 - INT is not wired to the ESP (TP8 only). Poll STAT, faults and the ADC (VBUS, IBUS, IBAT, VBAT, VSYS, TS, TDIE) every 1 to 2 s while awake.

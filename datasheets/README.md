@@ -69,3 +69,11 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 | Reichelt BL 1X20G8 sockets, SL 1X40G headers and jumpers ([BOM](../docs/bom-hand-sourced.md)); the Samtec SSQ and SNT sheets describe the alternative parts with the same pitch and height | J5 to J12, JP1, JP2 |
 
 New data sheets go into this directory, with an entry in the manifest and a text extraction in `pdf2text/`.
+
+## System reset additions
+
+| File | Use | Source |
+|---|---|---|
+| [csd17575q3.pdf](csd17575q3.pdf) | Q13 ship FET, pinout and recommended land pattern | Texas Instruments |
+| [bq2579x-evm.pdf](bq2579x-evm.pdf) | Figure 4-5, Q5 ship-FET reference circuit | Texas Instruments |
+| [bat54ws-jscj.pdf](bat54ws-jscj.pdf) | D10 BAT54WS L9, forward drop and SOD-323 dimensions | JSCJ, Oneyac mirror |

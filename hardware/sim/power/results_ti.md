@@ -235,45 +235,45 @@ Shutdown: PWR_EN low at 30 ms, U7 opens and discharges the rail through 230 Ω, 
 ## Undervoltage cut-off, rebound and restart (ngspice, power/undervoltage.cir)
 U11/U12 use the maximum diode-drop corner and the same separate module branches as the transient bench. Module readiness requires both terminals above 4.75 V.
 
-The battery is an open-circuit voltage behind the pack resistance and the harness. Then follow the BQ25798 BATT-to-SYS switch (11 mΩ) and the board copper (18 mΩ from the routed tracks, J3 to L2). The TLV840 on VSYS (VIT− 2.9 V, hysteresis 72 mV, 145 mV, 203 mV, 30 µs propagation, 40 µs reset delay with CT open) pulls PWR_EN low against R13 100 kΩ. R13 is fed from VSYS through R43 1 kΩ, the closed thermostat and the closed slider. The boost, load switch and modules are those of the transient bench. The open-circuit voltage ramps from 3.30 to 2.95 V in 400 ms, holds, then ramps back to 3.30 V (restore). The ramp stands for a discharge; it is fast only against the electrical time constants. The thermal bench holds the supervisor released; this one does not.
+The battery is an open-circuit voltage behind the pack resistance and the harness. Then follow the BQ25798 BATT-to-SYS switch (11 mΩ) and the board copper (33 mΩ from the routed tracks, J3 to L2). The TLV840 on VSYS (VIT− 2.9 V, hysteresis 72 mV, 145 mV, 203 mV, 30 µs propagation, 40 µs reset delay with CT open) pulls PWR_EN low against R13 100 kΩ. R13 is fed from VSYS through R43 1 kΩ, the closed thermostat and the closed slider. The boost, load switch and modules are those of the transient bench. The open-circuit voltage ramps from 3.30 to 2.95 V in 400 ms, holds, then ramps back to 3.30 V (restore). The ramp stands for a discharge; it is fast only against the electrical time constants. The thermal bench holds the supervisor released; this one does not.
 
 Voltage the load drops across the path at the trip point against the hysteresis. When the drop exceeds the hysteresis, cutting the load lifts VSYS above the release threshold and the supervisor restarts the system:
 
 | Load | Path resistance | Path current at 2.9 V | Drop I·R | Hysteresis 2.5 % (minimum) | Hysteresis 5 % (typical) | Hysteresis 7 % (maximum) |
 |---|---|---|---|---|---|---|
-| Wi-Fi off 0.23 A | pack 50 + harness 60 mΩ | 0.45 A | 62 mV | clean | clean | clean |
-| Wi-Fi off 0.23 A | pack 100 + harness 60 mΩ | 0.45 A | 84 mV | chatter | clean | clean |
-| Wi-Fi off 0.23 A | pack 150 + harness 100 mΩ | 0.45 A | 124 mV | chatter | clean | clean |
-| nominal 0.80 A | pack 50 + harness 60 mΩ | 1.55 A | 216 mV | chatter | chatter | chatter |
-| nominal 0.80 A | pack 100 + harness 60 mΩ | 1.55 A | 293 mV | chatter | chatter | chatter |
-| nominal 0.80 A | pack 150 + harness 100 mΩ | 1.55 A | 433 mV | chatter | chatter | chatter |
-| peak 1.00 A | pack 50 + harness 60 mΩ | 1.94 A | 270 mV | chatter | chatter | chatter |
-| peak 1.00 A | pack 100 + harness 60 mΩ | 1.94 A | 367 mV | chatter | chatter | chatter |
-| peak 1.00 A | pack 150 + harness 100 mΩ | 1.94 A | 541 mV | chatter | chatter | chatter |
+| Wi-Fi off 0.23 A | pack 50 + harness 60 mΩ | 0.45 A | 70 mV | clean | clean | clean |
+| Wi-Fi off 0.23 A | pack 100 + harness 60 mΩ | 0.45 A | 92 mV | chatter | clean | clean |
+| Wi-Fi off 0.23 A | pack 150 + harness 100 mΩ | 0.45 A | 132 mV | chatter | clean | clean |
+| nominal 0.80 A | pack 50 + harness 60 mΩ | 1.55 A | 243 mV | chatter | chatter | chatter |
+| nominal 0.80 A | pack 100 + harness 60 mΩ | 1.55 A | 321 mV | chatter | chatter | chatter |
+| nominal 0.80 A | pack 150 + harness 100 mΩ | 1.55 A | 460 mV | chatter | chatter | chatter |
+| peak 1.00 A | pack 50 + harness 60 mΩ | 1.94 A | 304 mV | chatter | chatter | chatter |
+| peak 1.00 A | pack 100 + harness 60 mΩ | 1.94 A | 401 mV | chatter | chatter | chatter |
+| peak 1.00 A | pack 150 + harness 100 mΩ | 1.94 A | 575 mV | chatter | chatter | chatter |
 
 
 Simulated discharge and restore ramps, PWR_EN counted through 1.2 V:
 
 | Load | Path resistance | Hysteresis | Trips while discharging | Open-circuit voltage band of the trips | Cycle | On-time in the band | Trips while restoring | VSYS minimum |
 |---|---|---|---|---|---|---|---|---|
-| nominal | pack 100 + harness 60 mΩ | 5 % (typical) | 17 | 3.193 to 3.041 V | 10.9 ms | 99 % | 15 | 2.87 V |
-| nominal | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 44 | 3.300 to 2.971 V | 8.9 ms | 99 % | 47 | 2.86 V |
-| nominal | pack 50 + harness 60 mΩ | 7 % (maximum) | 2 | 3.115 to 3.103 V | 14.0 ms | 99 % | 1 | 2.89 V |
-| Wi-Fi off | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 2.984 to 2.984 V | none | none | 0 | 2.90 V |
-| Wi-Fi off | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 7 | 3.024 to 2.968 V | 10.6 ms | 99 % | 5 | 2.89 V |
-| peak | pack 100 + harness 60 mΩ | 5 % (typical) | 25 | 3.266 to 3.045 V | 10.5 ms | 99 % | 23 | 2.87 V |
+| nominal | pack 100 + harness 60 mΩ | 5 % (typical) | 20 | 3.220 to 3.042 V | 10.7 ms | 99 % | 18 | 2.87 V |
+| nominal | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 45 | 3.300 to 2.973 V | 8.6 ms | 99 % | 49 | 2.86 V |
+| nominal | pack 50 + harness 60 mΩ | 7 % (maximum) | 5 | 3.143 to 3.099 V | 12.5 ms | 99 % | 3 | 2.88 V |
+| Wi-Fi off | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 2.992 to 2.992 V | none | none | 0 | 2.90 V |
+| Wi-Fi off | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 8 | 3.032 to 2.968 V | 10.5 ms | 99 % | 6 | 2.89 V |
+| peak | pack 100 + harness 60 mΩ | 5 % (typical) | 30 | 3.300 to 3.042 V | 10.3 ms | 99 % | 33 | 2.86 V |
 
-- Without the latch: cycling at nominal load, pack 100 + harness 60 mΩ, hysteresis 5 % (typical): 16 restarts; nominal load, pack 150 + harness 100 mΩ, hysteresis 2.5 % (minimum): 43 restarts; nominal load, pack 50 + harness 60 mΩ, hysteresis 7 % (maximum): 1 restarts; Wi-Fi off load, pack 150 + harness 100 mΩ, hysteresis 2.5 % (minimum): 6 restarts; peak load, pack 100 + harness 60 mΩ, hysteresis 5 % (typical): 24 restarts.
+- Without the latch: cycling at nominal load, pack 100 + harness 60 mΩ, hysteresis 5 % (typical): 19 restarts; nominal load, pack 150 + harness 100 mΩ, hysteresis 2.5 % (minimum): 44 restarts; nominal load, pack 50 + harness 60 mΩ, hysteresis 7 % (maximum): 4 restarts; Wi-Fi off load, pack 150 + harness 100 mΩ, hysteresis 2.5 % (minimum): 7 restarts; peak load, pack 100 + harness 60 mΩ, hysteresis 5 % (typical): 29 restarts.
 - PASS: the supervisor cuts the load before VSYS reaches the boost UVLO (2.4 V)
-- Duration estimate for the nominal case: the trips span 152 mV of open-circuit voltage. The pack is assumed to lose about 1.0 V per Ah near 3 V, and the average path current while cycling is roughly 0.77 A. That gives about 12 minutes of restarts every 10.9 ms at the end of every discharge.
+- Duration estimate for the nominal case: the trips span 178 mV of open-circuit voltage. The pack is assumed to lose about 1.0 V per Ah near 3 V, and the average path current while cycling is roughly 0.77 A. That gives about 14 minutes of restarts every 10.7 ms at the end of every discharge.
 
-1.5 A burst from the nominal load with the open-circuit voltage held just above the band (band top 3.19 V for the typical path), typical hysteresis:
+1.5 A burst from the nominal load with the open-circuit voltage held just above the band (band top 3.22 V for the typical path), typical hysteresis:
 
 | Open-circuit voltage | Burst | VSYS minimum | Trips | PWR_EN low for | Module terminal back at 4.75 V after burst start |
 |---|---|---|---|---|---|
-| 3.22 V | 10 ms | 2.57 V | 1 | 0.1 ms | 22.3 ms |
-| 3.29 V | 10 ms | 2.66 V | 1 | 0.1 ms | 21.2 ms |
-| 3.22 V | 1 ms | 2.57 V | 1 | 0.1 ms | 22.3 ms |
+| 3.25 V | 10 ms | 2.53 V | 1 | 0.1 ms | 22.3 ms |
+| 3.32 V | 10 ms | 2.62 V | 1 | 0.1 ms | 22.3 ms |
+| 3.25 V | 1 ms | 2.53 V | 1 | 0.1 ms | 22.3 ms |
 
 - PASS: a load burst near cut-off causes at most one shutdown and restart (most: 1)
 
@@ -281,8 +281,8 @@ The same discharge and restore with a larger hysteresis (a comparator with exter
 
 | Hysteresis | Trips while discharging | Trips while restoring |
 |---|---|---|
-| 300 mV | 8 | 6 |
-| 400 mV | 3 | 1 |
+| 300 mV | 10 | 8 |
+| 400 mV | 4 | 3 |
 | 500 mV | 1 | 0 |
 
 
@@ -290,10 +290,10 @@ With the latch fitted (Q7 AO3401A from the R40/C37 delayed hold supply, Q8 2N700
 
 | Load | Path resistance | Hysteresis | Trips | Restarts | Open-circuit voltage at the trip | PWR_EN at the end (voltage restored) |
 |---|---|---|---|---|---|---|
-| nominal | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.193 V | 0.00 V |
+| nominal | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.220 V | 0.00 V |
 | nominal | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 1 | 0 | 3.300 V | 0.00 V |
-| peak | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.266 V | 0.00 V |
-| nominal, 1.5 A burst at 3.22 V | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.223 V | 0.00 V |
+| peak | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.300 V | 0.00 V |
+| nominal, 1.5 A burst at 3.25 V | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.251 V | 0.00 V |
 | nominal, Q8 VGS(th) 2.5 V (max) | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 1 | 0 | 3.300 V | 0.00 V |
 
 - PASS: with the latch: at most one shutdown per discharge and no restart until the slider is cycled (trips 1, restarts 0)

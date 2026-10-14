@@ -630,7 +630,7 @@ class TrackNet:
                         touching.append((d, ("pad", p.ref, p.num)))
             for i, v in enumerate(vias):
                 d = math.hypot(x - v[0], y - v[1])
-                if d <= v[2] / 2 + 1e-3:
+                if d <= (v[2] + w) / 2 + 1e-3:
                     touching.append((d, ("via", i, layer)))
             if touching:
                 touching.sort()
@@ -975,9 +975,13 @@ class Model:
         self.board, self.copper, self.grid, self.fit = board, copper, copper.grid, fit
         self.corner = corner  # 0 nominal, 1 high
         self.heatsink = heatsink or {}  # {ref: HEATSINK entry}
+        self.ship_fet = CHG.get("ship_fet")
         self.nets = {n: TrackNet(board, self.grid, n) for n in
                      ("USB_VBUS", USB_J1, CHG_NETS["sw"], "VSYS", "VBAT", "BAT_IN", "BOOST_SW", "BOOST_5V",
                       "RAIL_5V", "ESP_5V_D", "ADS_5V_D", "ESP_5V", "ADS_5V") + ((CHG_NETS["sw2"],) if CHG_NETS["sw2"] else ())}
+        if self.ship_fet:
+            net = self.ship_fet["net"]
+            self.nets[net] = TrackNet(board, self.grid, net)
         self.unrouted = set()  # nets whose copper path is replaced by ASSUMED_PATH_R (solve_paths)
         self.plate_node = None
         ads = next(l for l in params["loads_5v"] if l["name"].startswith("ADSBee"))
@@ -1135,7 +1139,9 @@ def solve_paths(model, board):
         "CHG_SW": path("CHG_SW", CHG_NETS["sw"], ("U4", u4["sw"]), ("L1", ("1",))),
         "VSYS": path("VSYS", "VSYS", ("U4", u4["sys"]), ("L2", ("1",))),
         "VSYS L1": path("VSYS L1", CHG_NETS["sw2"] or "VSYS", ("L1", ("2",)), ("U4", u4["sw2"] or u4["sys"])),
-        "VBAT": path("VBAT", "VBAT", ("F1", ("2",)), ("U4", u4["bat"])),
+        "VBAT": (path("VBAT", "VBAT", ("F1", ("2",)), (model.ship_fet["ref"], ("5",)))
+                 + path("CHG_BAT", model.ship_fet["net"], (model.ship_fet["ref"], ("1", "2", "3")), ("U4", u4["bat"]))
+                 if model.ship_fet else path("VBAT", "VBAT", ("F1", ("2",)), ("U4", u4["bat"]))),
         "BAT_IN": path("BAT_IN", "BAT_IN", ("J3", ("1",)), ("F1", ("1",))),
         "BOOST_SW": path("BOOST_SW", "BOOST_SW", ("L2", ("2",)), ("U6", ("4", "5", "6", "7"))),
         "BOOST_5V": path("BOOST_5V", "BOOST_5V", ("U6", ("14", "15", "16")), ("U7", ("1", "2", "4"))),
@@ -1209,6 +1215,8 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
         # path resistances for the voltage bookkeeping (25 °C copper is close enough here)
         r_batpath = (2 * JST_CONTACT[corner] + FUSE_R[corner]
                      + model.r_net["BAT_IN"] + model.r_net["VBAT"] + model.r_gnd_bat)
+        if model.ship_fet:
+            r_batpath += model.ship_fet["r_on"][corner]
         rs = 1 + TC_RDSON * (tj["U4"] - 25)
         if case["mode"] == "battery":
             vin = case["vin"]
@@ -1291,7 +1299,13 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
                     track("VSYS", {("U4", u4["sys"]): i_sys, ("L2", ("1",)): -i_sys})
             contact("USB-C contacts", pads_of(board, "J1", ("A4", "A9", "B4", "B9", "A1", "A12", "B1", "B12")),
                     i_in, 2 * USB_CONTACT[corner] / 4)
-        track("VBAT", {("F1", ("2",)): i_b, ("U4", u4["bat"]): -i_b})
+        if model.ship_fet:
+            ref = model.ship_fet["ref"]
+            track("VBAT", {("F1", ("2",)): i_b, (ref, ("5",)): -i_b})
+            track(model.ship_fet["net"], {(ref, ("1", "2", "3")): i_b, ("U4", u4["bat"]): -i_b})
+            contact("ship FET", pads_of(board, ref), i_b, model.ship_fet["r_on"][corner])
+        else:
+            track("VBAT", {("F1", ("2",)): i_b, ("U4", u4["bat"]): -i_b})
         track("BAT_IN", {("J3", ("1",)): i_b, ("F1", ("1",)): -i_b})
         contact("F1 fuse", pads_of(board, "F1"), i_b, FUSE_R[corner])
         contact("JST-PH battery contacts", pads_of(board, "J3"), i_b, 2 * JST_CONTACT[corner])
@@ -1627,7 +1641,7 @@ def main():
         ("CHG_SW", "%s: U4 %s to L1" % (CHG_NETS["sw"], pin["sw"]), r_net["CHG_SW"]),
         ("VSYS L1", "%s: L1 to U4 %s" % (CHG_NETS["sw2"] or "VSYS", "SW2" if CHG_NETS["sw2"] else pin["sys"]), r_net["VSYS L1"]),
         ("VSYS", "VSYS: U4 %s to L2" % pin["sys"], r_net["VSYS"]),
-        ("VBAT", "VBAT: F1 to U4 %s" % pin["bat"], r_net["VBAT"]),
+        ("VBAT", "VBAT + CHG_BAT: F1 through Q13 to U4 BAT (copper only)" if CHG.get("ship_fet") else "VBAT: F1 to U4 %s" % pin["bat"], r_net["VBAT"]),
         ("BAT_IN", "BAT_IN: J3 to F1", r_net["BAT_IN"]),
         ("BOOST_SW", "BOOST_SW: L2 to U6 SW", r_net["BOOST_SW"]),
         ("BOOST_5V", "BOOST_5V: U6 VOUT to U7 VIN", r_net["BOOST_5V"]),

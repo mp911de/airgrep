@@ -129,7 +129,7 @@ def bind_charger(tag=None):
     else:
         R_BOARD = 1.3e-3 + 4.6e-3 + 6.2e-3  # MAX77757 board, heat/max/results.md
         R_BOARD_SOURCE = "literal, no calibration file"
-    R_SWITCH_BOARD = R_B2S + R_BOARD
+    R_SWITCH_BOARD = R_B2S + R_BOARD + CHG.get("ship_fet", {}).get("r_on", (0.0,))[0]
 
 BENCH = simlib.Bench(BENCHES)
 

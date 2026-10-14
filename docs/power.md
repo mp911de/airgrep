@@ -206,7 +206,10 @@ thermostat open -- Q2 -- CHG_DIS = BQ25798 CE (high: charging off)
 - ADC: 16-bit, die temperature (0.5 °C), IBAT and IBUS (1 mA), VBAT/VSYS/VBUS (1 mV), TS. Off by default, the host enables it.
 - STAT: low while charging, high when done, blinking on a fault. Drives the green LED. INT ends on TP8 (polled, no free module GPIO). The red LED shows USB present through Q10, R63 47 kΩ, R64 100 kΩ.
 - CE: the thermostat chain ends on CE (R12 100 kΩ pull-down, Q2 pulls it to VSYS when the thermostat opens). CE above 1.3 V disables charging; Q2 leakage at the 25 °C maximum leaves CE at 0.1 V (`hardware/sim/thermal/results_ti.md`).
-- No ship FET: SDRV has C49 1 nF, QON is open. The BQ25798 SDRV driver is an option for [issue 0001](../issues/0001-battery-disconnect-switch.md).
+- System reset: SW4 shorts QON to GND. Holding it for about 10 s turns Q13 off for about 350 ms, with the converter in HIZ and a typical 30 mA SYS discharge sink. Q13 then turns on automatically. These are TI's typical timings, not firmware delays ([BQ25798 section 7.3.12.3](../datasheets/bq25798.pdf)).
+- Q13 is the CSD17575Q3 used in TI's [EVM, Figure 4-5](../datasheets/bq2579x-evm.pdf): drain to raw VBAT, source to CHG_BAT and U4 BAT, gate directly to SDRV. C49 is removed. BATP sensing and the MAX17048 remain on raw VBAT. The thermal model includes both copper paths and Q13 losses, with 2.6 mΩ typical and 6.4 mΩ as a conservative hot corner.
+- D10 BAT54WS has its anode at ESP_PMID_EN and cathode at QON. It disables U14 while SW4 is held, preventing USB/PMID from keeping the display alive during reset. At 5.25 V, the 1 MΩ pull-up supplies less than 5.3 µA; the diode's 25 °C maximum forward drop is 240 mV at 100 µA, below U14's 1.076 V minimum falling EN threshold. Cold behavior and rail discharge need bench verification.
+- Firmware must set REG14 bit 7, SFET_PRESENT, during initialization and after register reset. Its POR value is zero. This is a system power reset, not a charger or gauge reset; a charger failure that prevents QON handling, or a MAX17048 holding I2C low, is outside its recovery coverage. See [firmware.md](firmware.md#charger-host-control-bq25798-i2c-0x6b).
 
 ### Temperature window (TS)
 
@@ -234,10 +237,13 @@ Worst case: parts at 1 %, NTC ±0.2 K and B ±0.5 %, charger thresholds at their
 | C8, C45 | BTST1 to SW1, BTST2 to SW2 | 2 x 47 nF 50 V | |
 | L1 | SW1 to SW2 | 2.2 µH, FXL0630-2R2-M (C167218) | 15 mΩ, 9.5 A saturation; 750 kHz |
 | C9, C10, C46 | SYS | 2 x 22 µF 10 V + 100 nF | data sheet 5 x 10 µF |
-| C11, C47 | BAT | 2 x 10 µF 25 V | |
+| C11 | raw VBAT | 10 µF 25 V | before Q13, near F1 |
+| C47 | CHG_BAT | 22 µF 10 V | after Q13, at U4 BAT |
 | R61 | BATP sense | 150 Ω to VBAT | high-impedance input, value shared with R28 |
 | C48 | REGN | 4.7 µF 16 V | |
-| C49 | SDRV | 1 nF 50 V | no ship FET |
+| Q13 | SDRV ship FET | CSD17575Q3, C529277 | replaces C49; no gate pull-down |
+| SW4 | QON to GND | 6 x 6 mm momentary, normally open | hand-fitted below BZ1; 6.5 x 4.5 mm pin spacing |
+| D10 | U14 reset clamp | BAT54WS, C22629 | anode EN, cathode QON |
 | R56 | PROG | 4.7 kΩ 1 % | 1S, 750 kHz (3.0 kΩ for 1.5 MHz) |
 | R57, R58 | ILIM_HIZ | 47 kΩ / 100 kΩ from REGN | 3.4 V, about 3 A |
 | R59, R60 | TS | 80.6 kΩ / 768 kΩ from REGN (C23249, C2933258) | window 3.1 to 43.0 °C, see above |
@@ -255,7 +261,7 @@ Placed and routed against data sheet section 8.4.1 (priority list) after two ind
 - P2: SW1 and SW2 leave the pins on 10 mil stubs into six vias each under the package (24/12 mil), then In2 traces of 40 mil beside the via groups and 70 mil to L1, five vias per inductor pad. The F.Cu zones CHG_SW1/CHG_SW2 cover the inductor pads only. C8 and C45 (BTST) sit at the inductor ends on the SW copper; the BTST pins reach them through a via at the pin and one B.Cu trace each, as in the data sheet example.
 - P3: C48 (REGN) is 115 mil east of pin 5 on the F.Cu REGN trace, two GND vias at its GND pad. The dividers take REGN through an 18 mil via next to the pin.
 - P4: C43 keeps its place in the VBUS zone; C43, C42, C41 grounds got vias. VBUS pins 2 and 3 share a 15 mil stub into two 28/12 vias to the In2 VBUS copper.
-- P5: C47 (BAT 10 µF) is 150 mil west of pins 22/23 (C49 sits between). The pour "U4 VBAT" (F.Cu) runs from F1 and C11 through an 84 mil corridor between R61 and the SW2 zone to C47; the pour "U4 VBAT stub" widens the 14 mil stub into the pins where INT and SDRV leave room. F1 to the BAT pins: 8.3 mΩ in the heat model.
+- P5: C47 (BAT 22 µF) remains west of pins 22/23. Q13 separates raw VBAT from CHG_BAT; C49 is removed. The new path uses three vias at each end of the In1.Cu connection to the CHG_BAT pour. F1 to BAT copper is 21.1 mΩ in the heat model, plus Q13 at 2.6 mΩ typical.
 - P6: the VSYS pour continues as "U4 VSYS feed" (50 mil band) to L2's input pad; before, a 10 mil track carried the boost input (31 mΩ, now 11 mΩ). The In2 VBUS band "USB5V" outranks the inner GND fill (priority 3) so it carries the input current, not only the 10 mil track inside it (78 mΩ before, 26 mΩ now). The "U6 GND" zone reaches C18/C19's ground pads; the two dead VBUS zones at pins 8/9 fill at 8 mil minimum width.
 - P7: BATP and TS leave west and north on F.Cu/B.Cu, more than 100 mil from switch copper outside the package.
 - DP, DN, REGN, BTST1 fan out on separate lanes east of the pins (clearance 6 mil in the FINE_USB rule area, now x 4250 to 4880, y 4150 to 4620). STAT leaves on a via south-east of pin 1 to B.Cu.

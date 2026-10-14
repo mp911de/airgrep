@@ -409,5 +409,32 @@
     "bytes": 5316794,
     "sha256": "8f96de389903091650d4f462dcfad3210071c3ae7093623a7978f34baf8a65b4",
     "note": "U11/U12/U14 on active TI carrier. TPS259474L, SLVSFC9C."
+  },
+  {
+    "file": "csd17575q3.pdf",
+    "download_url": "https://www.ti.com/lit/ds/symlink/csd17575q3.pdf",
+    "downloaded": "2026-10-13",
+    "pages": 12,
+    "bytes": 519045,
+    "sha256": "77a41b522836eb087795c7f9ecdd85794fdb8117fdd8295efede8e24537e869a",
+    "note": "Q13 ship FET, TI BQ25798 EVM reference part; 3.3 mm VSON-CLIP."
+  },
+  {
+    "file": "bat54ws-jscj.pdf",
+    "download_url": "https://uploadcdn.oneyac.com/attachments/files/brand_pdf/jscj/68/64/BAT54WS.pdf",
+    "downloaded": "2026-10-13",
+    "pages": 5,
+    "bytes": 1008831,
+    "sha256": "2f5c697992580c79621af3c85dc6dc6e7b73c1e3d8640c91bba532674c4723bf",
+    "note": "D10 JSCJ BAT54WS L9, C22629. Manufacturer datasheet from Oneyac mirror."
+  },
+  {
+    "file": "bq2579x-evm.pdf",
+    "download_url": "https://www.ti.com/lit/ug/sluucb5e/sluucb5e.pdf",
+    "downloaded": "2026-10-13",
+    "pages": 31,
+    "bytes": 3996565,
+    "sha256": "a653d3bae48cf0f0cc9f705968d309b90e1f003d50f51b53bee273e874bebfbd",
+    "note": "TI BQ25798 reference ship FET circuit, Figure 4-5."
   }
 ]
