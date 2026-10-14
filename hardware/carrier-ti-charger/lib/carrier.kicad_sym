@@ -4346,7 +4346,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(symbol "VSYS"
+	(symbol "+VSYS"
 		(power global)
 		(pin_numbers
 			(hide yes)
@@ -4371,7 +4371,7 @@
 				)
 			)
 		)
-		(property "Value" "VSYS"
+		(property "Value" "+VSYS"
 			(at 0 3.556 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4403,7 +4403,7 @@
 				)
 			)
 		)
-		(property "Description" "Power symbol creates a global label with name \"VSYS\""
+		(property "Description" "Power symbol creates a global label with name \"+VSYS\""
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4425,7 +4425,7 @@
 				)
 			)
 		)
-		(symbol "VSYS_0_1"
+		(symbol "+VSYS_0_1"
 			(polyline
 				(pts
 					(xy -0.762 1.27)
@@ -4466,7 +4466,7 @@
 				)
 			)
 		)
-		(symbol "VSYS_1_1"
+		(symbol "+VSYS_1_1"
 			(pin power_in line
 				(at 0 0 90)
 				(length 0)
@@ -4488,7 +4488,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(symbol "VBAT"
+	(symbol "+VBAT"
 		(power global)
 		(pin_numbers
 			(hide yes)
@@ -4513,7 +4513,7 @@
 				)
 			)
 		)
-		(property "Value" "VBAT"
+		(property "Value" "+VBAT"
 			(at 0 3.556 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4545,7 +4545,7 @@
 				)
 			)
 		)
-		(property "Description" "Power symbol creates a global label with name \"VBAT\""
+		(property "Description" "Power symbol creates a global label with name \"+VBAT\""
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4567,7 +4567,7 @@
 				)
 			)
 		)
-		(symbol "VBAT_0_1"
+		(symbol "+VBAT_0_1"
 			(polyline
 				(pts
 					(xy -0.762 1.27)
@@ -4608,7 +4608,7 @@
 				)
 			)
 		)
-		(symbol "VBAT_1_1"
+		(symbol "+VBAT_1_1"
 			(pin power_in line
 				(at 0 0 90)
 				(length 0)
@@ -4630,7 +4630,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(symbol "USB_VBUS"
+	(symbol "+VUSB"
 		(power global)
 		(pin_numbers
 			(hide yes)
@@ -4655,7 +4655,7 @@
 				)
 			)
 		)
-		(property "Value" "USB_VBUS"
+		(property "Value" "+VUSB"
 			(at 0 3.556 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4687,7 +4687,7 @@
 				)
 			)
 		)
-		(property "Description" "Power symbol creates a global label with name \"USB_VBUS\""
+		(property "Description" "Power symbol creates a global label with name \"+VUSB\""
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4709,7 +4709,7 @@
 				)
 			)
 		)
-		(symbol "USB_VBUS_0_1"
+		(symbol "+VUSB_0_1"
 			(polyline
 				(pts
 					(xy -0.762 1.27)
@@ -4750,7 +4750,7 @@
 				)
 			)
 		)
-		(symbol "USB_VBUS_1_1"
+		(symbol "+VUSB_1_1"
 			(pin power_in line
 				(at 0 0 90)
 				(length 0)
@@ -4772,7 +4772,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(symbol "RAIL_5V"
+	(symbol "+5V"
 		(power global)
 		(pin_numbers
 			(hide yes)
@@ -4797,7 +4797,7 @@
 				)
 			)
 		)
-		(property "Value" "RAIL_5V"
+		(property "Value" "+5V"
 			(at 0 3.556 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4829,7 +4829,7 @@
 				)
 			)
 		)
-		(property "Description" "Power symbol creates a global label with name \"RAIL_5V\""
+		(property "Description" "Power symbol creates a global label with name \"+5V\""
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4851,7 +4851,7 @@
 				)
 			)
 		)
-		(symbol "RAIL_5V_0_1"
+		(symbol "+5V_0_1"
 			(polyline
 				(pts
 					(xy -0.762 1.27)
@@ -4892,7 +4892,7 @@
 				)
 			)
 		)
-		(symbol "RAIL_5V_1_1"
+		(symbol "+5V_1_1"
 			(pin power_in line
 				(at 0 0 90)
 				(length 0)
@@ -4914,7 +4914,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(symbol "BOOST_5V"
+	(symbol "+BOOST_5V"
 		(power global)
 		(pin_numbers
 			(hide yes)
@@ -4939,7 +4939,7 @@
 				)
 			)
 		)
-		(property "Value" "BOOST_5V"
+		(property "Value" "+BOOST_5V"
 			(at 0 3.556 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4971,7 +4971,7 @@
 				)
 			)
 		)
-		(property "Description" "Power symbol creates a global label with name \"BOOST_5V\""
+		(property "Description" "Power symbol creates a global label with name \"+BOOST_5V\""
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4993,7 +4993,7 @@
 				)
 			)
 		)
-		(symbol "BOOST_5V_0_1"
+		(symbol "+BOOST_5V_0_1"
 			(polyline
 				(pts
 					(xy -0.762 1.27)
@@ -5034,7 +5034,7 @@
 				)
 			)
 		)
-		(symbol "BOOST_5V_1_1"
+		(symbol "+BOOST_5V_1_1"
 			(pin power_in line
 				(at 0 0 90)
 				(length 0)
@@ -5056,7 +5056,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(symbol "ESP_5V"
+	(symbol "+ESP_5V"
 		(power global)
 		(pin_numbers
 			(hide yes)
@@ -5081,7 +5081,7 @@
 				)
 			)
 		)
-		(property "Value" "ESP_5V"
+		(property "Value" "+ESP_5V"
 			(at 0 3.556 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5113,7 +5113,7 @@
 				)
 			)
 		)
-		(property "Description" "Power symbol creates a global label with name \"ESP_5V\""
+		(property "Description" "Power symbol creates a global label with name \"+ESP_5V\""
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5135,7 +5135,7 @@
 				)
 			)
 		)
-		(symbol "ESP_5V_0_1"
+		(symbol "+ESP_5V_0_1"
 			(polyline
 				(pts
 					(xy -0.762 1.27)
@@ -5176,7 +5176,7 @@
 				)
 			)
 		)
-		(symbol "ESP_5V_1_1"
+		(symbol "+ESP_5V_1_1"
 			(pin power_in line
 				(at 0 0 90)
 				(length 0)
@@ -5198,7 +5198,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(symbol "ADS_5V"
+	(symbol "+ADS_5V"
 		(power global)
 		(pin_numbers
 			(hide yes)
@@ -5223,7 +5223,7 @@
 				)
 			)
 		)
-		(property "Value" "ADS_5V"
+		(property "Value" "+ADS_5V"
 			(at 0 3.556 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5255,7 +5255,7 @@
 				)
 			)
 		)
-		(property "Description" "Power symbol creates a global label with name \"ADS_5V\""
+		(property "Description" "Power symbol creates a global label with name \"+ADS_5V\""
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5277,7 +5277,7 @@
 				)
 			)
 		)
-		(symbol "ADS_5V_0_1"
+		(symbol "+ADS_5V_0_1"
 			(polyline
 				(pts
 					(xy -0.762 1.27)
@@ -5318,7 +5318,7 @@
 				)
 			)
 		)
-		(symbol "ADS_5V_1_1"
+		(symbol "+ADS_5V_1_1"
 			(pin power_in line
 				(at 0 0 90)
 				(length 0)
@@ -5340,7 +5340,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(symbol "ESP_3V3"
+	(symbol "+ESP_3V3"
 		(power global)
 		(pin_numbers
 			(hide yes)
@@ -5365,7 +5365,7 @@
 				)
 			)
 		)
-		(property "Value" "ESP_3V3"
+		(property "Value" "+ESP_3V3"
 			(at 0 3.556 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5397,7 +5397,7 @@
 				)
 			)
 		)
-		(property "Description" "Power symbol creates a global label with name \"ESP_3V3\""
+		(property "Description" "Power symbol creates a global label with name \"+ESP_3V3\""
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5419,7 +5419,7 @@
 				)
 			)
 		)
-		(symbol "ESP_3V3_0_1"
+		(symbol "+ESP_3V3_0_1"
 			(polyline
 				(pts
 					(xy -0.762 1.27)
@@ -5460,7 +5460,7 @@
 				)
 			)
 		)
-		(symbol "ESP_3V3_1_1"
+		(symbol "+ESP_3V3_1_1"
 			(pin power_in line
 				(at 0 0 90)
 				(length 0)
@@ -5482,7 +5482,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(symbol "GNSS_3V3"
+	(symbol "+GNSS_3V3"
 		(power global)
 		(pin_numbers
 			(hide yes)
@@ -5507,7 +5507,7 @@
 				)
 			)
 		)
-		(property "Value" "GNSS_3V3"
+		(property "Value" "+GNSS_3V3"
 			(at 0 3.556 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5539,7 +5539,7 @@
 				)
 			)
 		)
-		(property "Description" "Power symbol creates a global label with name \"GNSS_3V3\""
+		(property "Description" "Power symbol creates a global label with name \"+GNSS_3V3\""
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5561,7 +5561,7 @@
 				)
 			)
 		)
-		(symbol "GNSS_3V3_0_1"
+		(symbol "+GNSS_3V3_0_1"
 			(polyline
 				(pts
 					(xy -0.762 1.27)
@@ -5602,7 +5602,7 @@
 				)
 			)
 		)
-		(symbol "GNSS_3V3_1_1"
+		(symbol "+GNSS_3V3_1_1"
 			(pin power_in line
 				(at 0 0 90)
 				(length 0)

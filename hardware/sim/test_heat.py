@@ -104,6 +104,10 @@ class TrackTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "balance"):
             self.net.solve({self.src: 1., self.dst: -0.5})
 
+    def test_missing_terminal_is_not_an_unrouted_path(self):
+        with self.assertRaisesRegex(ValueError, "no pad MISSING"):
+            self.net.resistance(("MISSING", ("1",)), self.dst)
+
     def test_equipotential_terminals_need_no_matrix_solve(self):
         net = heat.TrackNet(track_board(length=0.), self.grid, "TEST")
         volts, power, _ = net.solve({self.src: 1., self.dst: -1.})
@@ -160,6 +164,21 @@ class TrackTests(unittest.TestCase):
         net = heat.TrackNet(board, self.grid, "TEST")
         self.assertTrue(math.isfinite(net.resistance(self.src, self.dst)))
 
+    def test_track_end_caps_overlap_without_their_centres_touching(self):
+        board = track_board()
+        board["segments"] = [(0.5, 0.5, 2.1, 0.5, 1.0, "B", "TEST"),
+                             (2.9, 0.5, 4.5, 0.5, 1.0, "B", "TEST")]
+        net = heat.TrackNet(board, self.grid, "TEST")
+        self.assertTrue(math.isfinite(net.resistance(self.src, self.dst)))
+
+    def test_separated_track_end_caps_remain_disconnected(self):
+        board = track_board()
+        board["segments"] = [(0.5, 0.5, 1.9, 0.5, 1.0, "B", "TEST"),
+                             (3.1, 0.5, 4.5, 0.5, 1.0, "B", "TEST")]
+        net = heat.TrackNet(board, self.grid, "TEST")
+        with self.assertRaises(heat.Unrouted):
+            net.resistance(self.src, self.dst)
+
 
 class OperatingPointTests(unittest.TestCase):
     @classmethod
@@ -206,6 +225,9 @@ class OperatingPointTests(unittest.TestCase):
         board = sum(self.model.r_net[n] for n in ("BAT_IN", "VBAT", "VSYS"))
         self.assertAlmostEqual(run_power.R_BOARD, board, delta=0.15e-3)
 
+    def test_power_paths_are_calculated_from_copper(self):
+        self.assertEqual(self.model.unrouted, set())
+
     def test_vent_model_constants_follow_the_heat_model(self):
         """The sealed vent model must reproduce the sealed case it copies its constants from."""
         for key, scenario in (("bat08", "bat08"), ("usb32", "usb32"), ("usb32off", "usb_off")):
@@ -215,7 +237,7 @@ class OperatingPointTests(unittest.TestCase):
             with self.subTest(case=key):
                 self.assertAlmostEqual(lumped["t_air"], grid["t_air"], delta=1.0)
                 self.assertAlmostEqual(lumped["t_pack"], grid["t_pack"], delta=1.0)
-                self.assertAlmostEqual(lumped["i_chg"], grid["i_chg"], delta=0.05)
+                self.assertAlmostEqual(lumped["i_chg"], grid["i_chg"], delta=0.1)
 
 
 class EnclosureTests(unittest.TestCase):

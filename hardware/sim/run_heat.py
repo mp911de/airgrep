@@ -648,7 +648,7 @@ class TrackNet:
                     if j == k or o[5] != s[5]:
                         continue
                     d, t = point_segment(px, py, *o[:4])
-                    if d <= o[4] / 2 + 1e-3 and not 1e-3 < t < 1 - 1e-3:
+                    if d <= (s[4] + o[4]) / 2 + 1e-3 and not 1e-3 < t < 1 - 1e-3:
                         other = ends[j][0 if t < 0.5 else 1]
                         if other != end:
                             links.append((end, other))
@@ -805,7 +805,7 @@ class TrackNet:
         for (ref, nums), current in injections.items():
             keys = [("pad", p.ref, p.num) for p in self.pads if p.ref == ref and (nums is None or p.num in nums)]
             if not keys:
-                raise Unrouted("%s: no pad %s %s on the net" % (self.net, ref, nums))
+                raise ValueError("%s: no pad %s %s on the net" % (self.net, ref, nums))
             for k in keys:
                 inj[self.index[k]] += current / len(keys)
         if not np.isfinite(inj).all():
@@ -976,7 +976,7 @@ class Model:
         self.corner = corner  # 0 nominal, 1 high
         self.heatsink = heatsink or {}  # {ref: HEATSINK entry}
         self.ship_fet = CHG.get("ship_fet")
-        self.nets = {n: TrackNet(board, self.grid, n) for n in
+        self.nets = {n: TrackNet(board, self.grid, CHG.get("board_nets", {}).get(n, n)) for n in
                      ("USB_VBUS", USB_J1, CHG_NETS["sw"], "VSYS", "VBAT", "BAT_IN", "BOOST_SW", "BOOST_5V",
                       "RAIL_5V", "ESP_5V_D", "ADS_5V_D", "ESP_5V", "ADS_5V") + ((CHG_NETS["sw2"],) if CHG_NETS["sw2"] else ())}
         if self.ship_fet:

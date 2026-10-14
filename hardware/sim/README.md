@@ -262,5 +262,5 @@ Not modelled: common-mode currents on the antenna coax and the USB cable, the mo
 `vent_model.py` supplies the shared wall and vent heat balance used by `run_heat.py`, and adds a fan path for its own sweeps.
 It is a lumped steady-state estimate of case air, pack and U4 temperature over vent area.
 
-- The lumped model's enclosure parameters and component rises over case air are copied from the sealed heat model (25 °C, high corner). Its consistency test explicitly disables vents in both models. Temperature tolerance is 1 °C; charge-current tolerance is 0.05 A.
+- The lumped model's enclosure parameters and component rises over case air are copied from the sealed heat model (25 °C, high corner). Its consistency test explicitly disables vents in both models. Temperature tolerance is 1 °C; charge-current tolerance is 0.1 A.
 - Both models default to four 8 cm² openings, two inlets low and two outlets high, 35 mm vertical separation and a 50 % open grille. Each opening has 4 cm² free area, giving 8 cm² free area per inlet/outlet group. `VENTS_PER_SIDE`, `VENT_OPENING_CM2`, and `VENT_HEIGHT_M` in `vent_model.py` set these assumptions; `VENT_AREA_CM2` is the combined geometric area per group. Pass zero vent area for the sealed reference.

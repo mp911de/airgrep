@@ -65,7 +65,7 @@
 		)
 		(uuid "46a50a94-e492-4020-a261-0c9837dc83d5")
 	)
-	(text "VBAT, VSYS"
+	(text "+VBAT, +VSYS"
 		(exclude_from_sim no)
 		(at 119.38 65.04 0)
 		(effects
@@ -76,7 +76,7 @@
 		)
 		(uuid "47cc7ee4-19e2-408d-aaec-99942202325f")
 	)
-	(text "ESP_3V3, I2C, BUZZ_PWM"
+	(text "+ESP_3V3, I2C, BUZZ_PWM"
 		(exclude_from_sim no)
 		(at 268.2 94.48 0)
 		(effects
@@ -87,7 +87,7 @@
 		)
 		(uuid "6b13a3df-73f8-42e4-8c73-8ea48b02bc71")
 	)
-	(text "VBAT, charger status"
+	(text "+VBAT, charger status"
 		(exclude_from_sim no)
 		(at 161.52 94.48 0)
 		(effects
@@ -120,7 +120,7 @@
 		)
 		(uuid "947c5553-16b7-41ad-a75c-a2cbd39bcf07")
 	)
-	(text "USB_VBUS 5 V"
+	(text "+VUSB 5 V"
 		(exclude_from_sim no)
 		(at 66.04 65.04 0)
 		(effects
@@ -131,7 +131,7 @@
 		)
 		(uuid "b58088e7-8cbd-4260-bbaa-3a958abc8f6b")
 	)
-	(text "RAIL_5V 5 V"
+	(text "+5V 5 V"
 		(exclude_from_sim no)
 		(at 226.06 65.04 0)
 		(effects
@@ -164,7 +164,7 @@
 		)
 		(uuid "da809558-a699-46e4-aead-abb880a88330")
 	)
-	(text "VSYS, PWR_EN"
+	(text "+VSYS, PWR_EN"
 		(exclude_from_sim no)
 		(at 172.72 65.04 0)
 		(effects
@@ -202,7 +202,8 @@
 		)
 		(stroke
 			(width 0.254)
-			(type default)
+			(type solid)
+			(color 255 14 25 1)
 		)
 		(uuid "15316c40-efc5-4e2e-a9a6-5c450d70b6ea")
 	)
@@ -212,7 +213,8 @@
 		)
 		(stroke
 			(width 0.254)
-			(type default)
+			(type solid)
+			(color 255 14 25 1)
 		)
 		(uuid "218d4f3f-d4c1-4211-9b55-6b661f7c9b47")
 	)
@@ -372,7 +374,8 @@
 		)
 		(stroke
 			(width 0.254)
-			(type default)
+			(type solid)
+			(color 255 14 25 1)
 		)
 		(uuid "ca1fe17a-cb2d-45fc-ab58-b74d2cd0a843")
 	)
@@ -382,7 +385,8 @@
 		)
 		(stroke
 			(width 0.254)
-			(type default)
+			(type solid)
+			(color 255 14 25 1)
 		)
 		(uuid "dc9e06a7-c996-49e7-8afd-f52eb01f6d18")
 	)
@@ -422,7 +426,8 @@
 		)
 		(stroke
 			(width 0.254)
-			(type default)
+			(type solid)
+			(color 255 14 25 1)
 		)
 		(uuid "f25a5599-b459-48ea-922a-eb6691dce11d")
 	)

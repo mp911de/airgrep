@@ -140,6 +140,17 @@ class BoardTests(unittest.TestCase):
         for conv in emi.CONVERTERS.values():
             self.board.position(conv["inductor"])
 
+    def test_power_net_names_follow_the_board(self):
+        for role, net in run_power.CHG.get("board_nets", {}).items():
+            with self.subTest(net=net):
+                actual = self.board.net_parasitics(role)
+                self.assertGreater(actual[0], 0.)
+                self.assertEqual(actual, self.board.net_parasitics(net))
+
+    def test_missing_net_does_not_have_zero_resistance(self):
+        with self.assertRaisesRegex(ValueError, "no pads on net MISSING"):
+            self.board.net_parasitics("MISSING")
+
     def test_return_path_gaps_are_short(self):
         gaps = self.board.return_path_gaps("B", "In2")
         digital = [d[0] for d in emi.DIGITAL]

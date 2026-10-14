@@ -138,9 +138,9 @@ NOT_MODELLED = ("USB_DP and USB_DN carry only the BC1.2 detection at plug-in, no
 # floor kTB + NF of the receiver, so the noise floor rises by less than 1 dB.
 ANT_GAIN = 1.64  # dipole
 ANTENNA_OFFSET = 0.03  # m from the mount to the antenna's radiating centre on the enclosure wall (assumed)
-RECEIVERS = (("ADS-B 1090 MHz", 1090e6, 4e6, 5.0, "MH8"),
-             ("FLARM 868 MHz", 868.2e6, 250e3, 5.0, "MH7"),
-             ("GNSS L1 1575 MHz", 1575.42e6, 2e6, 2.0, "MH6"))
+RECEIVERS = (("ADS-B 1090 MHz", 1090e6, 4e6, 5.0, "MH8ADS980"),
+             ("FLARM 868 MHz", 868.2e6, 250e3, 5.0, "MH7ADS1090"),
+             ("GNSS L1 1575 MHz", 1575.42e6, 2e6, 2.0, "MH6ANTGNSS"))
 
 # --- USB input and harness
 USB_CABLE = (0.3, 1e-6)  # 1 m cable: R, L of the VBUS/GND loop (estimate)
@@ -327,10 +327,14 @@ class Board:
                 sum(s[1] + s[3] for s in tracks) / (2 * len(tracks)))
 
     def net_tracks(self, net):
+        net = run_power.CHG.get("board_nets", {}).get(net, net)
         return [s for s in self.data["segments"] if s[6] == net]
 
     def net_parasitics(self, net):
         """Length, R, L and C of all tracks and vias of a net: a bound for a branching net."""
+        net = run_power.CHG.get("board_nets", {}).get(net, net)
+        if not any(p.net == net for p in self.data["pads"]):
+            raise ValueError("no pads on net %s" % net)
         length = r = l = c = 0.0
         for x1, y1, x2, y2, w, layer, _ in self.net_tracks(net):
             seg = math.hypot(x2 - x1, y2 - y1) * 1e-3

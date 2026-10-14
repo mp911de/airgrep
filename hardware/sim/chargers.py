@@ -59,6 +59,9 @@ CHARGERS = {
         part="BQ25798", ref="U4", datasheet="SLUSDV2C, Electrical Characteristics and section 6.7",
         pads=dict(vin=("2", "3"), sw=("28",), sw2=("26",), sys=("25",), bat=("22", "23"), gnd=("27",)),
         nets=dict(sw="CHG_SW1", sw2="CHG_SW2"),
+        board_nets={"USB_VBUS_J1": "+VUSB_J1", "USB_VBUS": "+VUSB", "VSYS": "+VSYS", "VBAT": "+VBAT",
+                    "BOOST_5V": "+BOOST_5V", "RAIL_5V": "+5V", "ESP_5V_D": "+ESP_5V_D",
+                    "ADS_5V_D": "+ADS_5V_D", "ESP_5V": "+ESP_5V", "ADS_5V": "+ADS_5V"},
         pin_names=dict(vin="VBUS", sw="SW1", sys="SYS", bat="BAT", gnd="GND"),
         inductor_on_vsys=False,  # L1 sits between SW1 and SW2; SYS is a separate pin behind Q3
         ship_fet=dict(ref="Q13", net="CHG_BAT", r_on=(2.6e-3, 6.4e-3)),  # CSD17575Q3: 4.5 V typical; high includes 2x hot derating

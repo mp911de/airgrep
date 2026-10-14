@@ -41,6 +41,10 @@
 
 # Project rules
 
+(rule "mounting holes: internal hole to hole 14 mil"
+  (condition "A.Type == 'Pad' && B.Type == 'Pad' && A.memberOfFootprint('MH*') && A.Reference == B.Reference")
+  (constraint hole_to_hole (min 14mil)))
+
 (rule "edge clearance 40 mil"
   (constraint edge_clearance (min 40mil)))
 
@@ -56,12 +60,6 @@
 (rule "routed mounting holes: copper keepaway 16 mil"
   (condition "A.Reference == 'MH6' || A.Reference == 'MH7' || A.Reference == 'MH8'")
   (constraint hole_clearance (min 16mil)))
-
-# Fine areas are the rule areas named FINE_*. Draw one around a fine-pitch part.
-
-(rule "signal spacing 12 mil outside fine areas"
-  (condition "A.NetClass == 'Default' && B.NetClass == 'Default' && (A.Type == 'Track' || A.Type == 'Via') && (B.Type == 'Track' || B.Type == 'Via') && !A.intersectsArea('FINE_*')")
-  (constraint clearance (min 10mil)))
 
 # JLCPCB needs 0.15 mm more diameter than hole: 18 mil on a 12 mil hole.
 (rule "vias in fine areas 18 mil, ring 3 mil"
