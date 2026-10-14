@@ -44,6 +44,8 @@ def report_lines(step, kind, entries, where=""):
     """One line per error. Warnings print but do not fail. Returns (errors, warnings)."""
     errors = warnings = 0
     for v in entries:
+        if v.get("excluded"):
+            continue
         items = v.get("items", [])
         # A zone reports (0,0). Take the first item with a real position.
         pos = v.get("pos") or next((i["pos"] for i in items if i.get("pos") and (i["pos"]["x"] or i["pos"]["y"])), None)

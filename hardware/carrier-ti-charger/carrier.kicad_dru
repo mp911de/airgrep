@@ -1,6 +1,6 @@
 (version 1)
 
-# Units are mil. A later rule overrides an earlier one.
+# A later rule overrides an earlier one.
 # JLCPCB minimums are in Board Setup > Constraints. Stackup JLC04161H-2116C.
 # kicad-cli skips broken rules silently. Check edits in Board Setup > Custom Rules.
 
@@ -14,7 +14,12 @@
   (condition "A.Pad_Type == 'Through-hole' && (B.Type == 'Track' || B.Type == 'Arc')")
   (constraint hole_clearance (min 12mil)))
 
-(rule "PTH annular ring 10 mil (0.25 mm recommended, 0.18 mm minimum)"
+(rule "inner PTH hole to copper 12 mil (0.3 mm)"
+  (layer inner)
+  (condition "A.Pad_Type == 'Through-hole'")
+  (constraint hole_clearance (min 12mil)))
+
+(rule "PTH annular ring 10 mil (0.20 mm recommended, 0.15 mm minimum)"
   (condition "A.Pad_Type == 'Through-hole'")
   (constraint annular_width (min 10mil)))
 
@@ -22,16 +27,57 @@
   (condition "A.Pad_Type == 'NPTH, mechanical'")
   (constraint hole_size (min 20mil)))
 
+# KiCad's annular-width check skips NPTH pads. Check the copper envelope instead.
+# Bare holes have no annulus; offset and custom pad shapes still need inspection.
+(rule "NPTH copper ring 18 mil (0.45 mm)"
+  (condition "A.Pad_Type == 'NPTH, mechanical' && A.Pad_Shape != 'Custom' && (A.existsOnLayer('F.Cu') || A.existsOnLayer('B.Cu')) && (A.Size_X > A.Hole_Size_X || A.Size_Y > A.Hole_Size_Y)")
+  (constraint assertion "A.Size_X >= A.Hole_Size_X + 36mil && A.Size_Y >= A.Hole_Size_Y + 36mil"))
+
+(rule "plated slot width 14 mil (0.35 mm)"
+  (condition "A.Pad_Type == 'Through-hole' && A.Hole_Size_X != A.Hole_Size_Y")
+  (constraint hole_size (min 14mil)))
+
+(rule "plated slot length at least twice its width"
+  (condition "A.Pad_Type == 'Through-hole' && A.Hole_Size_X != A.Hole_Size_Y")
+  (constraint assertion "A.Hole_Size_X >= 2 * A.Hole_Size_Y || A.Hole_Size_Y >= 2 * A.Hole_Size_X"))
+
+(rule "NPTH slot width 40 mil (1.0 mm)"
+  (condition "A.Pad_Type == 'NPTH, mechanical' && A.Hole_Size_X != A.Hole_Size_Y")
+  (constraint hole_size (min 40mil)))
+
 (rule "pad to pad 6 mil (0.15 mm)"
   (condition "A.Type == 'Pad' && B.Type == 'Pad' && A.Net != B.Net")
   (constraint clearance (min 6mil)))
+
+# Custom pad dimensions describe the anchor, not the full copper shape.
+# Assertions accumulate, so the error and warning conditions must be disjoint.
+(rule "SMD pad size 0.25 mm"
+  (condition "A.Pad_Type == 'SMD' && A.Pad_Shape != 'Custom' && A.Fabrication_Property != 'BGA pad' && !((A.Reference == 'U4' && A.intersectsArea('FINE_U4')) || (A.Reference == 'U6' && A.intersectsArea('FINE_U6')))")
+  (constraint assertion "A.Size_X >= 0.25mm && A.Size_Y >= 0.25mm"))
+
+# QFN pad dimensions
+(rule "QFN pad size 0.25 mm"
+  (severity exclusion)
+  (condition "A.Pad_Type == 'SMD' && A.Pad_Shape != 'Custom' && A.Fabrication_Property != 'BGA pad' && ((A.Reference == 'U4' && A.intersectsArea('FINE_U4')) || (A.Reference == 'U6' && A.intersectsArea('FINE_U6')))")
+  (constraint assertion "A.Size_X >= 0.25mm && A.Size_Y >= 0.25mm"))
+
+# The smaller BGA pads require the project's ENIG finish.
+(rule "BGA pad size 0.2 mm"
+  (condition "A.Pad_Type == 'SMD' && A.Pad_Shape != 'Custom' && A.Fabrication_Property == 'BGA pad'")
+  (constraint assertion "A.Size_X >= 0.2mm && A.Size_Y >= 0.2mm"))
+
+# Group coil traces as COIL_*; KiCad cannot identify coils from their geometry.
+(rule "exposed coil width 10 mil (0.25 mm)"
+  (layer outer)
+  (condition "(A.Type == 'Track' || A.Type == 'Arc') && A.Soldermask && A.memberOfGroup('COIL_*')")
+  (constraint track_width (min 10mil)))
 
 (rule "silkscreen to pad 5 mil (0.13 mm)"
   (layer outer)
   (condition "A.Layer == '?.Silkscreen' && B.Type == 'Pad'")
   (constraint silk_clearance (min 5mil)))
 
-# JLCPCB flags 1:1 mask openings. Keep the mask web in Board Setup at 0.
+# JLCPCB accepts 1:1 mask openings.
 (rule "solder mask expansion 1 mil"
   (constraint solder_mask_expansion (opt 1mil)))
 
@@ -41,6 +87,7 @@
 
 # Project rules
 
+# Stitching holes inside mounting footprints are represented as pads.
 (rule "mounting holes: internal hole to hole 14 mil"
   (condition "A.Type == 'Pad' && B.Type == 'Pad' && A.memberOfFootprint('MH*') && A.Reference == B.Reference")
   (constraint hole_to_hole (min 14mil)))
@@ -55,11 +102,6 @@
 (rule "mounting holes: copper keepaway 12 mil"
   (condition "A.Reference == 'MH*'")
   (constraint hole_clearance (min 12mil)))
-
-# MH6 to MH8 are 6.5 mm. JLCPCB routes holes above 6.3 mm with +/-8 mil.
-(rule "routed mounting holes: copper keepaway 16 mil"
-  (condition "A.Reference == 'MH6' || A.Reference == 'MH7' || A.Reference == 'MH8'")
-  (constraint hole_clearance (min 16mil)))
 
 # JLCPCB needs 0.15 mm more diameter than hole: 18 mil on a 12 mil hole.
 (rule "vias in fine areas 18 mil, ring 3 mil"

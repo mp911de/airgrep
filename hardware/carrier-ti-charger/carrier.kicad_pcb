@@ -49046,6 +49046,38 @@
 		)
 	)
 	(zone
+		(locked yes)
+		(layer "F.Cu")
+		(uuid "6f530799-0c84-4d15-9dbb-76d4e9a53509")
+		(name "FINE_U4")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(keepout
+			(tracks allowed)
+			(vias allowed)
+			(pads allowed)
+			(copperpour allowed)
+			(footprints allowed)
+		)
+		(placement
+			(enabled no)
+			(sheetname "")
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+			(island_removal_mode 0)
+		)
+		(polygon
+			(pts
+				(xy 111.0488 106.7562) (xy 116.8908 106.7562) (xy 116.8908 112.2172) (xy 111.0488 112.2172)
+			)
+		)
+	)
+	(zone
 		(layer "F.Cu")
 		(uuid "706f9aae-5bcb-4d4c-8fda-a933090b09ce")
 		(name "FINE_U7")
@@ -54818,6 +54850,38 @@
 		(polygon
 			(pts
 				(xy 104.14 99.06) (xy 104.2416 99.06) (xy 104.2416 99.1616) (xy 104.14 99.1616)
+			)
+		)
+	)
+	(zone
+		(locked yes)
+		(layer "F.Cu")
+		(uuid "ab6e8f3c-63b3-4d64-893a-e8cec908d172")
+		(name "FINE_U6")
+		(hatch edge 0.5)
+		(connect_pads
+			(clearance 0)
+		)
+		(min_thickness 0.25)
+		(keepout
+			(tracks allowed)
+			(vias allowed)
+			(pads allowed)
+			(copperpour allowed)
+			(footprints allowed)
+		)
+		(placement
+			(enabled no)
+			(sheetname "")
+		)
+		(fill
+			(thermal_gap 0.5)
+			(thermal_bridge_width 0.5)
+			(island_removal_mode 0)
+		)
+		(polygon
+			(pts
+				(xy 138.1506 105.4862) (xy 142.8242 105.4862) (xy 142.8242 111.4298) (xy 138.1506 111.4298)
 			)
 		)
 	)
