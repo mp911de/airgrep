@@ -1,6 +1,6 @@
 # Design FMEA: carrier board and battery harness
 
-Failure modes and effects of the rev A carrier (working tree of 8 Oct 2026) with its pack, NTC and thermostat harness. The design is in [power.md](power.md), [interfaces.md](interfaces.md) and [mechanical.md](mechanical.md). The ranked result is at the end: [Top 10 risks](#top-10-risks).
+Failure modes and effects of the carrier with its pack, NTC and thermostat harness. Rows explicitly naming MAX77757 cover the frozen MAX carrier; the module-feed overvoltage entry covers the active TI carrier. The design is in [power.md](power.md), [interfaces.md](interfaces.md) and [mechanical.md](mechanical.md). The ranked result is at the end: [Top 10 risks](#top-10-risks).
 
 ## Basis
 
@@ -157,8 +157,7 @@ Verified circuit [S]: U5 TLV840CADL29 (open drain [D]) on VSYS pulls PWR_EN low.
 
 | ID | Item and failure mode | Effect on the system | Cockpit | Existing detection or limit | S | L | D | RPN | Mitigation | Rev |
 |---|---|---|---|---|---|---|---|---|---|---|
-| P1 | Boost over-voltage: R15 short, R14 open, FB (pin 17) bridged, U6 internal | U6 drives VOUT to its 13.2 V OVP [D]. U7 absolute maximum is 6 V [D]. U11 and U12 have OVLO tied to GND, so their over-voltage lock-out is off [S][D]. Modules see up to 13 V | F | None on the carrier. First power-up measurement catches assembly faults only | 5 | 1 | 5 | 25 | First power-up without modules: measure TP7 at 5.0 to 5.1 V | A |
-| | | | | | | | | | OVLO divider on U11 and U12 to trip at about 5.7 V (two resistors each), or a clamp on RAIL_5V | B |
+| P1 | Boost over-voltage: R15 short, R14 open, FB (pin 17) bridged, U6 internal | U6 can drive VOUT to its 13.2 V OVP [D]. U7 remains upstream and is rated 6 V absolute [D]. TI U11/U12/U14 use TPS259474L with 5.36 kΩ / 1.50 kΩ precision OVLO dividers [S]; static trip is 5.380–5.624 V [Sim]. Fault overshoot and failure of U7 can defeat module protection [A] | F | Hardware OVLO on all three feeds; response has no guaranteed maximum [D] | 5 | 1 | 5 | 25 | Fault-injection bench without modules: measure overshoot and recovery, check U7 survival | A |
 | P2 | U6 stuck off, L2 open, EN open | No 5 V. Device dark | IL | Dark screen | 3 | 1 | 2 | 6 | None needed | |
 | P3 | U6 stops switching but conducts, or high-side short | Modules get VSYS minus a diode, 3.0 to 4.2 V. The ADSBee LDO needs 3.7 V [Doc]. ADSBee may stop while the display runs [A] | SL | D5 still lit | 4 | 1 | 4 | 16 | Firmware ADSBee heartbeat (see M1) | A |
 | P4 | U6 low-side short | VSYS shorted through L2. QBAT OCP hiccup [D] | IL | QBAT OCP | 3 | 1 | 2 | 6 | None needed | |
@@ -181,7 +180,7 @@ Verified circuit [S]: U5 TLV840CADL29 (open drain [D]) on VSYS pulls PWR_EN low.
 | M3 | U11 or U12 switch short | Reverse blocking lost. A module on its own USB can back-feed RAIL_5V with the shunt fitted | N | | 2 | 1 | 4 | 8 | None needed | |
 | M4 | Socket or jumper contact intermittent under vibration (8.5 mm sockets, display on one standoff) | Module resets. Traffic gone for the reboot and GNSS reacquisition time [A] | SL or IL | None | 4 | 2 | 4 | 32 | Fit all module screws. Secure jumpers. Vibration test. Heartbeat as M1 | A |
 | | | | | | | | | | Solder modules or integrate the GNSS chip (owner plan) | B |
-| M5 | No over-voltage lock-out on module feeds (OVLO at GND) | See P1 | | | | | | | | |
+| M5 | Module-feed OVLO waveform or input-cycle recovery fails | See P1. TI feeds have hardware OVLO; fault response needs bench validation | | | | | | | | |
 
 ## 8. Module insertion faults (sockets not keyed)
 
@@ -220,7 +219,7 @@ Socket geometry from the board [S]: J5 (GNSS) is one 1x8 row. The display uses f
 
 Items that look like real design gaps, checked in the schematic or data sheet:
 
-1. **No over-voltage protection on the module feeds.** U11 and U12 OVLO pins are tied to GND [S], which disables their lock-out [D]. One failed resistor in the boost feedback (R14 open or R15 short) drives RAIL_5V toward the TPS61088's 13.2 V OVP [D]. U7 is rated 6 V absolute [D]. Rev B fix: an OVLO divider per LM73100.
+1. **Boost-fault survival is unverified.** TI U11/U12/U14 have OVLO and reverse blocking, with trip above 5.25 V across static corners. U7 is upstream and rated 6 V absolute, while a feedback fault can drive the boost towards 13.2 V [D]. Measure overshoot, U7 survival and input-cycle recovery before relying on module protection.
 2. **J2, J3 and J4 are interchangeable.** All three are JST-PH 2-pin [S]. The battery plug fits J2 and puts the pack on THM, rated 2.2 V [D]. A J2 and J4 swap silently removes the 60 °C load cut-off.
 3. **The POWER slider does not isolate the pack.** Soft shorts between about 2 and 6 A on VBAT, VSYS or BOOST_5V trip nothing: F1 needs 200 % for 5 s [D], QBAT trips at 6 A [D], and the boost conducts through its body diode when disabled. [Issue 0001](../issues/0001-battery-disconnect-switch.md) addresses part of this.
 4. **The safety timer is too short for the 10 Ah pack.** 6 h ± 20 % [D] against 5 h 55 min of charging [Doc]. Incomplete charges are likely.
@@ -237,7 +236,7 @@ Items that look like real design gaps, checked in the schematic or data sheet:
 
 ## Rev B actions (board change)
 
-1. OVLO dividers on U11 and U12.
+1. Boost-fault protection for U7 and validation of the module-feed OVLO waveform.
 2. Distinct connectors for pack and sensors, or one keyed sensor connector.
 3. Reverse-polarity stage at J3 (issue 0002) combined with a slider-controlled battery disconnect and a current limit near 3 A (issue 0001).
 4. JST-XH or two contacts per pole for the pack.
@@ -263,4 +262,4 @@ Ranked by RPN, then by severity.
 | 9 | B6 | J3 contact heat above its 2 A rating | 4 2 4 | 32 | Temperature check at 1 A. JST-XH | A, B |
 | 10 | M4 | Socket or jumper contact loss under vibration | 4 2 4 | 32 | Screws, vibration test, heartbeat. Solder modules | A, B |
 
-Severity 5 items below the top 10 that still need a decision: A3 heatsink stack short (30), I3 display offset (30), P1 boost over-voltage with no OVLO (25), C12 MLCC soft short with no isolation (25), C1 overcharge on U4 failure (25).
+Severity 5 items below the top 10 that still need a decision: A3 heatsink stack short (30), I3 display offset (30), P1 boost-fault survival and OVLO transient protection (25), C12 MLCC soft short with no isolation (25), C1 overcharge on U4 failure (25).

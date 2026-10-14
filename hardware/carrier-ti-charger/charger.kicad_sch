@@ -7520,7 +7520,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://www.lcsc.com/datasheet/C25867.pdf"
+		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/46d7760c582640714d605308a25a220a.pdf?productCode=C281775"
 			(at 205.74 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -7531,7 +7531,7 @@
 				)
 			)
 		)
-		(property "Description" "OVLO divider, 1%, 100 ppm/C, 62.5 mW, 50 V"
+		(property "Description" "OVLO divider, 0.1%, 25 ppm/C, 62.5 mW, 50 V"
 			(at 205.74 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -7542,7 +7542,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C25867"
+		(property "LCSC" "C281775"
 			(at 205.74 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -7553,7 +7553,7 @@
 				)
 			)
 		)
-		(property "MPN" "0402WGF1501TCE"
+		(property "MPN" "RT0402BRD071K5L"
 			(at 205.74 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -7564,7 +7564,7 @@
 				)
 			)
 		)
-		(property "Tolerance" "1%"
+		(property "Tolerance" "0.1%"
 			(at 205.74 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -7575,7 +7575,18 @@
 				)
 			)
 		)
-		(property "TCR" "100 ppm/C"
+		(property "TCR" "25 ppm/C"
+			(at 205.74 151.13 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "YAGEO"
 			(at 205.74 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -9415,7 +9426,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "5.1k"
+		(property "Value" "5.36k"
 			(at 208.28 144.78 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9426,7 +9437,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "carrier:R_0402_1005Metric_NoSilk"
+		(property "Footprint" "carrier:R_0805_2012Metric_NoSilk"
 			(at 205.74 143.51 0)
 			(hide yes)
 			(show_name no)
@@ -9437,7 +9448,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://www.lcsc.com/datasheet/C25905.pdf"
+		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/46d7760c582640714d605308a25a220a.pdf?productCode=C706247"
 			(at 205.74 143.51 0)
 			(hide yes)
 			(show_name no)
@@ -9448,7 +9459,7 @@
 				)
 			)
 		)
-		(property "Description" "OVLO divider, 1%, 100 ppm/C, 62.5 mW, 50 V"
+		(property "Description" "OVLO divider, 0.1%, 25 ppm/C, 125 mW, 150 V"
 			(at 205.74 143.51 0)
 			(hide yes)
 			(show_name no)
@@ -9459,7 +9470,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C25905"
+		(property "LCSC" "C706247"
 			(at 205.74 143.51 0)
 			(hide yes)
 			(show_name no)
@@ -9470,7 +9481,7 @@
 				)
 			)
 		)
-		(property "MPN" "0402WGF5101TCE"
+		(property "MPN" "RT0805BRD075K36L"
 			(at 205.74 143.51 0)
 			(hide yes)
 			(show_name no)
@@ -9481,7 +9492,7 @@
 				)
 			)
 		)
-		(property "Tolerance" "1%"
+		(property "Tolerance" "0.1%"
 			(at 205.74 143.51 0)
 			(hide yes)
 			(show_name no)
@@ -9492,7 +9503,18 @@
 				)
 			)
 		)
-		(property "TCR" "100 ppm/C"
+		(property "TCR" "25 ppm/C"
+			(at 205.74 143.51 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "YAGEO"
 			(at 205.74 143.51 0)
 			(hide yes)
 			(show_name no)

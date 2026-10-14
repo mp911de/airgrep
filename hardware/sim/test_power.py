@@ -8,6 +8,22 @@ import run_power as power
 import simlib
 
 
+class OvervoltageTests(unittest.TestCase):
+    def test_normal_supply_is_below_all_trip_corners(self):
+        self.assertGreater(power.ovlo_bounds(power.OVLO_RISING)[0], 5.25)
+        self.assertLess(power.ovlo_bounds(power.OVLO_RISING)[1], 6.0)
+
+    def test_basic_resistors_cannot_meet_the_normal_supply_limit(self):
+        trip = power.ovlo_bounds(power.OVLO_RISING, top=5.1e3, tolerance=.01, tcr=100e-6)
+        self.assertLess(trip[0], 5.25)
+
+    def test_returning_to_five_volts_does_not_guarantee_recovery(self):
+        low, high = power.ovlo_bounds(power.OVLO_FALLING)
+        self.assertLess(low, 5.0)
+        self.assertGreater(high, 5.0)
+        self.assertLess(high, power.ovlo_bounds(power.OVLO_RISING)[0])
+
+
 @unittest.skipUnless(simlib.NGSPICE, "ngspice is required")
 class ModuleFeedTests(unittest.TestCase):
     def bench(self, supplies, loads):

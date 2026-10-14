@@ -9,4 +9,6 @@ carrier_drc_violations.json
 ~*.*
 *.rpt
 netmap/
+hardware/sim/**/*.svg
+hardware/sim/**/*.pdf
 pdf2text/

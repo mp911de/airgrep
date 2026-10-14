@@ -16,7 +16,7 @@ Five energy-conserving nodes: U4 junction, local PCB, top heatsink (unused with 
 | Pack DC resistance | 90 mΩ for both | Existing high-corner estimate; both specify <=50 mΩ AC |
 | Pack surface heat transfer | 7 W/m²K times all six faces | Existing estimate; mounting can obstruct it |
 | U4 to local PCB | 9.7 K/W | RθJB 9.7 K/W from junction to pins (RθJC(top) 20.9, ψJT 0.5 K/W) |
-| Local PCB to surroundings | 26.42 K/W | Reduced from live board thermal network |
+| Local PCB to surroundings | 28.38 K/W | Reduced from live board thermal network |
 | U4 to top sink / sink to surroundings | 40.9 / 58.3 K/W | Existing top/spacer/epoxy estimates |
 | Vents | 5 cm² each, 50% free area, 35 mm height | Existing enclosure model |
 | JEITA hot / restart | 42.1 / 40.8 °C | Nominal pack NTC thresholds |
@@ -32,23 +32,23 @@ The delay page halves/doubles all heat capacities, and separately adds a 100 K/W
 
 | Pack | Ambient | Policy | Peak U4 | Peak pack | First charge stop | Charge added | End |
 |---|---|---|---|---|---|---|---|
-| 5000 mAh | 25 °C | 1 A default mode, TREG 120 °C | 79.7 °C | 50.2 °C | 28.6 min | 0.47 Ah | 90.0 min |
-| 5000 mAh | 25 °C | 1.8 A host mode, TREG 100 °C | 100.2 °C | 50.5 °C | 20.7 min | 0.60 Ah | 90.0 min |
-| 5000 mAh | 25 °C | 1.8 A host mode, TREG 80 °C | 80.9 °C | 50.3 °C | 25.2 min | 0.54 Ah | 90.0 min |
-| 5000 mAh | 35 °C | 1 A default mode, TREG 120 °C | 83.5 °C | 55.0 °C | 13.3 min | 0.22 Ah | 42.8 min |
-| 5000 mAh | 35 °C | 1.8 A host mode, TREG 100 °C | 100.3 °C | 55.0 °C | 10.4 min | 0.30 Ah | 38.4 min |
-| 5000 mAh | 35 °C | 1.8 A host mode, TREG 80 °C | 81.1 °C | 55.0 °C | 12.2 min | 0.24 Ah | 41.8 min |
-| 10000 mAh | 25 °C | 1 A default mode, TREG 120 °C | 79.3 °C | 48.8 °C | 39.6 min | 0.66 Ah | 90.0 min |
-| 10000 mAh | 25 °C | 1.8 A host mode, TREG 100 °C | 100.2 °C | 49.5 °C | 28.8 min | 0.83 Ah | 90.0 min |
-| 10000 mAh | 25 °C | 1.8 A host mode, TREG 80 °C | 80.8 °C | 49.1 °C | 35.5 min | 0.74 Ah | 90.0 min |
-| 10000 mAh | 35 °C | 1 A default mode, TREG 120 °C | 84.1 °C | 55.0 °C | 17.2 min | 0.29 Ah | 61.1 min |
-| 10000 mAh | 35 °C | 1.8 A host mode, TREG 100 °C | 100.3 °C | 55.0 °C | 13.9 min | 0.39 Ah | 56.1 min |
-| 10000 mAh | 35 °C | 1.8 A host mode, TREG 80 °C | 81.1 °C | 55.0 °C | 16.2 min | 0.31 Ah | 60.3 min |
+| 5000 mAh | 25 °C | 1 A default mode, TREG 120 °C | 66.7 °C | 44.3 °C | 42.8 min | 0.71 Ah | 90.0 min |
+| 5000 mAh | 25 °C | 1.8 A host mode, TREG 100 °C | 82.5 °C | 44.4 °C | 28.1 min | 0.84 Ah | 90.0 min |
+| 5000 mAh | 25 °C | 1.8 A host mode, TREG 80 °C | 80.1 °C | 44.4 °C | 28.6 min | 0.84 Ah | 90.0 min |
+| 5000 mAh | 35 °C | 1 A default mode, TREG 120 °C | 73.0 °C | 54.0 °C | 15.4 min | 0.26 Ah | 90.0 min |
+| 5000 mAh | 35 °C | 1.8 A host mode, TREG 100 °C | 87.7 °C | 54.1 °C | 12.0 min | 0.36 Ah | 90.0 min |
+| 5000 mAh | 35 °C | 1.8 A host mode, TREG 80 °C | 80.4 °C | 54.1 °C | 12.6 min | 0.34 Ah | 90.0 min |
+| 10000 mAh | 25 °C | 1 A default mode, TREG 120 °C | 66.5 °C | 43.9 °C | 62.6 min | 1.04 Ah | 90.0 min |
+| 10000 mAh | 25 °C | 1.8 A host mode, TREG 100 °C | 82.4 °C | 44.3 °C | 41.7 min | 1.25 Ah | 90.0 min |
+| 10000 mAh | 25 °C | 1.8 A host mode, TREG 80 °C | 80.1 °C | 44.2 °C | 42.4 min | 1.25 Ah | 90.0 min |
+| 10000 mAh | 35 °C | 1 A default mode, TREG 120 °C | 73.0 °C | 52.9 °C | 20.5 min | 0.34 Ah | 90.0 min |
+| 10000 mAh | 35 °C | 1.8 A host mode, TREG 100 °C | 88.5 °C | 53.1 °C | 16.4 min | 0.49 Ah | 90.0 min |
+| 10000 mAh | 35 °C | 1.8 A host mode, TREG 80 °C | 80.4 °C | 53.1 °C | 17.3 min | 0.46 Ah | 90.0 min |
 
 Charging stops before the old sustained-charge steady temperatures occur. At this load, module heat keeps warming the pack after JEITA suspends charging. The larger pack delays this; it does not remove the steady enclosure heat.
 
 ## Verification
 
-Reduced steady U4/enclosure temperatures match the seven board-model calibration points within 2.13e-14 K. Maximum per-step energy residual across the main scenarios: 4.1e-12 J. Analytic exponential, energy conservation, JEITA hysteresis and timestep tests are in `test_charge_heat.py`. These establish numerical consistency, not physical accuracy.
+Reduced steady U4/enclosure temperatures match the seven board-model calibration points within 5.68e-14 K. Maximum per-step energy residual across the main scenarios: 4.83e-12 J. Analytic exponential, energy conservation, JEITA hysteresis and timestep tests are in `test_charge_heat.py`. These establish numerical consistency, not physical accuracy.
 
-Board SHA256: `b08792ab016a2ca01629c069334da4e848b758189529cd937d3eec1a022d6a6b`. Input hashes and calibration points are in [charging.json](charging.json).
+Board SHA256: `2518e51b1eb83c99007201c4f30b65d595402f252acd16963b1669171927b6f3`. Input hashes and calibration points are in [charging.json](charging.json).

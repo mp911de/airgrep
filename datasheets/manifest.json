@@ -436,5 +436,15 @@
     "bytes": 3996565,
     "sha256": "a653d3bae48cf0f0cc9f705968d309b90e1f003d50f51b53bee273e874bebfbd",
     "note": "TI BQ25798 reference ship FET circuit, Figure 4-5."
+  },
+  {
+    "file": "yageo-rt.pdf",
+    "manufacturer_url": "https://www.yageo.com/en/ProductSearch/PartNumberSearch",
+    "download_url": "https://datasheet.lcsc.com/datasheet/pdf/46d7760c582640714d605308a25a220a.pdf?productCode=C706247",
+    "downloaded": "2026-10-14",
+    "pages": 10,
+    "bytes": 459826,
+    "sha256": "0a729d144519a7021c82a0ef242b064e467c70d44afcf9eabd6c7ffdc4b673a3",
+    "note": "Yageo RT V.16, 2025-05-06. R73/R75/R77: RT0805BRD075K36L, 125 mW, 150 V. R74/R76/R78: RT0402BRD071K5L, 62.5 mW, 50 V. Both 0.1%, 25 ppm/C."
   }
 ]

@@ -58,13 +58,13 @@ Shared and scripts:
 | `simlib.py` | ngspice batch runs with `.param` overrides, waveform helpers, Markdown report |
 | `chargers.py` | One entry per charger (MAX77757, BQ25798): data sheet constants with their sources, operating cases, heatsink or plate, transient policies |
 | `run_thermal.py` | Thermal charge cut-off: runs the benches over all corners and checks them against data sheet thresholds |
-| `run_power.py` | Converters: TPS61088 loop gain in closed form, ripple and transient benches, undervoltage cut-off, switch-node coupling read from the board file |
+| `run_power.py` | Converters: TPS61088 loop gain in closed form, ripple and transient benches, undervoltage cut-off, TI eFuse static OVLO corners, switch-node coupling read from the board file |
 | `run_heat.py` | Power loss and temperatures on the routed board inside an assumed enclosure, with and without the U4 heatsink (MAX) or bottom plate (TI) |
 | `run_charge_heat.py` | Five-node transient charging model, pack inertia and JEITA cutoff, 5 Ah and 10 Ah graphs |
 | `run_charge_limits.py` | MAX: full-current charging with 80/90/100/110 °C TMP300 sensor trips and 5/10 °C hysteresis. TI: 1.8 A host and 1 A default mode over TREG 80/100/120 °C. Thermal-mass sensitivity for both |
 | `run_emi.py` | Emission estimate: converter hot loops and edges, digital signals, radiated and conducted levels against CISPR 32 class B, converter lines in the receiver bands, return paths and rail ripple, all with geometry from the board |
 | `vent_model.py` | Lumped vented-enclosure model: stack-effect vents and a fan against case air, pack and U4 temperature |
-| `test_power.py` | Module-feed forward drop, branch currents, reverse isolation and shutdown solver regressions |
+| `test_power.py` | OVLO trip/recovery margins, module-feed forward drop, branch currents, reverse isolation and shutdown solver regressions |
 | `test_heat.py` | Analytic network checks, layer and via temperatures, zero-current cases, numerical failure checks, operating-point regressions, vent model constants against the heat model |
 | `test_charge_heat.py` | Transient energy balance, thermal inertia, pack cutoff, charger hysteresis, sensor lag and timestep convergence |
 | `test_emi.py` | Spectrum helpers against closed forms, Ott's loop formula, limits, microstrip, geometry, and the board: hot loops found, In1 solid, return-path gaps |
@@ -236,6 +236,9 @@ Assumptions that decide the numbers:
 - The MAX77757 switching loss is an estimate. The TPS61088 fit rests on the project's curve, which is TI's figure less an estimated 2 points.
 - Contact, fuse and pack DC resistances are data sheet maxima or estimates. The USB cable is not included.
 - Zone fills are read as stored. Refill the zones in KiCad before a run after layout changes, or pass a refilled copy with `--pcb`.
+
+
+The TI power report computes OVLO trip and release corners from the precision dividers, IC limits and pin leakage. OVLO switching is not included in the transient decks, so these checks do not bound fault overshoot. The heat model deposits divider dissipation at R73 to R78; PMID is approximated by 5 V during USB operation.
 
 ### EMI
 

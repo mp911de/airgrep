@@ -14,21 +14,21 @@ Other assumptions as in [charging.md](charging.md): fixed 3.7 V cell, USB 5 V / 
 
 | Pack | Mode | TREG | Peak U4 | Pack stop | Charge added |
 |---|---|---|---|---|---|
-| 5000 mAh | host | 80 °C | 80.4 °C | 24.7 min | 0.68 Ah |
-| 5000 mAh | host | 100 °C | 88.6 °C | 23.3 min | 0.70 Ah |
-| 5000 mAh | host | 120 °C | 88.6 °C | 23.3 min | 0.70 Ah |
-| 5000 mAh | default | 80 °C | 71.2 °C | 31.9 min | 0.53 Ah |
-| 5000 mAh | default | 100 °C | 71.2 °C | 31.9 min | 0.53 Ah |
-| 5000 mAh | default | 120 °C | 71.2 °C | 31.9 min | 0.53 Ah |
-| 10000 mAh | host | 80 °C | 80.4 °C | 35.2 min | 0.96 Ah |
-| 10000 mAh | host | 100 °C | 88.5 °C | 33.0 min | 0.99 Ah |
-| 10000 mAh | host | 120 °C | 88.5 °C | 33.0 min | 0.99 Ah |
-| 10000 mAh | default | 80 °C | 70.8 °C | 44.7 min | 0.74 Ah |
-| 10000 mAh | default | 100 °C | 70.8 °C | 44.7 min | 0.74 Ah |
-| 10000 mAh | default | 120 °C | 70.8 °C | 44.7 min | 0.74 Ah |
+| 5000 mAh | host | 80 °C | 80.1 °C | 28.6 min | 0.84 Ah |
+| 5000 mAh | host | 100 °C | 82.5 °C | 28.1 min | 0.84 Ah |
+| 5000 mAh | host | 120 °C | 82.5 °C | 28.1 min | 0.84 Ah |
+| 5000 mAh | default | 80 °C | 66.7 °C | 42.8 min | 0.71 Ah |
+| 5000 mAh | default | 100 °C | 66.7 °C | 42.8 min | 0.71 Ah |
+| 5000 mAh | default | 120 °C | 66.7 °C | 42.8 min | 0.71 Ah |
+| 10000 mAh | host | 80 °C | 80.1 °C | 42.4 min | 1.25 Ah |
+| 10000 mAh | host | 100 °C | 82.4 °C | 41.7 min | 1.25 Ah |
+| 10000 mAh | host | 120 °C | 82.4 °C | 41.7 min | 1.25 Ah |
+| 10000 mAh | default | 80 °C | 66.5 °C | 62.6 min | 1.04 Ah |
+| 10000 mAh | default | 100 °C | 66.5 °C | 62.6 min | 1.04 Ah |
+| 10000 mAh | default | 120 °C | 66.5 °C | 62.6 min | 1.04 Ah |
 
 ## Validation
 
-Reduced steady model agrees with its board calibration within 4.26e-14 K. Maximum energy residual 3.88e-12 J per step.
+Reduced steady model agrees with its board calibration within 5.68e-14 K. Maximum energy residual 4.94e-12 J per step.
 
-Board SHA256: `61f50be8f63d70bbf171e5e15b73bee6393e86da0e7b70cf2001206d267b4a1d`. Full inputs, 35 °C results and sensitivity results: [charging_limits.json](charging_limits.json).
+Board SHA256: `2518e51b1eb83c99007201c4f30b65d595402f252acd16963b1669171927b6f3`. Full inputs, 35 °C results and sensitivity results: [charging_limits.json](charging_limits.json).

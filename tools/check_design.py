@@ -119,7 +119,8 @@ def load_schematic():
             continue
         fields = {text_of(f, "name"): (f[2] if len(f) > 2 else "") for f in children(child(c, "fields") or [], "field")}
         comps[text_of(c, "ref")] = {"value": text_of(c, "value"), "footprint": text_of(c, "footprint"),
-                                    "lcsc": fields.get("LCSC", ""), "dnp": "dnp" in props}
+                                    "lcsc": fields.get("LCSC", ""), "dnp": "dnp" in props,
+                                    "tolerance": fields.get("Tolerance", ""), "tcr": fields.get("TCR", "")}
     return comps, [text_of(n, "name") for n in children(child(tree, "nets"), "net")]
 
 
@@ -235,6 +236,10 @@ def sch(*refs):
     return "schematic " + "+".join(refs), lambda c: sum(part_value(c["sch"][r]["value"]) for r in refs)
 
 
+def sch_field(ref, field, scale=1.0):
+    return "schematic %s %s" % (ref, field), lambda c: float(c["sch"][ref][field].split()[0].rstrip("%")) * scale
+
+
 def sim(script, name, index=None, scale=1.0, digits=None):
     def get(c):
         v = sim_env(script)[name]
@@ -341,6 +346,12 @@ BINDINGS_MAX = [
     (chg("r_batfet"), prose("_path_resistance_ohm", r"BATT-to-SYS switch \((\d+) mΩ typ\)", 1e-3)),
 ]
 BINDINGS_TI = [
+    (sch("R73"), sim("run_power", "OVLO_TOP")),
+    (sch("R74"), sim("run_power", "OVLO_BOTTOM")),
+    (sch("R75"), sim("run_power", "OVLO_TOP")),
+    (sch("R76"), sim("run_power", "OVLO_BOTTOM")),
+    (sch("R77"), sim("run_power", "OVLO_TOP")),
+    (sch("R78"), sim("run_power", "OVLO_BOTTOM")),
     (sch("R56"), lit(4.7e3, "PROG: 1S, 750 kHz, BQ25798 Table 7-1")),
     (sch("R57"), lit(47e3, "ILIM_HIZ divider top, 3.4 V from REGN 4.8 V for 3 A")),
     (sch("R58"), lit(100e3, "ILIM_HIZ divider bottom")),
@@ -351,6 +362,9 @@ BINDINGS_TI = [
     (chg("charge_a"), par("charging/charge_current_a")),
     (chg("fsw"), lit(750e3, "PROG 4.7 kΩ")),
 ]
+for ref in ("R73", "R74", "R75", "R76", "R77", "R78"):
+    BINDINGS_TI.extend([(sch_field(ref, "tolerance", .01), sim("run_power", "OVLO_TOL")),
+                        (sch_field(ref, "tcr", 1e-6), sim("run_power", "OVLO_TCR"))])
 BINDINGS += {"max": BINDINGS_MAX, "ti": BINDINGS_TI}[CHARGER]
 
 

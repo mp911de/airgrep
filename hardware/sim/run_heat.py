@@ -1275,6 +1275,19 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
                 losses["Module feed ideal diodes"] = losses.get("Module feed ideal diodes", 0.0) + p
                 pad_heat(heat, g, pads_of(board, ref, ("5", "6")), p)
 
+        if CHG["part"] == "BQ25798":
+            # Divider heat remains present whenever its input rail is powered.
+            feeds = [("R73", "R74", VOUT), ("R75", "R76", VOUT)] if load else []
+            if case["mode"] == "usb":
+                feeds.append(("R77", "R78", 5.0))  # PMID approximated by the 5 V USB input.
+            resistance = run_power.OVLO_TOP + run_power.OVLO_BOTTOM
+            for top, bottom, voltage in feeds:
+                current = voltage / resistance
+                for ref, value in ((top, run_power.OVLO_TOP), (bottom, run_power.OVLO_BOTTOM)):
+                    p = current ** 2 * value
+                    losses["OVLO dividers"] = losses.get("OVLO dividers", 0.0) + p
+                    pad_heat(heat, g, pads_of(board, ref), p)
+
         # copper and contacts
         if case["mode"] == "battery":
             track("VSYS", {("U4", u4["sys"]): i_bat, ("L2", ("1",)): -i_bat})
