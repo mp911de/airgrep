@@ -3922,7 +3922,7 @@
 		)
 	)
 	(global_label "I2C_SCL"
-		(shape bidirectional)
+		(shape input)
 		(at 241.3 104.14 0)
 		(effects
 			(font

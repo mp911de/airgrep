@@ -5895,7 +5895,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "J_THERM 60C NC"
+		(property "Value" "THERM"
 			(at 53.34 82.55 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7347,7 +7347,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "J_BAT JST-PH 2mm"
+		(property "Value" "BAT"
 			(at 31.75 48.26 0)
 			(show_name no)
 			(do_not_autoplace no)

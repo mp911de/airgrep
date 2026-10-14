@@ -3523,7 +3523,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(symbol "TUSB320LAIRWBR"
+	(symbol "TUSB320LIRWBR"
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
@@ -3539,7 +3539,7 @@
 				)
 			)
 		)
-		(property "Value" "TUSB320LAIRWBR"
+		(property "Value" "TUSB320LIRWBR"
 			(at 0 -11.43 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3560,7 +3560,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://lcsc.com/product-detail/PMIC-Battery-Management_TI_TUSB320LAIRWBR_TUSB320LAIRWBR_C132554.html"
+		(property "Datasheet" "https://www.ti.com/lit/ds/symlink/tusb320l.pdf"
 			(at 0 -16.51 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3571,7 +3571,7 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "USB Type-C CC logic, sink mode, I2C"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3582,7 +3582,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "TI(德州仪器)"
+		(property "Manufacturer" "Texas Instruments"
 			(at 0 -19.05 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3593,7 +3593,7 @@
 				)
 			)
 		)
-		(property "MPN" "TUSB320LAIRWBR"
+		(property "MPN" "TUSB320LIRWBR"
 			(at 0 -21.59 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3604,7 +3604,7 @@
 				)
 			)
 		)
-		(property "LCSC Part" "C132554"
+		(property "LCSC" "C2836598"
 			(at 0 -24.13 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3615,7 +3615,7 @@
 				)
 			)
 		)
-		(property "ki_keywords" "Battery Management ICs"
+		(property "ki_keywords" "USB Type-C CC detection"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3626,7 +3626,7 @@
 				)
 			)
 		)
-		(symbol "TUSB320LAIRWBR_0_1"
+		(symbol "TUSB320LIRWBR_0_1"
 			(rectangle
 				(start -17.78 8.89)
 				(end 17.78 -8.89)

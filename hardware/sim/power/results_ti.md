@@ -256,9 +256,9 @@ Voltage the load drops across the path at the trip point against the hysteresis.
 | Wi-Fi off 0.23 A | pack 50 + harness 60 mΩ | 0.45 A | 63 mV | clean | clean | clean |
 | Wi-Fi off 0.23 A | pack 100 + harness 60 mΩ | 0.45 A | 85 mV | chatter | clean | clean |
 | Wi-Fi off 0.23 A | pack 150 + harness 100 mΩ | 0.45 A | 125 mV | chatter | clean | clean |
-| nominal 0.80 A | pack 50 + harness 60 mΩ | 1.55 A | 217 mV | chatter | chatter | chatter |
+| nominal 0.80 A | pack 50 + harness 60 mΩ | 1.55 A | 218 mV | chatter | chatter | chatter |
 | nominal 0.80 A | pack 100 + harness 60 mΩ | 1.55 A | 295 mV | chatter | chatter | chatter |
-| nominal 0.80 A | pack 150 + harness 100 mΩ | 1.55 A | 434 mV | chatter | chatter | chatter |
+| nominal 0.80 A | pack 150 + harness 100 mΩ | 1.55 A | 435 mV | chatter | chatter | chatter |
 | peak 1.00 A | pack 50 + harness 60 mΩ | 1.94 A | 272 mV | chatter | chatter | chatter |
 | peak 1.00 A | pack 100 + harness 60 mΩ | 1.94 A | 369 mV | chatter | chatter | chatter |
 | peak 1.00 A | pack 150 + harness 100 mΩ | 1.94 A | 543 mV | chatter | chatter | chatter |
@@ -268,7 +268,7 @@ Simulated discharge and restore ramps, PWR_EN counted through 1.2 V:
 
 | Load | Path resistance | Hysteresis | Trips while discharging | Open-circuit voltage band of the trips | Cycle | On-time in the band | Trips while restoring | VSYS minimum |
 |---|---|---|---|---|---|---|---|---|
-| nominal | pack 100 + harness 60 mΩ | 5 % (typical) | 17 | 3.194 to 3.042 V | 10.9 ms | 99 % | 15 | 2.87 V |
+| nominal | pack 100 + harness 60 mΩ | 5 % (typical) | 17 | 3.195 to 3.042 V | 10.9 ms | 99 % | 15 | 2.87 V |
 | nominal | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 44 | 3.300 to 2.971 V | 8.9 ms | 99 % | 48 | 2.86 V |
 | nominal | pack 50 + harness 60 mΩ | 7 % (maximum) | 3 | 3.117 to 3.094 V | 13.3 ms | 98 % | 1 | 2.89 V |
 | Wi-Fi off | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 2.984 to 2.984 V | none | none | 0 | 2.90 V |
@@ -279,13 +279,13 @@ Simulated discharge and restore ramps, PWR_EN counted through 1.2 V:
 - PASS: the supervisor cuts the load before VSYS reaches the boost UVLO (2.4 V)
 - Duration estimate for the nominal case: the trips span 152 mV of open-circuit voltage. The pack is assumed to lose about 1.0 V per Ah near 3 V, and the average path current while cycling is roughly 0.77 A. That gives about 12 minutes of restarts every 10.9 ms at the end of every discharge.
 
-1.5 A burst from the nominal load with the open-circuit voltage held just above the band (band top 3.19 V for the typical path), typical hysteresis:
+1.5 A burst from the nominal load with the open-circuit voltage held just above the band (band top 3.20 V for the typical path), typical hysteresis:
 
 | Open-circuit voltage | Burst | VSYS minimum | Trips | PWR_EN low for | Module terminal back at 4.75 V after burst start |
 |---|---|---|---|---|---|
-| 3.22 V | 10 ms | 2.57 V | 1 | 0.1 ms | 22.3 ms |
-| 3.29 V | 10 ms | 2.66 V | 1 | 0.1 ms | 21.2 ms |
-| 3.22 V | 1 ms | 2.57 V | 1 | 0.1 ms | 22.3 ms |
+| 3.23 V | 10 ms | 2.57 V | 1 | 0.1 ms | 22.3 ms |
+| 3.30 V | 10 ms | 2.66 V | 1 | 0.1 ms | 21.2 ms |
+| 3.23 V | 1 ms | 2.57 V | 1 | 0.1 ms | 22.3 ms |
 
 - PASS: a load burst near cut-off causes at most one shutdown and restart (most: 1)
 
@@ -302,10 +302,10 @@ With the latch fitted (Q7 AO3401A from the R40/C37 delayed hold supply, Q8 2N700
 
 | Load | Path resistance | Hysteresis | Trips | Restarts | Open-circuit voltage at the trip | PWR_EN at the end (voltage restored) |
 |---|---|---|---|---|---|---|
-| nominal | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.194 V | 0.00 V |
+| nominal | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.195 V | 0.00 V |
 | nominal | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 1 | 0 | 3.300 V | 0.00 V |
 | peak | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.268 V | 0.00 V |
-| nominal, 1.5 A burst at 3.22 V | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.225 V | 0.00 V |
+| nominal, 1.5 A burst at 3.23 V | pack 100 + harness 60 mΩ | 5 % (typical) | 1 | 0 | 3.225 V | 0.00 V |
 | nominal, Q8 VGS(th) 2.5 V (max) | pack 150 + harness 100 mΩ | 2.5 % (minimum) | 1 | 0 | 3.300 V | 0.00 V |
 
 - PASS: with the latch: at most one shutdown per discharge and no restart until the slider is cycled (trips 1, restarts 0)
@@ -321,6 +321,8 @@ For each sensitive net: the edge-to-edge distance from the switch-node copper (p
 | BOOST_SW | BOOST_COMP | 2.80 mm | 0.0 mm | 0.004 pF | 4 mV |
 | BOOST_SW | BOOST_SS | 1.03 mm | 0.0 mm | 0.005 pF | 5 mV |
 | BOOST_SW | BOOST_ILIM | 2.90 mm | 0.0 mm | 0.004 pF | 4 mV |
+| BOOST_SW | I2C_SDA | -0.73 mm | 5.3 mm | 0.247 pF | 238 mV |
+| BOOST_SW | I2C_SCL | 0.11 mm | 3.1 mm | 0.139 pF | 137 mV |
 | CHG_SW1 | BAT_TS | 1.96 mm | 0.0 mm | 0.004 pF | 4 mV |
 | CHG_SW1 | CHG_PROG | 1.72 mm | 0.0 mm | 0.004 pF | 4 mV |
 | CHG_SW1 | CHG_ILIM | 1.63 mm | 0.0 mm | 0.004 pF | 4 mV |

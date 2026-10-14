@@ -7,9 +7,8 @@ The GNSS and ADSBee modules have arrived. The display is ordered. The carrier bo
 ## Before ordering the board
 
 - [ ] **Reverse-polarity protection at J3.** CSD25404Q3 (LCSC C2865523) selected; design and validate the bidirectional protection stage, including USB-powered reversed-pack insertion and depleted-pack recovery. Coordinate with the planned off-state battery disconnect. No indicator LED; see [issue 0002](../issues/0002-battery-reverse-polarity-protection.md).
-- [ ] **Silkscreen.** Labels on the top side:
-  - Add "ESP 5V" at JP1.
-  - Add "THERM" at J4, which is labelled on the bottom only.
+- [ ] **USB-C current detection, TI carrier.** Add TUSB320LIRWBR (LCSC C2836598) in sink mode and apply the CC advertisement (default current, 1.5 A or 3 A) to the BQ25798 `IINDPM` limit. Retain BC1.2 detection for legacy sources and default-current advertisement. Design the supply, CC termination and GPIO/I2C interface, including a conservative limit before the ESP boots and fallback on detach or advertisement changes. Verify dead-battery attachment and current limiting with weak sources. 5 V only, no PD negotiation.
+-
 - [ ] **Battery connector rating.** J3 is JST-PH, rated 2 A per contact. The battery current is about 1.9 A at the 1 A load peak and about 3 A at the 1.5 A headroom near empty, and F1 is 5 A. Accept this for short peaks or change the connector ([interfaces.md](interfaces.md#carrier-connectors)).
 - [ ] **K3-1280S-F1 fit and assembly placement.** Compare a real C92658 F1 sample with the manufacturer-derived footprint, including its 0.90 mm peg holes and 3.075 mm peg-to-terminal-row offset. The supplier CAD mixes F2/K1 names and uses 3.406 mm; its 3D model is not trusted. Verify SW1-SW3 orientation and seating in the JLCPCB preview before ordering. Details in [physical controls](../workflows/physical-controls.md).
 - [ ] **Display fit.**
@@ -28,7 +27,6 @@ The GNSS and ADSBee modules have arrived. The display is ordered. The carrier bo
 - [ ] **Case venting.** Selected four 8 cm² vents, two lower inlets and two upper outlets, with 50 % open grilles and 35 mm vertical separation. The updated TI heat model passes the 55 °C pack check at sustained 1 A and 25 °C ambient (51.0 °C). Charging while running still reaches the charge-temperature stop; verify the actual enclosure. See [vent implementation](#enclosure) and `hardware/sim/heat/ti/results.md`.
 - [ ] **carrier-ti-charger layout, optional improvements** from the data sheet review (hard rules are met, [power.md](power.md#layout-1)): widen the In2 SW runs to 100 mil or move L1 100 mil north; four VBUS vias at pins 2/3 instead of two; a 0.1 µF at U6 VIN (pin 9, schematic change); REGN trace 12 to 15 mil; trim the "L2 Boost" switch-node zone to an 80 mil band; U7 exposed pad has room for a second via.
 - [x] **BOM consolidation** applied: C5 and C15 (2.2 µF) to the 100 nF 50 V and the 4.7 µF 16 V parts, R23/R31 to 470 Ω, R61 to 150 Ω, value strings unified per LCSC code. 49 to 46 part numbers. Kept: two inductors (L1 FXL0630, L2 CKST0603), C33 22 µF 1206. Critical values untouched.
-- [ ] **carrier-ti-charger decisions.** Switching frequency 750 kHz (PROG 4.7 kΩ, L1 2.2 µH) against 1.5 MHz (3.0 kΩ, 1 µH), see `hardware/sim/emi/results_ti.md`. TS window: decided, 3 to 43 °C with 80.6 kΩ / 768 kΩ. INT on TP8 only, or on D11 if the buzzer PWM moves. JLCPCB stock of C2876593 (mirror showed 560, not verified on jlcpcb.com).
 
 - [ ] **FLARM interference estimate.** The TI EMI model bounds both converters at −116 dBm in the 868 MHz receiver band against a −121 dBm target. Check with near-field probing and receiver desense measurements; modeled bounds are not measured interference. See `hardware/sim/emi/results_ti.md`.
 
@@ -54,7 +52,10 @@ The simulations rest on these. Each one changes a result if it is far off.
   - Check the GNSS module's position in J5. The socket is not keyed; the silkscreen is the only guard.
 - [ ] **Charger, carrier-ti-charger (BQ25798).**
   - Default mode after power-on: 1 A, STAT low, 12 h timer. Then I2C at 0x6B: ICHG 1.8 A, TREG 100 °C, WD_RST every 20 s; pull the host and confirm the fallback to 1 A after 40 s (WD_STAT).
-  - D+/D- detection with a USB-A DCP, a PC port, a C-to-C cable from a PD adapter (expect "unknown adapter", 3 A, capped by ILIM_HIZ) and an Apple adapter.
+  - D+/D- detection with a USB-A DCP, a PC port, a C-to-C cable from a PD adapter (expect "unknown adapter", 3 A, clamped to 1.5 A by ILIM_HIZ) and an Apple adapter.
+  - U15 at 0x47 with default, 1.5 A and 3 A Type-C sources: IINDPM follows the lower of CC and BC1.2, EN_EXTILIM cleared only at 3 A, detach and replug restore the clamp.
+  - Dead-battery attach to a Type-C source, U15 unpowered.
+  - Weak source: a current-limited 5 V supply, VINDPM holds VBUS.
   - TDIE, IBAT and VBAT over the ADC against a thermocouple and a meter; the TREG loop holding 100 °C in the closed case.
   - TS transitions at J2 (3.1 / 8.9 / 32.2 / 43.0 °C nominal), NTC open and shorted, thermostat trip to CE.
   - Red LED with USB present, green LED on STAT.

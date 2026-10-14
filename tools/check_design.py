@@ -154,7 +154,7 @@ def check_nets(board, sch_nets):
         fail("nets", "schematic net %s has no label name" % name)
         bad += 1
     if not bad:
-        ok("nets", "%d board nets, %d schematic nets, no Net-(...) name" % (len(board_nets), len(sch_nets)))
+        ok("nets", "%d board nets, %d schematic nets, no auto-named Net-(...) name" % (len(board_nets), len(sch_nets)))
 
 
 # --- schematic against board, per reference
@@ -353,12 +353,11 @@ BINDINGS_TI = [
     (sch("R77"), sim("run_power", "OVLO_TOP")),
     (sch("R78"), sim("run_power", "OVLO_BOTTOM")),
     (sch("R56"), lit(4.7e3, "PROG: 1S, 750 kHz, BQ25798 Table 7-1")),
-    (sch("R57"), lit(47e3, "ILIM_HIZ divider top, 3.4 V from REGN 4.8 V for 3 A")),
+    (sch("R57"), lit(120e3, "ILIM_HIZ divider top, 2.2 V from REGN 4.8 V for a 1.5 A clamp")),
     (sch("R58"), lit(100e3, "ILIM_HIZ divider bottom")),
     (sch("R59"), lit(80.6e3, "TS divider RT1 for the 100k B4262 NTC, window 3 to 43 C")),
     (sch("R60"), lit(768e3, "TS divider RT2")),
-    (sch("R65"), lit(5.1e3, "USB-C Rd")),
-    (sch("R66"), lit(5.1e3, "USB-C Rd")),
+    (sch("R79"), lit(887e3, "TUSB320L VBUS_DET, 855 to 920 kOhm")),
     (chg("charge_a"), par("charging/charge_current_a")),
     (chg("fsw"), lit(750e3, "PROG 4.7 kΩ")),
 ]

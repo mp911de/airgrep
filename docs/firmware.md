@@ -35,11 +35,12 @@ The display gets 5 V from two ideal diodes: U12 from the 5 V rail (POWER slider 
 - The host may raise ICHG to 1.8 A and set TREG to 100 °C (or 80 °C). Every register marked "reset by WATCHDOG" falls back when the watchdog expires: reset the watchdog well inside 40 s, and re-apply the whole profile whenever WD_STAT is set.
 - INT is not wired to the ESP (TP8 only). Poll STAT, faults and the ADC (VBUS, IBUS, IBAT, VBAT, VSYS, TS, TDIE) every 1 to 2 s while awake.
 - Input current: the display load on PMID counts inside IINDPM. Keep IINDPM at the detected source limit (500 mA on a standard USB port).
+- USB-C advertisement: poll U15 (TUSB320L, 0x47) with the charger. Set IINDPM to the lower of the CC advertisement (default 0.5 A, 1.5 A, 3 A) and the BC1.2 result. Clear EN_EXTILIM only for a 3 A advertisement; otherwise the ILIM_HIZ clamp holds 1.5 A. On detach or a lower advertisement, set EN_EXTILIM = 1 first. A replug reruns BC1.2 and overwrites IINDPM; reapply. EN_EXTILIM survives the watchdog, only REG_RST resets it.
 - Adaptive current: lower ICHG when TDIE approaches TREG or the pack approaches the 43 °C stop; charger mode with the modules off allows the full 1.8 A in the closed case (heat model, device-off case).
 
 ## I2C bus
 
-Bus at 3.3 V, 100 kHz, the module's 5.1 kΩ pull-ups. Datasheet cross-check of all four carrier slaves (TCA9534, MAX17048, BMP580, BQ25798): levels, speed and timing are compatible, nothing to change on the board. Rules the parts impose:
+Bus at 3.3 V, 100 kHz, the module's 5.1 kΩ pull-ups. Datasheet cross-check of the carrier slaves (TCA9534, MAX17048, BMP580, BQ25798, TUSB320L): levels, speed and timing are compatible, nothing to change on the board. Rules the parts impose:
 
 - 100 kHz only. Estimated bus capacitance is about 130 pF per line (the MAX17048 alone is 60 pF per pin), rise time about 560 ns with 5.1 kΩ. Fast mode needs R19/R20 fitted and is still marginal.
 - Never address 0x7E. It is the I3C broadcast address and locks the BMP580 into I3C mode until power-off. Bus scans run 0x08 to 0x77 only.
@@ -47,6 +48,7 @@ Bus at 3.3 V, 100 kHz, the module's 5.1 kΩ pull-ups. Datasheet cross-check of a
 - No ACK is normal for the MAX17048 POR command (0x5400 to 0xFE) and the BMP580 soft reset (0xB6 to 0x7E). Do not treat it as a bus error.
 - BQ25798: a transaction not finished within 1.5 s is dropped and the chip returns to idle. WD_FLAG clears on read. Thresholds are absolute (VIH 1.3 V, VIL 0.4 V), fine at 3.3 V. I2C works on battery only, in HIZ and in ship mode, not in shutdown.
 - BMP580: wait 2 ms after ESP_3V3 before the first access, then check CHIP_ID = 0x50 and STATUS.nvm_rdy. Keep INT_CONFIG.int_en disabled because INT is grounded.
+- TUSB320L: 400 pF allowed at 100 kHz. Its pin capacitance is not specified; with U15 the bus is estimated at about 145 pF, rise time about 630 ns. Powered from ESP_3V3, so it is never unpowered on a live bus.
 - TCA9534: reads NACK until the first command byte has been written after power-up.
 
 ## Charger-mode display

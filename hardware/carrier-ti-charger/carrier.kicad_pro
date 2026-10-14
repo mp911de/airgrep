@@ -40,8 +40,8 @@
         "other_text_upright": false,
         "pads": {
           "drill": 0.0,
-          "height": 1.45,
-          "width": 1.0
+          "height": 0.64,
+          "width": 0.54
         },
         "silk_line_width": 0.1524,
         "silk_text_italic": false,
@@ -174,9 +174,9 @@
         {
           "td_onpthpad": true,
           "td_onroundshapesonly": false,
-          "td_onsmdpad": true,
+          "td_onsmdpad": false,
           "td_ontrackend": false,
-          "td_onvia": true
+          "td_onvia": false
         }
       ],
       "teardrop_parameters": [
@@ -296,10 +296,11 @@
     "layer_presets": [
       {
         "activeLayer": -2,
-        "flipBoard": false,
+        "flipBoard": true,
         "layers": [
           2,
           3,
+          7,
           11,
           15,
           25,
@@ -986,7 +987,7 @@
         "uuid": "1d76d2ec-7795-4c71-8167-b1182c3ebc1d"
       }
     ],
-    "used_designators": "U1-2,J5-11,#PWR64-82,#PWR101-102,C2-4,C25,R1-5,R7,JP1-2,#FLG8-11",
+    "used_designators": "#FLG8-11,JP1-2,R1-5,R7,C2-4,C25,#PWR64-82,#PWR101-102,J5-11,U1-2",
     "variants": []
   },
   "sheets": [

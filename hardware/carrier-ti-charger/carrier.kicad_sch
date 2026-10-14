@@ -42,7 +42,7 @@
 		)
 		(uuid "31313afe-6880-48cd-909f-38584a161eff")
 	)
-	(text "MAX77757\n1-cell Li-ion charger with\nUSB-C CC detect\nSYS power path, NTC via BAT_TS"
+	(text "BQ25798\n1-cell Li-ion charger with\nBC1.2 detect, I2C host control\nSYS power path, NTC via BAT_TS"
 		(exclude_from_sim no)
 		(at 74.93 53.34 0)
 		(effects
@@ -142,7 +142,7 @@
 		)
 		(uuid "ce323aab-7717-4b99-b3fa-ffe2c254722f")
 	)
-	(text "USB-C receptacle\n5 V in, CC and D+/D- to charger\nTVS on VBUS, ESD on CC and data"
+	(text "USB-C receptacle\n5 V in, CC to TUSB320L, D+/D- to charger\nTVS on VBUS, ESD on CC and data"
 		(exclude_from_sim no)
 		(at 21.59 53.34 0)
 		(effects

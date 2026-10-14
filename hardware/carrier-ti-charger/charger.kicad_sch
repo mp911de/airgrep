@@ -3820,7 +3820,7 @@
 		)
 		(uuid "a52e5484-62f8-405a-9483-98f5a1d1e932")
 	)
-	(text "D+/D- BC1.2 on chip, CC has Rd only (USB input sheet). Ship FET Q13, QON reset SW4. PROG 4.7k = 1S, 750 kHz. ILIM_HIZ 3.4 V = 3 A. TS 80.6k/768k: 3/43 C."
+	(text "D+/D- BC1.2 on chip, CC on U15 TUSB320L (USB input sheet). Ship FET Q13, QON reset SW4. PROG 4.7k = 1S, 750 kHz. ILIM_HIZ 2.2 V = 1.5 A clamp, firmware lifts it (EN_EXTILIM) on a 3 A advertisement. TS 80.6k/768k: 3/43 C."
 		(exclude_from_sim no)
 		(at 20.32 30.48 0)
 		(effects
@@ -3866,7 +3866,7 @@
 		(uuid "10dc4889-148f-4144-b008-9f9619531f57")
 	)
 	(junction
-		(at 119.38 125.73)
+		(at 119.38 132.08)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "1aab02da-874d-4687-bf18-d89bf19a2d4a")
@@ -4057,23 +4057,13 @@
 	)
 	(wire
 		(pts
-			(xy 119.38 123.19) (xy 119.38 125.73)
+			(xy 119.38 129.54) (xy 119.38 132.08)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "0d8454a2-6342-4fa3-bc8a-4f2bf7236ee5")
-	)
-	(wire
-		(pts
-			(xy 142.24 125.73) (xy 142.24 123.19)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "149db306-e8c8-4843-b615-5ea0e88ae085")
 	)
 	(wire
 		(pts
@@ -4177,7 +4167,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 100.33) (xy 152.4 125.73)
+			(xy 152.4 100.33) (xy 152.4 129.54)
 		)
 		(stroke
 			(width 0)
@@ -4307,16 +4297,6 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 125.73) (xy 142.24 125.73)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "958ea6c0-6113-436a-9958-4acae6a9b9e5")
-	)
-	(wire
-		(pts
 			(xy 96.52 62.23) (xy 93.98 62.23)
 		)
 		(stroke
@@ -4347,7 +4327,7 @@
 	)
 	(wire
 		(pts
-			(xy 119.38 125.73) (xy 114.3 125.73)
+			(xy 119.38 132.08) (xy 114.3 132.08)
 		)
 		(stroke
 			(width 0)
@@ -4467,7 +4447,7 @@
 	)
 	(wire
 		(pts
-			(xy 142.24 123.19) (xy 119.38 123.19)
+			(xy 119.38 129.54) (xy 152.4 129.54)
 		)
 		(stroke
 			(width 0)
@@ -4527,7 +4507,7 @@
 	)
 	(global_label "CHG_PMID"
 		(shape bidirectional)
-		(at 205.74 139.7 180)
+		(at 215.9 53.34 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4537,7 +4517,7 @@
 		)
 		(uuid "08871b30-be54-4ee0-a462-d724e0ab49a5")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 205.74 139.7 0)
+			(at 202.3692 53.34 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4767,7 +4747,7 @@
 	)
 	(global_label "+VBAT"
 		(shape bidirectional)
-		(at 134.62 125.73 0)
+		(at 134.62 132.08 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4777,7 +4757,7 @@
 		)
 		(uuid "38335506-e74e-4f39-b0b3-a2c098389d0f")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 134.62 125.73 0)
+			(at 134.62 132.08 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4959,7 +4939,7 @@
 	)
 	(global_label "GND"
 		(shape bidirectional)
-		(at 205.74 154.94 0)
+		(at 215.9 68.58 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4969,7 +4949,7 @@
 		)
 		(uuid "53e81e7e-fbb4-4d95-b854-c6946c5960f8")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 205.74 154.94 0)
+			(at 223.867 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5415,7 +5395,7 @@
 	)
 	(global_label "U14_OVLO"
 		(shape bidirectional)
-		(at 205.74 147.32 0)
+		(at 215.9 60.96 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5425,7 +5405,7 @@
 		)
 		(uuid "b607a59d-ac04-41bc-9391-feef0f4ce5a6")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 205.74 147.32 0)
+			(at 229.4913 60.96 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5631,7 +5611,7 @@
 	)
 	(global_label "CHG_BAT"
 		(shape bidirectional)
-		(at 114.3 125.73 180)
+		(at 114.3 132.08 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5641,7 +5621,7 @@
 		)
 		(uuid "e0f18ab8-a72b-4ade-868c-66eda445d716")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 114.3 125.73 0)
+			(at 114.3 132.08 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7478,7 +7458,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 205.74 151.13 0)
+		(at 215.9 64.77 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -7488,7 +7468,7 @@
 		(dnp no)
 		(uuid "422f561d-b5be-4ad1-8308-7fc06649d8ae")
 		(property "Reference" "R78"
-			(at 208.28 149.86 0)
+			(at 218.44 63.5 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7499,7 +7479,7 @@
 			)
 		)
 		(property "Value" "1.5k"
-			(at 208.28 152.4 0)
+			(at 218.44 66.04 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7510,7 +7490,7 @@
 			)
 		)
 		(property "Footprint" "carrier:R_0402_1005Metric_NoSilk"
-			(at 205.74 151.13 0)
+			(at 215.9 64.77 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7521,7 +7501,7 @@
 			)
 		)
 		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/46d7760c582640714d605308a25a220a.pdf?productCode=C281775"
-			(at 205.74 151.13 0)
+			(at 215.9 64.77 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7532,7 +7512,7 @@
 			)
 		)
 		(property "Description" "OVLO divider, 0.1%, 25 ppm/C, 62.5 mW, 50 V"
-			(at 205.74 151.13 0)
+			(at 215.9 64.77 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7543,7 +7523,7 @@
 			)
 		)
 		(property "LCSC" "C281775"
-			(at 205.74 151.13 0)
+			(at 215.9 64.77 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7554,7 +7534,7 @@
 			)
 		)
 		(property "MPN" "RT0402BRD071K5L"
-			(at 205.74 151.13 0)
+			(at 215.9 64.77 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7565,7 +7545,7 @@
 			)
 		)
 		(property "Tolerance" "0.1%"
-			(at 205.74 151.13 0)
+			(at 215.9 64.77 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7576,7 +7556,7 @@
 			)
 		)
 		(property "TCR" "25 ppm/C"
-			(at 205.74 151.13 0)
+			(at 215.9 64.77 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7587,7 +7567,7 @@
 			)
 		)
 		(property "Manufacturer" "YAGEO"
-			(at 205.74 151.13 0)
+			(at 215.9 64.77 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8636,7 +8616,7 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 134.62 129.54 0)
+		(at 134.62 135.89 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -8646,7 +8626,7 @@
 		(dnp no)
 		(uuid "66a328cc-d70b-4bfb-b9c8-670bf328bf04")
 		(property "Reference" "C11"
-			(at 137.16 128.27 0)
+			(at 137.16 134.62 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -8657,7 +8637,7 @@
 			)
 		)
 		(property "Value" "10u 25V X7R"
-			(at 137.16 130.81 0)
+			(at 137.16 137.16 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -8668,7 +8648,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
-			(at 134.62 129.54 0)
+			(at 134.62 135.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8679,7 +8659,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 134.62 129.54 0)
+			(at 134.62 135.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8690,7 +8670,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 134.62 129.54 0)
+			(at 134.62 135.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8701,7 +8681,7 @@
 			)
 		)
 		(property "LCSC" "C3039694"
-			(at 134.62 129.54 0)
+			(at 134.62 135.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8824,7 +8804,7 @@
 				)
 			)
 		)
-		(property "Value" "47k 1%"
+		(property "Value" "120k 1%"
 			(at 38.1 100.33 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8867,7 +8847,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C25819"
+		(property "LCSC" "C25808"
 			(at 38.1 102.87 0)
 			(hide yes)
 			(show_name no)
@@ -9064,7 +9044,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 119.38 133.35 0)
+		(at 119.38 139.7 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -9074,7 +9054,7 @@
 		(dnp no)
 		(uuid "6f9e36e6-ad3f-4cbb-bde5-7445041d8e81")
 		(property "Reference" "#PWR0223"
-			(at 119.38 135.89 0)
+			(at 119.38 142.24 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9085,7 +9065,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 119.38 137.16 0)
+			(at 119.38 143.51 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9095,7 +9075,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 119.38 133.35 0)
+			(at 119.38 139.7 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9106,7 +9086,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 119.38 133.35 0)
+			(at 119.38 139.7 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9117,7 +9097,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\""
-			(at 119.38 133.35 0)
+			(at 119.38 139.7 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9253,7 +9233,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "J_NTC 100k ENTC-EB-100K4262-02"
+		(property "Value" "NTC"
 			(at 44.45 139.7 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9406,7 +9386,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 205.74 143.51 0)
+		(at 215.9 57.15 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -9416,7 +9396,7 @@
 		(dnp no)
 		(uuid "7b3e4ce3-ffb9-4fd7-89d5-4fae2653580f")
 		(property "Reference" "R77"
-			(at 208.28 142.24 0)
+			(at 218.44 55.88 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9427,7 +9407,7 @@
 			)
 		)
 		(property "Value" "5.36k"
-			(at 208.28 144.78 0)
+			(at 218.44 58.42 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9438,7 +9418,7 @@
 			)
 		)
 		(property "Footprint" "carrier:R_0805_2012Metric_NoSilk"
-			(at 205.74 143.51 0)
+			(at 215.9 57.15 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9449,7 +9429,7 @@
 			)
 		)
 		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/46d7760c582640714d605308a25a220a.pdf?productCode=C706247"
-			(at 205.74 143.51 0)
+			(at 215.9 57.15 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9460,7 +9440,7 @@
 			)
 		)
 		(property "Description" "OVLO divider, 0.1%, 25 ppm/C, 125 mW, 150 V"
-			(at 205.74 143.51 0)
+			(at 215.9 57.15 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9471,7 +9451,7 @@
 			)
 		)
 		(property "LCSC" "C706247"
-			(at 205.74 143.51 0)
+			(at 215.9 57.15 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9482,7 +9462,7 @@
 			)
 		)
 		(property "MPN" "RT0805BRD075K36L"
-			(at 205.74 143.51 0)
+			(at 215.9 57.15 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9493,7 +9473,7 @@
 			)
 		)
 		(property "Tolerance" "0.1%"
-			(at 205.74 143.51 0)
+			(at 215.9 57.15 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9504,7 +9484,7 @@
 			)
 		)
 		(property "TCR" "25 ppm/C"
-			(at 205.74 143.51 0)
+			(at 215.9 57.15 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9515,7 +9495,7 @@
 			)
 		)
 		(property "Manufacturer" "YAGEO"
-			(at 205.74 143.51 0)
+			(at 215.9 57.15 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10503,7 +10483,7 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 119.38 129.54 0)
+		(at 119.38 135.89 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -10513,7 +10493,7 @@
 		(dnp no)
 		(uuid "bd589d71-e23b-4830-a302-4e990f814bd4")
 		(property "Reference" "C47"
-			(at 116.84 128.27 0)
+			(at 116.84 134.62 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10524,7 +10504,7 @@
 			)
 		)
 		(property "Value" "22u 10V X7R"
-			(at 116.84 130.81 0)
+			(at 116.84 137.16 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10535,7 +10515,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
-			(at 119.38 129.54 0)
+			(at 119.38 135.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10546,7 +10526,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 119.38 129.54 0)
+			(at 119.38 135.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10557,7 +10537,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 119.38 129.54 0)
+			(at 119.38 135.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10568,7 +10548,7 @@
 			)
 		)
 		(property "LCSC" "C907991"
-			(at 119.38 129.54 0)
+			(at 119.38 135.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11488,7 +11468,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 134.62 133.35 0)
+		(at 134.62 139.7 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -11498,7 +11478,7 @@
 		(dnp no)
 		(uuid "d8bb7999-a8fe-49c8-a653-88134be0e619")
 		(property "Reference" "#PWR0222"
-			(at 134.62 135.89 0)
+			(at 134.62 142.24 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11509,7 +11489,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 134.62 137.16 0)
+			(at 134.62 143.51 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -11519,7 +11499,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 134.62 133.35 0)
+			(at 134.62 139.7 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11530,7 +11510,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 134.62 133.35 0)
+			(at 134.62 139.7 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11541,7 +11521,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\""
-			(at 134.62 133.35 0)
+			(at 134.62 139.7 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)

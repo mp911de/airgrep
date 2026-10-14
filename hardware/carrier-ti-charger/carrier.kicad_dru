@@ -52,13 +52,13 @@
 # Custom pad dimensions describe the anchor, not the full copper shape.
 # Assertions accumulate, so the error and warning conditions must be disjoint.
 (rule "SMD pad size 0.25 mm"
-  (condition "A.Pad_Type == 'SMD' && A.Pad_Shape != 'Custom' && A.Fabrication_Property != 'BGA pad' && !((A.Reference == 'U4' && A.intersectsArea('FINE_U4')) || (A.Reference == 'U6' && A.intersectsArea('FINE_U6')))")
+  (condition "A.Pad_Type == 'SMD' && A.Pad_Shape != 'Custom' && A.Fabrication_Property != 'BGA pad' && !((A.Reference == 'U4' && A.intersectsArea('FINE_U4')) || (A.Reference == 'U6' && A.intersectsArea('FINE_U6')) || A.Reference == 'U15')")
   (constraint assertion "A.Size_X >= 0.25mm && A.Size_Y >= 0.25mm"))
 
 # QFN pad dimensions
 (rule "QFN pad size 0.25 mm"
   (severity exclusion)
-  (condition "A.Pad_Type == 'SMD' && A.Pad_Shape != 'Custom' && A.Fabrication_Property != 'BGA pad' && ((A.Reference == 'U4' && A.intersectsArea('FINE_U4')) || (A.Reference == 'U6' && A.intersectsArea('FINE_U6')))")
+  (condition "A.Pad_Type == 'SMD' && A.Pad_Shape != 'Custom' && A.Fabrication_Property != 'BGA pad' && ((A.Reference == 'U4' && A.intersectsArea('FINE_U4')) || (A.Reference == 'U6' && A.intersectsArea('FINE_U6')) || A.Reference == 'U15')")
   (constraint assertion "A.Size_X >= 0.25mm && A.Size_Y >= 0.25mm"))
 
 # The smaller BGA pads require the project's ENIG finish.

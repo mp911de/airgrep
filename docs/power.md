@@ -186,7 +186,7 @@ The power and thermal models use 28.2 mΩ typical and 45 mΩ maximum on-resistan
 U4 is a TI BQ25798RQMR (LCSC C2876593, VQFN-HR 29, 4 x 4 mm, 0.4 mm pitch, no exposed pad). It is an I2C charger with a complete default mode: it charges at 1 A with no host, the display's ESP32-S3 raises the current to 1.8 A, and the watchdog returns every register to its default when the host stops writing. Data sheet SLUSDV2C in `datasheets/bq25798.pdf`.
 
 ```
-USB-C -- TVS -- BQ25798 VBUS   (D+/D- BC1.2 on chip; CC has Rd 5.1 kOhm only)
+USB-C -- TVS -- BQ25798 VBUS   (D+/D- BC1.2 on chip; CC on U15 TUSB320L, I2C 0x47)
                    |
 battery -- fuse --+-- BQ25798 BAT -- SYS -- TPS61088 boost -- TPS22975 load switch -- 5 V rail
                   |     L1 2.2 uH between SW1 and SW2       EN = thermostat AND slider AND supervisor (latched)
@@ -199,11 +199,12 @@ thermostat open -- Q2 -- CHG_DIS = BQ25798 CE (high: charging off)
 
 | Mode | Charge current | TREG | Who sets it |
 |---|---|---|---|
-| Default (power-on, or watchdog expired) | 1 A | 120 °C | silicon defaults; input limit from D+/D- |
+| Default (power-on, or watchdog expired) | 1 A | 120 °C | silicon defaults; input limit from D+/D-, clamped to 1.5 A by ILIM_HIZ |
 | Host | 1.8 A (ICHG register) | 60/80/100/120 °C, 100 °C planned | ESP32-S3 over I2C, WD_RST at least every 40 s |
 
 - Watchdog: 40 s default (20 to 160 s). On expiry every "reset by WATCHDOG" register returns to its default, so the firmware re-applies the whole profile whenever WD_STAT is set.
-- Input: 3.6 to 24 V operating, OVP at 26 V. Input limit from BC1.2: SDP 0.5 A, CDP 1.5 A, DCP 3.25 A, unknown adapter 3 A, Apple/Samsung dividers 1 to 2.4 A. No CC detection: R65/R66 5.1 kΩ to GND on CC1/CC2 make the carrier a default-current sink; a PD adapter on a C-to-C cable leaves D+/D- open and reads as unknown (3 A). ILIM_HIZ (R57 47 kΩ from REGN, R58 100 kΩ) caps the hardware input limit at 3.4 V, about 3 A at REGN 4.8 V (2.8 to 3.2 A over the REGN range). VINDPM 4.2 V default.
+- Input: 3.6 to 24 V operating, OVP at 26 V. Input limit from BC1.2: SDP 0.5 A, CDP 1.5 A, DCP 3.25 A, unknown adapter 3 A, Apple/Samsung dividers 1 to 2.4 A. A C-to-C source leaves D+/D- open and reads as unknown (3 A). ILIM_HIZ (R57 120 kΩ from REGN, R58 100 kΩ) clamps IINDPM at 2.2 V, about 1.5 A at REGN 4.8 V, before the ESP boots. The firmware lifts the clamp (EN_EXTILIM = 0) only for a 3 A CC advertisement. EN_EXTILIM is reset by REG_RST only, not by the watchdog. Default VINDPM is VBUS0 - 0.7 V and backs off on a sagging source.
+- CC: U15 TUSB320LIRWBR (LCSC C2836598). PORT to GND (sink), ADDR to GND (I2C 0x47), EN_N to GND, INT_N and ID open. VDD from the always-on +ESP_3V3 with C57 100 nF. Unpowered, its CC pins present Rd (4.1 to 6.1 kΩ), so a Type-C source enables VBUS with a dead battery. VBUS_DET through R79 887 kΩ to +VUSB. The firmware sets IINDPM to the lower of the CC advertisement (default, 1.5 A, 3 A) and the BC1.2 result.
 - Timers: fast charge 12 h default (5 to 24 h or off), precharge 2 h, trickle 1 h.
 - ADC: 16-bit, die temperature (0.5 °C), IBAT and IBUS (1 mA), VBAT/VSYS/VBUS (1 mV), TS. Off by default, the host enables it.
 - STAT: low while charging, high when done, blinking on a fault. Drives the green LED. INT ends on TP8 (polled, no free module GPIO). The red LED shows USB present through Q10, R63 47 kΩ, R64 100 kΩ.
@@ -247,11 +248,11 @@ Worst case: parts at 1 %, NTC ±0.2 K and B ±0.5 %, charger thresholds at their
 | SW4 | QON to GND | 6 x 6 mm momentary, normally open | hand-fitted below BZ1; 6.5 x 4.5 mm pin spacing |
 | D10 | U14 reset clamp | BAT54WS, C22629 | anode EN, cathode QON |
 | R56 | PROG | 4.7 kΩ 1 % | 1S, 750 kHz (3.0 kΩ for 1.5 MHz) |
-| R57, R58 | ILIM_HIZ | 47 kΩ / 100 kΩ from REGN | 3.4 V, about 3 A |
+| R57, R58 | ILIM_HIZ | 120 kΩ / 100 kΩ from REGN (C25808, C25803) | 2.2 V, about 1.5 A clamp |
 | R59, R60 | TS | 80.6 kΩ / 768 kΩ from REGN (C23249, C2933258) | window 3.1 to 43.0 °C, see above |
 | R62, TP8 | INT | 100 kΩ to ESP_3V3 | polled |
 | Q10, R63, R64 | USB present | 2N7002, 47 kΩ / 100 kΩ | red LED |
-| R65, R66 | CC1, CC2 | 5.1 kΩ Rd | usb_input sheet |
+| U15, R79, C57 | CC1, CC2, VBUS_DET, VDD | TUSB320LIRWBR, 887 kΩ (C23259), 100 nF | usb_input sheet |
 
 Removed against the MAX77757 board: R6, R37 (IFAST), R8 (THM bias), C7 (VDD), C34 (PVL), Q6 (THM pull-down).
 

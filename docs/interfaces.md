@@ -55,7 +55,7 @@ J7 signals:
 
 - D11 to D13 are the only free GPIOs the module exposes. Charger STAT and INOKB are therefore not wired to the display. The firmware reads the charging state from the fuel gauge.
 - D14 and D15 on J6 are used inside the module (IMU interrupt, button B). The carrier leaves them unconnected.
-- The I2C bus on J8 serves U13 (TCA9534, 0x20), U8 (MAX17048, 0x36), U10 (BMP580, 0x46) and, on carrier-ti-charger, U4 (BQ25798, 0x6B; its INT pin ends on TP8 and is polled). The display shares it with AXS5106L touch (0x63) and LSM6DS3 IMU (0x6A), as documented by [Seeed](https://wiki.seeedstudio.com/function_1.47_inch_touch_display_esp32s3/). These addresses do not conflict.
+- The I2C bus on J8 serves U13 (TCA9534, 0x20), U8 (MAX17048, 0x36), U10 (BMP580, 0x46) and, on carrier-ti-charger, U4 (BQ25798, 0x6B; its INT pin ends on TP8 and is polled) and U15 (TUSB320L, 0x47; INT_N open, polled). The display shares it with AXS5106L touch (0x63) and LSM6DS3 IMU (0x6A), as documented by [Seeed](https://wiki.seeedstudio.com/function_1.47_inch_touch_display_esp32s3/). These addresses do not conflict.
 - The I2C pull-ups are the module's own, 5.1 kΩ. R19 and R20 (4.7 kΩ) on the carrier are not fitted. The firmware therefore runs the bus at 100 kHz.  Bus rules per slave are in [firmware.md](firmware.md#i2c-bus).
 
 ## Physical control inputs
