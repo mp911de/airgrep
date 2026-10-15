@@ -8281,7 +8281,7 @@
 				)
 			)
 		)
-		(property "Value" "2.2uH FXL0630-2R2-M"
+		(property "Value" "2.2uH FC-ALX4030D-2R2MT"
 			(at 139.7 69.85 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8291,7 +8291,7 @@
 				)
 			)
 		)
-		(property "Footprint" "carrier:IND-SMD_L7.0-W6.6_FXL0630"
+		(property "Footprint" "carrier:IND-SMD_L4.2-W4.2_FC-ALX4030D"
 			(at 139.7 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -8302,7 +8302,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/7ccab6d15d9e909aa3f3d55ed931dfcf.pdf?productCode=C167216"
+		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/4f0a80287f31a1fb9e399a39619e691e.pdf?productCode=C5370906"
 			(at 139.7 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -8324,7 +8324,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C167218"
+		(property "LCSC" "C5370906"
 			(at 139.7 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -9417,7 +9417,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "carrier:R_0805_2012Metric_NoSilk"
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
 			(at 215.9 57.15 0)
 			(hide yes)
 			(show_name no)
@@ -9428,7 +9428,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/46d7760c582640714d605308a25a220a.pdf?productCode=C706247"
+		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/5bf30c62a4b85499d309118a7d825f44.pdf?productCode=C2924137"
 			(at 215.9 57.15 0)
 			(hide yes)
 			(show_name no)
@@ -9439,7 +9439,7 @@
 				)
 			)
 		)
-		(property "Description" "OVLO divider, 0.1%, 25 ppm/C, 125 mW, 150 V"
+		(property "Description" "OVLO divider, 0.1%, 25 ppm/C, 100 mW, 75 V"
 			(at 215.9 57.15 0)
 			(hide yes)
 			(show_name no)
@@ -9450,7 +9450,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C706247"
+		(property "LCSC" "C2924137"
 			(at 215.9 57.15 0)
 			(hide yes)
 			(show_name no)
@@ -9461,7 +9461,7 @@
 				)
 			)
 		)
-		(property "MPN" "RT0805BRD075K36L"
+		(property "MPN" "AR03BTCX5361A"
 			(at 215.9 57.15 0)
 			(hide yes)
 			(show_name no)
@@ -9494,7 +9494,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Viking Tech"
 			(at 215.9 57.15 0)
 			(hide yes)
 			(show_name no)

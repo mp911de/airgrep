@@ -8287,7 +8287,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "carrier:R_0805_2012Metric_NoSilk"
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
 			(at 54.61 78.74 0)
 			(hide yes)
 			(show_name no)
@@ -8298,7 +8298,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/46d7760c582640714d605308a25a220a.pdf?productCode=C706247"
+		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/5bf30c62a4b85499d309118a7d825f44.pdf?productCode=C2924137"
 			(at 54.61 78.74 0)
 			(hide yes)
 			(show_name no)
@@ -8309,7 +8309,7 @@
 				)
 			)
 		)
-		(property "Description" "OVLO divider, 0.1%, 25 ppm/C, 125 mW, 150 V"
+		(property "Description" "OVLO divider, 0.1%, 25 ppm/C, 100 mW, 75 V"
 			(at 54.61 78.74 0)
 			(hide yes)
 			(show_name no)
@@ -8320,7 +8320,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C706247"
+		(property "LCSC" "C2924137"
 			(at 54.61 78.74 0)
 			(hide yes)
 			(show_name no)
@@ -8331,7 +8331,7 @@
 				)
 			)
 		)
-		(property "MPN" "RT0805BRD075K36L"
+		(property "MPN" "AR03BTCX5361A"
 			(at 54.61 78.74 0)
 			(hide yes)
 			(show_name no)
@@ -8364,7 +8364,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Viking Tech"
 			(at 54.61 78.74 0)
 			(hide yes)
 			(show_name no)
@@ -10989,7 +10989,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "carrier:R_0805_2012Metric_NoSilk"
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
 			(at 54.61 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -11000,7 +11000,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/46d7760c582640714d605308a25a220a.pdf?productCode=C706247"
+		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/5bf30c62a4b85499d309118a7d825f44.pdf?productCode=C2924137"
 			(at 54.61 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -11011,7 +11011,7 @@
 				)
 			)
 		)
-		(property "Description" "OVLO divider, 0.1%, 25 ppm/C, 125 mW, 150 V"
+		(property "Description" "OVLO divider, 0.1%, 25 ppm/C, 100 mW, 75 V"
 			(at 54.61 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -11022,7 +11022,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C706247"
+		(property "LCSC" "C2924137"
 			(at 54.61 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -11033,7 +11033,7 @@
 				)
 			)
 		)
-		(property "MPN" "RT0805BRD075K36L"
+		(property "MPN" "AR03BTCX5361A"
 			(at 54.61 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -11066,7 +11066,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Viking Tech"
 			(at 54.61 139.7 0)
 			(hide yes)
 			(show_name no)

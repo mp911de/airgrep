@@ -76,7 +76,7 @@ CHARGERS = {
         emi_loop=(("C44", "1"), ("U4", "29"), ("U4", "27"), ("C44", "2")),  # 0.1 uF PMID capacitor at the pins, PMID pin, GND pin
         emi_caps=("C44",),
         emi_fsw_options=(750e3, 1.5e6),  # PROG default and the PWM_FREQ alternative, both reported
-        l1=dict(label="FXL0630-2R2-M", dcr=15e-3, l=2.2e-6),  # LCSC C167218 listing: 15 mΩ, 9.5 A saturation
+        l1=dict(label="FC-ALX4030D-2R2MT", dcr=10.7e-3, l=2.2e-6),  # LCSC C5370906 data sheet: 10.7 mΩ typical, 7.3 A minimum saturation
         bulk_caps=("C1", "C6", "C9", "C10", "C11", "C13", "C14", "C18", "C19", "C20", "C24", "C25", "C26",
                    "C33", "C41", "C42", "C47"),  # X7R; the 0.1 uF and REGN parts are not bulk
         usb_cases=[

@@ -52,8 +52,8 @@ VOUT = VREF * (1 + R14 / R15)
 R16, R17 = 220e3, 160e3  # frequency setting (about 720 kHz) and current limit
 R18, C21, C22 = 6.8e3, 10e-9, 100e-12  # compensation: R5, C5, C8 in the data sheet
 C21_TOL = 0.10  # X7R
-L2, L2_DCR, L2_ISAT = 2.2e-6, 15.5e-3, 10.0  # CKST0603-2.2uH/M
-L2_TOL = 0.20  # suffix M, CENKER CKST series data sheet
+L2, L2_DCR, L2_ISAT = 2.2e-6, 10.7e-3, 7.3  # FC-ALX4030D-2R2MT: typical DCR, minimum Isat
+L2_TOL = 0.20  # suffix M, Fangcheng FC-ALX series data sheet
 EFFICIENCY = 0.9
 # Output capacitance seen by the loop. C18, C19, C20: Murata GRM21BZ71A226ME15L, 22 uF +-20 %
 # X7R 10 V 0805 (datasheets/murata-grm21bz71a226.pdf): DC bias -52 % at 5 V. The -10 % at

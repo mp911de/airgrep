@@ -177,7 +177,7 @@ For a first prototype, compare a thin copper or aluminium plate plus an insulati
 
 The active TI carrier uses TPS259474LRPWR (C2864845) at U11/U12/U14 in the shared RPW0010A footprint; the frozen MAX carrier retains LM73100. R70/R71/R72 are 1.65 kΩ, 1%, setting a nominal circuit-breaker threshold of 3334 / 1650 = 2.02 A, approximately 1.78–2.22 A including the specified 1.8–2.2 A threshold range and resistor tolerance. C56/C54/C55 are 2.2 nF, 50 V X7R, setting nominal slew to 2000 / 2200 = 0.909 V/ms, about 5.6 ms to 5.06 V. ITIMER is open for the shortest trip delay; the L variant latches off after overcurrent or thermal shutdown until IN is power-cycled or EN/UVLO is pulled below its shutdown threshold. Overvoltage clears when IN falls below the divider release threshold. Existing enable dividers and Q12 remain.
 
-R73/R74, R75/R76 and R77/R78 implement IN-to-OVLO-to-GND dividers on U11, U12 and U14 respectively. U11/U12 sense RAIL_5V; U14 senses CHG_PMID. Each uses 5.36 kΩ above 1.50 kΩ, both 0.1%, ±25 ppm/°C. R73/R75/R77 are 0805 Yageo RT0805BRD075K36L ([C706247](https://www.lcsc.com/product-detail/C706247.html)), rated 125 mW and 150 V. R74/R76/R78 are 0402 RT0402BRD071K5L ([C281775](https://www.lcsc.com/product-detail/C281775.html)), rated 62.5 mW and 50 V. The [Yageo RT datasheet](../datasheets/yageo-rt.pdf) references TCR to 25 °C. Nominal trip is 1.20 × (1 + 5.36/1.50) = 5.488 V; nominal release is 1.09 × (1 + 5.36/1.50) = 4.985 V. Independent resistor tolerance and drift over −40 to +125 °C, IC threshold limits and ±0.1 µA OVLO leakage give approximately 5.380–5.624 V trip and 4.894–5.132 V release. The static minimum trip exceeds the 5.25 V normal-input design limit. Returning to 5 V does not guarantee recovery after an overvoltage fault: cycle POWER for U11/U12 or disconnect and reconnect USB for U14, allowing the input to discharge.
+R73/R74, R75/R76 and R77/R78 implement IN-to-OVLO-to-GND dividers on U11, U12 and U14 respectively. U11/U12 sense RAIL_5V; U14 senses CHG_PMID. Each uses 5.36 kΩ above 1.50 kΩ, both 0.1%, ±25 ppm/°C. R73/R75/R77 are 0603 Viking AR03BTCX5361A ([C2924137](https://www.lcsc.com/product-detail/C2924137.html)), thin film, rated 100 mW and 75 V. R74/R76/R78 are 0402 RT0402BRD071K5L ([C281775](https://www.lcsc.com/product-detail/C281775.html)), rated 62.5 mW and 50 V. The [Yageo RT datasheet](../datasheets/yageo-rt.pdf) references TCR to 25 °C. Nominal trip is 1.20 × (1 + 5.36/1.50) = 5.488 V; nominal release is 1.09 × (1 + 5.36/1.50) = 4.985 V. Independent resistor tolerance and drift over −40 to +125 °C, IC threshold limits and ±0.1 µA OVLO leakage give approximately 5.380–5.624 V trip and 4.894–5.132 V release. The static minimum trip exceeds the 5.25 V normal-input design limit. Returning to 5 V does not guarantee recovery after an overvoltage fault: cycle POWER for U11/U12 or disconnect and reconnect USB for U14, allowing the input to discharge.
 
 The display's XIAO SGM6029 regulator permits 5.5 V in operation and 6 V absolute maximum ([manufacturer datasheet](https://www.sg-micro.com/rect/assets/3323f5dc-718f-4b81-b820-398ddb702989/SGM6029.pdf)); the ADSBee 1090U schematic specifies a 3.7–6.5 V input. These limits do not certify every module component or a fault waveform. The divider does not hold the output below 5.5 V: OVLO response is 1.2 µs typical, and transient overshoot still needs measurement. U7, upstream of the eFuses, remains exposed to a boost fault and is rated 6 V absolute maximum.
 
@@ -238,7 +238,7 @@ Worst case: parts at 1 %, NTC ±0.2 K and B ±0.5 %, charger thresholds at their
 | C5, C41, C42, C43 | VBUS | 2 x 100 nF 50 V + 2 x 10 µF 25 V | data sheet 2 x 10 µF + 100 nF; C5 was 2.2 µF, merged into the 100 nF part |
 | C6, C33, C44 | PMID | 10 µF 25 V + 22 µF 16 V + 100 nF | data sheet 3 x 10 µF |
 | C8, C45 | BTST1 to SW1, BTST2 to SW2 | 2 x 47 nF 50 V | |
-| L1 | SW1 to SW2 | 2.2 µH, FXL0630-2R2-M (C167218) | 15 mΩ, 9.5 A saturation; 750 kHz |
+| L1 | SW1 to SW2 | 2.2 µH, FC-ALX4030D-2R2MT (C5370906) | 10.7 mΩ typical, 7.3 A minimum saturation; 750 kHz; 4.2 x 4.2 x 3.1 mm |
 | C9, C10, C46 | SYS | 2 x 22 µF 10 V + 100 nF | data sheet 5 x 10 µF |
 | C11 | raw VBAT | 10 µF 25 V | before Q13, near F1 |
 | C47 | CHG_BAT | 22 µF 10 V | after Q13, at U4 BAT |
@@ -387,7 +387,7 @@ U6 TPS61088RHLR (LCSC C87357) converts SYS (3.1 to 4.4 V) to 5.06 V. The load is
 
 | Part | Function | Value | Result |
 |---|---|---|---|
-| L2 | inductor | 2.2 µH, CKST0603 (C3002634) | 15.5 mΩ, 10 A saturation |
+| L2 | inductor | 2.2 µH, FC-ALX4030D-2R2MT (C5370906) | 10.7 mΩ typical, 7.3 A minimum saturation; 4.2 x 4.2 x 3.1 mm |
 | R14, R15 | feedback | 240 kΩ, 75 kΩ, 1 % | 5.06 V with VREF 1.204 V (PWM mode) |
 | R16 | switching frequency, FSW to SW | 220 kΩ | 710 to 732 kHz over 3.1 to 4.4 V |
 | R17 | current limit | 160 kΩ | 5.84 A typical, 4.54 A minimum |

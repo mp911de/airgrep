@@ -120,7 +120,7 @@ def buck_k(k_boost):
     return CHG_K_SW if CHG_K_SW is not None else k_boost
 
 
-# --- Boost and L2 (CENKER CKST0603-2.2uH/M)
+# --- Boost and L2 (Fangcheng FC-ALX4030D-2R2MT)
 INDUCTOR_THETA_BODY = 12.0  # K/W, winding to its two terminals (estimate, metal-alloy body)
 CORE_LOSS = 0.02  # W per inductor at about 0.5 A ripple and 1 to 1.3 MHz (estimate, no vendor curve)
 
