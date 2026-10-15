@@ -186,7 +186,7 @@ The power and thermal models use 28.2 mΩ typical and 45 mΩ maximum on-resistan
 U4 is a TI BQ25798RQMR (LCSC C2876593, VQFN-HR 29, 4 x 4 mm, 0.4 mm pitch, no exposed pad). It is an I2C charger with a complete default mode: it charges at 1 A with no host, the display's ESP32-S3 raises the current to 1.8 A, and the watchdog returns every register to its default when the host stops writing. Data sheet SLUSDV2C in `datasheets/bq25798.pdf`.
 
 ```
-USB-C -- TVS -- BQ25798 VBUS   (D+/D- BC1.2 on chip; CC on U15 TUSB320L, I2C 0x47)
+USB-C -- TVS -- BQ25798 VBUS   (D+/D- BC1.2 on chip; CC on U15 FUSB303B, I2C 0x21)
                    |
 battery -- fuse --+-- BQ25798 BAT -- SYS -- TPS61088 boost -- TPS22975 load switch -- 5 V rail
                   |     L1 2.2 uH between SW1 and SW2       EN = thermostat AND slider AND supervisor (latched)
@@ -204,7 +204,7 @@ thermostat open -- Q2 -- CHG_DIS = BQ25798 CE (high: charging off)
 
 - Watchdog: 40 s default (20 to 160 s). On expiry every "reset by WATCHDOG" register returns to its default, so the firmware re-applies the whole profile whenever WD_STAT is set.
 - Input: 3.6 to 24 V operating, OVP at 26 V. Input limit from BC1.2: SDP 0.5 A, CDP 1.5 A, DCP 3.25 A, unknown adapter 3 A, Apple/Samsung dividers 1 to 2.4 A. A C-to-C source leaves D+/D- open and reads as unknown (3 A). ILIM_HIZ (R57 120 kΩ from REGN, R58 100 kΩ) clamps IINDPM at 2.2 V, about 1.5 A at REGN 4.8 V, before the ESP boots. The firmware lifts the clamp (EN_EXTILIM = 0) only for a 3 A CC advertisement. EN_EXTILIM is reset by REG_RST only, not by the watchdog. Default VINDPM is VBUS0 - 0.7 V and backs off on a sagging source.
-- CC: U15 TUSB320LIRWBR (LCSC C2836598). PORT to GND (sink), ADDR to GND (I2C 0x47), EN_N to GND, INT_N and ID open. VDD from the always-on +ESP_3V3 with C57 100 nF. Unpowered, its CC pins present Rd (4.1 to 6.1 kΩ), so a Type-C source enables VBUS with a dead battery. VBUS_DET through R79 887 kΩ to +VUSB. The firmware sets IINDPM to the lower of the CC advertisement (default, 1.5 A, 3 A) and the BC1.2 result.
+- CC: U15 FUSB303BTMX (onsemi, LCSC C895444). R80 pulls PORT/DEBUG_N low for sink mode and R81 pulls ADDR/ORIENT low for I2C address 0x21; both are 910 kΩ, 1%, below the 1 MΩ guaranteed-low boundary without loading their output phase. EN_N is grounded, INT_N and ID are open. VDD comes from always-on +ESP_3V3 with C57 100 nF. Unpowered CC pins present Rd, so a Type-C source enables VBUS with a dead battery. VBUS_DET uses R79 887 kΩ to +VUSB. Firmware sets `CONTROL1.ENABLE` and applies the lower of CC advertisement and BC1.2 to IINDPM.
 - Timers: fast charge 12 h default (5 to 24 h or off), precharge 2 h, trickle 1 h.
 - ADC: 16-bit, die temperature (0.5 °C), IBAT and IBUS (1 mA), VBAT/VSYS/VBUS (1 mV), TS. Off by default, the host enables it.
 - STAT: low while charging, high when done, blinking on a fault. Drives the green LED. INT ends on TP8 (polled, no free module GPIO). The red LED shows USB present through Q10, R63 47 kΩ, R64 100 kΩ.
@@ -252,7 +252,7 @@ Worst case: parts at 1 %, NTC ±0.2 K and B ±0.5 %, charger thresholds at their
 | R59, R60 | TS | 80.6 kΩ / 768 kΩ from REGN (C23249, C2933258) | window 3.1 to 43.0 °C, see above |
 | R62, TP8 | INT | 100 kΩ to ESP_3V3 | polled |
 | Q10, R63, R64 | USB present | 2N7002, 47 kΩ / 100 kΩ | red LED |
-| U15, R79, C57 | CC1, CC2, VBUS_DET, VDD | TUSB320LIRWBR, 887 kΩ (C23259), 100 nF | usb_input sheet |
+| U15, R79-R81, C57 | CC1, CC2, VBUS_DET, straps, VDD | FUSB303BTMX (C895444), 887 kΩ, 2 x 910 kΩ (C25800), 100 nF | usb_input sheet |
 
 Removed against the MAX77757 board: R6, R37 (IFAST), R8 (THM bias), C7 (VDD), C34 (PVL), Q6 (THM pull-down).
 
@@ -302,7 +302,7 @@ The sink carries 0.36 to 0.42 W of the 0.9 to 1.1 W charger loss in the closed c
 | Part | Net | Value | Note |
 |---|---|---|---|
 | D3 | USB_VBUS | SMAJ12A, unidirectional, cathode to VBUS | breakdown 13.3 V minimum, clamp 19.9 V at 20.8 A |
-| D6 to D9 | CC1, CC2, D+, D- | H5VLD3B, 5 V, SOD-323 (C20615805) | at the connector |
+| D8, D9 | D+, D- | H5VLD3B, 5 V, SOD-323 (C20615805) | at the connector |
 | C1 | USB_VBUS_J1 | 4.7 µF 50 V at J1, before FB1 | the 10 µF hot-plug limit applies at the connector; behind the bead the charger input holds 2 x 10 µF + 2 x 100 nF |
 | FB1 | USB_VBUS_J1 to USB_VBUS | Murata BLM31KN471SZ1L, 470 Ω at 100 MHz, 4 A, 20 mΩ, 1206 (C710518) | with C1, keeps the charger's 1.3 MHz input ripple off the USB cable |
 
@@ -525,7 +525,7 @@ Passives use JLCPCB Basic stock where a Basic value exists. Expected outside Bas
 - the ICs U4 to U13
 - the X7R bulk capacitors
 - R8 154 kΩ (C22881)
-- L1, L2, F1, D3, D6 to D9
+- L1, L2, F1, D3, D8, D9
 - J1, SW1, SW2, SW3, BZ1
 
 The JLCPCB class of each part is not recorded in the project and is not verified here. Check it at the BOM export. Hand-fitted parts are in [bom-hand-sourced.md](bom-hand-sourced.md).

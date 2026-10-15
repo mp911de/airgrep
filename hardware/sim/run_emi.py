@@ -33,6 +33,7 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import boosts  # noqa: E402
 import run_heat  # noqa: E402  (board reader, stackup)
 import run_power  # noqa: E402  (operating points, benches)
 import simlib  # noqa: E402
@@ -66,21 +67,23 @@ L_PKG = 1.0e-9  # QFN lead frame and bond wires, two pins in the loop (estimate)
 ESL = {"0603": 0.4e-9, "0805": 0.5e-9, "1206": 0.7e-9}
 # switch output capacitance, not specified: assumed from the switch size (10 A class for the
 # TPS61088, 3 A for the MAX77757), swept by a factor of two either way
-COSS = {"boost": 1e-9, "buck": 300e-12}
+COSS = {"buck": 300e-12}
 EDGE_CASES = (2e-9, 5e-9, 10e-9)  # gate ramp, not specified ("very fast" per TI); current slew 10 A per ramp
 EDGE_NOMINAL = 5e-9
 BOOST_VIN, BOOST_IOUT = 3.1, 1.5  # lowest input, short-term peak: highest loop current and duty
 BUCK_VSYS, BUCK_ILOAD = 4.2, 3.0
-CONVERTERS, BUCK_KEY = {}, None
+CONVERTERS, BOOST_KEY, BUCK_KEY = {}, None, None
 
 
 def bind():
     """CONVERTERS for the project's charger: the boost, the charger buck at its PROG frequency, and for a
     charger with a selectable frequency one more row per option."""
-    global CONVERTERS, BUCK_KEY, RESULTS, SPECTRUM
+    global CONVERTERS, BOOST_KEY, BUCK_KEY, RESULTS, SPECTRUM
     chg = run_power.CHG
-    RESULTS = os.path.join(BENCHES, "results_%s.md" % run_heat.CHARGER)
-    SPECTRUM = os.path.join(BENCHES, "spectrum_flarm_%s" % run_heat.CHARGER)
+    boost = run_heat.BOOST
+    suffix = "" if run_heat.BOOST_NAME == boosts.DEFAULT else "_%s" % run_heat.BOOST_NAME
+    RESULTS = os.path.join(BENCHES, "results_%s%s.md" % (run_heat.CHARGER, suffix))
+    SPECTRUM = os.path.join(BENCHES, "spectrum_flarm_%s%s" % (run_heat.CHARGER, suffix))
     l1 = chg["l1"]["l"]
 
     def buck(fsw):
@@ -92,25 +95,34 @@ def bind():
                     ripple=(5.0 - BUCK_VSYS) * d / (l1 * fsw),
                     point="5 V in, %.1f V / %.1f A out, %.2g MHz" % (BUCK_VSYS, BUCK_ILOAD, fsw / 1e6))
     BUCK_KEY = "buck U4 (%s, L1)" % chg["part"]
-    CONVERTERS = dict(BASE_CONVERTERS)
+    eta = boost["emi_efficiency"]
+    boost_fsw = boost.get("emi_fsw", boost["fsw"](BOOST_VIN))
+    vout = boost.get("vout", run_power.VOUT)
+    BOOST_KEY = "boost U6 (%s, L2)" % boost["part"]
+    def boost_converter(fsw):
+        return dict(
+            dir=1, mg=1, mb=0, sg=0, sb=1, vbank=vout, fsw=fsw,
+            d=1 - eta * BOOST_VIN / vout,
+            idc=vout * BOOST_IOUT / (BOOST_VIN * eta),
+            ron_main=boost["r_ls"], ron_sync=boost["r_hs"],
+            cbank=run_power.C_MAIN * run_power.C_MAIN_BIAS,
+            esr=1e-3, esl=ESL["0805"] / 3,
+            loop=(("U6", "15"), ("C18", "1"), ("C18", "2"), ("U6", "13")),
+            caps=("C18",), sw_net="BOOST_SW", coss=boost["coss"],
+            snubber=(("U6", "4"), ("R39", "1"), ("R39", "2"), ("C36", "1"), ("C36", "2"))
+            if boost.get("snubber", boost["load_switch"]) else None,
+            spread=boost.get("spread_fraction", 0.0),
+            inductor="L2", ripple=BOOST_VIN * (1 - eta * BOOST_VIN / vout)
+            / (boost["l2_l"] * fsw),
+            point="%.1f V in, %.1f A out" % (BOOST_VIN, BOOST_IOUT))
+    CONVERTERS = {BOOST_KEY: boost_converter(boost_fsw)}
+    for fsw in boost.get("emi_fsw_options", ()):
+        CONVERTERS["boost U6 %.0f kHz (%s, L2)" % (fsw / 1e3, boost["part"])] = boost_converter(fsw)
     CONVERTERS[BUCK_KEY] = buck(chg["fsw"])
     for fsw in chg.get("emi_fsw_options", ()):
         if fsw != chg["fsw"]:
             CONVERTERS["%s %.2g MHz" % (BUCK_KEY, fsw / 1e6)] = buck(fsw)
 
-
-BASE_CONVERTERS = {
-    "boost U6 (TPS61088, L2)": dict(
-        dir=1, mg=1, mb=0, sg=0, sb=1, vbank=run_power.VOUT, fsw=run_power.fsw_boost(BOOST_VIN),
-        d=1 - 0.96 * BOOST_VIN / run_power.VOUT, idc=run_power.VOUT * BOOST_IOUT / (BOOST_VIN * 0.96),
-        ron_main=11e-3, ron_sync=13e-3, cbank=run_power.C_MAIN * run_power.C_MAIN_BIAS,
-        esr=1e-3, esl=ESL["0805"] / 3, loop=(("U6", "15"), ("C18", "1"), ("C18", "2"), ("U6", "13")),
-        caps=("C18",), sw_net="BOOST_SW", coss=COSS["boost"], snubber=(("U6", "4"), ("R39", "1"), ("R39", "2"), ("C36", "1"),
-                                                   ("C36", "2")),
-        inductor="L2", ripple=BOOST_VIN * (1 - 0.96 * BOOST_VIN / run_power.VOUT)
-        / (run_power.L2 * run_power.fsw_boost(BOOST_VIN)),
-        point="%.1f V in, %.1f A out" % (BOOST_VIN, BOOST_IOUT)),
-}
 INDUCTOR_TURNS, INDUCTOR_AREA, INDUCTOR_LEAK = 5, 10e-6, 0.1  # as in run_power
 
 # --- digital signals on the carrier. Driver edge times are not on any data sheet: assumed.
@@ -252,6 +264,29 @@ def windowed_lines(t, x, dt, freqs):
 def merged(level, spacing, bandwidth):
     """Several lines inside one receiver bandwidth add as power."""
     return level * math.sqrt(max(1.0, bandwidth / spacing))
+
+
+def spread_overlap(f, spread, f0, bandwidth, spacing):
+    """Fraction of one frequency-dithered harmonic captured by the receiver bandwidth."""
+    if not spread:
+        return 1.0 if abs(f - f0) <= max(bandwidth / 2, spacing / 2) else 0.0
+    low, high = f * (1 - spread), f * (1 + spread)
+    overlap = max(0.0, min(high, f0 + bandwidth / 2) - max(low, f0 - bandwidth / 2))
+    return overlap / (high - low)
+
+
+def converter_received_power(src, amplitudes, f0, bandwidth, distance):
+    """Mean received power from fixed or triangle-dithered converter harmonics."""
+    spread = src["conv"].get("spread", 0.0)
+    power = 0.0
+    for f, current in zip(src["freqs"], amplitudes):
+        fraction = spread_overlap(f, spread, f0, bandwidth, src["conv"]["fsw"])
+        if not fraction:
+            continue
+        at = f0 if spread else f
+        e = loop_field(at, src["loop"]["area"], current, r=distance, ground=False)
+        power += received_power(e, at) / 2 * fraction
+    return power
 
 
 def band_margins(freqs, fields, spacing):
@@ -431,6 +466,8 @@ def converter_runs(board, fast):
     sources = {}
     for name, conv in CONVERTERS.items():
         loop = board.hot_loop(conv["loop"], conv["caps"])
+        if name.startswith("boost U6") and run_heat.BOOST.get("loop_area_model"):
+            loop["area"] = run_heat.BOOST["loop_area_model"]
         fsw, d = conv["fsw"], conv["d"]
         n_max = int(6.5e9 / fsw)
         freqs = fsw * np.arange(1, n_max + 1)
@@ -504,6 +541,9 @@ def report_sources(report, board, sources, fast):
     report.add()
     report.table(["Converter", "Point", "fSW", "Duty", "Loop current", "Loop area", "Copper runs",
                   "Loop L", "Switch-node copper"], rows)
+    report.add("The boost uses the 1.5 A safety point to bound loop current. Sustained load is 0.8 A and expected "
+               "peak is 1.0 A; edge resonance does not scale reliably with load current.")
+    report.add()
     if fast:
         report.add("ngspice skipped (--fast): spectra are the closed-form trapezoids with %.0f ns edges."
                    % (EDGE_NOMINAL * 1e9))
@@ -519,7 +559,8 @@ def report_sources(report, board, sources, fast):
     report.add("One period at 10 ps per case. Ring frequency from the zero crossings of the loop current "
                "after the main switch turns on, ring current its peak relative to the settled value. Edge is "
                "the gate ramp (10 A of current slew per ramp), Coss the output capacitance of each switch "
-               "(boost %.0f pF, buck %.0f pF assumed); both are swept:" % (COSS["boost"] * 1e12, COSS["buck"] * 1e12))
+               "(boost %.0f pF, buck %.0f pF assumed); both are swept:"
+               % (CONVERTERS[BOOST_KEY]["coss"] * 1e12, COSS["buck"] * 1e12))
     report.add()
     report.table(["Converter", "Case", "Ring", "Ring current", "Switch node max / min", "Bank pin max / min"], rows)
     # closed form against the bench at the low harmonics
@@ -662,7 +703,7 @@ def radiated(report, board, sources, digital, fast):
 def receiver_bands(report, board, sources, digital, fast):
     report.add("## Converter and digital lines in the receiver bands")
     report.add()
-    rows, failures = [], []
+    rows, failures, boost_failures = [], [], []
     mounts = {m: board.mounts[m] for _, _, _, _, m in RECEIVERS}
     for rx_name, f0, bw, nf, mount in RECEIVERS:
         floor = dbm(KT * bw) + nf
@@ -675,17 +716,18 @@ def receiver_bands(report, board, sources, digital, fast):
             for label, case in cases.items():
                 if label not in ("nominal", "closed form", "edge 2 ns", "snubber R39 2.2 Ω, C36 1 nF"):
                     continue
-                sel = np.abs(freqs - f0) <= max(bw / 2, conv["fsw"] / 2)
-                power = 0.0
-                for f, i in zip(freqs[sel], case["i"][sel]):
-                    e = loop_field(f, loop["area"], i, r=r, ground=False)
-                    power += received_power(e, f) / 2  # peak amplitude to mean power
+                sel = np.array([spread_overlap(f, conv.get("spread", 0.0), f0, bw, conv["fsw"]) > 0
+                                for f in freqs])
+                power = converter_received_power(src, case["i"], f0, bw, r)
                 level = dbm(power)
                 rows.append([rx_name, name.split(" (")[0] + ", " + label, "%.0f mm" % (r * 1e3),
                              "%d" % int(sel.sum()), "%.0f dBm" % level, "%.0f dBm" % threshold,
                              "%.0f dB" % (threshold - level)])
                 if label in ("nominal", "closed form") and level > threshold:
                     failures.append((rx_name, name, level, threshold))
+                if name.startswith("boost U6") and label in ("nominal", "closed form", "edge 2 ns") \
+                        and level > threshold:
+                    boost_failures.append((rx_name, name, label, level, threshold))
         worst_digital = None
         for s in digital:
             r = math.dist(board.net_centre(s["net"]), mounts[mount]) * 1e-3 + ANTENNA_OFFSET
@@ -699,7 +741,8 @@ def receiver_bands(report, board, sources, digital, fast):
     report.add("Field of each hot loop at the antenna (free space with the near-field term; distance from "
                "the inductor centre to the mount plus %.0f mm to the antenna on the enclosure wall), received "
                "by a dipole of gain %.2f with its far-field aperture. Lines within the receiver bandwidth add "
-               "as power; where the line spacing exceeds the bandwidth the nearest line counts. Threshold: "
+               "as power; where the line spacing exceeds the bandwidth the nearest line counts. Triangle "
+               "frequency dithering is integrated as uniform dwell across each harmonic's specified spread. Threshold: "
                "thermal noise floor kTB plus the noise figure, less %.0f dB (ADS-B 4 MHz, NF 5 dB; FLARM "
                "250 kHz, NF 5 dB; GNSS 2 MHz, NF 2 dB):" % (ANTENNA_OFFSET * 1e3, ANT_GAIN, MARGIN))
     report.add()
@@ -707,6 +750,10 @@ def receiver_bands(report, board, sources, digital, fast):
     report.check(not failures, "converter lines in every receiver band below the threshold"
                  if not failures else "; ".join("%s: %s %.0f dBm above %.0f dBm" % (r, n.split(" (")[0], lv, th)
                                                 for r, n, lv, th in failures))
+    report.check(not boost_failures, "selected boost nominal and 2 ns edge cases below every receiver threshold"
+                 if not boost_failures else "; ".join("%s: %s %s %.0f dBm above %.0f dBm"
+                                                      % (r, n.split(" (")[0], label, lv, th)
+                                                      for r, n, label, lv, th in boost_failures))
     report.add("- The ADS-B receiver's data sheet sensitivity is −85 dBm; the threshold here protects the noise "
                "floor, which is stricter. GNSS tolerates narrowband interference better than this threshold "
                "suggests, because despreading averages it. Digital nets use the mean power of a random edge "
@@ -774,7 +821,8 @@ def flarm_spectrum(board, sources, digital):
         fig.line([(x(f), top), (x(f), top + height)], "#a8d8a8", 2)
         fig.text(x(f) - 3, top + dy, label, 10, "#3c8c3c", anchor="end")
     for name, (freqs, p, _) in combs.items():
-        fig.line([(x(f), yy(v)) for f, v in zip(freqs, p) if 1e6 <= f <= 2e9], SPECTRUM_COLORS[name], 0.8)
+        color = SPECTRUM_COLORS.get(name, "#d9534f" if name.startswith("boost U6") else "#337ab7")
+        fig.line([(x(f), yy(v)) for f, v in zip(freqs, p) if 1e6 <= f <= 2e9], color, 0.8)
     fig.line([(x(f), yy(v)) for f, v in zip(grid, worst)], SPECTRUM_COLORS["digital"], 1.5)
     levels(x, yy, top, at_left=True)
 
@@ -785,13 +833,15 @@ def flarm_spectrum(board, sources, digital):
         fig.rect(x(ch - bw / 2), y0, x(ch + bw / 2) - x(ch - bw / 2), height, fill="#dff0df")
     fig.text(x(sum(FLARM_CHANNELS) / 2), y0 + 12, "868.2 / 868.4", 10, "#3c8c3c", anchor="middle")
     for name, (freqs, p, _) in combs.items():
+        color = SPECTRUM_COLORS.get(name, "#d9534f" if name.startswith("boost U6") else "#337ab7")
         for f, v in zip(freqs, p):
             if zlo <= f <= zhi:
-                fig.line([(x(f), yy(ymin)), (x(f), yy(v))], SPECTRUM_COLORS[name], 2)
-                fig.circle(x(f), yy(v), 3, SPECTRUM_COLORS[name])
+                fig.line([(x(f), yy(ymin)), (x(f), yy(v))], color, 2)
+                fig.circle(x(f), yy(v), 3, color)
     levels(x, yy, y0)
 
-    legend = [(SPECTRUM_COLORS[n], "%s, lines every %.0f kHz" % (n, c[2] / 1e3)) for n, c in combs.items()]
+    legend = [(SPECTRUM_COLORS.get(n, "#d9534f" if n.startswith("boost U6") else "#337ab7"),
+               "%s, lines every %.0f kHz" % (n, c[2] / 1e3)) for n, c in combs.items()]
     legend.append((SPECTRUM_COLORS["digital"], "worst digital net, mean in %.0f kHz" % (bw / 1e3)))
     for k, (color, label) in enumerate(legend):
         fig.rect(left + k * 260, 872, 14, 4, fill=color)
@@ -906,10 +956,13 @@ def rails(report, board, fast):
         report.add("Benches skipped (--fast).")
         report.add()
         return
-    boost = CONVERTERS["boost U6 (TPS61088, L2)"]
+    boost = CONVERTERS[BOOST_KEY]
     buck = CONVERTERS[BUCK_KEY]
     runs = [("boost_ripple", dict(vin=BOOST_VIN, iout=BOOST_IOUT, fsw=boost["fsw"], cout=boost["cbank"],
-                                  c24=run_power.C24 * run_power.C24_BIAS)),
+                                  c24=run_power.C24 * run_power.C24_BIAS,
+                                  ron_ls=boost["ron_main"], ron_hs=boost["ron_sync"], coss=boost["coss"],
+                                  ron_u7=run_heat.BOOST["load_switch_ron"] or 0.1e-3,
+                                  eff=run_heat.BOOST["emi_efficiency"])),
             ("buck_ripple", dict(vsys=BUCK_VSYS, iload=BUCK_ILOAD, **run_power.buck_bench_params()))]
     results = [run_power.BENCH.simulate(bench, **p) for bench, p in runs]
     # socket ripple: RAIL_5V lines through the load switch and copper into the module capacitance
@@ -980,20 +1033,28 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--write", action="store_true", help="store the report in emi/results_<charger>.md")
     parser.add_argument("--fast", action="store_true", help="skip the ngspice benches")
+    parser.add_argument("--boost", choices=boosts.PROFILES, default=boosts.DEFAULT,
+                        help="boost converter to model without changing the board")
     run_heat.project.add_argument(parser)
     args = parser.parse_args()
     if args.project:
         run_heat.select_project(args.project)
+    run_heat.select_boost(args.boost)
     bind()
     version = "closed form only" if args.fast else simlib.require_ngspice()
     board = Board()
     report = simlib.Report()
-    report.add("# EMI estimate, simulation results")
+    report.add("# EMI estimate, simulation results%s" %
+               ("" if run_heat.BOOST_NAME == boosts.DEFAULT else ", %s candidate" % run_heat.BOOST["part"]))
     report.add()
     report.add("Generated by `hardware/sim/run_emi.py` with %s. Board geometry from `carrier.kicad_pcb`. "
                "See `hardware/sim/README.md` for what is and is not modelled. These are order-of-magnitude "
                "pre-compliance estimates, not measurements." % version)
     report.add()
+    if run_heat.BOOST["layout_note"]:
+        report.add("Candidate assumption: %s PFM timing is unpublished and is not represented by the fixed-frequency model."
+                   % run_heat.BOOST["layout_note"])
+        report.add()
     sources = converter_runs(board, args.fast)
     report_sources(report, board, sources, args.fast)
     digital = digital_sources(board)

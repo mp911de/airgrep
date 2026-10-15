@@ -43,6 +43,7 @@ except ImportError as exc:
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tools"))
 import chargers  # noqa: E402
+import boosts  # noqa: E402
 import project  # noqa: E402
 import simlib  # noqa: E402
 import run_power  # noqa: E402  (boost constants and switching frequency)
@@ -66,6 +67,15 @@ def select_project(name=None):
     run_power.bind_charger(CHARGER)
     ID_RON, ID_VFWD = run_power.ID_RON, run_power.ID_VFWD
     vent_model.bind(CHARGER)
+
+
+def select_boost(name=boosts.DEFAULT):
+    """Bind the production boost or a candidate without changing the board."""
+    global BOOST, BOOST_NAME, RESULTS, VOUT
+    BOOST_NAME = name
+    BOOST = boosts.get(name)
+    VOUT = BOOST.get("vout", run_power.VOUT)
+    RESULTS = os.path.join(OUT, "results.md" if name == boosts.DEFAULT else "results_%s.md" % name)
 
 # --- Materials and stackup (board file, JLC04161H-2116C: four layers, 1.6 mm)
 LAYERS = ("F", "In1", "In2", "B")
@@ -110,16 +120,11 @@ def buck_k(k_boost):
     return CHG_K_SW if CHG_K_SW is not None else k_boost
 
 
-# --- TPS61088 (SLVSCM8D) and L2 (CENKER CKST0603-2.2uH/M)
-BST_R_HS, BST_R_LS = 13e-3, 11e-3  # typ at VCC 6 V
-BST_THETA_JC = 3.1 + 1.0  # RθJC(bot) plus the solder layer under the 42 % paste windows (estimate)
-BST_THETA_JA_JEDEC = 38.8
-CURVE_R16 = 150e3  # R16 the efficiency curve in specs/power_params.json is derated for (about 1 MHz)
+# --- Boost and L2 (CENKER CKST0603-2.2uH/M)
 INDUCTOR_THETA_BODY = 12.0  # K/W, winding to its two terminals (estimate, metal-alloy body)
 CORE_LOSS = 0.02  # W per inductor at about 0.5 A ripple and 1 to 1.3 MHz (estimate, no vendor curve)
 
 # --- TPS22975 (SLVSCI1)
-LS_RON = 16e-3
 # --- LM73100 ideal diodes U11 (ADSBee), U12 (display), SNOSDC0A: forward drop regulated to VFWD at light
 # load, resistive above VFWD / RON; (typical, maximum over -40 to 125 C) per corner
 ID_RON = (28.4e-3, 44.85e-3)
@@ -875,30 +880,29 @@ class TrackNet:
 
 
 def boost_conduction(vin, iin, tj, tl):
-    """Conduction losses of the TPS61088 switches and L2 DCR at input current iin."""
-    r_hs = BST_R_HS * (1 + TC_RDSON * (tj - 25))
-    r_ls = BST_R_LS * (1 + TC_RDSON * (tj - 25))
-    dcr = run_power.L2_DCR * (1 + ALPHA_CU * (tl - 25))
+    """Conduction losses of the selected boost switches and L2 at input current iin."""
+    r_hs = BOOST["r_hs"] * (1 + TC_RDSON * (tj - 25))
+    r_ls = BOOST["r_ls"] * (1 + TC_RDSON * (tj - 25))
+    dcr = BOOST["l2_dcr"] * (1 + ALPHA_CU * (tl - 25))
     d = max(0.0, 1 - (vin - iin * (dcr + r_ls)) / VOUT)
-    fsw = run_power.fsw_boost(vin)
-    ripple = vin * d / (run_power.L2 * fsw)
+    fsw = BOOST["fsw"](vin)
+    ripple = vin * d / (BOOST["l2_l"] * fsw)
     i2 = iin ** 2 + ripple ** 2 / 12
     return {"d": d, "fsw": fsw, "ripple": ripple, "ls": d * i2 * r_ls, "hs": (1 - d) * i2 * r_hs,
             "dcr": i2 * dcr}
 
 
-def fit_boost(curve):
-    """Fit P_sw = K * VOUT * IIN * fSW + P0 to the residual loss of the efficiency curve at 3.6 V.
-    The curve is derated for R16 = CURVE_R16 (about 1 MHz), so the fit uses that frequency."""
+def fit_boost(curve, vin=3.6):
+    """Fit P_sw = K * VOUT * IIN * fSW + P0 to a data-sheet efficiency curve."""
     rows = []
     for iout, eta in curve:
         if not 0.2 <= iout <= 2.0:
             continue
-        vin = 3.6
         iin = VOUT * iout / (eta * vin)
         c = boost_conduction(vin, iin, 25 + 30 * iout, 25 + 20 * iout)
-        resid = VOUT * iout * (1 / eta - 1) - c["ls"] - c["hs"] - c["dcr"] - CORE_LOSS
-        fsw = 1 / (CURVE_R16 * run_power.C_FREQ / 4 + run_power.T_DELAY * VOUT / vin)
+        isolation = iout ** 2 * BOOST.get("isolation_ron", 0.0) * (1 + TC_RDSON * (25 + 30 * iout - 25))
+        resid = VOUT * iout * (1 / eta - 1) - c["ls"] - c["hs"] - isolation - c["dcr"] - CORE_LOSS
+        fsw = BOOST["fit_fsw"](vin)
         rows.append((VOUT * iin * fsw, resid, iout, eta))
     n = len(rows)
     mx = sum(r[0] for r in rows) / n
@@ -936,7 +940,8 @@ def boost_losses(vin, iout, tj, tl, fit):
     iin = VOUT * iout / (0.92 * vin)
     for _ in range(30):
         c = boost_conduction(vin, iin, tj, tl)
-        ic = c["ls"] + c["hs"] + k * VOUT * iin * c["fsw"] + p0
+        isolation = iout ** 2 * BOOST.get("isolation_ron", 0.0) * (1 + TC_RDSON * (tj - 25))
+        ic = c["ls"] + c["hs"] + isolation + k * VOUT * iin * c["fsw"] + p0
         l2 = c["dcr"] + CORE_LOSS
         iin = (VOUT * iout + ic + l2) / vin
     return {"iin": iin, "ic": ic, "l2": l2, "d": c["d"], "ripple": c["ripple"],
@@ -1077,7 +1082,7 @@ class Model:
         sheet.gref[NL - 1] = [env["h_bot"] * area] * g.nc
         # junction and inductor body nodes
         self.nodes = {}
-        for ref, theta in (("U4", CHG_THETA_JC), ("U6", BST_THETA_JC), ("U7", LS_THETA_JC),
+        for ref, theta in (("U4", CHG_THETA_JC), ("U6", BOOST["theta_board"]), ("U7", LS_THETA_JC),
                            ("L1", INDUCTOR_THETA_BODY), ("L2", INDUCTOR_THETA_BODY)):
             pads = [p for p in pads_of(self.board, ref) if p.net or not ref.startswith("U")]
             total = sum(p.w * p.h for p in pads)
@@ -1266,9 +1271,10 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
             losses["L1"] = buck["l1"]
         losses[U4_LOSSES[1]] = p_batfet
         if load:
-            losses["TPS61088"] = b["ic"]
+            losses[BOOST["part"]] = b["ic"]
             losses["L2"] = b["l2"]
-            losses["TPS22975"] = load ** 2 * LS_RON * (1 + TC_RDSON * (tj["U7"] - 25))
+            if BOOST["load_switch"]:
+                losses["TPS22975"] = load ** 2 * BOOST["load_switch_ron"] * (1 + TC_RDSON * (tj["U7"] - 25))
             # ideal diodes: regulated drop at light load, resistive above VFWD / RON
             for ref, i in (("U11", i_ads), ("U12", i_esp)):
                 p = max(i * ID_VFWD[corner], i * i * ID_RON[corner])
@@ -1379,7 +1385,7 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
         b_vec = [0.0] * (NL * nc + len(model.nodes) + (model.plate_node is not None))
         for (li, c), p in heat.items():
             b_vec[li * nc + c] += p
-        for ref, keys in (("U4", U4_LOSSES), ("U6", ("TPS61088",)), ("U7", ("TPS22975",)),
+        for ref, keys in (("U4", U4_LOSSES), ("U6", (BOOST["part"],)), ("U7", ("TPS22975",)),
                           ("L1", ("L1",)), ("L2", ("L2",))):
             b_vec[model.nodes[ref]] += sum(losses.get(k, 0.0) for k in keys)
         rise = thermal.solve(b_vec, tol=1e-7)
@@ -1529,6 +1535,7 @@ def u4_loss(result):
 
 
 select_project()  # after the definitions bind_charger needs
+select_boost()
 
 
 def main():
@@ -1537,19 +1544,27 @@ def main():
     project.add_argument(ap)
     ap.add_argument("--pcb", default=None, help="board file to read, e.g. a copy with refilled zones")
     ap.add_argument("--no-heatsink", action="store_true", help="model the board without the U4 heatsink")
+    ap.add_argument("--boost", choices=boosts.PROFILES, default=boosts.DEFAULT,
+                    help="boost converter to model without changing the board")
     args = ap.parse_args()
     if args.project:
         select_project(args.project)
+    select_boost(args.boost)
     args.pcb = args.pcb or PCB
     started = time.time()
     with open(PARAMS) as f:
         params = json.load(f)
     board = read_board(args.pcb)
     copper = Copper(board)
-    k_sw, p0, fit_rows = fit_boost(params["boost_efficiency_curve"])
+    curve = BOOST["efficiency_curve"] or params["boost_efficiency_curve"]
+    k_sw, p0, fit_rows = fit_boost(curve, BOOST["fit_vin"])
     rep = simlib.Report()
-    rep.add("# Power loss and temperature estimate")
+    rep.add("# Power loss and temperature estimate%s" %
+            ("" if BOOST_NAME == boosts.DEFAULT else ", %s candidate" % BOOST["part"]))
     rep.add()
+    if BOOST["layout_note"]:
+        rep.add("Candidate assumption: %s" % BOOST["layout_note"])
+        rep.add()
     rep.add("Generated by `hardware/sim/run_heat.py` from `%s` (charger %s). See `hardware/sim/README.md` for "
             "what is and is not modelled." % (os.path.relpath(os.path.abspath(args.pcb), os.path.dirname(os.path.dirname(HERE))),
                                              CHG["part"]))
@@ -1599,10 +1614,12 @@ def main():
          "data sheet section 6.7, VBUS 5 V, VBAT 4 V" if CHG_K_SW is not None else "estimate, no efficiency curve published"],
         ["%s input supply current" % part, "%.1f mA" % (CHG_IQ * 1e3), "data sheet, typ"],
         ["%s VSYSMIN" % part, "%.1f V; below it the BATFET regulates linearly" % CHG_VSYSMIN, "data sheet"],
-        ["TPS61088 high side / low side", "13 / 11 mΩ typ", "SLVSCM8D"],
-        ["L1 %s / L2 CKST0603-2.2uH" % CHG["l1"]["label"], "%.1f / 15.5 mΩ DCR, core loss %.0f mW each" % (L1_DCR * 1e3, CORE_LOSS * 1e3),
+        ["%s high side / low side" % BOOST["part"], "%.0f / %.0f mΩ typ" %
+         (BOOST["r_hs"] * 1e3, BOOST["r_ls"] * 1e3),
+         BOOST["datasheet"]],
+        ["L1 %s / L2 %s" % (CHG["l1"]["label"], BOOST["l2_label"]), "%.1f / %.1f mΩ DCR, core loss %.0f mW each" % (L1_DCR * 1e3, BOOST["l2_dcr"] * 1e3, CORE_LOSS * 1e3),
          "docs/power.md, vendor tables; core loss estimate"],
-        ["TPS22975", "16 mΩ typ", "SLVSCI1"],
+        ["TPS22975", "16 mΩ typ" if BOOST["load_switch"] else "removed by integrated disconnect", "SLVSCI1"],
         [run_power.ID_NAME + " ideal diodes U11, U12", "drop regulated to %.1f / %.1f mV, %.1f / %.1f mΩ above that" % (
             ID_VFWD[0] * 1e3, ID_VFWD[1] * 1e3, ID_RON[0] * 1e3, ID_RON[1] * 1e3), "SLVSFC9C, high forward drop assumed, no specified maximum" if CHARGER == "ti" else "SNOSDC0A, typ / max over temperature"],
         ["On-resistance temperature coefficient", "+%.1f %%/K" % (TC_RDSON * 100), "estimate"],
@@ -1617,16 +1634,37 @@ def main():
     ])
     rep.add("Where two values are given, the first is the nominal corner and the second the high corner.")
     rep.add()
-    rep.add("TPS61088 switching term: P = K · VOUT · IIN · fSW + P0 with K = %.2f ns and P0 = %.0f mW. "
-            "It is fitted to what the efficiency curve in `specs/power_params.json` at 3.6 V leaves after the "
-            "conduction, DCR and core losses. The curve is TI Figure 6-2 less 2 points for 1 MHz and the CKST0603 DCR."
-            % (k_sw * 1e9, p0 * 1e3))
+    rep.add("%s switching term: P = K · VOUT · IIN · fSW + P0 with K = %.2f ns and P0 = %.0f mW. "
+            "It is fitted to what %s at %.1f V leaves after switch conduction, L2 DCR and core loss."
+            % (BOOST["part"], k_sw * 1e9, p0 * 1e3, BOOST["efficiency_note"], BOOST["fit_vin"]))
     rep.add()
     fit = (k_sw, p0)
     rep.table(["IOUT", "Curve η", "Model η"],
               [["%.1f A" % iout, "%.1f %%" % (eta * 100),
-                "%.1f %%" % (boost_losses(3.6, iout, 25 + 30 * iout, 25 + 20 * iout, fit)["eta"] * 100)]
+                "%.1f %%" % (boost_losses(BOOST["fit_vin"], iout, 25 + 30 * iout, 25 + 20 * iout, fit)["eta"] * 100)]
                for _, _, iout, eta in fit_rows])
+    if "valley_limit_min" in BOOST or "peak_limit_min" in BOOST:
+        vin, eta = 3.1, 0.90
+        duty = 1 - vin * eta / VOUT
+        if "valley_limit_min" in BOOST:
+            lcorner = BOOST["l2_l"] * (1 + BOOST["l2_tol"])
+            lsign = "+"
+            ripple = vin * duty / (lcorner * BOOST.get("fsw_min", BOOST["fsw"](vin)))
+            iout_limit = (1 - duty) * (BOOST["valley_limit_min"] + ripple / 2)
+            kind = "valley"
+        else:
+            lcorner = BOOST["l2_l"] * (1 - BOOST["l2_tol"])
+            lsign = "−"
+            ripple = vin * duty / (lcorner * BOOST.get("fsw_min", BOOST["fsw"](vin)))
+            iout_limit = (1 - duty) * (BOOST["peak_limit_min"] - ripple / 2)
+            kind = "peak"
+        rep.check(iout_limit >= 1.5, "minimum calculated output before %s current limit %.2f A at 3.1 V, "
+                  "L2 %s%.0f %% and 90 %% efficiency; 1.5 A is safety margin, not sustained load"
+                  % (kind, iout_limit, lsign, 100 * BOOST["l2_tol"]))
+        peak = VOUT * 1.5 / (vin * eta) + ripple / 2
+        rep.check(peak <= BOOST["l2_isat_10"], "1.5 A safety load gives %.2f A peak in L2, below %.1f A "
+                  "at 10 %% inductance drop" % (peak, BOOST["l2_isat_10"]))
+        rep.add()
 
     # -- path resistances
     heatsink = None if args.no_heatsink else HEATSINK
@@ -1685,9 +1723,10 @@ def main():
             % (vent_model.VENTS_PER_SIDE, vent_model.VENTS_PER_SIDE, vent_model.VENT_OPENING_CM2,
                vent_model.VENT_AREA_CM2, vent_model.BLOCKAGE * 100, vent_model.VENT_HEIGHT_M * 1000,
                vent_model.CD))
-    rep.add("- Junction to board: %s %s, TPS61088 RθJC(bot) 3.1 K/W plus 1 K/W "
-            "solder onto its pad, TPS22975 RθJC(bot) %.1f K/W; inductor winding to terminals %.0f K/W."
-            % (part, CHG["theta_note"], LS_THETA_JC, INDUCTOR_THETA_BODY))
+    rep.add("- Junction to board: %s %s, %s %.1f K/W, TPS22975 RθJC(bot) %.1f K/W; "
+            "inductor winding to terminals %.0f K/W."
+            % (part, CHG["theta_note"], BOOST["part"], BOOST["theta_board"], LS_THETA_JC,
+               INDUCTOR_THETA_BODY))
     for ref, hs in (heatsink or {}).items():
         if hs["type"] == "plate":
             g_cell, g_air_open = plate_conductances(hs, ENVIRONMENTS["open"])
@@ -1775,8 +1814,8 @@ def main():
                      "%.0f °C" % ambient if corner == 0 else "", CORNERS[corner],
                      "%.1f" % r["t_air"],
                      "%.0f (θJA %.0f)" % (r["tj"]["U4"], ambient + u4_loss(r) * CHG_THETA_JA_JEDEC),
-                     "%.0f (θJA %.0f)" % (r["tj"]["U6"], ambient + l["TPS61088"] * BST_THETA_JA_JEDEC)
-                     if "TPS61088" in l else "-",
+                     "%.0f (θJA %.0f)" % (r["tj"]["U6"], ambient + l[BOOST["part"]] * BOOST["theta_ja"])
+                     if BOOST["part"] in l else "-",
                      "%.0f" % r["tj"]["U7"] if "TPS22975" in l else "-",
                      "%.0f" % r["tj"]["L1"] if "L1" in l else "-",
                      "%.0f" % r["tj"]["L2"] if "L2" in l else "-",
@@ -1803,8 +1842,11 @@ def main():
         rep.check(not r["regulated"], "%s, open bench, 25 °C: %s (U4 junction %.0f °C, regulation at %.0f °C)"
                   % (label[ck], "full %.1f A charge current" % case["charge"] if not r["regulated"]
                      else "thermal regulation cuts the charge current to %.2f A" % r["i_chg"], r["tj"]["U4"], case["treg"]))
-    for ref, limit, what in (("U6", 125.0, "TPS61088 junction"), ("U7", 125.0, "TPS22975 junction"),
-                             ("L1", 125.0, "L1 winding"), ("L2", 125.0, "L2 winding")):
+    thermal_checks = [("U6", 125.0, "%s junction" % BOOST["part"]),
+                      ("L1", 125.0, "L1 winding"), ("L2", 125.0, "L2 winding")]
+    if BOOST["load_switch"]:
+        thermal_checks.insert(1, ("U7", 125.0, "TPS22975 junction"))
+    for ref, limit, what in thermal_checks:
         v, ck, amb, corner = worst(lambda r: r["tj"][ref])
         rep.check(v < limit, "%s at most %.0f °C (%s, %.0f °C ambient, %s corner, closed case), limit %.0f °C"
                   % (what, v, label[ck], amb, CORNERS[corner], limit))
@@ -1937,7 +1979,8 @@ def main():
         for ck, env_key, amb in (("usb32", "closed", 25.0), ("bat08", "closed", 25.0), ("bat08", "open", 25.0),
                                  ("usb37", "open", 25.0)):
             r = results[(ck, env_key, amb, 0)]
-            name = "map_%s_%s_%d" % (ck, env_key, amb)
+            name = "map_%s%s_%s_%d" % ("" if BOOST_NAME == boosts.DEFAULT else BOOST_NAME + "_",
+                                          ck, env_key, amb)
             head = "%s, %s, %.0f °C ambient, nominal: top copper" % (label[ck], ENVIRONMENTS[env_key]["label"], amb)
             if heatsink:
                 # the map as modelled (with the sink) and the bare board on one colour scale, for comparison
@@ -1949,7 +1992,8 @@ def main():
                 heat_map(os.path.join(OUT, name + "_bare.svg"), bare[0], r0, head + ", without " + sink_kind, rng)
             else:
                 heat_map(os.path.join(OUT, name + ".svg"), nominal, r, head + ", without heatsink")
-        write_calibration(results, r_net, nominal, high, k_sw, label)
+        if BOOST_NAME == boosts.DEFAULT:
+            write_calibration(results, r_net, nominal, high, k_sw, label)
     return rep.finish(RESULTS if args.write else None)
 
 

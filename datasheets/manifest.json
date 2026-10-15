@@ -20,6 +20,56 @@
     "note": "U6 boost"
   },
   {
+    "file": "fusb303b.pdf",
+    "manufacturer_url": "https://www.onsemi.com/download/data-sheet/pdf/fusb303b-d.pdf",
+    "download_url": "https://www.onsemi.com/download/data-sheet/pdf/fusb303b-d.pdf",
+    "downloaded": "2026-10-15",
+    "pages": 19,
+    "bytes": 559529,
+    "sha256": "0d26784a1e3c1fa0e9cad3b7587ddcdb881bb2b5ca0d9fd53bdf7d9c63908f4b",
+    "note": "U15 USB Type-C CC controller on carrier-ti-charger, FUSB303BTMX"
+  },
+  {
+    "file": "tps61023.pdf",
+    "manufacturer_url": "https://www.ti.com/lit/ds/symlink/tps61023.pdf",
+    "download_url": "https://www.ti.com/lit/ds/symlink/tps61023.pdf",
+    "downloaded": "2026-10-15",
+    "pages": 28,
+    "bytes": 2392725,
+    "sha256": "a6bec2d636d7c7a68544ae32cb66c9a85802b38468072002f23e70d5b7c5d22e",
+    "note": "TPS61023 integrated-disconnect boost candidate"
+  },
+  {
+    "file": "tps61033.pdf",
+    "manufacturer_url": "https://www.ti.com/lit/ds/symlink/tps61033.pdf",
+    "download_url": "https://www.ti.com/lit/ds/symlink/tps61033.pdf",
+    "downloaded": "2026-10-15",
+    "pages": 31,
+    "bytes": 1942926,
+    "sha256": "ad649d9686d7262bb812fd429800c73427c01807eafb9bb0ab55210ee4eaac42",
+    "note": "Rejected integrated-disconnect boost candidate; automatic PFM only"
+  },
+  {
+    "file": "tps61033-q1.pdf",
+    "manufacturer_url": "https://www.ti.com/lit/ds/symlink/tps61033-q1.pdf",
+    "download_url": "https://www.ti.com/lit/ds/symlink/tps61033-q1.pdf",
+    "downloaded": "2026-10-15",
+    "pages": 30,
+    "bytes": 1908321,
+    "sha256": "5b80c67cf80dd6ef999cea645380cd309a21350f7ea3d7035c25ecedf9e9d528",
+    "note": "Rejected forced-PWM boost candidate; receiver-band model did not clear the required margin"
+  },
+  {
+    "file": "tps61378-q1.pdf",
+    "manufacturer_url": "https://www.ti.com/lit/ds/symlink/tps61378-q1.pdf",
+    "download_url": "https://www.ti.com/lit/ds/symlink/tps61378-q1.pdf",
+    "downloaded": "2026-10-15",
+    "pages": 41,
+    "bytes": 2457320,
+    "sha256": "f8809cae09f058dc7fe8f6d3ca67cf1ba251589d9743ca59dad0a75f9b230443",
+    "note": "TPS61378-Q1 forced-PWM integrated-disconnect boost candidate"
+  },
+  {
     "file": "tps22975.pdf",
     "manufacturer_url": "https://www.ti.com/lit/ds/symlink/tps22975.pdf",
     "download_url": "https://www.ti.com/lit/ds/symlink/tps22975.pdf",

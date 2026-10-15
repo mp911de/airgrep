@@ -47,7 +47,7 @@ One entry per decision, with its reason. The design is described in [power.md](p
 
 - There is no eFuse at the input. The charger provides reverse blocking, over-voltage lockout and the current limit.
 - An SMAJ12A protects VBUS. It covers ESD and surge below the charger's 16 V limit. A USB-C source stays at 5 V without PD, so the 12 V standoff is sufficient.
-- Each USB line has its own H5VLD3B ESD diode. Single SOD-323 diodes from JLCPCB's Preferred stock avoid the feeder fee of an array.
+- D+ and D- retain H5VLD3B ESD diodes. CC1 and CC2 rely on the FUSB303B's integrated 4 kV HBM protection; the datasheet requires external TVS only for the stated IEC 61000-4-2 system rating.
 
 ## Boost
 
@@ -84,9 +84,9 @@ One entry per decision, with its reason. The design is described in [power.md](p
 
 - A second board variant replaces the MAX77757 with a TI BQ25798 (QFN-29 4x4, LCSC C2876593). The reasons: the MAX77757 regulates its junction at a fixed 130 °C and needs a heatsink to hold 1.8 A in a closed case, and nothing can read its state. The BQ25798 charges at a silicon default of 1 A with no host, the display's ESP32-S3 raises it to 1.8 A over I2C, and the watchdog (40 s default) drops it back to the default when the host stops talking. Its regulation set point is 60/80/100/120 °C and it reports die temperature, battery current and voltage through a 16-bit ADC.
 - The earlier rejection of I2C chargers assumed no host. The display module is the host now; charging without it still works at 1 A.
-- BC1.2 stays on chip (D+/D-). The BQ25798 has no CC detection, and a C-to-C source with open D+/D- reads as unknown adapter, 3 A. U15, a TUSB320L on the shared I2C bus, reads the CC advertisement. It needs no ESP GPIO, which the display module does not have. The firmware applies the lower of CC and BC1.2 to IINDPM.
+- BC1.2 stays on chip (D+/D-). The BQ25798 has no CC detection, and a C-to-C source with open D+/D- reads as unknown adapter, 3 A. U15, an FUSB303B at 0x21 on the shared I2C bus, reads the CC advertisement. It needs no ESP GPIO. Unlike TUSB320LI, it supports the 200 pF Fast-mode design envelope and stronger pull-ups. Firmware applies the lower of CC and BC1.2 to IINDPM.
 - The ILIM_HIZ divider (120 kΩ / 100 kΩ from REGN) clamps the input at about 1.5 A until the firmware sees a 3 A advertisement and clears EN_EXTILIM. Without the display, charging is capped at 1.5 A input. Accepted for a conservative limit before boot.
-- U15 runs from the always-on +ESP_3V3, not from VBUS. VBUS can exceed its 5 V recommended VDD, and its SDA/SCL are rated to VDD + 0.3 V, so an unpowered U15 on a live bus is outside its ratings. Unpowered, its CC pins present Rd, which covers dead-battery attach.
+- U15 runs from the always-on +ESP_3V3, not VBUS. R80 and R81 are 910 kΩ straps because PORT/DEBUG_N and ADDR/ORIENT become push-pull outputs after configuration sampling. Unpowered, its CC pins present Rd, which covers dead-battery attach.
 - Switching frequency 750 kHz (PROG 4.7 kΩ) with a 2.2 µH FXL0630-2R2-M: about 6 dB lower converter lines at 868 MHz than 1.5 MHz and the better efficiency curve, at the cost of sitting next to the boost's 720 kHz and a conducted-emission fundamental at 750 kHz where the CISPR limit is 56 dBµV (`hardware/sim/emi/results_ti.md`: 5 dB short with FB1 at its DC-bias inductance). The host can switch to 1.5 MHz (PWM_FREQ) and the bench decides.
 - The thermostat drives the CE pin through Q2 and R12 (CE high disables charging). Q6, which pulled the MAX77757 THM pin low, is gone.
 - The red LED shows USB present (Q10 from a 47 kΩ / 100 kΩ divider on USB_VBUS) because the BQ25798 has no input-OK pin. The green LED follows STAT (charging).

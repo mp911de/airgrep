@@ -17,6 +17,7 @@ A carrier board for three plug-in modules: an ESP32-S3 touch display, an ADSBee 
 | [docs/decisions.md](docs/decisions.md) | Reasons behind the design decisions |
 | [docs/mechanical.md](docs/mechanical.md) | Board outline, mounting holes, module placement, battery, antennas, enclosure |
 | [docs/interfaces.md](docs/interfaces.md) | Pin maps of the modules and the carrier connectors |
+| [docs/i2c-bus-requirements.md](docs/i2c-bus-requirements.md) | I2C speed, bandwidth, capacitance and pull-up limits |
 | [docs/firmware.md](docs/firmware.md) | What the display firmware must do: operating modes, charger host control, charger-mode display, sleep |
 | [docs/bom-hand-sourced.md](docs/bom-hand-sourced.md) | Parts to buy and fit by hand, with order links and order status |
 | [docs/open-issues.md](docs/open-issues.md) | Open work only |

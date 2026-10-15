@@ -292,6 +292,19 @@ def chg(*keys):
     return "chargers.py %s/%s" % (CHARGER, "/".join(keys)), get
 
 
+def bst(*keys):
+    """A value of the production boost entry in hardware/sim/boosts.py."""
+    sys.path.insert(0, SIM)
+    import boosts
+
+    def get(c):
+        v = boosts.PROFILES[boosts.DEFAULT]
+        for k in keys:
+            v = v[k]
+        return v
+    return "boosts.py %s/%s" % (boosts.DEFAULT, "/".join(keys)), get
+
+
 CHG = "charging/_charge_current_a"
 IFAST = r"R6 \+ R37 = ([\d.]+) kΩ \+ ([\d.]+) kΩ in series = ([\d.]+) kΩ"
 BINDINGS = [
@@ -319,7 +332,7 @@ BINDINGS = [
     (sch("R15"), prose("_rail_5v_v", r"R14/R15 \((\d+) kΩ / (\d+) kΩ\)", 1e3, 2)),
     (sch("R16"), prose("_boost_efficiency_curve", r"R16 (\d+) kΩ", 1e3)),
     (par("rail_5v_v"), sim("run_power", "VOUT", digits=2)),
-    (par("load_switch_ron_ohm"), sim("run_heat", "LS_RON")),
+    (par("load_switch_ron_ohm"), bst("load_switch_ron")),
     (sim("run_power", "L2_DCR"), prose("_boost_efficiency_curve", r"DCR \(([\d.]+) mΩ\)", 1e-3)),
     # loads, fuse, pack
     (sim("run_heat", "LED_5V_A", scale=1e3), par("loads_5v/Carrier: green power LED D5/ma")),
@@ -357,7 +370,11 @@ BINDINGS_TI = [
     (sch("R58"), lit(100e3, "ILIM_HIZ divider bottom")),
     (sch("R59"), lit(80.6e3, "TS divider RT1 for the 100k B4262 NTC, window 3 to 43 C")),
     (sch("R60"), lit(768e3, "TS divider RT2")),
-    (sch("R79"), lit(887e3, "TUSB320L VBUS_DET, 855 to 920 kOhm")),
+    (sch("R19"), lit(1.8e3, "I2C SDA pull-up for the 200 pF Fast-mode envelope")),
+    (sch("R20"), lit(1.8e3, "I2C SCL pull-up for the 200 pF Fast-mode envelope")),
+    (sch("R79"), lit(887e3, "FUSB303B VBUS_DET, 855 to 920 kOhm")),
+    (sch("R80"), lit(910e3, "FUSB303B PORT strap below the 1 MOhm guaranteed-low boundary")),
+    (sch("R81"), lit(910e3, "FUSB303B ADDR strap below the 1 MOhm guaranteed-low boundary")),
     (chg("charge_a"), par("charging/charge_current_a")),
     (chg("fsw"), lit(750e3, "PROG 4.7 kΩ")),
 ]

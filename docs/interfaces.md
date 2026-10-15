@@ -55,12 +55,12 @@ J7 signals:
 
 - D11 to D13 are the only free GPIOs the module exposes. Charger STAT and INOKB are therefore not wired to the display. The firmware reads the charging state from the fuel gauge.
 - D14 and D15 on J6 are used inside the module (IMU interrupt, button B). The carrier leaves them unconnected.
-- The I2C bus on J8 serves U13 (TCA9534, 0x20), U8 (MAX17048, 0x36), U10 (BMP580, 0x46) and, on carrier-ti-charger, U4 (BQ25798, 0x6B; its INT pin ends on TP8 and is polled) and U15 (TUSB320L, 0x47; INT_N open, polled). The display shares it with AXS5106L touch (0x63) and LSM6DS3 IMU (0x6A), as documented by [Seeed](https://wiki.seeedstudio.com/function_1.47_inch_touch_display_esp32s3/). These addresses do not conflict.
-- The I2C pull-ups are the module's own, 5.1 kΩ. R19 and R20 (4.7 kΩ) on the carrier are not fitted. The firmware therefore runs the bus at 100 kHz.  Bus rules per slave are in [firmware.md](firmware.md#i2c-bus).
+- The I2C bus on J8 serves U13 (TCA9534, 0x20), U15 (FUSB303B, 0x21), U8 (MAX17048, 0x36), U10 (BMP580, 0x46) and U4 (BQ25798, 0x6B; its INT pin ends on TP8 and is polled). The display shares it with AXS5106L touch (0x63) and LSM6DS3 IMU (0x6A), as documented by [Seeed](https://wiki.seeedstudio.com/function_1.47_inch_touch_display_esp32s3/). These addresses do not conflict.
+- R19 and R20 are 1.8 kΩ. In parallel with the display module's 5.1 kΩ pull-ups, the effective range is 1.284 to 1.373 kΩ including tolerances. This supports the 200 pF, 400 kHz design envelope for every participant with published limits; the AXS5106L limits remain unpublished. Calculations are in [I2C bus requirements](i2c-bus-requirements.md).
 
 ## Physical control inputs
 
-U13 is TI TCA9534PWR (C783615), powered by ESP_3V3 with C40, 100 nF. A0, A1 and A2 are grounded for address 0x20. INT is unconnected; firmware polls over the existing 100 kHz bus. Leave all eight channels configured as inputs and polarity inversion disabled. Read the input-port register, 0x00.
+U13 is TI TCA9534PWR (C783615), powered by ESP_3V3 with C40, 100 nF. A0, A1 and A2 are grounded for address 0x20. INT is unconnected; firmware polls over the shared 400 kHz bus. Leave all eight channels configured as inputs and polarity inversion disabled. Read the input-port register, 0x00.
 
 | U13 input | Net | Connection | Raw low | Raw high |
 |---|---|---|---|---|

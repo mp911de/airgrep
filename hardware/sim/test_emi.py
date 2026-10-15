@@ -77,6 +77,12 @@ class FieldTests(unittest.TestCase):
         self.assertAlmostEqual(emi.merged(1.0, 100e3, 400e3), 2.0)
         self.assertEqual(emi.merged(1.0, 1e6, 120e3), 1.0)
 
+    def test_spread_overlap(self):
+        self.assertEqual(emi.spread_overlap(100e6, 0, 100e6, 1e6, 2e6), 1.0)
+        self.assertEqual(emi.spread_overlap(103e6, 0, 100e6, 1e6, 2e6), 0.0)
+        self.assertAlmostEqual(emi.spread_overlap(100e6, .1, 100e6, 1e6, 2e6), .05)
+        self.assertEqual(emi.spread_overlap(120e6, .1, 100e6, 1e6, 2e6), 0.0)
+
 
 class FigureTests(unittest.TestCase):
     def test_pdf_cross_reference_points_at_objects(self):

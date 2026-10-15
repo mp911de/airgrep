@@ -24,6 +24,10 @@ python3 hardware/sim/run_heat.py --write       # power loss and temperatures, re
 python3 hardware/sim/run_charge_heat.py --write # battery heating delay, heat/<charger>/charging.pdf and SVGs
 python3 hardware/sim/run_charge_limits.py --write # MAX: TMP300 trip sweeps; TI: TREG and host-mode sweeps
 python3 hardware/sim/run_emi.py --write        # emission estimate, report in emi/results_<charger>.md, FLARM spectrum in emi/spectrum_flarm_<charger>.svg/.pdf
+python3 hardware/sim/run_heat.py --boost tps61023 --write # candidate heat report, does not replace calibration
+python3 hardware/sim/run_emi.py --boost tps61023 --write  # candidate EMI report and spectrum
+python3 hardware/sim/run_heat.py --boost tps61378q1 --write # selected candidate heat report
+python3 hardware/sim/run_emi.py --boost tps61378q1 --write  # selected candidate EMI report
 python3 hardware/sim/vent_model.py             # vented enclosure sweep, prints to the terminal
 ```
 
@@ -38,6 +42,7 @@ Every board-reading script takes `--project NAME` (or `CARRIER_PROJECT`), defaul
 | `run_power.py` | `--fast` | Skip the ngspice benches, closed-form checks only |
 | `run_heat.py` | `--pcb FILE` | Read another board file, for example a copy with refilled zones |
 | `run_heat.py` | `--no-heatsink` | Model the board without the U4 heatsink |
+| `run_heat.py`, `run_emi.py` | `--boost tps61023` or `--boost tps61378q1` | Model an integrated-disconnect candidate without changing the board |
 | `run_emi.py` | `--fast` | Skip the ngspice benches, closed-form spectra and board checks only |
 
 The ngspice suites take a few seconds, the EMI run about 10. The heat run takes about 20 seconds.
@@ -100,6 +105,8 @@ Power loss and temperatures:
 |---|---|
 | `heat/max/`, `heat/ti/` | One folder per charger, contents below |
 | `heat/*/results.md` | Last stored report |
+| `heat/*/results_tps61023.md` | TPS61023 candidate loss and temperature report on the present board geometry |
+| `heat/*/results_tps61378q1.md` | TPS61378-Q1 candidate loss and temperature report |
 | `heat/*/map_*.svg` | Top-copper temperature maps, see below |
 | `heat/*/charging.pdf`, `heat/*/charging_*.svg` | Both pack sizes, current limits, heating-delay sensitivity and illustrative external spreader paths |
 | `heat/*/charging.md`, `heat/*/charging.json` | Transient assumptions, results, board/input hashes and steady calibration points |
@@ -114,6 +121,8 @@ EMI:
 | `emi/switch_edge.cir` | One switching period of a converter hot loop at 10 ps: gate-limited switches, body diodes, switch output capacitances, the loop inductance from the board, capacitor bank, optional snubber. Serves both converters through gate weights |
 | `emi/usb_lisn.cir` | Buck input current pulses into the BYP, CHGIN and J1 capacitors, the USB_VBUS copper, a USB cable and a CISPR 16 LISN; optional bead at J1 and adapter output capacitor |
 | `emi/results_<charger>.md` | Last stored report per charger |
+| `emi/results_<charger>_tps61023.md` | TPS61023 candidate edge, resonance and receiver-band report |
+| `emi/results_<charger>_tps61378q1.md` | TPS61378-Q1 candidate report at nominal and switching-frequency corners |
 | `emi/spectrum_flarm_<charger>.svg`, `.pdf` | Converter and digital lines at the FLARM antenna, 1 MHz to 2 GHz and a zoom on 868.2 / 868.4 MHz |
 
 The maps cover four cases at 25 °C ambient:
@@ -167,6 +176,10 @@ They decide the edge ringing, not the 20 MHz ripple, and are bench items.
 The transient and undervoltage benches include U11/U12 as separate LM73100 feeds. Their forward drop is the larger of the regulated forward voltage and branch current times on-resistance, with typical and maximum data sheet corners matched to the heat model. A native diode supplies reverse blocking and numerical limiting; its extra forward drop is less than 0.6 mV at 1.5 A. This is a quasistatic model, not a vendor macromodel. It omits the chip's enable/UVLO logic, switching delays and parasitics.
 
 The assumed 40 µF module input capacitance and total load are divided 83.5 % to ADSBee/GNSS and 16.5 % to the display, using the heat model's Wi-Fi-on load split. Each branch has 20 mΩ of connector resistance. Both terminal voltages are checked; reported minima and maxima cover both. The undervoltage bench uses maximum diode drop. The split, capacitance and module voltage limits still need measurement. C38 and C39 contribute 100 nF each upstream of the diodes; module capacitance is isolated from U7's discharge path.
+
+The TPS61023 candidate keeps the current L2 and places its loss at U6. It removes U7 silicon loss but retains the current U6-to-U7 copper path, loop area and antenna distance because no candidate layout exists. Its fixed-frequency EMI estimate does not model the unpublished PFM burst timing. The candidate reports compare silicon and switching frequency; they do not validate the eventual layout.
+
+The TPS61378-Q1 candidate uses forced PWM at 300 kHz with its specified ±10 % spread, the footprint-compatible 3.3 µH CKST0603 C3002635, 5.152 V nominal output, and the internal isolation FET instead of U7. Its EMI gate requires the switch/output-capacitor loop to be at most 2.5 mm²; that is a future-layout constraint, not geometry verified on the present board.
 
 The coupling section reads track and pad geometry from the board file.
 Capacitive coupling uses a coplanar-strip formula for the parallel run and a 5 pF victim node.

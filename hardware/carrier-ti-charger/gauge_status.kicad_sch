@@ -4281,7 +4281,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "2.2k"
+		(property "Value" "1.8k"
 			(at 217.17 95.25 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4325,7 +4325,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C4190"
+		(property "LCSC" "C4177"
 			(at 215.9 93.98 0)
 			(hide yes)
 			(show_name no)
@@ -4604,7 +4604,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "2.2k"
+		(property "Value" "1.8k"
 			(at 240.03 95.25 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4648,7 +4648,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C4190"
+		(property "LCSC" "C4177"
 			(at 238.76 93.98 0)
 			(hide yes)
 			(show_name no)

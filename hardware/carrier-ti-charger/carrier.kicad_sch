@@ -142,7 +142,7 @@
 		)
 		(uuid "ce323aab-7717-4b99-b3fa-ffe2c254722f")
 	)
-	(text "USB-C receptacle\n5 V in, CC to TUSB320L, D+/D- to charger\nTVS on VBUS, ESD on CC and data"
+	(text "USB-C receptacle\n5 V in, CC to FUSB303B, D+/D- to charger\nTVS on VBUS, ESD on data"
 		(exclude_from_sim no)
 		(at 21.59 53.34 0)
 		(effects

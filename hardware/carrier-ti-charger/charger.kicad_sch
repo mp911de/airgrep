@@ -3820,7 +3820,7 @@
 		)
 		(uuid "a52e5484-62f8-405a-9483-98f5a1d1e932")
 	)
-	(text "D+/D- BC1.2 on chip, CC on U15 TUSB320L (USB input sheet). Ship FET Q13, QON reset SW4. PROG 4.7k = 1S, 750 kHz. ILIM_HIZ 2.2 V = 1.5 A clamp, firmware lifts it (EN_EXTILIM) on a 3 A advertisement. TS 80.6k/768k: 3/43 C."
+	(text "D+/D- BC1.2 on chip, CC on U15 FUSB303B (USB input sheet). Ship FET Q13, QON reset SW4. PROG 4.7k = 1S, 750 kHz. ILIM_HIZ 2.2 V = 1.5 A clamp, firmware lifts it (EN_EXTILIM) on a 3 A advertisement. TS 80.6k/768k: 3/43 C."
 		(exclude_from_sim no)
 		(at 20.32 30.48 0)
 		(effects

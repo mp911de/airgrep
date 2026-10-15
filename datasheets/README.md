@@ -6,7 +6,12 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 |---|---|---|---|
 | [max77757.pdf](max77757.pdf) | U4 charger of carrier-max-charger, Rev 2 | [Original](https://www.analog.com/media/en/technical-documentation/data-sheets/MAX77757.pdf) | Manufacturer, browser download |
 | [bq25798.pdf](bq25798.pdf) | U4 charger of carrier-ti-charger, SLUSDV2C | [Original](https://www.ti.com/lit/ds/symlink/bq25798.pdf) | Manufacturer |
+| [fusb303b.pdf](fusb303b.pdf) | U15 USB Type-C CC controller of carrier-ti-charger, Rev 2 | [Original](https://www.onsemi.com/download/data-sheet/pdf/fusb303b-d.pdf) | Manufacturer |
 | [tps61088.pdf](tps61088.pdf) | U6 boost | [Original](https://www.ti.com/lit/ds/symlink/tps61088.pdf) | Manufacturer |
+| [tps61023.pdf](tps61023.pdf) | Integrated-disconnect boost candidate, SLVSF14B | [Original](https://www.ti.com/lit/ds/symlink/tps61023.pdf) | Manufacturer |
+| [tps61033.pdf](tps61033.pdf) | Rejected integrated-disconnect boost candidate, SLVSGY4B | [Original](https://www.ti.com/lit/ds/symlink/tps61033.pdf) | Manufacturer |
+| [tps61033-q1.pdf](tps61033-q1.pdf) | Rejected forced-PWM boost candidate, SLVSH17A | [Original](https://www.ti.com/lit/ds/symlink/tps61033-q1.pdf) | Manufacturer |
+| [tps61378-q1.pdf](tps61378-q1.pdf) | Integrated-disconnect boost candidate, SLVSET0E | [Original](https://www.ti.com/lit/ds/symlink/tps61378-q1.pdf) | Manufacturer |
 | [tps25947.pdf](tps25947.pdf) | U11/U12/U14 on active TI carrier, TPS259474L | [Original](https://www.ti.com/lit/ds/symlink/tps25947.pdf) | Manufacturer |
 | [yageo-rt.pdf](yageo-rt.pdf) | R73 to R78 OVLO dividers, RT0805BRD / RT0402BRD, V.16 | Yageo | LCSC mirror |
 | [tps22975.pdf](tps22975.pdf) | U7 load switch | [Original](https://www.ti.com/lit/ds/symlink/tps22975.pdf) | Manufacturer |

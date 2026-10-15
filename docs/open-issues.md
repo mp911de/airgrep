@@ -7,7 +7,7 @@ The GNSS and ADSBee modules have arrived. The display is ordered. The carrier bo
 ## Before ordering the board
 
 - [ ] **Reverse-polarity protection at J3.** CSD25404Q3 (LCSC C2865523) selected; design and validate the bidirectional protection stage, including USB-powered reversed-pack insertion and depleted-pack recovery. Coordinate with the planned off-state battery disconnect. No indicator LED; see [issue 0002](../issues/0002-battery-reverse-polarity-protection.md).
-- [ ] **USB-C current detection, TI carrier.** Add TUSB320LIRWBR (LCSC C2836598) in sink mode and apply the CC advertisement (default current, 1.5 A or 3 A) to the BQ25798 `IINDPM` limit. Retain BC1.2 detection for legacy sources and default-current advertisement. Design the supply, CC termination and GPIO/I2C interface, including a conservative limit before the ESP boots and fallback on detach or advertisement changes. Verify dead-battery attachment and current limiting with weak sources. 5 V only, no PD negotiation.
+- [ ] **USB-C current detection, TI carrier.** FUSB303BTMX (LCSC C895444), R80 and R81 are routed and synchronized between schematic and PCB. Implement `CONTROL1.ENABLE`, CC advertisement handling and conservative fallback in firmware. Verify dead-battery attachment and current limiting with weak sources. 5 V only, no PD negotiation.
 -
 - [ ] **Battery connector rating.** J3 is JST-PH, rated 2 A per contact. The battery current is about 1.9 A at the 1 A load peak and about 3 A at the 1.5 A headroom near empty, and F1 is 5 A. Accept this for short peaks or change the connector ([interfaces.md](interfaces.md#carrier-connectors)).
 - [ ] **K3-1280S-F1 fit and assembly placement.** Compare a real C92658 F1 sample with the manufacturer-derived footprint, including its 0.90 mm peg holes and 3.075 mm peg-to-terminal-row offset. The supplier CAD mixes F2/K1 names and uses 3.406 mm; its 3D model is not trusted. Verify SW1-SW3 orientation and seating in the JLCPCB preview before ordering. Details in [physical controls](../workflows/physical-controls.md).
@@ -53,7 +53,7 @@ The simulations rest on these. Each one changes a result if it is far off.
 - [ ] **Charger, carrier-ti-charger (BQ25798).**
   - Default mode after power-on: 1 A, STAT low, 12 h timer. Then I2C at 0x6B: ICHG 1.8 A, TREG 100 °C, WD_RST every 20 s; pull the host and confirm the fallback to 1 A after 40 s (WD_STAT).
   - D+/D- detection with a USB-A DCP, a PC port, a C-to-C cable from a PD adapter (expect "unknown adapter", 3 A, clamped to 1.5 A by ILIM_HIZ) and an Apple adapter.
-  - U15 at 0x47 with default, 1.5 A and 3 A Type-C sources: IINDPM follows the lower of CC and BC1.2, EN_EXTILIM cleared only at 3 A, detach and replug restore the clamp.
+  - U15 at 0x21 with default, 1.5 A and 3 A Type-C sources: ENABLE startup, IINDPM follows the lower of CC and BC1.2, EN_EXTILIM clears only at 3 A, detach and replug restore the clamp.
   - Dead-battery attach to a Type-C source, U15 unpowered.
   - Weak source: a current-limited 5 V supply, VINDPM holds VBUS.
   - TDIE, IBAT and VBAT over the ADC against a thermocouple and a meter; the TREG loop holding 100 °C in the closed case.
@@ -73,7 +73,7 @@ The simulations rest on these. Each one changes a result if it is far off.
   - Switch off with USB present; no backfeed.
 - [ ] **5 V rail.** Start-up, load steps between 0.1 and 0.8 A and between 0.8 and 1 A at the module terminals, boost ripple. Compare against `hardware/sim/power/results_<charger>.md`.
 - [ ] **Undervoltage.** Discharge to cut-off under load. The latch must hold the system off while the battery voltage recovers. Clear it with the slider and with USB. Measure the latched current (about 60 µA expected).
-- [ ] **Physical controls.** Verify U13 address 0x20 alongside all other I2C devices, 100 kHz bus rise time, both slider positions, startup silence, debounce, last-known-state behavior on a disconnected expander, and Wi-Fi command acknowledgment. Check all six J12 inputs with contacts to GND. Measure added current; the budget is an estimate.
+- [ ] **Physical controls.** Verify U13 address 0x20 alongside all other I2C devices, 400 kHz bus rise time, both slider positions, startup silence, debounce, last-known-state behavior on a disconnected expander, and Wi-Fi command acknowledgment. Check all six J12 inputs with contacts to GND. Measure added current; the budget is an estimate.
 - [ ] **GNSS reception next to the charger.** L1 is closer to the GNSS module than the 40 mm planning target ([mechanical.md](mechanical.md#placement)). Compare reception with and without charging.
 
 ## Firmware
