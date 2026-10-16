@@ -6208,7 +6208,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "BAT54WS"
+		(property "Value" "1N4148WS"
 			(at 38.1 92.71 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6252,7 +6252,18 @@
 				)
 			)
 		)
-		(property "LCSC" "C22629"
+		(property "LCSC" "C2128"
+			(at 38.1 90.17 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "1N4148WS"
 			(at 38.1 90.17 0)
 			(hide yes)
 			(show_name no)

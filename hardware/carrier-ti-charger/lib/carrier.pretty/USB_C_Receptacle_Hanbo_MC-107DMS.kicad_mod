@@ -371,7 +371,7 @@
 		(uuid "246413f7-e666-4bae-a623-d7624c89f5fb")
 	)
 	(embedded_fonts no)
-	(model "${KICAD10_3DMODEL_DIR}/Connector_USB.3dshapes/USB_C_Receptacle_HRO_TYPE-C-31-M-12.step"
+	(model "${KIPRJMOD}/lib/carrier.3dshapes/USB-C-SMD_MC-107DMS.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

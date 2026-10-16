@@ -5693,7 +5693,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "BAT54WS"
+		(property "Value" "1N4148WS"
 			(at 116.84 41.91 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5737,7 +5737,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C22629"
+		(property "LCSC" "C2128"
 			(at 119.38 48.26 0)
 			(hide yes)
 			(show_name no)
@@ -5748,7 +5748,7 @@
 				)
 			)
 		)
-		(property "MPN" "BAT54WS"
+		(property "MPN" "1N4148WS"
 			(at 119.38 48.26 0)
 			(hide yes)
 			(show_name no)
@@ -7014,7 +7014,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Diode_SMD:D_0402_1005Metric"
+		(property "Footprint" "carrier:D_0402_1005Metric"
 			(at 195.58 107.95 0)
 			(hide yes)
 			(show_name no)

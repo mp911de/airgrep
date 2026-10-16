@@ -4205,7 +4205,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+		(property "Footprint" "carrier:R_0402_1005Metric_NoSilk"
 			(at 170.18 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -4238,7 +4238,18 @@
 				)
 			)
 		)
-		(property "LCSC" "C23259"
+		(property "LCSC" "C409935"
+			(at 170.18 116.84 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "ERJ2RKF8873X"
 			(at 170.18 116.84 0)
 			(hide yes)
 			(show_name no)

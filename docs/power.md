@@ -211,7 +211,7 @@ thermostat open -- Q2 -- CHG_DIS = BQ25798 CE (high: charging off)
 - CE: the thermostat chain ends on CE (R12 100 kΩ pull-down, Q2 pulls it to VSYS when the thermostat opens). CE above 1.3 V disables charging; Q2 leakage at the 25 °C maximum leaves CE at 0.1 V (`hardware/sim/thermal/results_ti.md`).
 - System reset: SW4 shorts QON to GND. Holding it for about 10 s turns Q13 off for about 350 ms, with the converter in HIZ and a typical 30 mA SYS discharge sink. Q13 then turns on automatically. These are TI's typical timings, not firmware delays ([BQ25798 section 7.3.12.3](../datasheets/bq25798.pdf)).
 - Q13 is the CSD17575Q3 used in TI's [EVM, Figure 4-5](../datasheets/bq2579x-evm.pdf): drain to raw VBAT, source to CHG_BAT and U4 BAT, gate directly to SDRV. C49 is removed. BATP sensing and the MAX17048 remain on raw VBAT. The thermal model includes both copper paths and Q13 losses, with 2.6 mΩ typical and 6.4 mΩ as a conservative hot corner.
-- D10 BAT54WS has its anode at ESP_PMID_EN and cathode at QON. It disables U14 while SW4 is held, preventing USB/PMID from keeping the display alive during reset. At 5.25 V, the 1 MΩ pull-up supplies less than 5.3 µA; the diode's 25 °C maximum forward drop is 240 mV at 100 µA, below U14's 1.076 V minimum falling EN threshold. Cold behavior and rail discharge need bench verification.
+- D10 1N4148WS has its anode at ESP_PMID_EN and cathode at QON. It disables U14 while SW4 is held, preventing USB/PMID from keeping the display alive during reset. At 5.25 V, the 1 MΩ pull-up supplies less than 5.3 µA; the diode's maximum forward drop is 0.715 V at 1 mA, below U14's 1.076 V minimum falling EN threshold. A small-signal diode, not a Schottky: with EN low, reverse leakage flows through QON's 200 kΩ internal pull-up to 3.2 V. The 1N4148WS leaks at most 25 nA at 20 V (5 mV drop). A Schottky such as the RB551V-30 reaches about 10 µA at 55 °C, which pulls QON to its 1.3 V high threshold. Cold behavior and rail discharge need bench verification.
 - Firmware must set REG14 bit 7, SFET_PRESENT, during initialization and after register reset. Its POR value is zero. This is a system power reset, not a charger or gauge reset; a charger failure that prevents QON handling, or a MAX17048 holding I2C low, is outside its recovery coverage. See [firmware.md](firmware.md#charger-host-control-bq25798-i2c-0x6b).
 
 ### Temperature window (TS)
@@ -246,7 +246,7 @@ Worst case: parts at 1 %, NTC ±0.2 K and B ±0.5 %, charger thresholds at their
 | C48 | REGN | 4.7 µF 16 V | |
 | Q13 | SDRV ship FET | CSD17575Q3, C529277 | replaces C49; no gate pull-down |
 | SW4 | QON to GND | 6 x 6 mm momentary, normally open | hand-fitted below BZ1; 6.5 x 4.5 mm pin spacing |
-| D10 | U14 reset clamp | BAT54WS, C22629 | anode EN, cathode QON |
+| D10 | U14 reset clamp | 1N4148WS, C2128 | anode EN, cathode QON |
 | R56 | PROG | 4.7 kΩ 1 % | 1S, 750 kHz (3.0 kΩ for 1.5 MHz) |
 | R57, R58 | ILIM_HIZ | 120 kΩ / 100 kΩ from REGN (C25808, C25803) | 2.2 V, about 1.5 A clamp |
 | R59, R60 | TS | 80.6 kΩ / 768 kΩ from REGN (C23249, C2933258) | window 3.1 to 43.0 °C, see above |

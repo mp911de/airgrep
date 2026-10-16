@@ -490,13 +490,13 @@
     "note": "Q13 ship FET, TI BQ25798 EVM reference part; 3.3 mm VSON-CLIP."
   },
   {
-    "file": "bat54ws-jscj.pdf",
-    "download_url": "https://uploadcdn.oneyac.com/attachments/files/brand_pdf/jscj/68/64/BAT54WS.pdf",
-    "downloaded": "2026-10-13",
-    "pages": 5,
-    "bytes": 1008831,
-    "sha256": "2f5c697992580c79621af3c85dc6dc6e7b73c1e3d8640c91bba532674c4723bf",
-    "note": "D10 JSCJ BAT54WS L9, C22629. Manufacturer datasheet from Oneyac mirror."
+    "file": "1n4148ws-jscj.pdf",
+    "download_url": "https://datasheet.lcsc.com/datasheet/pdf/460cf88f750c4519b4ed435068ee729e.pdf?productCode=C2128",
+    "downloaded": "2026-10-17",
+    "pages": 2,
+    "bytes": 774532,
+    "sha256": "59e951bd3155eb4a94e958d10edc3b7d17325f38cf06784cac07fbcc9fcabf2e",
+    "note": "D10, D12, D13 JSCJ 1N4148WS, C2128. Forward drop and reverse leakage; replaces BAT54WS C22629 (out of stock)."
   },
   {
     "file": "bq2579x-evm.pdf",
