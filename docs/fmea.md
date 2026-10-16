@@ -73,19 +73,19 @@ RPN = S x L x D. "Rev" says where the mitigation fits: **A** = no board change (
 
 ## 2b. Charger U4 on carrier-ti-charger: BQ25798
 
-Rows C1 to C12 describe the MAX77757 board. The BQ25798 variant changes these:
+Rows C1 to C12 describe the MAX77757 board. The BQ25798 variant changes these; its rows use TI so they do not clash with the temperature rows T1 to T16:
 
 | ID | Item and failure mode | Effect on the system | Cockpit | Existing detection or limit | S | L | D | RPN | Mitigation | Rev |
 |---|---|---|---|---|---|---|---|---|---|---|
-| T1 | Host never configures the charger (display absent, firmware fault) | Default mode: 1 A, 4.2 V, TREG 120 °C, 12 h timer [D]. Charging continues, slower | N | WD_STAT readable, STAT LED | 1 | 3 | 2 | 6 | By design; the default is the safe state | |
-| T2 | Host stops writing (crash, reset) | Watchdog expiry (40 s default) resets every register to default [D]: 1 A, TREG 120 °C, JEITA back to defaults | N | WD_STAT, INT pulse | 1 | 3 | 3 | 9 | Firmware re-applies the profile on every WD_STAT; never disables the watchdog | A |
-| T3 | Host writes a wrong profile (ICHG above 1.8 A, VREG above 4.2 V, TREG 120 °C) | More heat; VREG up to 4.99 V on a 1S setting [D] | F | Pack PCM overcharge cut at about 4.25 V [D] | 4 | 2 | 3 | 24 | Firmware clamps writes; verify by reading back; keep VREG at the 4.2 V default. Pack PCM is the last line | A |
-| T4 | Pack above 45 °C in default mode | T5 hot stop at 43.0 °C nominal, 44.2 °C worst case (RT1 80.6 kΩ, RT2 768 kΩ) suspends charging in default mode too; T3 at 32.2 °C lowers VREG by 400 mV [Sim]. Pack rated to 45 °C [D] | N | TS thresholds | 3 | 2 | 3 | 18 | Host sets JEITA_VSET = suspend, or the 71.5 kΩ / 412 kΩ divider puts T5 at 45 °C (`docs/power.md`) | B |
-| T5 | PROG (R56) open or shorted | Open: cell count undefined at POR [A]; shorted: 0 Ω is no table entry [D]. Charger may configure for the wrong frequency or cell count | F | VREG default follows the cell count; pack PCM | 4 | 1 | 3 | 12 | Measure VREG and VSYSMIN at bring-up; X-ray not needed, 0603 | A |
-| T6 | ILIM_HIZ divider (R57/R58) open at the top | Pin below 0.75 V: converter stops, HIZ [D]. No charging, battery runs the system | IL | STAT, PG_STAT | 2 | 1 | 2 | 4 | None needed | |
-| T7 | CE pulled high by Q2 leakage (above 1.3 V) | Charging disabled with the thermostat closed | IL | CHG_STAT | 2 | 1 | 3 | 6 | 100 kΩ R12 keeps CE at 0.1 V at the 25 °C leakage maximum; 5 µA at 55 °C reaches 0.5 V, still below VIH [Sim] | |
-| T8 | C-to-C cable from a PD adapter | D+/D- open: "unknown adapter", input limit 3 A [D], capped by ILIM_HIZ at about 3 A; a 500 mA-limited source then sags to VINDPM | N | VINDPM loop | 2 | 3 | 2 | 12 | AICL holds the input at 4.2 V; bench test | A |
-| T9 | Unrouted copper paths in the heat model | The model assumes 5 mΩ per unrouted net until the board is routed [Sim] | - | report line | - | - | - | - | Rerun after routing | A |
+| TI1 | Host never configures the charger (display absent, firmware fault) | Default mode: 1 A, 4.2 V, TREG 120 °C, 12 h timer [D]. Charging continues, slower | N | WD_STAT readable, STAT LED | 1 | 3 | 2 | 6 | By design; the default is the safe state | |
+| TI2 | Host stops writing (crash, reset) | Watchdog expiry (40 s default) resets every register to default [D]: 1 A, TREG 120 °C, JEITA back to defaults | N | WD_STAT, INT pulse | 1 | 3 | 3 | 9 | Firmware re-applies the profile on every WD_STAT; never disables the watchdog | A |
+| TI3 | Host writes a wrong profile (ICHG above 1.8 A, VREG above 4.2 V, TREG 120 °C) | More heat; VREG up to 4.99 V on a 1S setting [D] | F | Pack PCM overcharge cut at about 4.25 V [D] | 4 | 2 | 3 | 24 | Firmware clamps writes; verify by reading back; keep VREG at the 4.2 V default. Pack PCM is the last line | A |
+| TI4 | Pack above 45 °C in default mode | T5 hot stop at 43.0 °C nominal, 44.2 °C worst case (RT1 80.6 kΩ, RT2 768 kΩ) suspends charging in default mode too; T3 at 32.2 °C lowers VREG by 400 mV [Sim]. Pack rated to 45 °C [D] | N | TS thresholds | 3 | 2 | 3 | 18 | Host sets JEITA_VSET = suspend, or the 71.5 kΩ / 412 kΩ divider puts T5 at 45 °C (`docs/power.md`) | B |
+| TI5 | PROG (R56) open or shorted | Open: cell count undefined at POR [A]; shorted: 0 Ω is no table entry [D]. Charger may configure for the wrong frequency or cell count | F | VREG default follows the cell count; pack PCM | 4 | 1 | 3 | 12 | Measure VREG and VSYSMIN at bring-up; X-ray not needed, 0603 | A |
+| TI6 | ILIM_HIZ divider (R57/R58) open at the top | Pin below 0.75 V: converter stops, HIZ [D]. No charging, battery runs the system | IL | STAT, PG_STAT | 2 | 1 | 2 | 4 | None needed | |
+| TI7 | CE pulled high by Q2 leakage (above 1.3 V) | Charging disabled with the thermostat closed | IL | CHG_STAT | 2 | 1 | 3 | 6 | 100 kΩ R12 keeps CE at 0.1 V at the 25 °C leakage maximum; 5 µA at 55 °C reaches 0.5 V, still below VIH [Sim] | |
+| TI8 | C-to-C cable from a PD adapter | D+/D- open: "unknown adapter", input limit 3 A [D], capped by ILIM_HIZ at about 3 A; a 500 mA-limited source then sags to VINDPM | N | VINDPM loop | 2 | 3 | 2 | 12 | AICL holds the input at 4.2 V; bench test | A |
+| TI9 | Unrouted copper paths in the heat model | The model assumes 5 mΩ per unrouted net until the board is routed [Sim] | - | report line | - | - | - | - | Rerun after routing | A |
 
 Package: VQFN-HR 29 at 0.4 mm pitch with no exposed pad; the GND pin is a 0.2 x 1 mm pad. A1 (bridges) applies with the TI land pattern; A3 (heatsink stack short) does not apply, the plate sits on the solder mask through an insulating pad.
 
@@ -184,13 +184,10 @@ Verified circuit [S]: U5 TLV840CADL29 (open drain [D]) on VSYS pulls PWR_EN low.
 
 ## 8. Module insertion faults (sockets not keyed)
 
-Socket geometry from the board [S]: J5 (GNSS) is one 1x8 row. The display uses four parallel groups J6 to J9 in two columns. J10 (1x13) and J11 (1x5) of the ADSBee run at right angles.
+Socket geometry from the board [S]: the GNSS receiver is soldered on the carrier (U16), so the former I1 and I2 no longer apply. The display uses four parallel groups J6 to J9 in two columns. J10 (1x13) and J11 (1x5) of the ADSBee run at right angles.
 
 | ID | Item and failure mode | Effect on the system | Cockpit | Existing detection or limit | S | L | D | RPN | Mitigation | Rev |
 |---|---|---|---|---|---|---|---|---|---|---|
-| I1 | GNSS module rotated 180° in J5 | Module GND lands on an unconnected pin, GNSS_3V3 on INT. The module is fed through its I/O protection. ADSBee TX meets module TXO [S]. No fix, possible I/O damage. Traffic positions unusable | SL | Silkscreen only [Doc]. MH10 and MH11 do not align when rotated (holes 34 mm from J5 on one side) [S], so the screws catch it if fitted | 4 | 3 | 3 | 36 | Rule: fit both GNSS screws before power. Firmware: show "no GNSS" | A |
-| | | | | | | | | | Integrate MAX-M10S or use a keyed connector | B |
-| I2 | GNSS module offset by one pin | Module unpowered (+1) or its 3V3 pin on GND (-1) [S]. ADSBee 3V3 output is not shorted in either case | SL | Screws do not align (2.54 mm shift, M2.5 in 2.7 mm hole) [A] | 4 | 2 | 3 | 24 | As I1 | A |
 | I3 | Display offset by one pitch toward pin 1 | ESP_5V on the module GND pad, carrier GND on module 3V3 and D11 [S]. The module 3.3 V domain is reverse-fed from RAIL_5V through U12. A 180° rotation does not fit the four groups [S] | F | MH13 screw does not align [A] | 5 | 2 | 3 | 30 | Rule: fit the MH13 screw before power. Mark pin 1 on module and socket | A |
 | I4 | ADSBee offset by one pitch toward pin 1 | 5 V on module GND, carrier GND on module TX [S]. J11 then sits off its row, so this needs force. 180° rotation does not fit [S] | F | MH12, MH14 screws | 5 | 1 | 3 | 15 | As I3 | A |
 
@@ -257,9 +254,9 @@ Ranked by RPN, then by severity.
 | 4 | B5 | Pack lead chafe, short upstream of F1 | 5 2 4 | 40 | Grommet, strain relief. J3 next to the pack | A, B |
 | 5 | A1 | U4 solder fault, up to loss of charge control | 5 2 4 | 40 | X-ray, staged first power-up. Maxim land pattern | A, B |
 | 6 | T3 | NTC detached from the pack, charging above 45 °C | 4 2 5 | 40 | Bonding, hot-air check. Pack temperature to firmware | A, B |
-| 7 | I1 | GNSS module reversed in J5 | 4 3 3 | 36 | Screws before power, "no GNSS" display. Integrate GNSS | A, B |
-| 8 | T10 | Thermostat shuts the device down in flight from sun heat | 3 4 3 | 36 | BMP580 temperature warning, shade, vents | A |
-| 9 | B6 | J3 contact heat above its 2 A rating | 4 2 4 | 32 | Temperature check at 1 A. JST-XH | A, B |
-| 10 | M4 | Socket or jumper contact loss under vibration | 4 2 4 | 32 | Screws, vibration test, heartbeat. Solder modules | A, B |
+| 7 | T10 | Thermostat shuts the device down in flight from sun heat | 3 4 3 | 36 | BMP580 temperature warning, shade, vents | A |
+| 8 | B6 | J3 contact heat above its 2 A rating | 4 2 4 | 32 | Temperature check at 1 A. JST-XH | A, B |
+| 9 | M4 | Socket or jumper contact loss under vibration | 4 2 4 | 32 | Screws, vibration test, heartbeat. Solder modules | A, B |
+| 10 | T4 | Bare NTC lead touches a pack tab or BAT+ | 4 2 4 | 32 | Heat-shrink the Dumet leads. Place the NTC away from the PCM end | A |
 
 Severity 5 items below the top 10 that still need a decision: A3 heatsink stack short (30), I3 display offset (30), P1 boost-fault survival and OVLO transient protection (25), C12 MLCC soft short with no isolation (25), C1 overcharge on U4 failure (25).

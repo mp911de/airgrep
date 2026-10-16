@@ -47,7 +47,9 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 | [AKKU_SOLD333288_DB-EN.pdf](AKKU_SOLD333288_DB-EN.pdf) | Battery 5 Ah option | | reichelt |
 | [limitor-p8.pdf](limitor-p8.pdf) | Pack thermostat LIM-P-82-60, German | Limitor P series | reichelt |
 | [datasheet_adsbee_1090.pdf](datasheet_adsbee_1090.pdf) | ADSBee 1090U module | | |
-| [max-m10s.pdf](max-m10s.pdf) | GNSS module (SparkFun GPS-18037) | u-blox | |
+| [max-m10s.pdf](max-m10s.pdf) | GNSS module, data sheet UBX-20035208 R08 | u-blox | User-supplied |
+| [max-m10s-integration.pdf](max-m10s-integration.pdf) | GNSS module, integration manual UBX-20053088 R05 | u-blox | User-supplied |
+| [u-blox-m10-interface-spg7.pdf](u-blox-m10-interface-spg7.pdf) | GNSS firmware SPG 7.0x interface description | u-blox | User-supplied |
 | [abracon-aane-ap-0164.pdf](abracon-aane-ap-0164.pdf) | GNSS active antenna | [Digi-Key](https://www.digikey.de/de/products/detail/abracon-llc/AANE-AP-0164-1/26813090) | Supplied by Mark |
 | [100069905.pdf](100069905.pdf) | Display module | Seeed XIAO 1.47" ESP32-S3 | |
 | [FTD-116-FLARM-FAMP-Public-Protocol-v1.02.pdf](FTD-116-FLARM-FAMP-Public-Protocol-v1.02.pdf) | FLARM protocol | Firmware reference | |

@@ -56,31 +56,28 @@ Place the board edge about 0.5 mm inside the case wall. With a 1.5 to 2 mm wall 
 ## Assembly split
 
 - JLCPCB assembles all SMD parts. They are on the top side.
-- Hand-soldered through-hole parts: module sockets J5 to J11, pack connectors J2 to J4, shunt headers JP1 and JP2, expansion header J12, LEDs D4 and D5. The parts are listed in [bom-hand-sourced.md](bom-hand-sourced.md).
-- All seven module sockets are 2.54 mm single-row female headers of one height, 8.5 mm.
+- Hand-soldered through-hole parts: module sockets J6 to J11, pack connectors J2 to J4, shunt headers JP1 and JP2, expansion header J12, LEDs D4 and D5. The parts are listed in [bom-hand-sourced.md](bom-hand-sourced.md).
+- All six module sockets are 2.54 mm single-row female headers of one height, 8.5 mm.
 
 ## Mounting
 
-All mounting hardware is M2.5. The carrier has nine 2.7 mm non-plated holes (KiCad stock `MountingHole_2.7mm_M2.5`) and three 6.5 mm antenna holes (stock `MountingHole_6.5mm`).
+All mounting hardware is M2.5. The carrier has four plated 2.7 mm case holes (KiCad stock `MountingHole_2.7mm_M2.5_Pad_Via`), three non-plated 2.7 mm module holes (`MountingHole_2.7mm_M2.5`) and three plated 6.5 mm antenna holes (`MountingHole_6.5mm_Pad`).
 
 | Use | References | Centres (X, Y) in mm | Basis |
 |---|---|---|---|
 | Case | MH1, MH2, MH3, MH4 | (3.556, 3.556), (101.600, 3.556), (3.556, 91.440), (101.600, 91.440) | 3.40 to 3.56 mm from the edges |
-| GNSS | MH10, MH11 | (6.600, 17.531), (32.014, 17.520) | SparkFun GPS-18037 holes H2 and H1, within 0.012 mm of the module CAD |
 | Display | MH13 | (47.511, 64.195) | Seeed 100069905 hole H1, within 0.029 mm of the module CAD |
 | ADSBee | MH12, MH14 | (98.2726, 18.1610), (75.3618, 58.6740) | measured, rounded to whole mil |
 | Antenna bulkheads | MH6, MH7, MH8 | (39.878, 7.112), (61.976, 7.112), (91.948, 7.112) | 6.5 mm hole, 11 mm keepout |
 
 Notes on the module holes:
 
-- GNSS: the two holes next to J5 are not drilled. They would sit 1.3 mm from the header row, and the header carries that edge.
 - Display: the other three module holes, at (67.53, 64.17), (67.53, 41.67) and (47.53, 41.67), are not drilled. The display rests on its four socket groups and the one standoff. The module CAD has 2.5 mm holes.
 - ADSBee: MH12 and MH14 use the measured diagonal pair, rounded to a 22.9108 x 40.5130 mm pattern (902 x 1595 mil). The [measurement record](../mechanical/adsbee-estimate.md#physical-measurements-2026-10-08) includes the independent diagonal cross-check.
 - Module standoffs are 8.5 mm nominal to match the sockets. Case standoff height depends on the enclosure.
 
 Clearance around the 2.7 mm holes on the current board:
 
-- The nearest non-GND track edge is 6.13 mm from the MH11 centre.
 - The nearest courtyards are J10 at 3.2 mm from MH12, J9 at 3.6 mm from MH13 and J8 at 5.0 mm from MH14.
 - `carrier.kicad_dru` keeps copper clear of the holes.
 

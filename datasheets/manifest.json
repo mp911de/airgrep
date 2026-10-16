@@ -260,7 +260,27 @@
   },
   {
     "file": "max-m10s.pdf",
-    "note": "u-blox MAX-M10S on the SparkFun GPS-18037 GNSS module"
+    "downloaded": "2026-10-15",
+    "pages": 24,
+    "bytes": 3259178,
+    "sha256": "e36d9c8585809c0dc486804d2634c66cd1888ad71af0f28ce0b830ffa8df6bec",
+    "note": "u-blox MAX-M10S data sheet UBX-20035208 R08, supplied by Mark. GNSS module U16 on the carrier; replaces R02."
+  },
+  {
+    "file": "max-m10s-integration.pdf",
+    "downloaded": "2026-10-15",
+    "pages": 102,
+    "bytes": 11398355,
+    "sha256": "5a7510ef84f7e2757c57e362a25e3c16bcf8c80af5a4f70790c2e51032dbcd13",
+    "note": "u-blox MAX-M10S integration manual UBX-20053088 R05, supplied by Mark. Antenna bias-T, antenna supervisor, V_BCKP."
+  },
+  {
+    "file": "u-blox-m10-interface-spg7.pdf",
+    "downloaded": "2026-10-15",
+    "pages": 193,
+    "bytes": 2733702,
+    "sha256": "bde3a5b9c9402844772d3f2fcbb81dae253e8d84b78b8364ea81fc5cf8515e9a",
+    "note": "u-blox F10/M10 SPG 7.0x interface description UBXDOC-304424225-21489, supplied by Mark. UBX protocol and CFG keys."
   },
   {
     "file": "100069905.pdf",

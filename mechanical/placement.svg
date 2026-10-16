@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1830" height="1179" viewBox="-6 -6 183 117.9" font-family="Helvetica,Arial,sans-serif">
-<rect x="-6" y="-6" width="183" height="117.9" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1830" height="1241" viewBox="-6 -6 183 124.1" font-family="Helvetica,Arial,sans-serif">
+<rect x="-6" y="-6" width="183" height="124.1" fill="#ffffff"/>
 <line x1="0.000" y1="-1.500" x2="0.000" y2="0.000" fill="none" stroke="#64748b" stroke-width="0.15"/>
 <text x="0.000" y="-2.200" font-size="1.5" text-anchor="middle" fill="#64748b">0</text>
 <line x1="10.000" y1="-1.500" x2="10.000" y2="0.000" fill="none" stroke="#64748b" stroke-width="0.15"/>
@@ -43,217 +43,278 @@
 <line x1="-1.500" y1="90.000" x2="0.000" y2="90.000" fill="none" stroke="#64748b" stroke-width="0.15"/>
 <text x="-2.000" y="90.525" font-size="1.5" text-anchor="end" fill="#64748b">90</text>
 <rect x="0.000" y="0.000" width="105.000" height="95.000" fill="#f8fafc" stroke="#0f172a" stroke-width="0.3"/>
-<rect x="8.409" y="64.797" width="9.090" height="9.090" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="90.542" y="82.075" width="2.050" height="3.490" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
-<rect x="60.231" y="75.937" width="3.490" height="2.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="56.675" y="74.413" width="3.490" height="2.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="56.375" y="66.420" width="1.550" height="3.050" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="84.996" y="72.635" width="3.490" height="2.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="56.421" y="80.636" width="3.490" height="2.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="87.820" y="62.000" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="85.077" y="67.276" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="88.506" y="70.484" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="93.057" y="68.511" width="2.050" height="3.490" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="95.190" y="68.511" width="2.050" height="3.490" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="96.362" y="64.897" width="2.050" height="3.490" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="94.780" y="61.065" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="92.909" y="61.053" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="99.555" y="61.467" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="96.362" y="61.120" width="2.050" height="3.490" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="49.267" y="19.083" width="2.050" height="3.490" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="91.177" y="50.833" width="2.050" height="3.490" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="52.057" y="55.382" width="1.550" height="3.050" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
-<rect x="14.211" y="59.816" width="1.550" height="3.050" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="64.757" y="52.069" width="1.550" height="3.050" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="39.750" y="60.185" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="34.785" y="83.044" width="1.550" height="3.050" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="64.896" y="69.994" width="2.390" height="4.690" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="60.959" y="74.409" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="54.851" y="72.008" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="79.247" y="62.471" width="3.050" height="1.550" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="91.427" y="70.865" width="1.550" height="3.050" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="41.110" y="37.845" width="1.550" height="3.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="88.391" y="54.851" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="28.193" y="64.757" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="62.979" y="67.309" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="62.874" y="70.391" width="2.050" height="3.490" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="56.502" y="70.865" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="67.246" y="70.484" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="60.231" y="77.969" width="3.490" height="2.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="74.941" y="81.771" width="7.090" height="3.590" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
-<rect x="66.877" y="88.169" width="7.470" height="4.510" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
-<rect x="74.497" y="88.169" width="4.930" height="4.510" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
-<rect x="82.317" y="81.870" width="1.990" height="3.290" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
-<rect x="88.413" y="81.870" width="1.990" height="3.290" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
-<rect x="86.381" y="81.870" width="1.990" height="3.290" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
-<rect x="84.349" y="81.870" width="1.990" height="3.290" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
-<rect x="41.490" y="78.369" width="4.650" height="2.350" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="92.989" y="81.425" width="2.490" height="4.790" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
-<rect x="81.135" y="87.185" width="10.730" height="9.510" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
-<rect x="97.985" y="21.305" width="3.630" height="34.110" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="79.744" y="14.441" width="13.790" height="3.630" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="24.347" y="73.623" width="6.180" height="11.250" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="45.120" y="72.077" width="6.990" height="5.590" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="37.796" y="72.093" width="6.990" height="5.590" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="38.161" y="83.057" width="6.990" height="5.590" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="8.599" y="50.001" width="21.410" height="3.630" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="66.685" y="18.065" width="3.630" height="21.410" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="44.685" y="18.065" width="3.630" height="18.870" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="66.685" y="51.931" width="3.630" height="11.250" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="44.685" y="54.471" width="3.630" height="6.170" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="40.857" y="30.687" width="3.630" height="6.180" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="95.467" y="55.589" width="6.180" height="3.630" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="64.600" y="75.391" width="6.690" height="7.490" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="77.960" y="66.181" width="6.690" height="7.490" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="63.049" y="84.361" width="3.950" height="3.490" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="57.032" y="85.631" width="3.950" height="3.490" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
-<rect x="52.889" y="85.631" width="3.950" height="3.490" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
-<rect x="49.055" y="84.893" width="3.490" height="3.950" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="86.417" y="74.709" width="3.950" height="3.490" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="86.925" y="78.265" width="3.950" height="3.490" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="82.353" y="74.709" width="3.950" height="3.490" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="36.341" y="83.044" width="1.550" height="3.050" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="46.100" y="88.887" width="3.050" height="1.550" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="50.799" y="69.888" width="3.050" height="1.550" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="91.693" y="65.383" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="93.268" y="65.613" width="3.050" height="1.550" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="85.077" y="64.007" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="91.385" y="61.053" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="93.268" y="64.089" width="3.050" height="1.550" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="64.757" y="55.117" width="1.550" height="3.050" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
-<rect x="57.899" y="54.990" width="1.550" height="3.050" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
-<rect x="68.071" y="86.093" width="3.050" height="1.550" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
-<rect x="77.088" y="86.601" width="3.050" height="1.550" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
-<rect x="8.369" y="58.927" width="1.550" height="3.050" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="6.984" y="63.106" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="50.799" y="36.309" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="50.799" y="34.404" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="73.012" y="84.835" width="1.550" height="3.050" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
-<rect x="57.403" y="84.061" width="3.050" height="1.550" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
-<rect x="52.831" y="84.061" width="3.050" height="1.550" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
-<rect x="53.454" y="75.310" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="82.295" y="62.471" width="3.050" height="1.550" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="91.439" y="73.901" width="3.050" height="1.550" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="83.565" y="78.219" width="3.050" height="1.550" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="80.759" y="75.183" width="1.550" height="3.050" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="45.575" y="85.627" width="3.050" height="1.550" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="36.309" y="38.353" width="1.550" height="3.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="37.972" y="39.230" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="89.903" y="56.387" width="1.550" height="3.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="88.379" y="56.387" width="1.550" height="3.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="19.494" y="73.647" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="19.494" y="75.425" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="19.494" y="77.203" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="19.494" y="78.981" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="32.448" y="78.981" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="32.448" y="77.203" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="32.448" y="75.425" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="32.448" y="73.647" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="55.105" y="75.310" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="61.340" y="79.997" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="56.623" y="89.082" width="9.690" height="8.640" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="-2.294" y="60.941" width="8.640" height="9.690" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="-2.294" y="42.145" width="8.640" height="9.690" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="48.232" y="80.746" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="74.902" y="72.237" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="44.067" y="67.385" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="40.993" y="89.001" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="78.966" y="79.095" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="12.799" y="74.142" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="42.898" y="38.836" width="2.593" height="2.592" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="39.091" y="57.379" width="2.590" height="2.590" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="92.405" y="55.655" width="2.990" height="2.990" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="37.932" y="36.105" width="2.990" height="2.990" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="23.537" y="66.547" width="7.790" height="5.590" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<rect x="58.679" y="69.992" width="3.990" height="3.990" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
-<rect x="51.352" y="66.323" width="1.690" height="2.990" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
-<rect x="87.359" y="65.269" width="3.590" height="4.590" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="98.620" y="64.567" width="2.590" height="3.090" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
-<rect x="54.357" y="56.261" width="3.350" height="2.590" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
-<rect x="9.843" y="59.723" width="4.190" height="3.490" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
-<circle cx="3.556" cy="3.556" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
-<text x="3.556" y="6.506" font-size="1.5" text-anchor="middle" fill="#0f172a">MH1</text>
-<circle cx="6.600" cy="17.531" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
-<text x="6.600" y="20.481" font-size="1.5" text-anchor="middle" fill="#0f172a">MH10</text>
-<circle cx="32.014" cy="17.520" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
-<text x="32.014" y="20.470" font-size="1.5" text-anchor="middle" fill="#0f172a">MH11</text>
-<circle cx="98.273" cy="18.161" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
-<text x="98.273" y="21.111" font-size="1.5" text-anchor="middle" fill="#0f172a">MH12</text>
-<circle cx="47.511" cy="64.195" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
-<text x="47.511" y="62.445" font-size="1.5" text-anchor="middle" fill="#0f172a">MH13</text>
-<circle cx="75.362" cy="58.674" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
-<text x="75.362" y="56.924" font-size="1.5" text-anchor="middle" fill="#0f172a">MH14</text>
-<circle cx="101.600" cy="3.556" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
-<text x="101.600" y="6.506" font-size="1.5" text-anchor="middle" fill="#0f172a">MH2</text>
-<circle cx="3.556" cy="91.440" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
-<text x="3.556" y="89.690" font-size="1.5" text-anchor="middle" fill="#0f172a">MH3</text>
-<circle cx="101.600" cy="91.440" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
-<text x="101.600" y="89.690" font-size="1.5" text-anchor="middle" fill="#0f172a">MH4</text>
-<circle cx="39.878" cy="7.112" r="3.250" fill="#e2e8f0" stroke="#64748b" stroke-width="0.1"/>
-<circle cx="39.878" cy="7.112" r="3.250" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
-<text x="39.878" y="11.662" font-size="1.5" text-anchor="middle" fill="#0f172a">MH6 GNSS</text>
-<circle cx="61.976" cy="7.112" r="3.250" fill="#e2e8f0" stroke="#64748b" stroke-width="0.1"/>
-<circle cx="61.976" cy="7.112" r="3.250" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
-<text x="61.976" y="11.662" font-size="1.5" text-anchor="middle" fill="#0f172a">MH7 868 MHz</text>
-<circle cx="91.948" cy="7.112" r="3.250" fill="#e2e8f0" stroke="#64748b" stroke-width="0.1"/>
-<circle cx="91.948" cy="7.112" r="3.250" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
-<text x="91.948" y="11.662" font-size="1.5" text-anchor="middle" fill="#0f172a">MH8 1090 MHz</text>
-<rect x="3.744" y="14.541" width="31.120" height="38.620" fill="none" stroke="#0369a1" stroke-width="0.3" stroke-dasharray="1.2 0.8"/>
-<text x="19.304" y="31.461" font-size="2" text-anchor="middle" font-weight="bold" fill="#0369a1">GNSS GPS-18037</text>
-<text x="19.304" y="33.886" font-size="1.5" text-anchor="middle" fill="#0369a1">measured outline</text>
-<text x="19.304" y="36.086" font-size="1.5" text-anchor="middle" fill="#0369a1">31.12 x 38.62 mm</text>
-<rect x="16.104" y="8.441" width="6.400" height="6.100" fill="none" stroke="#0369a1" stroke-width="0.2" stroke-dasharray="1.2 0.8"/>
-<text x="19.304" y="8.041" font-size="1.5" text-anchor="middle" fill="#0369a1">SMA</text>
-<rect x="44.300" y="16.000" width="26.400" height="51.400" fill="none" stroke="#047857" stroke-width="0.3" stroke-dasharray="1.2 0.8"/>
-<text x="57.500" y="43.942" font-size="2" text-anchor="middle" font-weight="bold" fill="#047857">Display</text>
-<text x="57.500" y="46.367" font-size="1.5" text-anchor="middle" fill="#047857">Seeed 100069905</text>
-<text x="57.500" y="48.567" font-size="1.5" text-anchor="middle" fill="#047857">26.4 x 51.4 mm</text>
-<rect x="72.000" y="14.490" width="29.890" height="47.460" fill="none" stroke="#b91c1c" stroke-width="0.3" stroke-dasharray="1.2 0.8"/>
-<text x="86.945" y="35.123" font-size="2" text-anchor="middle" font-weight="bold" fill="#b91c1c">ADSBee 1090U</text>
-<text x="86.945" y="37.548" font-size="1.5" text-anchor="middle" fill="#b91c1c">measured outline</text>
-<text x="86.945" y="39.748" font-size="1.5" text-anchor="middle" fill="#b91c1c">29.89 x 47.46 mm</text>
-<rect x="82.445" y="61.950" width="9.000" height="3.000" fill="none" stroke="#b91c1c" stroke-width="0.2" stroke-dasharray="1.2 0.8"/>
-<text x="86.945" y="63.975" font-size="1.5" text-anchor="middle" fill="#b91c1c">USB-C</text>
-<text x="76.000" y="19.215" font-size="1.5" text-anchor="middle" fill="#b91c1c">U.FL</text>
-<text x="86.500" y="92.465" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J1</text>
-<text x="48.615" y="71.777" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J2</text>
-<text x="41.291" y="71.793" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J3</text>
-<text x="41.656" y="90.147" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J4</text>
-<text x="19.304" y="55.131" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J5</text>
-<text x="66.285" y="29.295" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">J6</text>
-<text x="48.715" y="28.025" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">J7</text>
-<text x="68.500" y="64.681" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J8</text>
-<text x="48.715" y="58.081" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">J9</text>
-<text x="97.585" y="38.885" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">J10</text>
-<text x="86.639" y="19.571" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J11</text>
-<text x="40.457" y="34.302" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">JP1</text>
-<text x="98.557" y="60.719" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">JP2</text>
-<text x="61.468" y="88.782" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">SW1</text>
-<text x="6.746" y="66.311" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">SW2</text>
-<text x="6.746" y="47.515" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">SW3</text>
-<text x="27.437" y="86.373" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J12</text>
-<text x="27.432" y="66.247" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U13</text>
-<text x="12.954" y="69.867" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">BZ1</text>
-<text x="70.612" y="90.949" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">D4</text>
-<text x="76.962" y="90.949" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">D5</text>
-<text x="43.815" y="82.219" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">F1</text>
-<text x="67.945" y="79.661" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">L1</text>
-<text x="81.305" y="70.451" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">L2</text>
-<text x="60.674" y="72.512" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U4</text>
-<text x="52.197" y="70.813" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U5</text>
-<text x="89.154" y="68.089" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U6</text>
-<text x="101.610" y="66.637" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">U7</text>
-<text x="56.032" y="55.961" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U8</text>
-<text x="11.938" y="59.423" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U9</text>
-<text x="40.386" y="61.469" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U10</text>
-<text x="78.486" y="84.091" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">D3</text>
-<text x="51.225" y="82.567" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">TP1</text>
-<text x="74.502" y="74.058" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">TP2</text>
-<text x="45.363" y="67.085" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">TP3</text>
-<text x="40.593" y="90.822" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">TP4</text>
-<text x="78.566" y="80.916" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">TP5</text>
-<text x="12.399" y="75.963" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">TP6</text>
-<text x="44.195" y="42.928" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">TP7</text>
+<rect x="7.498" y="1.773" width="15.790" height="29.000" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="8.562" y="66.682" width="9.090" height="9.090" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="79.019" y="84.746" width="3.050" height="1.550" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
+<rect x="64.575" y="75.155" width="3.490" height="2.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="46.118" y="80.084" width="2.050" height="3.490" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="79.273" y="62.959" width="3.050" height="1.550" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="84.834" y="74.774" width="3.490" height="2.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="69.147" y="75.155" width="3.490" height="2.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="87.870" y="64.082" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="85.127" y="69.358" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="88.532" y="72.496" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="93.107" y="70.593" width="2.050" height="3.490" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="95.240" y="70.593" width="2.050" height="3.490" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="96.412" y="66.979" width="2.050" height="3.490" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="94.755" y="63.098" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="93.231" y="63.098" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="99.454" y="63.225" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="96.410" y="63.132" width="2.050" height="3.490" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="49.547" y="19.190" width="2.050" height="3.490" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="97.214" y="59.407" width="3.490" height="2.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="52.107" y="55.432" width="1.550" height="3.050" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
+<rect x="8.153" y="62.324" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="64.783" y="51.922" width="1.550" height="3.050" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="39.800" y="60.235" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="36.621" y="85.590" width="1.550" height="3.050" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="74.008" y="71.429" width="4.690" height="2.390" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="59.194" y="63.213" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="79.297" y="64.553" width="3.050" height="1.550" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="94.628" y="76.497" width="1.550" height="3.050" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="34.684" y="38.333" width="1.550" height="3.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="87.608" y="54.901" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="28.243" y="64.807" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="68.343" y="64.148" width="2.050" height="3.490" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="66.311" y="64.148" width="2.050" height="3.490" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="64.783" y="64.622" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="63.005" y="73.258" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="57.290" y="77.195" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="59.461" y="73.170" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="56.786" y="73.673" width="2.050" height="3.490" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="56.095" y="61.689" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="76.340" y="83.418" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="70.625" y="66.146" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="51.579" y="19.190" width="2.050" height="3.490" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="53.611" y="19.190" width="2.050" height="3.490" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="91.580" y="70.591" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="37.490" y="33.114" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="70.637" y="64.356" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="93.307" y="52.430" width="1.550" height="3.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="85.357" y="80.751" width="1.550" height="3.050" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
+<rect x="25.429" y="37.506" width="1.010" height="1.910" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="19.063" y="32.885" width="1.550" height="3.050" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="64.575" y="73.123" width="3.490" height="2.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="7.633" y="36.936" width="1.550" height="3.050" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="9.931" y="53.561" width="3.050" height="1.550" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="11.701" y="55.258" width="2.050" height="3.490" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="17.932" y="59.276" width="3.050" height="1.550" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="21.095" y="56.748" width="1.550" height="3.050" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="26.175" y="56.748" width="1.550" height="3.050" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="66.307" y="78.338" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="59.495" y="74.901" width="3.490" height="2.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="71.802" y="70.471" width="1.990" height="3.290" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="24.451" y="35.406" width="1.950" height="1.030" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="22.765" y="57.786" width="3.290" height="1.990" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="22.765" y="55.500" width="3.290" height="1.990" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="9.919" y="49.890" width="1.550" height="3.050" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="92.239" y="83.148" width="7.090" height="3.590" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
+<rect x="66.927" y="88.219" width="7.470" height="4.510" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
+<rect x="74.547" y="88.219" width="4.930" height="4.510" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
+<rect x="82.470" y="79.234" width="1.990" height="3.290" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
+<rect x="82.470" y="82.536" width="1.990" height="3.290" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
+<rect x="41.540" y="78.419" width="4.650" height="2.350" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="79.831" y="79.443" width="2.490" height="4.790" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
+<rect x="81.185" y="87.235" width="10.730" height="9.510" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
+<rect x="98.035" y="21.355" width="3.630" height="34.110" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="79.794" y="14.491" width="13.790" height="3.630" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="24.397" y="73.673" width="6.180" height="11.250" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="23.366" y="28.234" width="5.090" height="4.440" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="45.170" y="72.127" width="6.990" height="5.590" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="37.846" y="72.143" width="6.990" height="5.590" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="38.211" y="83.107" width="6.990" height="5.590" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="66.735" y="18.115" width="3.630" height="21.410" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="44.735" y="18.115" width="3.630" height="18.870" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="66.735" y="51.981" width="3.630" height="11.250" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="44.735" y="54.521" width="3.630" height="6.170" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="40.907" y="30.737" width="3.630" height="6.180" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="95.517" y="55.512" width="6.180" height="3.630" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="8.237" y="55.200" width="3.390" height="2.590" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="60.269" y="78.130" width="4.990" height="4.990" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="79.446" y="68.202" width="4.990" height="4.990" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="24.451" y="36.422" width="1.950" height="1.030" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="48.851" y="85.738" width="3.950" height="3.490" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="36.659" y="79.388" width="3.950" height="3.490" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="75.267" y="62.751" width="3.950" height="3.490" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="52.501" y="70.450" width="4.090" height="3.890" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="9.457" y="38.264" width="3.490" height="3.950" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="13.013" y="38.264" width="3.490" height="3.950" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="11.997" y="49.948" width="3.490" height="3.950" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="63.456" y="84.411" width="3.950" height="3.490" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="56.979" y="85.681" width="3.950" height="3.490" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
+<rect x="52.939" y="85.681" width="3.950" height="3.490" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
+<rect x="97.746" y="75.896" width="3.950" height="3.490" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="97.746" y="79.452" width="3.950" height="3.490" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="93.809" y="79.579" width="3.950" height="3.490" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="35.065" y="85.590" width="1.550" height="3.050" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="52.984" y="64.737" width="3.050" height="1.550" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="82.321" y="62.959" width="3.050" height="1.550" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="91.743" y="67.465" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="93.318" y="67.695" width="3.050" height="1.550" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="85.127" y="66.273" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="91.707" y="63.098" width="1.550" height="3.050" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="93.318" y="66.171" width="3.050" height="1.550" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="64.783" y="55.478" width="1.550" height="3.050" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
+<rect x="64.783" y="59.034" width="1.550" height="3.050" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
+<rect x="68.121" y="86.143" width="3.050" height="1.550" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
+<rect x="74.828" y="86.581" width="3.050" height="1.550" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
+<rect x="15.507" y="61.631" width="1.550" height="3.050" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="8.153" y="60.546" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="50.849" y="36.359" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="50.849" y="34.454" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="72.530" y="84.885" width="1.550" height="3.050" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
+<rect x="57.453" y="84.111" width="3.050" height="1.550" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
+<rect x="52.881" y="84.111" width="3.050" height="1.550" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
+<rect x="82.345" y="64.553" width="3.050" height="1.550" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="93.104" y="76.497" width="1.550" height="3.050" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="96.152" y="76.497" width="1.550" height="3.050" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="92.215" y="79.798" width="1.550" height="3.050" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="45.625" y="85.677" width="3.050" height="1.550" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="36.359" y="38.333" width="1.550" height="3.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="38.022" y="39.337" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="89.120" y="56.437" width="1.550" height="3.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="87.596" y="56.437" width="1.550" height="3.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="19.544" y="73.697" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="19.544" y="75.475" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="32.498" y="79.031" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="32.498" y="77.253" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="32.498" y="75.475" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="32.498" y="73.697" width="3.050" height="1.550" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="55.270" y="67.150" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="56.095" y="63.213" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="56.095" y="64.737" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="59.207" y="64.737" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="59.195" y="61.689" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="52.476" y="68.928" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="51.333" y="67.150" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="74.828" y="81.882" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="74.816" y="83.418" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="76.340" y="66.273" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="73.673" y="61.828" width="1.550" height="3.050" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="40.665" y="81.298" width="3.050" height="1.550" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="91.352" y="52.430" width="1.550" height="3.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="35.585" y="34.638" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="70.637" y="61.816" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="92.596" y="58.907" width="1.550" height="3.050" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="94.301" y="59.282" width="1.950" height="1.030" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="36.601" y="41.496" width="3.050" height="1.550" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="39.897" y="41.423" width="1.030" height="1.950" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="75.463" y="69.690" width="3.050" height="1.550" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="74.009" y="69.490" width="1.030" height="1.950" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="90.564" y="79.786" width="1.550" height="3.050" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
+<rect x="89.808" y="82.952" width="1.030" height="1.950" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
+<rect x="89.173" y="79.142" width="1.030" height="1.950" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
+<rect x="12.017" y="42.546" width="3.450" height="1.990" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="9.677" y="36.416" width="3.050" height="1.550" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="10.173" y="45.064" width="1.550" height="3.050" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="8.649" y="45.064" width="1.550" height="3.050" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="8.268" y="49.890" width="1.550" height="3.050" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="59.839" y="42.201" width="7.647" height="8.024" fill="#e2e8f0" stroke="#475569" stroke-width="0.08"/>
+<rect x="56.673" y="89.132" width="9.690" height="8.640" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="-2.244" y="60.991" width="8.640" height="9.690" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="-2.244" y="42.195" width="8.640" height="9.690" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="8.260" y="76.794" width="9.590" height="7.590" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="7.689" y="32.832" width="11.090" height="3.130" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="48.767" y="78.440" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="70.992" y="77.678" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="100.837" y="71.709" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="39.369" y="88.981" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="76.707" y="79.075" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="34.543" y="88.981" width="2.593" height="2.592" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="46.100" y="38.562" width="2.593" height="2.592" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="47.497" y="67.645" width="2.593" height="2.592" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="39.141" y="57.429" width="2.590" height="2.590" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="91.394" y="55.705" width="2.990" height="2.990" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="37.982" y="36.155" width="2.990" height="2.990" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="23.587" y="66.597" width="7.790" height="5.590" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<rect x="72.191" y="66.176" width="2.990" height="2.990" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="87.096" y="81.335" width="2.390" height="2.390" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
+<rect x="17.287" y="40.390" width="10.690" height="11.890" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="11.997" y="44.748" width="3.490" height="4.190" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="17.585" y="53.892" width="3.490" height="4.190" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<rect x="60.001" y="67.972" width="4.990" height="4.990" fill="#fdba74" stroke="#475569" stroke-width="0.08"/>
+<rect x="83.382" y="58.810" width="1.690" height="2.990" fill="#d8b4fe" stroke="#475569" stroke-width="0.08"/>
+<rect x="87.409" y="67.351" width="3.590" height="4.590" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="98.670" y="66.649" width="2.590" height="3.090" fill="#fca5a5" stroke="#475569" stroke-width="0.08"/>
+<rect x="54.407" y="56.311" width="3.350" height="2.590" fill="#86efac" stroke="#475569" stroke-width="0.08"/>
+<rect x="11.393" y="60.395" width="4.190" height="3.490" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
+<circle cx="4.039" cy="4.070" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
+<text x="4.039" y="7.020" font-size="1.5" text-anchor="middle" fill="#0f172a">MH1</text>
+<circle cx="98.323" cy="18.211" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
+<text x="98.323" y="21.161" font-size="1.5" text-anchor="middle" fill="#0f172a">MH12</text>
+<circle cx="47.561" cy="64.245" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
+<text x="47.561" y="62.495" font-size="1.5" text-anchor="middle" fill="#0f172a">MH13</text>
+<circle cx="75.412" cy="58.724" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
+<text x="75.412" y="56.974" font-size="1.5" text-anchor="middle" fill="#0f172a">MH14</text>
+<circle cx="101.017" cy="4.070" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
+<text x="101.017" y="7.020" font-size="1.5" text-anchor="middle" fill="#0f172a">MH2</text>
+<circle cx="4.030" cy="91.030" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
+<text x="4.030" y="89.280" font-size="1.5" text-anchor="middle" fill="#0f172a">MH3</text>
+<circle cx="101.058" cy="91.030" r="1.350" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
+<text x="101.058" y="89.280" font-size="1.5" text-anchor="middle" fill="#0f172a">MH4</text>
+<circle cx="31.522" cy="7.854" r="6.500" fill="#e2e8f0" stroke="#64748b" stroke-width="0.1"/>
+<circle cx="31.522" cy="7.854" r="3.250" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
+<text x="31.522" y="15.654" font-size="1.5" text-anchor="middle" fill="#0f172a">MH6 GNSS</text>
+<circle cx="50.572" cy="7.854" r="6.500" fill="#e2e8f0" stroke="#64748b" stroke-width="0.1"/>
+<circle cx="50.572" cy="7.854" r="3.250" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
+<text x="50.572" y="15.654" font-size="1.5" text-anchor="middle" fill="#0f172a">MH7 1090 MHz</text>
+<circle cx="74.194" cy="7.854" r="6.500" fill="#e2e8f0" stroke="#64748b" stroke-width="0.1"/>
+<circle cx="74.194" cy="7.854" r="3.250" fill="#ffffff" stroke="#0f172a" stroke-width="0.2"/>
+<text x="74.194" y="15.654" font-size="1.5" text-anchor="middle" fill="#0f172a">MH8 sub-GHz</text>
+<rect x="44.350" y="16.050" width="26.400" height="51.400" fill="none" stroke="#047857" stroke-width="0.3" stroke-dasharray="1.2 0.8"/>
+<text x="57.550" y="43.992" font-size="2" text-anchor="middle" font-weight="bold" fill="#047857">Display</text>
+<text x="57.550" y="46.417" font-size="1.5" text-anchor="middle" fill="#047857">Seeed 100069905</text>
+<text x="57.550" y="48.617" font-size="1.5" text-anchor="middle" fill="#047857">26.4 x 51.4 mm</text>
+<rect x="72.050" y="14.540" width="29.890" height="47.460" fill="none" stroke="#b91c1c" stroke-width="0.3" stroke-dasharray="1.2 0.8"/>
+<text x="86.995" y="35.173" font-size="2" text-anchor="middle" font-weight="bold" fill="#b91c1c">ADSBee 1090U</text>
+<text x="86.995" y="37.598" font-size="1.5" text-anchor="middle" fill="#b91c1c">measured outline</text>
+<text x="86.995" y="39.798" font-size="1.5" text-anchor="middle" fill="#b91c1c">29.89 x 47.46 mm</text>
+<rect x="82.495" y="62.000" width="9.000" height="3.000" fill="none" stroke="#b91c1c" stroke-width="0.2" stroke-dasharray="1.2 0.8"/>
+<text x="86.995" y="64.025" font-size="1.5" text-anchor="middle" fill="#b91c1c">USB-C</text>
+<text x="76.050" y="19.265" font-size="1.5" text-anchor="middle" fill="#b91c1c">U.FL</text>
+<text x="86.550" y="92.515" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J1</text>
+<text x="48.665" y="71.827" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J2</text>
+<text x="41.341" y="71.843" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J3</text>
+<text x="41.706" y="90.197" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J4</text>
+<text x="66.335" y="29.345" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">J6</text>
+<text x="48.765" y="28.075" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">J7</text>
+<text x="68.550" y="64.731" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J8</text>
+<text x="48.765" y="58.131" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">J9</text>
+<text x="97.635" y="38.935" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">J10</text>
+<text x="86.689" y="19.621" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J11</text>
+<text x="40.507" y="34.352" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">JP1</text>
+<text x="98.607" y="60.642" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">JP2</text>
+<text x="61.518" y="88.832" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">SW1</text>
+<text x="6.796" y="66.361" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">SW2</text>
+<text x="6.796" y="47.565" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">SW3</text>
+<text x="27.487" y="86.423" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">J12</text>
+<text x="27.482" y="66.297" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U13</text>
+<text x="13.107" y="71.752" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">BZ1</text>
+<text x="70.662" y="90.999" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">D4</text>
+<text x="77.012" y="90.999" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">D5</text>
+<text x="43.865" y="82.269" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">F1</text>
+<text x="62.764" y="81.150" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">L1</text>
+<text x="81.941" y="71.222" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">L2</text>
+<text x="62.496" y="70.992" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U4</text>
+<text x="84.227" y="63.300" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U5</text>
+<text x="89.204" y="70.171" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U6</text>
+<text x="101.660" y="68.719" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">U7</text>
+<text x="56.082" y="56.011" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U8</text>
+<text x="13.488" y="60.095" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U9</text>
+<text x="40.436" y="61.519" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U10</text>
+<text x="95.784" y="85.468" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">D3</text>
+<text x="51.759" y="80.261" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">TP1</text>
+<text x="70.592" y="79.499" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">TP2</text>
+<text x="102.133" y="71.409" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">TP3</text>
+<text x="38.969" y="90.802" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">TP4</text>
+<text x="76.307" y="80.896" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">TP5</text>
+<text x="34.143" y="90.802" font-size="1.5" text-anchor="end" font-weight="bold" fill="#0f172a">TP6</text>
+<text x="47.396" y="42.654" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">TP7</text>
+<text x="22.632" y="46.860" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U16</text>
+<text x="28.856" y="30.979" font-size="1.5" text-anchor="start" font-weight="bold" fill="#0f172a">J13</text>
+<text x="13.234" y="32.532" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">SW5</text>
+<text x="15.393" y="16.798" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">BT1</text>
+<text x="19.330" y="59.582" font-size="1.5" text-anchor="middle" font-weight="bold" fill="#0f172a">U18</text>
 <text x="111.000" y="1.920" font-size="2.4" text-anchor="start" font-weight="bold" fill="#0f172a">Carrier placement, front view, 105 x 95 mm</text>
 <rect x="111.000" y="6.000" width="3.000" height="2.000" fill="#cbd5e1" stroke="#475569" stroke-width="0.08"/>
 <text x="115.500" y="7.595" font-size="1.7" text-anchor="start" fill="#0f172a">USB input and protection</text>
@@ -267,53 +328,57 @@
 <text x="115.500" y="20.395" font-size="1.7" text-anchor="start" fill="#0f172a">Gauge and status LEDs</text>
 <rect x="111.000" y="22.000" width="3.000" height="2.000" fill="#a5b4fc" stroke="#475569" stroke-width="0.08"/>
 <text x="115.500" y="23.595" font-size="1.7" text-anchor="start" fill="#0f172a">Buzzer, barometer and controls</text>
-<rect x="111.000" y="25.200" width="3.000" height="2.000" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
-<text x="115.500" y="26.795" font-size="1.7" text-anchor="start" fill="#0f172a">Module sockets and service shunts</text>
-<rect x="111.000" y="28.400" width="3.000" height="2.000" fill="none" stroke="#334155" stroke-width="0.3" stroke-dasharray="1.2 0.8"/>
-<text x="115.500" y="29.995" font-size="1.7" text-anchor="start" fill="#0f172a">Module outline above the board</text>
-<text x="111.000" y="35.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">J1</text>
-<text x="125.500" y="35.260" font-size="1.7" text-anchor="start" fill="#0f172a">USB-C charging input</text>
-<text x="111.000" y="38.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">J2 J3 J4</text>
-<text x="125.500" y="38.260" font-size="1.7" text-anchor="start" fill="#0f172a">pack NTC, battery, thermostat</text>
-<text x="111.000" y="41.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">J5</text>
-<text x="125.500" y="41.260" font-size="1.7" text-anchor="start" fill="#0f172a">GNSS socket 1x8</text>
-<text x="111.000" y="44.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">J6 J7 J8 J9</text>
-<text x="125.500" y="44.260" font-size="1.7" text-anchor="start" fill="#0f172a">display sockets 1x8, 1x7, 1x4, 1x2</text>
-<text x="111.000" y="47.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">J10 J11</text>
-<text x="125.500" y="47.260" font-size="1.7" text-anchor="start" fill="#0f172a">ADSBee sockets 1x13, 1x5</text>
-<text x="111.000" y="50.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">JP1 JP2</text>
-<text x="125.500" y="50.260" font-size="1.7" text-anchor="start" fill="#0f172a">5 V shunts: display, ADSBee</text>
-<text x="111.000" y="53.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">SW1 SW2 SW3</text>
-<text x="125.500" y="53.260" font-size="1.7" text-anchor="start" fill="#0f172a">POWER, MUTE and Wi-Fi sliders</text>
-<text x="111.000" y="56.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U13 J12</text>
-<text x="125.500" y="56.260" font-size="1.7" text-anchor="start" fill="#0f172a">control inputs and expansion</text>
-<text x="111.000" y="59.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">D4 D5</text>
-<text x="125.500" y="59.260" font-size="1.7" text-anchor="start" fill="#0f172a">charge LED, power LED</text>
-<text x="111.000" y="62.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U4 L1</text>
-<text x="125.500" y="62.260" font-size="1.7" text-anchor="start" fill="#0f172a">charger MAX77757</text>
-<text x="111.000" y="65.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U6 L2</text>
-<text x="125.500" y="65.260" font-size="1.7" text-anchor="start" fill="#0f172a">boost TPS61088</text>
-<text x="111.000" y="68.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U7</text>
-<text x="125.500" y="68.260" font-size="1.7" text-anchor="start" fill="#0f172a">load switch TPS22975</text>
-<text x="111.000" y="71.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U5</text>
-<text x="125.500" y="71.260" font-size="1.7" text-anchor="start" fill="#0f172a">undervoltage supervisor</text>
-<text x="111.000" y="74.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U8 U10</text>
-<text x="125.500" y="74.260" font-size="1.7" text-anchor="start" fill="#0f172a">fuel gauge, barometer</text>
-<text x="111.000" y="77.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U9 BZ1</text>
-<text x="125.500" y="77.260" font-size="1.7" text-anchor="start" fill="#0f172a">buzzer driver, buzzer</text>
-<text x="111.000" y="80.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">F1 D3</text>
-<text x="125.500" y="80.260" font-size="1.7" text-anchor="start" fill="#0f172a">pack fuse, VBUS TVS</text>
-<text x="111.000" y="83.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">TP1 to TP7</text>
-<text x="125.500" y="83.260" font-size="1.7" text-anchor="start" fill="#0f172a">VBAT, VSYS, PWR_EN, THERM_OK, USB_VBUS, GND, 5 V</text>
-<text x="111.000" y="86.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">MH1 to MH4</text>
-<text x="125.500" y="86.260" font-size="1.7" text-anchor="start" fill="#0f172a">case, 2.7 mm</text>
-<text x="111.000" y="89.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">MH6 to MH8</text>
-<text x="125.500" y="89.260" font-size="1.7" text-anchor="start" fill="#0f172a">antenna bulkheads, 6.5 mm</text>
-<text x="111.000" y="92.260" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">MH10 to MH14</text>
-<text x="125.500" y="92.260" font-size="1.7" text-anchor="start" fill="#0f172a">module standoffs, 2.7 mm</text>
-<text x="111.000" y="97.100" font-size="1.5" text-anchor="start" fill="#475569">Origin upper left, +Y down, mm, as in KiCad.</text>
-<text x="111.000" y="99.700" font-size="1.5" text-anchor="start" fill="#475569">Part outlines are courtyards read from carrier.kicad_pcb.</text>
-<text x="111.000" y="102.300" font-size="1.5" text-anchor="start" fill="#475569">Module outlines follow the socket positions.</text>
-<text x="111.000" y="104.900" font-size="1.5" text-anchor="start" fill="#475569">GNSS and ADSBee sizes measured; edge offsets approximate.</text>
-<text x="111.000" y="107.500" font-size="1.5" text-anchor="start" fill="#475569">Regenerate with mechanical/draw_placement.py.</text>
+<rect x="111.000" y="25.200" width="3.000" height="2.000" fill="#fde047" stroke="#475569" stroke-width="0.08"/>
+<text x="115.500" y="26.795" font-size="1.7" text-anchor="start" fill="#0f172a">GNSS receiver, antenna and backup</text>
+<rect x="111.000" y="28.400" width="3.000" height="2.000" fill="#7dd3fc" stroke="#475569" stroke-width="0.08"/>
+<text x="115.500" y="29.995" font-size="1.7" text-anchor="start" fill="#0f172a">Module sockets and service shunts</text>
+<rect x="111.000" y="31.600" width="3.000" height="2.000" fill="none" stroke="#334155" stroke-width="0.3" stroke-dasharray="1.2 0.8"/>
+<text x="115.500" y="33.195" font-size="1.7" text-anchor="start" fill="#0f172a">Module outline above the board</text>
+<text x="111.000" y="38.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">J1</text>
+<text x="125.500" y="38.460" font-size="1.7" text-anchor="start" fill="#0f172a">USB-C charging input</text>
+<text x="111.000" y="41.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">J2 J3 J4</text>
+<text x="125.500" y="41.460" font-size="1.7" text-anchor="start" fill="#0f172a">pack NTC, battery, thermostat</text>
+<text x="111.000" y="44.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">J6 J7 J8 J9</text>
+<text x="125.500" y="44.460" font-size="1.7" text-anchor="start" fill="#0f172a">display sockets 1x8, 1x7, 1x4, 1x2</text>
+<text x="111.000" y="47.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">J10 J11</text>
+<text x="125.500" y="47.460" font-size="1.7" text-anchor="start" fill="#0f172a">ADSBee sockets 1x13, 1x5</text>
+<text x="111.000" y="50.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">JP1 JP2</text>
+<text x="125.500" y="50.460" font-size="1.7" text-anchor="start" fill="#0f172a">5 V shunts: display, ADSBee</text>
+<text x="111.000" y="53.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">SW1 SW2 SW3</text>
+<text x="125.500" y="53.460" font-size="1.7" text-anchor="start" fill="#0f172a">POWER, MUTE and Wi-Fi sliders</text>
+<text x="111.000" y="56.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U13 J12</text>
+<text x="125.500" y="56.460" font-size="1.7" text-anchor="start" fill="#0f172a">control inputs and expansion</text>
+<text x="111.000" y="59.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">D4 D5</text>
+<text x="125.500" y="59.460" font-size="1.7" text-anchor="start" fill="#0f172a">charge LED, power LED</text>
+<text x="111.000" y="62.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U16 J13 SW5</text>
+<text x="125.500" y="62.460" font-size="1.7" text-anchor="start" fill="#0f172a">GNSS MAX-M10S, U.FL antenna, active antenna switch</text>
+<text x="111.000" y="65.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">BT1 U18</text>
+<text x="125.500" y="65.460" font-size="1.7" text-anchor="start" fill="#0f172a">GNSS backup: CR2032, LDO</text>
+<text x="111.000" y="68.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U4 L1</text>
+<text x="125.500" y="68.460" font-size="1.7" text-anchor="start" fill="#0f172a">charger BQ25798</text>
+<text x="111.000" y="71.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U6 L2</text>
+<text x="125.500" y="71.460" font-size="1.7" text-anchor="start" fill="#0f172a">boost TPS61088</text>
+<text x="111.000" y="74.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U7</text>
+<text x="125.500" y="74.460" font-size="1.7" text-anchor="start" fill="#0f172a">load switch TPS22975</text>
+<text x="111.000" y="77.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U5</text>
+<text x="125.500" y="77.460" font-size="1.7" text-anchor="start" fill="#0f172a">undervoltage supervisor</text>
+<text x="111.000" y="80.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U8 U10</text>
+<text x="125.500" y="80.460" font-size="1.7" text-anchor="start" fill="#0f172a">fuel gauge, barometer</text>
+<text x="111.000" y="83.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">U9 BZ1</text>
+<text x="125.500" y="83.460" font-size="1.7" text-anchor="start" fill="#0f172a">buzzer driver, buzzer</text>
+<text x="111.000" y="86.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">F1 D3</text>
+<text x="125.500" y="86.460" font-size="1.7" text-anchor="start" fill="#0f172a">pack fuse, VBUS TVS</text>
+<text x="111.000" y="89.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">TP1 to TP7</text>
+<text x="125.500" y="89.460" font-size="1.7" text-anchor="start" fill="#0f172a">VBAT, VSYS, PWR_EN, THERM_OK, USB_VBUS, GND, 5 V</text>
+<text x="111.000" y="92.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">MH1 to MH4</text>
+<text x="125.500" y="92.460" font-size="1.7" text-anchor="start" fill="#0f172a">case, 2.7 mm</text>
+<text x="111.000" y="95.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">MH6 to MH8</text>
+<text x="125.500" y="95.460" font-size="1.7" text-anchor="start" fill="#0f172a">antenna bulkheads, 6.5 mm</text>
+<text x="111.000" y="98.460" font-size="1.7" text-anchor="start" font-weight="bold" fill="#0f172a">MH12 to MH14</text>
+<text x="125.500" y="98.460" font-size="1.7" text-anchor="start" fill="#0f172a">module standoffs, 2.7 mm</text>
+<text x="111.000" y="103.300" font-size="1.5" text-anchor="start" fill="#475569">Origin at the upper left board edge, +Y down, mm.</text>
+<text x="111.000" y="105.900" font-size="1.5" text-anchor="start" fill="#475569">Part outlines are courtyards read from carrier.kicad_pcb.</text>
+<text x="111.000" y="108.500" font-size="1.5" text-anchor="start" fill="#475569">Module outlines follow the socket positions.</text>
+<text x="111.000" y="111.100" font-size="1.5" text-anchor="start" fill="#475569">ADSBee size measured; edge offsets approximate.</text>
+<text x="111.000" y="113.700" font-size="1.5" text-anchor="start" fill="#475569">Regenerate with mechanical/draw_placement.py.</text>
 </svg>

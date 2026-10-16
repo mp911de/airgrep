@@ -108,3 +108,12 @@
   (condition "A.Type == 'Via' && A.intersectsArea('FINE_*')")
   (constraint via_diameter (min 18mil))
   (constraint annular_width (min 3mil)))
+
+# The RF net class sets the CPWG gap. Zone clearance would otherwise win.
+(rule "RF CPWG gap to pour"
+  (condition "A.NetClass == 'RF' && B.Type == 'Zone'")
+  (constraint clearance (min 8mil)))
+
+(rule "via diameter 22 mil"
+  (condition "A.Type == 'Via'")
+  (constraint via_diameter (min 22mil)))

@@ -40,8 +40,8 @@
         "other_text_upright": false,
         "pads": {
           "drill": 0.0,
-          "height": 0.64,
-          "width": 0.54
+          "height": 0.95,
+          "width": 0.9
         },
         "silk_line_width": 0.1524,
         "silk_text_italic": false,
@@ -60,7 +60,7 @@
           "hatch_smoothing_level": 0,
           "hatch_smoothing_value": 0.1,
           "hatch_thickness": 1.0,
-          "min_clearance": 0.3048,
+          "min_clearance": 0.0,
           "min_island_area": 9.99999999996,
           "min_thickness": 0.254,
           "pad_connection": 2,
@@ -684,7 +684,7 @@
         "line_style": 0,
         "name": "+12V",
         "pcb_color": "rgb(204, 54, 56)",
-        "priority": 0,
+        "priority": 1,
         "schematic_color": "rgb(204, 11, 0)",
         "track_width": 0.3048,
         "tuning_profile": "",
@@ -698,7 +698,7 @@
         "line_style": 0,
         "name": "+3V3",
         "pcb_color": "rgb(255, 98, 138)",
-        "priority": 1,
+        "priority": 2,
         "schematic_color": "rgb(255, 164, 115)",
         "track_width": 0.3048,
         "tuning_profile": "",
@@ -712,7 +712,7 @@
         "line_style": 0,
         "name": "+5V",
         "pcb_color": "rgb(204, 57, 56)",
-        "priority": 2,
+        "priority": 3,
         "schematic_color": "rgb(204, 11, 0)",
         "track_width": 0.4064,
         "tuning_profile": "",
@@ -726,7 +726,7 @@
         "line_style": 0,
         "name": "GND",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 3,
+        "priority": 4,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
         "track_width": 0.3048,
         "tuning_profile": "",
@@ -740,12 +740,21 @@
         "line_style": 0,
         "name": "I2C",
         "pcb_color": "rgb(188, 186, 255)",
-        "priority": 4,
+        "priority": 5,
         "schematic_color": "rgb(188, 186, 255)",
         "track_width": 0.254,
         "tuning_profile": "",
         "via_diameter": 0.6096,
         "via_drill": 0.3048
+      },
+      {
+        "clearance": 0.2032,
+        "name": "RF",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 0,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.381,
+        "tuning_profile": ""
       },
       {
         "clearance": 0.1524,
@@ -754,7 +763,7 @@
         "line_style": 4,
         "name": "UART",
         "pcb_color": "rgb(162, 199, 23)",
-        "priority": 5,
+        "priority": 6,
         "schematic_color": "rgb(162, 199, 23)",
         "track_width": 0.254,
         "tuning_profile": "",
@@ -799,6 +808,14 @@
       {
         "netclass": "UART",
         "pattern": "*TX*"
+      },
+      {
+        "netclass": "RF",
+        "pattern": "*GNSS*ANT"
+      },
+      {
+        "netclass": "RF",
+        "pattern": "*RF_IN*"
       }
     ]
   },

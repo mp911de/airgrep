@@ -17,7 +17,7 @@ It is an awareness aid, not certified avionics. It must not be the primary means
 | Carrier board | 105 x 95 x 1.6 mm, 4 layers; stackup in [power.md](power.md#stackup) |
 | Display module | Seeed XIAO 1.47" IPS Touch Display (ESP32-S3), SKU 100069905 |
 | ADS-B receiver | ADSBee 1090U (RP2040, ESP32-S3 for Wi-Fi, TI CC1312 sub-GHz) |
-| GNSS receiver | SparkFun GPS-18037 with u-blox MAX-M10S, SMA antenna connector |
+| GNSS receiver | u-blox MAX-M10S on the carrier, U.FL antenna connector J13, active or passive antenna (SW5), CR2032 and pack backup |
 | Barometer | Bosch BMP580 on the carrier |
 | Audio | piezo buzzer, 4 kHz; maintained MUTE slider read by firmware |
 | Controls | independent POWER slider; MUTE and Wi-Fi sliders on TCA9534 I2C inputs; six spare inputs on J12; display touch and two display buttons |
@@ -201,7 +201,7 @@ The boost efficiency is a budget estimate from the TI data sheet curve, derated 
 | Carrier: BMP580, buzzer driver idle, I2C pull-ups | 0.1 mA | BMP580 normal mode below 0.01 mA; 74LVC1G17 below 0.01 mA; display I2C pull-ups about 0.05 mA |
 | Carrier: control inputs, both sliders low | 0.1 mA | TCA9534: at most 4 uA standby at 3.6 V plus 2 x 33 uA in 100 kOhm pulls at 3.3 V; rounded to 0.1 mA for polling. Each additional grounded spare input adds 33 uA. Estimate, through display LDO. |
 | Carrier: buzzer, average | 0.2 mA | PKMCS0909 driven from 3.3 V through 150 Ω: about 20 mA while beeping, assumed 1 % duty |
-| GNSS: MAX-M10S, breakout LED, active antenna (tracking) | 35.8 mA | u-blox MAX-M10S data sheet UBX-20035208 R02, Table 13, GPS+GAL+GLO: tracking 7.0 + 2.3 mA (VCC + V_IO), acquisition 9.0 + 2.3 mA at 3.0 V; Abracon AANE-AP-0164 LNA, 15 to 25 mA at 3.0 to 5.0 V, maximum used (datasheets/abracon-aane-ap-0164.pdf). Set 0 for a passive antenna. |
+| GNSS: MAX-M10S, fix LED, active antenna (tracking) | 35.8 mA | u-blox MAX-M10S data sheet UBX-20035208 R02, Table 13, GPS+GAL+GLO: tracking 7.0 + 2.3 mA (VCC + V_IO), acquisition 9.0 + 2.3 mA at 3.0 V; Abracon AANE-AP-0164 LNA, 15 to 25 mA at 3.0 to 5.0 V, maximum used (datasheets/abracon-aane-ap-0164.pdf). Set 0 for a passive antenna. |
 | **Total at 5.06 V** | **246 mA** | |
 
 Wi-Fi on raises the ADSBee from 120 mA to 400 mA. Without a fix the GNSS receiver stays in acquisition and draws 2.0 mA more, below 1 % of the total.

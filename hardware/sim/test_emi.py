@@ -157,10 +157,13 @@ class BoardTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "no pads on net MISSING"):
             self.board.net_parasitics("MISSING")
 
-    def test_return_path_gaps_are_short(self):
-        gaps = self.board.return_path_gaps("B", "In2")
-        digital = [d[0] for d in emi.DIGITAL]
-        self.assertLess(sum(v[0] + v[2] for n, v in gaps.items() if n in digital), 5.0)
+    def test_return_path_detours_are_short(self):
+        for layer, ref in (("F", "In1"), ("B", "In2")):
+            for net, power, point, detour in self.board.crossing_detours(layer, ref):
+                limit = emi.detour_limit(net)
+                if limit is not None:
+                    with self.subTest(net=net, power=power, point=point):
+                        self.assertLess(2 * detour, limit)
 
 
 if __name__ == "__main__":

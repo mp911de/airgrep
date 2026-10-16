@@ -2570,7 +2570,7 @@
 		)
 		(uuid "3afd7f75-bc02-471b-9ef0-c67e5ce0900a")
 	)
-	(text "Pull-ups, all expander inputs high when open"
+	(text "Pull-ups on inputs; P2/P3 drive GNSS reset and safeboot"
 		(exclude_from_sim no)
 		(at 101.6 104.14 0)
 		(effects
@@ -2603,7 +2603,7 @@
 		)
 		(uuid "c8ff1049-a5f5-4bdb-bbd8-afd0b4b2e933")
 	)
-	(text "Rev 1 controls: I2C 0x20, polled inputs; INT unused.\nR48-R55 bias all inputs high. J12: dry contacts to GND only."
+	(text "Rev 1 controls: I2C 0x20, polled; INT unused. R48, R49, R52-R55 bias the inputs high.\nP2 GNSS_RESET_N, P3 GNSS_SAFEBOOT_N: high-Z by default, firmware drives them low only.\nJ12 pins 1 and 2 unused. J12: dry contacts to GND only."
 		(exclude_from_sim no)
 		(at 25.4 163.83 0)
 		(effects
@@ -2687,22 +2687,10 @@
 		(uuid "69b6a892-8bb8-465d-ac3d-e1f92a9f4f84")
 	)
 	(junction
-		(at 137.16 134.62)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "6f40df5b-a8f1-4090-8415-09f4f7eb2f08")
-	)
-	(junction
 		(at 167.64 109.22)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "72852be0-02b4-432b-9eec-8c65390276cc")
-	)
-	(junction
-		(at 127 132.08)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "75eaa14b-3acc-4e72-9e05-a4d9fd8b2dff")
 	)
 	(junction
 		(at 203.2 48.26)
@@ -2721,12 +2709,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "8ffb6e6e-4417-45d2-a9bc-e30c33a3f40d")
-	)
-	(junction
-		(at 127 109.22)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "91560a30-354e-4aed-a283-54c2feb83c30")
 	)
 	(junction
 		(at 48.26 142.24)
@@ -2751,12 +2733,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "ae475aec-0dab-4fd9-b815-e6100b49df3a")
-	)
-	(junction
-		(at 137.16 109.22)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "b92bb467-dc24-475c-8af8-dea87c96acd8")
 	)
 	(junction
 		(at 116.84 129.54)
@@ -3044,16 +3020,6 @@
 	)
 	(wire
 		(pts
-			(xy 190.5 149.86) (xy 187.96 149.86)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5b2e0538-e570-4190-92e5-f34ca74e2260")
-	)
-	(wire
-		(pts
 			(xy 203.2 157.48) (xy 205.74 157.48)
 		)
 		(stroke
@@ -3204,16 +3170,6 @@
 	)
 	(wire
 		(pts
-			(xy 127 116.84) (xy 127 132.08)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a5df97a4-1b5c-4999-8471-85f02287912b")
-	)
-	(wire
-		(pts
 			(xy 55.88 71.12) (xy 55.88 73.66)
 		)
 		(stroke
@@ -3314,16 +3270,6 @@
 	)
 	(wire
 		(pts
-			(xy 137.16 116.84) (xy 137.16 134.62)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d80069b4-beca-49dc-869e-366d2c5fd1d3")
-	)
-	(wire
-		(pts
 			(xy 88.9 50.8) (xy 88.9 53.34)
 		)
 		(stroke
@@ -3421,16 +3367,6 @@
 			(type default)
 		)
 		(uuid "f07a2704-ffcb-48f3-a360-eac8acd555db")
-	)
-	(wire
-		(pts
-			(xy 203.2 149.86) (xy 205.74 149.86)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f1a7eaa4-a87c-40fe-befe-62aed7a211e9")
 	)
 	(wire
 		(pts
@@ -3648,8 +3584,8 @@
 			)
 		)
 	)
-	(global_label "CTRL_P3"
-		(shape bidirectional)
+	(global_label "GNSS_SAFEBOOT_N"
+		(shape output)
 		(at 182.88 134.62 0)
 		(fields_autoplaced yes)
 		(effects
@@ -3718,30 +3654,6 @@
 			)
 		)
 	)
-	(global_label "CTRL_P3"
-		(shape bidirectional)
-		(at 205.74 149.86 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "4e6ff7c7-24d0-4826-99f2-93c32a08b106")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 205.74 149.86 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-	)
 	(global_label "CTRL_P5"
 		(shape bidirectional)
 		(at 205.74 152.4 0)
@@ -3763,30 +3675,6 @@
 					(size 1.27 1.27)
 				)
 				(justify left)
-			)
-		)
-	)
-	(global_label "CTRL_P2"
-		(shape bidirectional)
-		(at 187.96 149.86 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "93ccb652-f2a0-49ee-ab2a-c84ffaeabda0")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 187.96 149.86 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
 			)
 		)
 	)
@@ -3812,8 +3700,8 @@
 			)
 		)
 	)
-	(global_label "CTRL_P2"
-		(shape bidirectional)
+	(global_label "GNSS_RESET_N"
+		(shape output)
 		(at 182.88 132.08 0)
 		(fields_autoplaced yes)
 		(effects
@@ -5223,96 +5111,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
-		(at 137.16 113.03 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "63d63e18-0962-4cab-a71b-cc6631114e8f")
-		(property "Reference" "R51"
-			(at 134.62 113.03 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100k 1%"
-			(at 139.7 113.03 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 137.16 113.03 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 137.16 113.03 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Resistor"
-			(at 137.16 113.03 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C25803"
-			(at 137.16 113.03 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "0f378524-338c-4e0e-9a37-f06d528b5096")
-		)
-		(pin "2"
-			(uuid "ba8ce503-3e1f-4924-bd6e-c9766ae1bc44")
-		)
-		(instances
-			(project "carrier"
-				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/85e779da-b238-4408-b509-099899e823d5"
-					(reference "R51")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "carrier:K3-1280S-F1")
 		(at 113.03 157.48 0)
 		(unit 1)
@@ -6238,96 +6036,6 @@
 			(project "carrier"
 				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/85e779da-b238-4408-b509-099899e823d5"
 					(reference "R52")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
-		(at 127 113.03 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "97308032-458e-42bc-b0e6-da3cafc7c521")
-		(property "Reference" "R50"
-			(at 124.46 113.03 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100k 1%"
-			(at 129.54 113.03 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 127 113.03 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 127 113.03 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Resistor"
-			(at 127 113.03 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C25803"
-			(at 127 113.03 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "655a8400-6678-4f8b-8de0-4afbe864aa3f")
-		)
-		(pin "2"
-			(uuid "482f6db6-d00b-4b1e-8e8f-a75cc57011ab")
-		)
-		(instances
-			(project "carrier"
-				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/85e779da-b238-4408-b509-099899e823d5"
-					(reference "R50")
 					(unit 1)
 				)
 			)
@@ -7418,6 +7126,14 @@
 				)
 			)
 		)
+	)
+	(no_connect
+		(at 190.5 149.86)
+		(uuid "18136e7b-e2ef-4c39-ae63-a7637be8274c")
+	)
+	(no_connect
+		(at 203.2 149.86)
+		(uuid "8ac74039-86d3-4343-a7b6-5705bbc37f51")
 	)
 	(sheet_instances
 		(path "/"

@@ -49,7 +49,6 @@ The simulations rest on these. Each one changes a result if it is far off.
 - [ ] **Before first power-up.**
   - Inspect the U6 and U7 solder joints. The exposed pads have unfilled thermal vias next to the paste windows.
   - Confirm the pack lead polarity at J3 (pin 1, square pad, is plus).
-  - Check the GNSS module's position in J5. The socket is not keyed; the silkscreen is the only guard.
 - [ ] **Charger, carrier-ti-charger (BQ25798).**
   - Default mode after power-on: 1 A, STAT low, 12 h timer. Then I2C at 0x6B: ICHG 1.8 A, TREG 100 °C, WD_RST every 20 s; pull the host and confirm the fallback to 1 A after 40 s (WD_STAT).
   - D+/D- detection with a USB-A DCP, a PC port, a C-to-C cable from a PD adapter (expect "unknown adapter", 3 A, clamped to 1.5 A by ILIM_HIZ) and an Apple adapter.
@@ -74,7 +73,7 @@ The simulations rest on these. Each one changes a result if it is far off.
 - [ ] **5 V rail.** Start-up, load steps between 0.1 and 0.8 A and between 0.8 and 1 A at the module terminals, boost ripple. Compare against `hardware/sim/power/results_<charger>.md`.
 - [ ] **Undervoltage.** Discharge to cut-off under load. The latch must hold the system off while the battery voltage recovers. Clear it with the slider and with USB. Measure the latched current (about 60 µA expected).
 - [ ] **Physical controls.** Verify U13 address 0x20 alongside all other I2C devices, 400 kHz bus rise time, both slider positions, startup silence, debounce, last-known-state behavior on a disconnected expander, and Wi-Fi command acknowledgment. Check all six J12 inputs with contacts to GND. Measure added current; the budget is an estimate.
-- [ ] **GNSS reception next to the charger.** L1 is closer to the GNSS module than the 40 mm planning target ([mechanical.md](mechanical.md#placement)). Compare reception with and without charging.
+- [ ] **GNSS reception next to the charger.** U16 is 41 mm from L1, just past the 40 mm planning target ([mechanical.md](mechanical.md#placement)). Compare reception with and without charging, and with SW5 on and off with each antenna type.
 
 ## Firmware
 

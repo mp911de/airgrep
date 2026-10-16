@@ -10,7 +10,6 @@ Everything that JLCPCB does not assemble, per board, with order sources and orde
 |---|---|---|---|---|---|
 | 1 | Seeed Studio XIAO 1.47" IPS Touch Display (ESP32-S3), SKU 100069905 | Display and main MCU; sits on J6, J7, J8, J9 | ordered | [Seeed Studio](https://www.seeedstudio.com/1-47-Inch-Touch-Display-Powered-by-XIAO-ESP32-S3-Plus-p-6996.html), [OpenELAB (EU)](https://openelab.io/products/seeed-studio-xiao-1-47-ips-touch-display-esp32-s3) | $19.90 |
 | 1 | Pants for Birds ADSBee 1090U | ADS-B 1090 MHz and 978 MHz receiver with Wi-Fi; sits on J10, J11 | arrived | [pantsforbirds.com](https://pantsforbirds.com/product/adsbee-1090u/) | see shop |
-| 1 | SparkFun GNSS Receiver Breakout MAX-M10S, GPS-18037 | GNSS receiver with SMA connector; sits on J5 | arrived | [SparkFun](https://www.sparkfun.com/sparkfun-gnss-receiver-breakout-max-m10s-qwiic.html), [Botland (EU)](https://botland.store/gps-modules/22065-gnss-max-m10s-module-qwiic-sparkfun-gps-18037.html) | $45.95 |
 
 ## Battery and battery sensors
 
@@ -22,7 +21,7 @@ Everything that JLCPCB does not assemble, per board, with order sources and orde
 
 ## Through-hole parts on the carrier (hand-soldered)
 
-D4, D5, J2 to J12, JP1, JP2 and SW4 are marked DNP, so the assembly BOM and position files leave them out. Their footprints are on the board; fit the parts below by hand. The mounting holes (MH1 to MH4, MH6 to MH8, MH10 to MH14) are board-only footprints and are excluded from the assembly files as well.
+D4, D5, J2 to J12, JP1, JP2 and SW4 are marked DNP, so the assembly BOM and position files leave them out. Their footprints are on the board; fit the parts below by hand. The mounting holes (MH1 to MH4, MH6 to MH8, MH12 to MH14) are board-only footprints and are excluded from the assembly files as well.
 
 | Qty | Ref | Part | Description | Where | Approx. price |
 |---|---|---|---|---|---|
@@ -30,7 +29,7 @@ D4, D5, J2 to J12, JP1, JP2 and SW4 are marked DNP, so the assembly BOM and posi
 | 3 | J2, J3, J4 | JST B2B-PH-K-S | JST-PH 2-pin header, vertical, 2 mm | Reichelt [JST PH2P ST](https://www.reichelt.com/de/en/shop/product/jst_pin_header_straight_1x2-pin_ph-185049) | €0.16 each |
 | 1 | D5 | Kingbright L-7104GD | LED 3 mm green, diffused, 20 mcd, 40° (power) | Reichelt [KBT L-7104GD](https://www.reichelt.com/de/en/led-3-mm-leaded-green-20-mcd-40--kbt-l-7104gd-p230824.html) | €0.10 |
 | 1 | D4 | Kingbright L-115WEGW | LED 3 mm red/green, 3-pin, **common cathode**, diffused, 60° (red USB power, green charging or charged) | Reichelt [KBT L-115WEGW](https://www.reichelt.com/de/en/shop/product/led_3_mm_tht_3-pin_red_green_627_565_nm_40_40_mcd_60_-231039) | €0.28 |
-| 3 | J5 to J11 | Female header 2.54 mm, 1x20, straight, 8.5 mm high, cut to length | Module sockets: 8 + 8 + 7 + 4 + 2 + 13 + 5 = 47 positions; cutting costs one position per cut, 3 strips are enough | Reichelt [BL 1X20G8 2,54](https://www.reichelt.com/de/en/20-pin-socket-terminal-strip-straight-rm-2-54-h-8-5-mm-bl-1x20g8-2-54-p51827.html) | about €1 each |
+| 2 | J6 to J11 | Female header 2.54 mm, 1x20, straight, 8.5 mm high, cut to length | Module sockets: 8 + 7 + 4 + 2 + 13 + 5 = 39 positions; cutting costs one position per cut, 2 strips are enough | Reichelt [BL 1X20G8 2,54](https://www.reichelt.com/de/en/20-pin-socket-terminal-strip-straight-rm-2-54-h-8-5-mm-bl-1x20g8-2-54-p51827.html) | about €1 each |
 | 1 | JP1, JP2 | Pin header 2.54 mm, 1x40, straight, two 1x2 pieces cut off | Power shunts ESP 5V / ADS 5V; the rest of the strip serves as module pins (below) | Reichelt [SL 1X40G 2,54](https://reichelt.com/de/en/40-pin-header-straight-pitch-2-54-sl-1x40g-2-54-p19506.html) | about €0.30 |
 | 2 pieces | J12 | Pin header 2.54 mm, 1x4, straight, cut from the SL 1X40G strip | Fit side by side in the 2x4 footprint; six dry-contact inputs and two grounds. Eight additional pins from the existing strips. | Reichelt SL 1X40G 2,54 (link above) | included in strip |
 | 2 | JP1, JP2 | Jumper 2.54 mm, closed, with grip | Shunts | Reichelt [Jumper 2.54 mm closed with handle](https://www.reichelt.com/de/en/shop/product/jumper_2_54_mm_closed_with_handle_black-119938) | €0.10 each |
@@ -64,8 +63,8 @@ A JST-PH crimp tool (e.g. Engineer PA-09 or a generic 2.0 mm open-barrel crimper
 | 1 | 1090 MHz antenna, SMA | ADS-B antenna; the ADSBee enclosure and sleeve-dipole bundle includes 1090 / 978 MHz antennas | [Pants for Birds bundle](https://pantsforbirds.com/product/adsbee-1090u-enclosure-and-1090mhz-978mhz-sleeve-dipole-antenna-bundle/) |
 | 1 (2 with 978 MHz) | Delock 88343, SMA bulkhead jack to U.FL plug, 200 mm | ADSBee U.FL (1090 MHz, sub-GHz) to case bulkhead | Reichelt [DELOCK 88343](https://www.reichelt.com/de/en/sma-jack-mount-mhf-u-fl-plug-200-mm-delock-88343-p179726.html) |
 | 1 | Abracon AANE-AP-0164, active GNSS antenna, SMA plug | Preferred. L1 multi-GNSS, LNA 28 dB, 15 to 25 mA at 3.0 to 5.0 V, 1 m RG-174 cable (`datasheets/abracon-aane-ap-0164.pdf`) | Digi-Key [AANE-AP-0164-1](https://www.digikey.de/de/products/detail/abracon-llc/AANE-AP-0164-1/26813090) |
-| (1) | Navilock 60555, active GNSS antenna, SMA plug | Fallback. Multi-GNSS active antenna, 3 m cable; bias current not checked against the 200 mA 3.3 V output | Reichelt [NAVILOCK 60555](https://www.reichelt.com/de/en/gnss-antenna-sma-connector-3-m-outdoor-use-navilock-60555-p347955.html) |
-| 1 | Delock SMA bulkhead jack to SMA plug 90° cable | GNSS module SMA to case bulkhead | Reichelt [Delock antenna cable SMA jack bulkhead / SMA plug 90°](https://www.reichelt.de/de/de/shop/produkt/antennenkabel_sma_buchse_zum_einbau_sma_stecker_90_-364462) |
+| (1) | Navilock 60555, active GNSS antenna, SMA plug | Fallback. Multi-GNSS active antenna, 3 m cable; bias current not checked; the carrier feeds 3.3 V from GNSS_VCC_RF through R82 | Reichelt [NAVILOCK 60555](https://www.reichelt.com/de/en/gnss-antenna-sma-connector-3-m-outdoor-use-navilock-60555-p347955.html) |
+| 1 | Delock 88343, SMA bulkhead jack to U.FL plug, 200 mm | Carrier J13 (GNSS) to case bulkhead | Reichelt [DELOCK 88343](https://www.reichelt.com/de/en/sma-jack-mount-mhf-u-fl-plug-200-mm-delock-88343-p179726.html) |
 | 1 | W.FL / MHF3 to RP-SMA female bulkhead pigtail, 0.81 mm coax, 100 to 150 mm | ADSBee Wi-Fi output (W.FL, not U.FL) to case bulkhead; not stocked by Reichelt | [Amazon example](https://www.amazon.com/RP-SMA-female-bulkhead-IPEX-MHF3-connector/dp/B00K282VW0), [Data Alliance](https://www.data-alliance.net/w-fl-to-sma-female-cable-4-inch-6-inch-8-inch-10-inch-1ft-14-in-16-in-18-in/) |
 | 1 | 2.4 GHz antenna, RP-SMA | Wi-Fi antenna for the ADSBee | any 2.4 GHz RP-SMA rod antenna |
 

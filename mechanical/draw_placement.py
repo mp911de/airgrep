@@ -8,6 +8,7 @@ Needs pcbnew and Pillow, so run it from the repository root with KiCad's Python:
 
   tools/kpy mechanical/draw_placement.py
 """
+import os
 import re
 from pathlib import Path
 
@@ -15,7 +16,7 @@ import pcbnew
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
-KICAD = ROOT / "hardware/carrier-max-charger"
+KICAD = ROOT / "hardware" / os.environ.get("CARRIER_PROJECT", "carrier-ti-charger")
 OUT = ROOT / "mechanical"
 
 # Schematic sheet -> (legend text, fill colour). Parts are coloured by the sheet they are on.
@@ -26,6 +27,7 @@ SHEETS = {
     "battery_control": ("Battery, thermal and power control", "#d8b4fe"),
     "gauge_status": ("Gauge and status LEDs", "#86efac"),
     "buzzer_baro": ("Buzzer, barometer and controls", "#a5b4fc"),
+    "gnss": ("GNSS receiver, antenna and backup", "#fde047"),
     "modules": ("Module sockets and service shunts", "#7dd3fc"),
 }
 
@@ -33,32 +35,32 @@ SHEETS = {
 # socket on the board; the offsets come from the module geometry in this folder.
 #   name, note, anchor ref, envelope origin relative to pin 1 (dx, dy), size (w, h), label height, colour
 MODULES = [
-    ("GNSS GPS-18037", "measured outline", "J5", (-6.67, -37.275), (31.12, 38.62), 0.42, "#0369a1"),
     ("Display", "Seeed 100069905", "J6", (-24.2, -3.88), (26.4, 51.4), 0.53, "#047857"),
     ("ADSBee 1090U", "measured outline", "J10", (-27.8, -39.11), (29.89, 47.46), 0.42, "#b91c1c"),
 ]
-GNSS_SMA = (15.56, 6.1, 6.4)   # axis from the envelope's left edge, length above the top edge, width
 ADSBEE_USB = (3.0, 9.0)        # reserved overhang below the envelope, assumed width (position along the edge unknown)
 
-ANTENNA = {"MH6": "GNSS", "MH7": "868 MHz", "MH8": "1090 MHz"}
+ANTENNA = {"MH6": "GNSS", "MH7": "1090 MHz", "MH8": "sub-GHz"}
 
 # Reference labels on the drawing: ref -> side of the part the label goes on (c = centred).
 LABELS = {
-    "J1": "c", "J2": "t", "J3": "t", "J4": "b", "J5": "b", "J6": "l", "J7": "r", "J8": "b", "J9": "r",
+    "J1": "c", "J2": "t", "J3": "t", "J4": "b", "J6": "l", "J7": "r", "J8": "b", "J9": "r",
     "J10": "l", "J11": "b", "JP1": "l", "JP2": "b", "SW1": "t", "SW2": "r", "SW3": "r", "J12": "b", "U13": "t", "BZ1": "c", "D4": "c", "D5": "c",
     "F1": "b", "L1": "c", "L2": "c", "U4": "c", "U5": "b", "U6": "c", "U7": "r", "U8": "t", "U9": "t", "U10": "b",
     "D3": "c", "TP1": "r", "TP2": "l", "TP3": "t", "TP4": "l", "TP5": "l", "TP6": "l", "TP7": "b",
+    "U16": "c", "J13": "r", "SW5": "t", "BT1": "c", "U18": "b",
 }
 KEY = [
     ("J1", "USB-C charging input"), ("J2 J3 J4", "pack NTC, battery, thermostat"),
-    ("J5", "GNSS socket 1x8"), ("J6 J7 J8 J9", "display sockets 1x8, 1x7, 1x4, 1x2"),
+    ("J6 J7 J8 J9", "display sockets 1x8, 1x7, 1x4, 1x2"),
     ("J10 J11", "ADSBee sockets 1x13, 1x5"), ("JP1 JP2", "5 V shunts: display, ADSBee"),
     ("SW1 SW2 SW3", "POWER, MUTE and Wi-Fi sliders"), ("U13 J12", "control inputs and expansion"), ("D4 D5", "charge LED, power LED"),
-    ("U4 L1", "charger MAX77757"), ("U6 L2", "boost TPS61088"), ("U7", "load switch TPS22975"),
+    ("U16 J13 SW5", "GNSS MAX-M10S, U.FL antenna, active antenna switch"), ("BT1 U18", "GNSS backup: CR2032, LDO"),
+    ("U4 L1", "charger BQ25798"), ("U6 L2", "boost TPS61088"), ("U7", "load switch TPS22975"),
     ("U5", "undervoltage supervisor"), ("U8 U10", "fuel gauge, barometer"), ("U9 BZ1", "buzzer driver, buzzer"),
     ("F1 D3", "pack fuse, VBUS TVS"), ("TP1 to TP7", "VBAT, VSYS, PWR_EN, THERM_OK, USB_VBUS, GND, 5 V"),
     ("MH1 to MH4", "case, 2.7 mm"), ("MH6 to MH8", "antenna bulkheads, 6.5 mm"),
-    ("MH10 to MH14", "module standoffs, 2.7 mm"),
+    ("MH12 to MH14", "module standoffs, 2.7 mm"),
 ]
 
 FONTS = ["/System/Library/Fonts/Helvetica.ttc", "/System/Library/Fonts/Supplemental/Arial.ttf",
@@ -79,20 +81,22 @@ def read_board():
     mm = pcbnew.ToMM
     edge = board.GetBoardEdgesBoundingBox()
     width, height = round(mm(edge.GetWidth()), 0), round(mm(edge.GetHeight()), 0)
+    ox, oy = mm(edge.GetX()), mm(edge.GetY())
     parts, holes = {}, {}
     for f in board.GetFootprints():
         ref = f.GetReference()
         if ref.startswith("FID"):
             continue
         if ref.startswith("MH"):
-            pad = list(f.Pads())[0]
-            holes[ref] = (mm(f.GetPosition().x), mm(f.GetPosition().y), mm(pad.GetDrillSize().x), mm(pad.GetSize().x))
+            pad = max(f.Pads(), key=lambda p: p.GetDrillSize().x)
+            ref = re.match(r"MH\d+", ref).group(0)
+            holes[ref] = (mm(f.GetPosition().x) - ox, mm(f.GetPosition().y) - oy, mm(pad.GetDrillSize().x), mm(pad.GetSize().x))
             continue
         court = f.GetCourtyard(f.GetLayer())
         box = court.BBox() if court.OutlineCount() else f.GetBoundingBox(False, False)
         pin1 = next((p for p in f.Pads() if p.GetNumber() == "1"), None)
-        parts[ref] = dict(x=mm(box.GetX()), y=mm(box.GetY()), w=mm(box.GetWidth()), h=mm(box.GetHeight()),
-                          pin1=(mm(pin1.GetPosition().x), mm(pin1.GetPosition().y)) if pin1 else None)
+        parts[ref] = dict(x=mm(box.GetX()) - ox, y=mm(box.GetY()) - oy, w=mm(box.GetWidth()), h=mm(box.GetHeight()),
+                          pin1=(mm(pin1.GetPosition().x) - ox, mm(pin1.GetPosition().y) - oy) if pin1 else None)
     return width, height, parts, holes
 
 
@@ -141,10 +145,6 @@ def build():
         text(x + w / 2, y + h * at, name, size=2.0, anchor="mm", fill=colour, bold=True)
         for i, sub in enumerate(s for s in (note, f"{w:g} x {h:g} mm") if s):
             text(x + w / 2, y + h * at + 2.6 + 2.2 * i, sub, size=1.5, anchor="mm", fill=colour)
-        if anchor == "J5":
-            ax, length, width = GNSS_SMA
-            rect(x + ax - width / 2, y - length, width, length, stroke=colour, sw=0.2, dash=True)
-            text(x + ax, y - length - 0.4, "SMA", size=1.5, anchor="mb", fill=colour)
         if anchor == "J10":
             depth, width = ADSBEE_USB
             rect(x + w / 2 - width / 2, y + h, width, depth, stroke=colour, sw=0.2, dash=True)
@@ -175,10 +175,10 @@ def build():
         text(kx + 14.5, ky, what, size=1.7, anchor="lt")
         ky += 3.0
     ky += 2
-    for note in ("Origin upper left, +Y down, mm, as in KiCad.",
+    for note in ("Origin at the upper left board edge, +Y down, mm.",
                  "Part outlines are courtyards read from carrier.kicad_pcb.",
                  "Module outlines follow the socket positions.",
-                 "GNSS and ADSBee sizes measured; edge offsets approximate.",
+                 "ADSBee size measured; edge offsets approximate.",
                  "Regenerate with mechanical/draw_placement.py."):
         text(kx, ky, note, size=1.5, anchor="lt", fill="#475569")
         ky += 2.6

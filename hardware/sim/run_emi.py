@@ -456,6 +456,40 @@ class Board:
                 entry[2] += gap
         return result
 
+    def crossing_detours(self, layer, ref_layer):
+        """Per crossing of a signal track on layer over a power track of ref_layer: the signal net, the
+        power net, the crossing point and the distance to where the return current can pass the slot.
+        That is an end of the power track run on ref_layer, or a capacitor from the power net to GND."""
+        power = [s for s in self.data["segments"] if s[5] == ref_layer and s[6] != "GND"]
+        ends = {}
+        for s in power:
+            for end in ((round(s[0], 3), round(s[1], 3)), (round(s[2], 3), round(s[3], 3))):
+                ends.setdefault((s[6], end), 0)
+                ends[(s[6], end)] += 1
+        bridges = {}
+        for (net, end), count in ends.items():
+            if count == 1:
+                bridges.setdefault(net, []).append(end)
+        for ref, pads in self.refs.items():
+            nets = {p.net for p in pads}
+            if ref.startswith("C") and "GND" in nets:
+                for p in pads:
+                    if p.net != "GND":
+                        bridges.setdefault(p.net, []).append((p.x, p.y))
+        result = []
+        for seg in self.data["segments"]:
+            if seg[5] != layer or seg[6] == "GND":
+                continue
+            for s in power:
+                if s[6] == seg[6] or not segments_cross(seg, s):
+                    continue
+                (x1, y1), (dx, dy), (ex, ey) = seg[:2], (seg[2] - seg[0], seg[3] - seg[1]), (s[2] - s[0], s[3] - s[1])
+                t = ((s[0] - x1) * ey - (s[1] - y1) * ex) / (dx * ey - dy * ex)
+                point = (x1 + t * dx, y1 + t * dy)
+                detour = min(math.hypot(point[0] - bx, point[1] - by) for bx, by in bridges.get(s[6], [point]))
+                result.append((seg[6], s[6], point, detour))
+        return result
+
 
 
 # ------------------------------------------------------------------------------------------
@@ -914,13 +948,11 @@ def conducted(report, board, fast):
 def return_paths(report, board):
     report.add("## Return paths under signal tracks")
     report.add()
-    rows, total = [], 0.0
+    rows = []
     for layer, ref in (("F", "In1"), ("B", "In2")):
         gaps = board.return_path_gaps(layer, ref)
         for net, (over, crossings, gap) in sorted(gaps.items(), key=lambda kv: -kv[1][0] - kv[1][2]):
             rows.append([layer + ".Cu", net, "%.1f mm" % over, "%d" % crossings, "%.1f mm" % gap])
-            if net in [d[0] for d in DIGITAL]:
-                total += over + gap
     in1 = [n for n, lay, _ in board.data["zones"] if lay == "In1" and n != "GND"]
     report.add("Top tracks reference In1, bottom tracks In2, both %.2f mm away. Listed: track length over "
                "non-GND zone copper of the reference layer and crossings of its power tracks (the gap is the "
@@ -932,8 +964,29 @@ def return_paths(report, board):
     else:
         report.add("No signal track runs over power copper of its reference layer.")
         report.add()
-    report.check(total < 5.0, "digital tracks over return-path gaps: %.1f mm in total, below 5 mm" % total)
+    report.add("Each crossing of a digital net: the return current detours to the nearest end of the power "
+               "track or capacitor to GND and back. That detour stays below λ/20 at the net's knee "
+               "frequency 0.35/t_rise.")
     report.add()
+    rows = []
+    for layer, ref in (("F", "In1"), ("B", "In2")):
+        for net, power, (x, y), detour in board.crossing_detours(layer, ref):
+            limit = detour_limit(net)
+            if limit is None:
+                continue
+            rows.append([net, power, "%.0f, %.0f mil" % (x / 0.0254, y / 0.0254), "%.1f mm" % (2 * detour),
+                         "%.0f mm" % limit])
+            report.check(2 * detour < limit, "%s over %s at %.0f, %.0f mil: detour %.1f mm, below %.0f mm"
+                         % (net, power, x / 0.0254, y / 0.0254, 2 * detour, limit))
+    if rows:
+        report.table(["Net", "Crosses", "At", "Detour", "λ/20"], rows)
+    report.add()
+
+
+def detour_limit(net):
+    """λ/20 in mm at the knee frequency of a digital net, None for other nets."""
+    rise = next((d[1] for d in DIGITAL if d[0] == net), None)
+    return None if rise is None else 299.792458e9 / math.sqrt(ER) * rise / 0.35 / 20
 
 
 # ------------------------------------------------------------------------------------------

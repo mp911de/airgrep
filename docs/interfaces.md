@@ -12,7 +12,6 @@ All module sockets are 2.54 mm single-row female headers. Their height is given 
 | J2 | pack NTC | JST B2B-PH-K-S, 2-pin | hand |
 | J3 | battery | JST B2B-PH-K-S, 2-pin, pin 1 is + | hand |
 | J4 | pack thermostat | JST B2B-PH-K-S, 2-pin | hand |
-| J5 | GNSS socket | 1x8 | hand |
 | J6, J7, J8, J9 | display sockets | 1x8, 1x7, 1x4, 1x2 | hand |
 | J10, J11 | ADSBee sockets | 1x13, 1x5 | hand |
 | JP1 | 5 V to the display | 1x2 pin header with jumper | hand |
@@ -58,41 +57,55 @@ J7 signals:
 - The I2C bus on J8 serves U13 (TCA9534, 0x20), U15 (FUSB303B, 0x21), U8 (MAX17048, 0x36), U10 (BMP580, 0x46) and U4 (BQ25798, 0x6B; its INT pin ends on TP8 and is polled). The display shares it with AXS5106L touch (0x63) and LSM6DS3 IMU (0x6A), as documented by [Seeed](https://wiki.seeedstudio.com/function_1.47_inch_touch_display_esp32s3/). These addresses do not conflict.
 - R19 and R20 are 1.8 kΩ. In parallel with the display module's 5.1 kΩ pull-ups, the effective range is 1.284 to 1.373 kΩ including tolerances. This supports the 200 pF, 400 kHz design envelope for every participant with published limits; the AXS5106L limits remain unpublished. Calculations are in [I2C bus requirements](i2c-bus-requirements.md).
 
-## Physical control inputs
+## Physical control inputs and GNSS control
 
-U13 is TI TCA9534PWR (C783615), powered by ESP_3V3 with C40, 100 nF. A0, A1 and A2 are grounded for address 0x20. INT is unconnected; firmware polls over the shared 400 kHz bus. Leave all eight channels configured as inputs and polarity inversion disabled. Read the input-port register, 0x00.
+U13 is TI TCA9534PWR (C783615), powered by ESP_3V3 with C40, 100 nF. A0, A1 and A2 are grounded for address 0x20. INT is unconnected; firmware polls over the shared 400 kHz bus. Leave all eight channels configured as inputs and polarity inversion disabled. Read the input-port register, 0x00. P2 and P3 control the GNSS receiver; see below.
 
-| U13 input | Net | Connection | Raw low | Raw high |
+| U13 pin | Net | Connection | Raw low | Raw high |
 |---|---|---|---|---|
 | P0 | BUZZ_ENABLE | SW2 common, pin 2 | mute | buzzer permitted |
 | P1 | WIFI_ENABLE | SW3 common, pin 2 | Wi-Fi off | Wi-Fi on |
-| P2 | CTRL_P2 | J12 pin 1 | contact closed | open |
-| P3 | CTRL_P3 | J12 pin 2 | contact closed | open |
+| P2 | GNSS_RESET_N | U16 RESET_N, pin 9 | GNSS in reset | run |
+| P3 | GNSS_SAFEBOOT_N | U16 SAFEBOOT_N, pin 18 | safeboot at start-up | run; follows TIMEPULSE once running |
 | P4 | CTRL_P4 | J12 pin 3 | contact closed | open |
 | P5 | CTRL_P5 | J12 pin 4 | contact closed | open |
 | P6 | CTRL_P6 | J12 pin 5 | contact closed | open |
 | P7 | SW_ON_N | POWER slider through Q11 (J12 pin 6 unused) | slider on | slider off |
 
-J12 pins 7 and 8 are GND. R48 to R55 are 100 kΩ pull-ups to ESP_3V3, one per input in P0 to P7 order. Each grounded input draws 33 µA nominal at 3.3 V. SW2 and SW3 connect common to GND through pin 3; pin 1 is unconnected. Both maintained positions are therefore defined without switching directly between power rails. The switch footprint numbers are our convention; the manufacturer drawing does not number the terminals.
+J12 pins 1, 2 and 6 are unconnected, pins 7 and 8 are GND. R48, R49 and R52 to R55 are 100 kΩ pull-ups to ESP_3V3 for P0, P1 and P4 to P7. P2 and P3 have no carrier pull-up; U16 pulls both up internally to +GNSS_3V3. Each grounded input draws 33 µA nominal at 3.3 V. SW2 and SW3 connect common to GND through pin 3; pin 1 is unconnected. Both maintained positions are therefore defined without switching directly between power rails. The switch footprint numbers are our convention; the manufacturer drawing does not number the terminals.
 
 J12 is for short enclosure wiring and dry contacts to GND. It is not a powered peripheral port. Leave unused contacts open; their pull-ups define their levels. Fit the header by hand; it is DNP and excluded from JLCPCB assembly exports.
 
+GNSS control rules:
+
+- Drive P2 and P3 low only. Set their output-port bits to 0 once and switch the direction bit: output pulls low, input releases. Never drive them high: +GNSS_3V3 is switched by the ADSBee, and a high output into an unpowered receiver exceeds the V_IO + 0.3 V pin limit.
+- Reset: hold P2 low for at least 1 ms.
+- Safeboot: hold P3 low while releasing P2, then release P3. Safeboot is for firmware recovery only.
+- Keep P3 an input in normal operation. The receiver connects SAFEBOOT_N to TIMEPULSE through 1 kΩ, so P3 reads the PPS pulse.
+
 Both sliders determine requested state from startup. Keep PWM silent until the first valid mute read, debounce changes, and retain both last known states if a read fails. The touchscreen displays state without overriding the sliders. Low battery must not turn Wi-Fi off while SW3 requests it. Shared peripheral-failure indication and the UART command protocol remain firmware work.
 
-## GNSS: SparkFun GPS-18037 (MAX-M10S)
+## GNSS: MAX-M10S (U16)
 
-The carrier uses the module's 1x8 header J5, on carrier socket J5.
+The receiver is on the carrier, sheet `gnss.kicad_sch`. +GNSS_3V3 comes from the ADSBee's switched 3V3 output on J11 pin 1.
 
-| Pin | Module | Carrier net |
+| U16 pin | Net | Connection |
 |---|---|---|
-| 1 | GND | GND |
-| 2 | 3.3V | GNSS_3V3, from the ADSBee |
-| 3 | !SAFE | not connected |
-| 4 | TXO | GNSS_TXO, to ADSBee GNSS RX |
-| 5 | RXI | GNSS_RXI, from ADSBee GNSS TX |
-| 6 | PPS | GNSS_PPS, to ADSBee PPS |
-| 7 | INT | not connected |
-| 8 | !RESET | not connected |
+| 2 TXD | GNSS_TXO | ADSBee GNSS RX, J11 pin 3 |
+| 3 RXD | GNSS_RXI | ADSBee GNSS TX, J11 pin 2 |
+| 4 TIMEPULSE | GNSS_PPS | ADSBee PPS, J11 pin 4, and the fix LED switch Q16 |
+| 6 V_BCKP | GNSS_V_BCKP | backup supply, below |
+| 9 RESET_N | GNSS_RESET_N | U13 P2 |
+| 11 RF_IN | GNSS_RF_IN | antenna, below |
+| 13 LNA_EN, 14 VCC_RF, 16, 17 | GNSS_ANT_* | antenna supervisor, below |
+| 18 SAFEBOOT_N | GNSS_SAFEBOOT_N | U13 P3 |
+| 5 EXTINT, 15 VIO_SEL | not connected | |
+
+- Antenna: U.FL J13 with ESD diode D11, bias-T L3/C59 and DC block C58 (u-blox UBX-20053088 reference values). RF_IN is matched to 50 Ω inside the module. The trace is 15 mil coplanar waveguide with an 8 mil gap to the pour; the RF net class and the "RF CPWG gap to pour" rule in `carrier.kicad_dru` set it.
+- Antenna supply: SW5 on feeds VCC_RF through Q14 and R82 (10 Ω) for an active antenna. Q15 switches it from LNA_EN. U17 detects an open antenna, R82 limits a short. SW5 off is for a passive antenna, which the receiver reports as open.
+- Backup: U18 (TPS7A02, 25 nA) makes 3.3 V from the pack, BT1 (CR2032) covers a disconnected pack. D12 and D13 OR them into V_BCKP, so neither source charges the other.
+- Fix LED: D14 through R86 and Q16, lit for each PPS pulse. The receiver sends PPS only with a fix; the pulse length is CFG-TP-LEN_LOCK_TP1, 100 ms by default. Cut JP4 to disable the LED.
+- Firmware (ADSBee) after a cold start without backup: CFG-I2C-ENABLED 0, CFG-HW-ANT_CFG_SHORTDET 1, CFG-HW-ANT_SUP_SHORT_PIN 3, CFG-HW-ANT_CFG_OPENDET 1, CFG-HW-ANT_SUP_OPEN_PIN 2, CFG-HW-ANT_CFG_PWRDOWN 1, CFG-HW-ANT_CFG_RECOVER 1.
 
 ## ADSBee 1090U
 
@@ -123,7 +136,7 @@ GNSS header (module J4, 1x5) on carrier socket J11:
 
 ## Silkscreen labels
 
-- Module sockets J5 to J8, J10 and J11 carry a short label per pin. J9 has none.
+- Module sockets J6 to J8, J10 and J11 carry a short label per pin. J9 has none.
 - Labels use the module's own view: RX and TX at J7 are the display's, at J10 and J11 the ADSBee's.
 - J2 and J3 print NTC and BAT on the top side, with + and - at J3. The bottom side prints NTC, BAT and THERM.
 - Test points print VBAT, VSYS, PWR_EN, THERM, USB_VBUS, GND and 5V (TP1 to TP7).
