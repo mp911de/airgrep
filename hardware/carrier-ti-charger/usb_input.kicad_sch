@@ -3172,7 +3172,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "910k 1%"
+		(property "Value" "768k 1%"
 			(at 185.42 116.84 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3194,7 +3194,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/0a975aaa49b7c97f38a963127be4a823.pdf?productCode=C25800"
+		(property "Datasheet" "https://www.lcsc.com/product-detail/C49196905.html"
 			(at 180.34 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -3216,7 +3216,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C25800"
+		(property "LCSC" "C49196905"
 			(at 180.34 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -3238,7 +3238,7 @@
 				)
 			)
 		)
-		(property "MPN" "0402WGF9103TCE"
+		(property "MPN" "FRC0402F7683TS"
 			(at 180.34 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -3363,7 +3363,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "910k 1%"
+		(property "Value" "768k 1%"
 			(at 165.1 116.84 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3385,7 +3385,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/0a975aaa49b7c97f38a963127be4a823.pdf?productCode=C25800"
+		(property "Datasheet" "https://www.lcsc.com/product-detail/C49196905.html"
 			(at 160.02 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -3407,7 +3407,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C25800"
+		(property "LCSC" "C49196905"
 			(at 160.02 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -3429,7 +3429,7 @@
 				)
 			)
 		)
-		(property "MPN" "0402WGF9103TCE"
+		(property "MPN" "FRC0402F7683TS"
 			(at 160.02 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -3768,7 +3768,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100n 50V"
+		(property "Value" "100n 16V"
 			(at 210.82 78.74 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3779,7 +3779,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
 			(at 208.28 77.47 0)
 			(hide yes)
 			(show_name no)
@@ -3812,7 +3812,18 @@
 				)
 			)
 		)
-		(property "LCSC" "C14663"
+		(property "LCSC" "C1525"
+			(at 208.28 77.47 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "CL05B104KO5NNNC"
 			(at 208.28 77.47 0)
 			(hide yes)
 			(show_name no)
@@ -4195,7 +4206,7 @@
 				)
 			)
 		)
-		(property "Value" "887k 1%"
+		(property "Value" "1.5k 1%"
 			(at 175.26 116.84 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4227,7 +4238,7 @@
 				)
 			)
 		)
-		(property "Description" "Resistor, VBUS_DET"
+		(property "Description" "VBUS_DET series resistor, surge current limit"
 			(at 170.18 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -4238,7 +4249,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C409935"
+		(property "LCSC" "C25867"
 			(at 170.18 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -4249,7 +4260,7 @@
 				)
 			)
 		)
-		(property "MPN" "ERJ2RKF8873X"
+		(property "MPN" "0402WGF1501TCE"
 			(at 170.18 116.84 0)
 			(hide yes)
 			(show_name no)

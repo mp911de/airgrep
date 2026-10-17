@@ -9,19 +9,25 @@ import simlib
 
 
 class OvervoltageTests(unittest.TestCase):
-    def test_normal_supply_is_below_all_trip_corners(self):
-        self.assertGreater(power.ovlo_bounds(power.OVLO_RISING)[0], 5.25)
-        self.assertLess(power.ovlo_bounds(power.OVLO_RISING)[1], 6.0)
+    def test_rail_trip_is_between_the_boost_maximum_and_the_display_limit(self):
+        low, high = power.ovlo_bounds(power.OVLO_RISING, power.OVLO_RAIL)
+        self.assertGreater(low, 5.25)
+        self.assertLess(high, 6.0)
 
-    def test_basic_resistors_cannot_meet_the_normal_supply_limit(self):
-        trip = power.ovlo_bounds(power.OVLO_RISING, top=5.1e3, tolerance=.01, tcr=100e-6)
-        self.assertLess(trip[0], 5.25)
+    def test_usb_trip_is_between_the_normal_usb_maximum_and_the_display_limit(self):
+        low, high = power.ovlo_bounds(power.OVLO_RISING, power.OVLO_USB)
+        self.assertGreater(low, 5.5)
+        self.assertLess(high, 6.0)
 
-    def test_returning_to_five_volts_does_not_guarantee_recovery(self):
-        low, high = power.ovlo_bounds(power.OVLO_FALLING)
-        self.assertLess(low, 5.0)
-        self.assertGreater(high, 5.0)
-        self.assertLess(high, power.ovlo_bounds(power.OVLO_RISING)[0])
+    def test_basic_resistors_alone_cannot_meet_the_usb_window(self):
+        basic = ((4.7e3, .01, 100e-6), (1.24e3, .01, 100e-6))
+        low, high = power.ovlo_bounds(power.OVLO_RISING, basic)
+        self.assertTrue(low < 5.5 or high > 6.0)
+
+    def test_usb_release_is_below_its_trip_band(self):
+        low, high = power.ovlo_bounds(power.OVLO_FALLING, power.OVLO_USB)
+        self.assertLess(low, 5.5)
+        self.assertLess(high, power.ovlo_bounds(power.OVLO_RISING, power.OVLO_USB)[0])
 
 
 @unittest.skipUnless(simlib.NGSPICE, "ngspice is required")

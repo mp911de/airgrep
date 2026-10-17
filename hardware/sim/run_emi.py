@@ -146,13 +146,16 @@ DIGITAL = (
 NOT_MODELLED = ("USB_DP and USB_DN carry only the BC1.2 detection at plug-in, no traffic. "
                 "PWR_EN, SW_EN, the LED and status nets are static.")
 
-# --- receivers at the antenna mounts. Interference threshold: 6 dB below the thermal noise
-# floor kTB + NF of the receiver, so the noise floor rises by less than 1 dB.
+# --- receivers at the antenna mounts: name, centre, bandwidth, NF, mount, hard limit in dBm.
+# Without a hard limit the threshold is 6 dB below the thermal noise floor kTB + NF, so the floor
+# rises by less than 1 dB. FLARM uses a hard limit at the receiver sensitivity: cockpit electronics
+# set its real floor. For scale, a 14 dBm FLARM transmitter 20 km away arrives at about -103 dBm in
+# free space (isotropic antennas), so the carrier stays below a target at that range.
 ANT_GAIN = 1.64  # dipole
 ANTENNA_OFFSET = 0.03  # m from the mount to the antenna's radiating centre on the enclosure wall (assumed)
-RECEIVERS = (("ADS-B 1090 MHz", 1090e6, 4e6, 5.0, "MH8ADS980"),
-             ("FLARM 868 MHz", 868.2e6, 250e3, 5.0, "MH7ADS1090"),
-             ("GNSS L1 1575 MHz", 1575.42e6, 2e6, 2.0, "MH6ANTGNSS"))
+RECEIVERS = (("ADS-B 1090 MHz", 1090e6, 4e6, 5.0, "MH8ADS980", None),
+             ("FLARM 868 MHz", 868.2e6, 250e3, 5.0, "MH7ADS1090", -105.0),
+             ("GNSS L1 1575 MHz", 1575.42e6, 2e6, 2.0, "MH6ANTGNSS", None))
 
 # --- USB input and harness
 USB_CABLE = (0.3, 1e-6)  # 1 m cable: R, L of the VBUS/GND loop (estimate)
@@ -173,6 +176,10 @@ def dbuv(x):
 
 def dbm(watts):
     return 10 * math.log10(max(watts, 1e-30) / 1e-3)
+
+
+def receiver_threshold(bw, nf, limit):
+    return limit if limit is not None else dbm(KT * bw) + nf - MARGIN
 
 
 def mhz(f):
@@ -738,10 +745,9 @@ def receiver_bands(report, board, sources, digital, fast):
     report.add("## Converter and digital lines in the receiver bands")
     report.add()
     rows, failures, boost_failures = [], [], []
-    mounts = {m: board.mounts[m] for _, _, _, _, m in RECEIVERS}
-    for rx_name, f0, bw, nf, mount in RECEIVERS:
-        floor = dbm(KT * bw) + nf
-        threshold = floor - MARGIN
+    mounts = {m: board.mounts[m] for _, _, _, _, m, _ in RECEIVERS}
+    for rx_name, f0, bw, nf, mount, limit in RECEIVERS:
+        threshold = receiver_threshold(bw, nf, limit)
         for name, src in sources.items():
             conv, loop, freqs = src["conv"], src["loop"], src["freqs"]
             centre = board.position(conv["inductor"])
@@ -777,8 +783,10 @@ def receiver_bands(report, board, sources, digital, fast):
                "by a dipole of gain %.2f with its far-field aperture. Lines within the receiver bandwidth add "
                "as power; where the line spacing exceeds the bandwidth the nearest line counts. Triangle "
                "frequency dithering is integrated as uniform dwell across each harmonic's specified spread. Threshold: "
-               "thermal noise floor kTB plus the noise figure, less %.0f dB (ADS-B 4 MHz, NF 5 dB; FLARM "
-               "250 kHz, NF 5 dB; GNSS 2 MHz, NF 2 dB):" % (ANTENNA_OFFSET * 1e3, ANT_GAIN, MARGIN))
+               "thermal noise floor kTB plus the noise figure, less %.0f dB (ADS-B 4 MHz, NF 5 dB; GNSS 2 MHz, "
+               "NF 2 dB). FLARM (250 kHz) uses the hard limit −105 dBm at the receiver sensitivity, about the level of "
+               "a 14 dBm FLARM transmitter 20 km away in free space:"
+               % (ANTENNA_OFFSET * 1e3, ANT_GAIN, MARGIN))
     report.add()
     report.table(["Receiver", "Source", "Distance", "Lines", "In-band power", "Threshold", "Margin"], rows)
     report.check(not failures, "converter lines in every receiver band below the threshold"
@@ -805,9 +813,10 @@ SPECTRUM_COLORS = {"boost U6": "#d9534f", "buck U4": "#337ab7", "digital": "#777
 def flarm_spectrum(board, sources, digital):
     """Received power at the FLARM mount per converter line (nominal bench case) and of the worst
     digital net, as a wide view and a zoom on the channels."""
-    _, f0, bw, nf, mount = next(r for r in RECEIVERS if r[0].startswith("FLARM"))
+    _, f0, bw, nf, mount, limit = next(r for r in RECEIVERS if r[0].startswith("FLARM"))
     ant = board.mounts[mount]
     floor = dbm(KT * bw) + nf
+    threshold = receiver_threshold(bw, nf, limit)
     combs = {}
     for name, src in sources.items():
         conv, loop, freqs = src["conv"], src["loop"], src["freqs"]
@@ -843,7 +852,7 @@ def flarm_spectrum(board, sources, digital):
 
     def levels(x, yy, y0, at_left=False):
         for v, label, color in ((floor, "receiver floor %d dBm" % round(floor), "#444444"),
-                                (floor - MARGIN, "threshold %d dBm" % round(floor - MARGIN), "#e08a00")):
+                                (threshold, "hard limit %d dBm" % round(threshold), "#e08a00")):
             fig.line([(left, yy(v)), (right, yy(v))], color, dash=(5, 3))
             fig.text(left + 4 if at_left else right - 4, yy(v) - 4, simlib.minus(label), 10, color,
                      anchor="start" if at_left else "end")

@@ -67,18 +67,21 @@ C_TEMP, C_AC = 0.90, 0.92
 C_MODULES = 40e-6
 C_INPUT = 100e-9  # C39/C38, each module-feed input bypass
 # TPS25947 SLVSFC9C, section 6.5; Yageo RT V.16, TCR referenced to 25 C.
-OVLO_TOP, OVLO_BOTTOM = 5.36e3, 1.5e3
-OVLO_TOL, OVLO_TCR = .001, 25e-6
+# OVLO dividers: (top, bottom), each (ohm, tolerance, TCR).
+OVLO_RAIL = ((5.6e3, .01, 100e-6), (1.5e3, .01, 100e-6))  # U11, U12 on RAIL_5V: R73/R74, R75/R76
+OVLO_USB = ((4.7e3, .01, 100e-6), (1.24e3, .001, 25e-6))  # U14 on CHG_PMID: R77/R78
 OVLO_TEMP = (-40., 125.)
 OVLO_RISING, OVLO_FALLING = (1.183, 1.223), (1.076, 1.116)
 OVLO_LEAKAGE = 0.1e-6
 
 
-def ovlo_bounds(threshold, top=OVLO_TOP, bottom=OVLO_BOTTOM, tolerance=OVLO_TOL, tcr=OVLO_TCR):
+def ovlo_bounds(threshold, divider=OVLO_RAIL):
     delta = max(abs(t - 25.) for t in OVLO_TEMP)
-    factors = ((1 - tolerance) * (1 - tcr * delta), (1 + tolerance) * (1 + tcr * delta))
+    (top, top_tol, top_tcr), (bottom, bottom_tol, bottom_tcr) = divider
+    corners = lambda tol, tcr: ((1 - tol) * (1 - tcr * delta), (1 + tol) * (1 + tcr * delta))
     values = [v * (1 + top * a / (bottom * b)) + leakage * top * a
-              for v, a, b, leakage in itertools.product(threshold, factors, factors,
+              for v, a, b, leakage in itertools.product(threshold, corners(top_tol, top_tcr),
+                                                        corners(bottom_tol, bottom_tcr),
                                                         (-OVLO_LEAKAGE, OVLO_LEAKAGE))]
     return min(values), max(values)
 
@@ -86,21 +89,25 @@ def ovlo_bounds(threshold, top=OVLO_TOP, bottom=OVLO_BOTTOM, tolerance=OVLO_TOL,
 def overvoltage(report):
     if CHG["part"] != "BQ25798":
         return
-    trip, release = ovlo_bounds(OVLO_RISING), ovlo_bounds(OVLO_FALLING)
     report.add("## Module-feed overvoltage lockout")
     report.add()
-    report.add("U11/U12/U14: 5.36 kΩ / 1.50 kΩ, 0.1 %, ±25 ppm/°C. "
-               "R73/R75/R77: RT0805BRD075K36L, 0805, 125 mW, 150 V; "
-               "R74/R76/R78: RT0402BRD071K5L, 0402, 62.5 mW, 50 V. Static corners include "
+    report.add("U11/U12 sense RAIL_5V through R73/R74 and R75/R76: 5.6 kΩ / 1.5 kΩ, both 1 %, ±100 ppm/°C "
+               "(0603WAF5601T5E, 0402WGF1501TCE). U14 senses CHG_PMID through R77/R78: 4.7 kΩ 1 %, ±100 ppm/°C "
+               "(0603WAF4701T5E) over 1.24 kΩ 0.1 %, ±25 ppm/°C (ARG02BTC1241). Static corners include "
                "independent resistor drift over −40 to +125 °C from 25 °C, IC threshold limits "
-               "and ±0.1 µA OVLO leakage. Sources: TPS25947 SLVSFC9C section 6.5 and Yageo RT V.16.")
-    report.table(["Threshold", "Nominal", "Full-temperature corners"],
-                 [["Trip", "%.3f V" % (1.20 * (1 + OVLO_TOP / OVLO_BOTTOM)),
-                   "%.3f–%.3f V" % trip],
-                  ["Release", "%.3f V" % (1.09 * (1 + OVLO_TOP / OVLO_BOTTOM)),
-                   "%.3f–%.3f V" % release]])
-    report.check(trip[0] > 5.25, "minimum trip exceeds the 5.25 V normal-input design limit")
-    report.check(trip[1] < 6.0, "static maximum trip is below the display SGM6029's 6 V absolute maximum")
+               "and ±0.1 µA OVLO leakage. Source: TPS25947 SLVSFC9C section 6.5.")
+    rows = []
+    for name, divider in (("U11/U12, RAIL_5V", OVLO_RAIL), ("U14, USB side", OVLO_USB)):
+        ratio = 1 + divider[0][0] / divider[1][0]
+        rows.append([name, "Trip", "%.3f V" % (1.20 * ratio), "%.3f–%.3f V" % ovlo_bounds(OVLO_RISING, divider)])
+        rows.append([name, "Release", "%.3f V" % (1.09 * ratio), "%.3f–%.3f V" % ovlo_bounds(OVLO_FALLING, divider)])
+    report.table(["Feed", "Threshold", "Nominal", "Full-temperature corners"], rows)
+    rail, usb = ovlo_bounds(OVLO_RISING, OVLO_RAIL), ovlo_bounds(OVLO_RISING, OVLO_USB)
+    report.check(rail[0] > 5.25, "RAIL_5V minimum trip exceeds the boost's 5.25 V load-step maximum")
+    report.check(usb[0] > 5.5, "USB-side minimum trip exceeds the 5.5 V normal USB input maximum")
+    report.check(max(rail[1], usb[1]) < 6.0, "static maximum trip is below the display SGM6029's 6 V absolute maximum")
+    report.add("USB PD load transients reach 6.0 V for up to 5 ms; U14 trips on them by design, since 6 V is the "
+               "display's absolute maximum. The RAIL_5V release and trip bands overlap with 1 % dividers.")
     report.add("Returning to 5 V does not guarantee recovery. Cycle the affected input after an "
                "overvoltage fault: POWER off/on for U11/U12, USB disconnect/reconnect for U14. "
                "The display SGM6029 operating maximum is 5.5 V. Static trip below 6 V does not "

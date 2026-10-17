@@ -104,7 +104,7 @@ The receiver is on the carrier, sheet `gnss.kicad_sch`. +GNSS_3V3 comes from the
 - Antenna: U.FL J13 with ESD diode D11, bias-T L3/C59 and DC block C58 (u-blox UBX-20053088 reference values). RF_IN is matched to 50 Ω inside the module. The trace is 15 mil coplanar waveguide with an 8 mil gap to the pour; the RF net class and the "RF CPWG gap to pour" rule in `carrier.kicad_dru` set it.
 - Antenna supply: SW5 on feeds VCC_RF through Q14 and R82 (10 Ω) for an active antenna. Q15 switches it from LNA_EN. U17 detects an open antenna, R82 limits a short. SW5 off is for a passive antenna, which the receiver reports as open.
 - Backup: U18 (TPS7A02, 25 nA) makes 3.3 V from the pack, BT1 (CR2032) covers a disconnected pack. D12 and D13 OR them into V_BCKP, so neither source charges the other.
-- Fix LED: D14 through R86 and Q16, lit for each PPS pulse. The receiver sends PPS only with a fix; the pulse length is CFG-TP-LEN_LOCK_TP1, 100 ms by default. Cut JP4 to disable the LED.
+- Fix LED: D14 (KT-0603W white, C2290) through R86 and Q16, lit for each PPS pulse. The receiver sends PPS only with a fix; the pulse length is CFG-TP-LEN_LOCK_TP1, 100 ms by default. Cut JP4 to disable the LED.
 - Firmware (ADSBee) after a cold start without backup: CFG-I2C-ENABLED 0, CFG-HW-ANT_CFG_SHORTDET 1, CFG-HW-ANT_SUP_SHORT_PIN 3, CFG-HW-ANT_CFG_OPENDET 1, CFG-HW-ANT_SUP_OPEN_PIN 2, CFG-HW-ANT_CFG_PWRDOWN 1, CFG-HW-ANT_CFG_RECOVER 1.
 
 ## ADSBee 1090U

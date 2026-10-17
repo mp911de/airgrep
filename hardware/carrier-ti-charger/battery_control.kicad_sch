@@ -5792,7 +5792,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100n 50V"
+		(property "Value" "100n 16V"
 			(at 68.58 93.98 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5803,7 +5803,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
 			(at 66.04 92.71 0)
 			(hide yes)
 			(show_name no)
@@ -5836,7 +5836,18 @@
 				)
 			)
 		)
-		(property "LCSC" "C14663"
+		(property "LCSC" "C1525"
+			(at 66.04 92.71 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "CL05B104KO5NNNC"
 			(at 66.04 92.71 0)
 			(hide yes)
 			(show_name no)
@@ -5976,7 +5987,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100n 50V"
+		(property "Value" "100n 16V"
 			(at 180.34 59.69 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5987,7 +5998,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
 			(at 177.8 58.42 0)
 			(hide yes)
 			(show_name no)
@@ -6020,7 +6031,18 @@
 				)
 			)
 		)
-		(property "LCSC" "C14663"
+		(property "LCSC" "C1525"
+			(at 177.8 58.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "CL05B104KO5NNNC"
 			(at 177.8 58.42 0)
 			(hide yes)
 			(show_name no)
@@ -6681,7 +6703,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "100n 50V"
+		(property "Value" "100n 16V"
 			(at 179.07 123.19 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6692,7 +6714,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
 			(at 176.53 121.92 0)
 			(hide yes)
 			(show_name no)
@@ -6725,7 +6747,18 @@
 				)
 			)
 		)
-		(property "LCSC" "C14663"
+		(property "LCSC" "C1525"
+			(at 176.53 121.92 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "CL05B104KO5NNNC"
 			(at 176.53 121.92 0)
 			(hide yes)
 			(show_name no)

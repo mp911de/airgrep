@@ -6637,7 +6637,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "1.5k"
+		(property "Value" "1.5k 1%"
 			(at 52.07 148.59 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6670,7 +6670,7 @@
 				)
 			)
 		)
-		(property "Description" "OVLO divider, 0.1%, 25 ppm/C, 62.5 mW, 50 V"
+		(property "Description" "OVLO divider bottom, U11, 1%, 100 ppm/C"
 			(at 54.61 147.32 0)
 			(hide yes)
 			(show_name no)
@@ -6681,7 +6681,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C281775"
+		(property "LCSC" "C25867"
 			(at 54.61 147.32 0)
 			(hide yes)
 			(show_name no)
@@ -6692,7 +6692,7 @@
 				)
 			)
 		)
-		(property "MPN" "RT0402BRD071K5L"
+		(property "MPN" "0402WGF1501TCE"
 			(at 54.61 147.32 0)
 			(hide yes)
 			(show_name no)
@@ -6703,7 +6703,7 @@
 				)
 			)
 		)
-		(property "Tolerance" "0.1%"
+		(property "Tolerance" "1%"
 			(at 54.61 147.32 0)
 			(hide yes)
 			(show_name no)
@@ -6714,7 +6714,7 @@
 				)
 			)
 		)
-		(property "TCR" "25 ppm/C"
+		(property "TCR" "100 ppm/C"
 			(at 54.61 147.32 0)
 			(hide yes)
 			(show_name no)
@@ -7186,7 +7186,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100n 50V"
+		(property "Value" "100n 16V"
 			(at 29.21 57.15 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7197,7 +7197,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
 			(at 26.67 55.88 0)
 			(hide yes)
 			(show_name no)
@@ -7230,7 +7230,18 @@
 				)
 			)
 		)
-		(property "LCSC" "C14663"
+		(property "LCSC" "C1525"
+			(at 26.67 55.88 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "CL05B104KO5NNNC"
 			(at 26.67 55.88 0)
 			(hide yes)
 			(show_name no)
@@ -7939,7 +7950,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "5.36k"
+		(property "Value" "5.6k 1%"
 			(at 52.07 80.01 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7972,7 +7983,7 @@
 				)
 			)
 		)
-		(property "Description" "OVLO divider, 0.1%, 25 ppm/C, 100 mW, 75 V"
+		(property "Description" "OVLO divider top, U12, 1%, 100 ppm/C"
 			(at 54.61 78.74 0)
 			(hide yes)
 			(show_name no)
@@ -7983,7 +7994,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C2924137"
+		(property "LCSC" "C23189"
 			(at 54.61 78.74 0)
 			(hide yes)
 			(show_name no)
@@ -7994,7 +8005,7 @@
 				)
 			)
 		)
-		(property "MPN" "AR03BTCX5361A"
+		(property "MPN" "0603WAF5601T5E"
 			(at 54.61 78.74 0)
 			(hide yes)
 			(show_name no)
@@ -8005,7 +8016,7 @@
 				)
 			)
 		)
-		(property "Tolerance" "0.1%"
+		(property "Tolerance" "1%"
 			(at 54.61 78.74 0)
 			(hide yes)
 			(show_name no)
@@ -8016,7 +8027,7 @@
 				)
 			)
 		)
-		(property "TCR" "25 ppm/C"
+		(property "TCR" "100 ppm/C"
 			(at 54.61 78.74 0)
 			(hide yes)
 			(show_name no)
@@ -8491,7 +8502,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "1.5k"
+		(property "Value" "1.5k 1%"
 			(at 52.07 87.63 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8524,7 +8535,7 @@
 				)
 			)
 		)
-		(property "Description" "OVLO divider, 0.1%, 25 ppm/C, 62.5 mW, 50 V"
+		(property "Description" "OVLO divider bottom, U12, 1%, 100 ppm/C"
 			(at 54.61 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -8535,7 +8546,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C281775"
+		(property "LCSC" "C25867"
 			(at 54.61 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -8546,7 +8557,7 @@
 				)
 			)
 		)
-		(property "MPN" "RT0402BRD071K5L"
+		(property "MPN" "0402WGF1501TCE"
 			(at 54.61 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -8557,7 +8568,7 @@
 				)
 			)
 		)
-		(property "Tolerance" "0.1%"
+		(property "Tolerance" "1%"
 			(at 54.61 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -8568,7 +8579,7 @@
 				)
 			)
 		)
-		(property "TCR" "25 ppm/C"
+		(property "TCR" "100 ppm/C"
 			(at 54.61 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -10549,7 +10560,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100n 50V"
+		(property "Value" "100n 16V"
 			(at 29.21 118.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10560,7 +10571,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
 			(at 26.67 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -10593,7 +10604,18 @@
 				)
 			)
 		)
-		(property "LCSC" "C14663"
+		(property "LCSC" "C1525"
+			(at 26.67 116.84 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "CL05B104KO5NNNC"
 			(at 26.67 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -10641,7 +10663,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "5.36k"
+		(property "Value" "5.6k 1%"
 			(at 52.07 140.97 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10674,7 +10696,7 @@
 				)
 			)
 		)
-		(property "Description" "OVLO divider, 0.1%, 25 ppm/C, 100 mW, 75 V"
+		(property "Description" "OVLO divider top, U11, 1%, 100 ppm/C"
 			(at 54.61 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -10685,7 +10707,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C2924137"
+		(property "LCSC" "C23189"
 			(at 54.61 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -10696,7 +10718,7 @@
 				)
 			)
 		)
-		(property "MPN" "AR03BTCX5361A"
+		(property "MPN" "0603WAF5601T5E"
 			(at 54.61 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -10707,7 +10729,7 @@
 				)
 			)
 		)
-		(property "Tolerance" "0.1%"
+		(property "Tolerance" "1%"
 			(at 54.61 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -10718,7 +10740,7 @@
 				)
 			)
 		)
-		(property "TCR" "25 ppm/C"
+		(property "TCR" "100 ppm/C"
 			(at 54.61 139.7 0)
 			(hide yes)
 			(show_name no)

@@ -84,6 +84,16 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(emi.spread_overlap(120e6, .1, 100e6, 1e6, 2e6), 0.0)
 
 
+class ReceiverLimitTests(unittest.TestCase):
+    def test_flarm_hard_limit_is_the_receiver_sensitivity(self):
+        _, _, bw, nf, _, limit = next(r for r in emi.RECEIVERS if r[0].startswith("FLARM"))
+        self.assertEqual(emi.receiver_threshold(bw, nf, limit), -105.0)
+
+    def test_other_receivers_keep_the_noise_floor_threshold(self):
+        _, _, bw, nf, _, limit = next(r for r in emi.RECEIVERS if r[0].startswith("ADS-B"))
+        self.assertAlmostEqual(emi.receiver_threshold(bw, nf, limit), emi.dbm(emi.KT * bw) + nf - emi.MARGIN)
+
+
 class FigureTests(unittest.TestCase):
     def test_pdf_cross_reference_points_at_objects(self):
         fig = simlib.Figure(100, 50)
@@ -141,7 +151,7 @@ class BoardTests(unittest.TestCase):
             self.assertTrue(self.board.net_tracks(net), net)
 
     def test_mounts_and_inductors(self):
-        for _, _, _, _, mount in emi.RECEIVERS:
+        for _, _, _, _, mount, _ in emi.RECEIVERS:
             self.assertIn(mount, self.board.mounts)
         for conv in emi.CONVERTERS.values():
             self.board.position(conv["inductor"])

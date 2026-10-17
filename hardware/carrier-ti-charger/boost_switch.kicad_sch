@@ -4499,7 +4499,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "100n 50V"
+		(property "Value" "100n 16V"
 			(at 127 81.28 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4510,7 +4510,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
 			(at 129.54 80.01 0)
 			(hide yes)
 			(show_name no)
@@ -4543,7 +4543,18 @@
 				)
 			)
 		)
-		(property "LCSC" "C14663"
+		(property "LCSC" "C1525"
+			(at 129.54 80.01 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "CL05B104KO5NNNC"
 			(at 129.54 80.01 0)
 			(hide yes)
 			(show_name no)
@@ -4759,7 +4770,7 @@
 				)
 			)
 		)
-		(property "Value" "100n 50V"
+		(property "Value" "100n 16V"
 			(at 82.55 88.9 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4769,7 +4780,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
 			(at 82.55 91.44 0)
 			(hide yes)
 			(show_name no)
@@ -4802,7 +4813,18 @@
 				)
 			)
 		)
-		(property "LCSC" "C14663"
+		(property "LCSC" "C1525"
+			(at 82.55 91.44 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "CL05B104KO5NNNC"
 			(at 82.55 91.44 0)
 			(hide yes)
 			(show_name no)

@@ -4603,7 +4603,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100n 50V"
+		(property "Value" "100n 16V"
 			(at 104.14 81.28 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4614,7 +4614,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
 			(at 101.6 80.01 0)
 			(hide yes)
 			(show_name no)
@@ -4647,7 +4647,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C14663"
+		(property "LCSC" "C1525"
 			(at 101.6 80.01 0)
 			(hide yes)
 			(show_name no)
@@ -4658,7 +4658,7 @@
 				)
 			)
 		)
-		(property "MPN" "CC0603KRX7R9BB104"
+		(property "MPN" "CL05B104KO5NNNC"
 			(at 101.6 80.01 0)
 			(hide yes)
 			(show_name no)
@@ -8493,7 +8493,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100n 50V"
+		(property "Value" "100n 16V"
 			(at 231.14 157.48 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8504,7 +8504,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
 			(at 228.6 156.21 0)
 			(hide yes)
 			(show_name no)
@@ -8537,7 +8537,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C14663"
+		(property "LCSC" "C1525"
 			(at 228.6 156.21 0)
 			(hide yes)
 			(show_name no)
@@ -8548,7 +8548,7 @@
 				)
 			)
 		)
-		(property "MPN" "CC0603KRX7R9BB104"
+		(property "MPN" "CL05B104KO5NNNC"
 			(at 228.6 156.21 0)
 			(hide yes)
 			(show_name no)
@@ -9394,7 +9394,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "CT-1608DUPC-P6"
+		(property "Value" "KT-0603W white"
 			(at 86.36 152.4 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9427,7 +9427,7 @@
 				)
 			)
 		)
-		(property "Description" "Fix LED, purple, blinks with PPS"
+		(property "Description" "Fix LED, white, blinks with PPS"
 			(at 83.82 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -9438,7 +9438,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C52676000"
+		(property "LCSC" "C2290"
 			(at 83.82 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -9449,7 +9449,7 @@
 				)
 			)
 		)
-		(property "MPN" "CT-1608DUPC-P6"
+		(property "MPN" "KT-0603W"
 			(at 83.82 151.13 0)
 			(hide yes)
 			(show_name no)

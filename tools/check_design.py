@@ -243,9 +243,12 @@ def sch_field(ref, field, scale=1.0):
 def sim(script, name, index=None, scale=1.0, digits=None):
     def get(c):
         v = sim_env(script)[name]
-        v = (v[index] if index is not None else v) * scale
+        for i in (index if isinstance(index, tuple) else () if index is None else (index,)):
+            v = v[i]
+        v *= scale
         return round(v, digits) if digits is not None else v
-    return "%s.py %s%s" % (script, name, "" if index is None else "[%d]" % index), get
+    path = "" if index is None else "".join("[%d]" % i for i in (index if isinstance(index, tuple) else (index,)))
+    return "%s.py %s%s" % (script, name, path), get
 
 
 def par(path, scale=1.0):
@@ -359,12 +362,12 @@ BINDINGS_MAX = [
     (chg("r_batfet"), prose("_path_resistance_ohm", r"BATT-to-SYS switch \((\d+) mΩ typ\)", 1e-3)),
 ]
 BINDINGS_TI = [
-    (sch("R73"), sim("run_power", "OVLO_TOP")),
-    (sch("R74"), sim("run_power", "OVLO_BOTTOM")),
-    (sch("R75"), sim("run_power", "OVLO_TOP")),
-    (sch("R76"), sim("run_power", "OVLO_BOTTOM")),
-    (sch("R77"), sim("run_power", "OVLO_TOP")),
-    (sch("R78"), sim("run_power", "OVLO_BOTTOM")),
+    (sch("R73"), sim("run_power", "OVLO_RAIL", (0, 0))),
+    (sch("R74"), sim("run_power", "OVLO_RAIL", (1, 0))),
+    (sch("R75"), sim("run_power", "OVLO_RAIL", (0, 0))),
+    (sch("R76"), sim("run_power", "OVLO_RAIL", (1, 0))),
+    (sch("R77"), sim("run_power", "OVLO_USB", (0, 0))),
+    (sch("R78"), sim("run_power", "OVLO_USB", (1, 0))),
     (sch("R56"), lit(4.7e3, "PROG: 1S, 750 kHz, BQ25798 Table 7-1")),
     (sch("R57"), lit(120e3, "ILIM_HIZ divider top, 2.2 V from REGN 4.8 V for a 1.5 A clamp")),
     (sch("R58"), lit(100e3, "ILIM_HIZ divider bottom")),
@@ -372,15 +375,16 @@ BINDINGS_TI = [
     (sch("R60"), lit(768e3, "TS divider RT2")),
     (sch("R19"), lit(1.8e3, "I2C SDA pull-up for the 200 pF Fast-mode envelope")),
     (sch("R20"), lit(1.8e3, "I2C SCL pull-up for the 200 pF Fast-mode envelope")),
-    (sch("R79"), lit(887e3, "FUSB303B VBUS_DET, 855 to 920 kOhm")),
-    (sch("R80"), lit(910e3, "FUSB303B PORT strap below the 1 MOhm guaranteed-low boundary")),
-    (sch("R81"), lit(910e3, "FUSB303B ADDR strap below the 1 MOhm guaranteed-low boundary")),
+    (sch("R79"), lit(1.5e3, "FUSB303B VBUS_DET series resistor; the pin loads to GND with 72.4 kOhm min, so it stays small")),
+    (sch("R80"), lit(768e3, "FUSB303B PORT strap below the 1 to 4 MOhm float band; same part as R60")),
+    (sch("R81"), lit(768e3, "FUSB303B ADDR strap below the 1 to 4 MOhm float band; same part as R60")),
     (chg("charge_a"), par("charging/charge_current_a")),
     (chg("fsw"), lit(750e3, "PROG 4.7 kΩ")),
 ]
-for ref in ("R73", "R74", "R75", "R76", "R77", "R78"):
-    BINDINGS_TI.extend([(sch_field(ref, "tolerance", .01), sim("run_power", "OVLO_TOL")),
-                        (sch_field(ref, "tcr", 1e-6), sim("run_power", "OVLO_TCR"))])
+for ref, divider, position in (("R73", "OVLO_RAIL", 0), ("R74", "OVLO_RAIL", 1), ("R75", "OVLO_RAIL", 0),
+                               ("R76", "OVLO_RAIL", 1), ("R77", "OVLO_USB", 0), ("R78", "OVLO_USB", 1)):
+    BINDINGS_TI.extend([(sch_field(ref, "tolerance", .01), sim("run_power", divider, (position, 1))),
+                        (sch_field(ref, "tcr", 1e-6), sim("run_power", divider, (position, 2)))])
 BINDINGS += {"max": BINDINGS_MAX, "ti": BINDINGS_TI}[CHARGER]
 
 

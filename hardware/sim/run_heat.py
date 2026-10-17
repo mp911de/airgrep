@@ -1283,13 +1283,13 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
 
         if CHG["part"] == "BQ25798":
             # Divider heat remains present whenever its input rail is powered.
-            feeds = [("R73", "R74", VOUT), ("R75", "R76", VOUT)] if load else []
+            rail, usb = run_power.OVLO_RAIL, run_power.OVLO_USB
+            feeds = [("R73", "R74", VOUT, rail), ("R75", "R76", VOUT, rail)] if load else []
             if case["mode"] == "usb":
-                feeds.append(("R77", "R78", 5.0))  # PMID approximated by the 5 V USB input.
-            resistance = run_power.OVLO_TOP + run_power.OVLO_BOTTOM
-            for top, bottom, voltage in feeds:
-                current = voltage / resistance
-                for ref, value in ((top, run_power.OVLO_TOP), (bottom, run_power.OVLO_BOTTOM)):
+                feeds.append(("R77", "R78", 5.0, usb))  # PMID approximated by the 5 V USB input.
+            for top, bottom, voltage, ((r_top, *_), (r_bottom, *_)) in feeds:
+                current = voltage / (r_top + r_bottom)
+                for ref, value in ((top, r_top), (bottom, r_bottom)):
                     p = current ** 2 * value
                     losses["OVLO dividers"] = losses.get("OVLO dividers", 0.0) + p
                     pad_heat(heat, g, pads_of(board, ref), p)
