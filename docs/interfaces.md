@@ -28,7 +28,7 @@ Notes:
 - JP1 and JP2 connect RAIL_5V to ESP_5V and ADS_5V. Remove the jumper before powering that module from its own USB port.
 - SW4 is the hand-fitted RESET button below BZ1: QON to GND, about 10 s hold. It power-cycles the system rails after firmware enables SFET_PRESENT; the charger and gauge stay powered.
 - SW1 switches SW_EN between THERM_OK and GND. SW2 and SW3 are logic inputs; neither carries buzzer or radio power.
-- BZ1 is driven directly by U9 (SN74LVC1G17) through R28, 150 Ω, on BUZZ_LIM. D11 remains the PWM source; firmware implements mute.
+- BZ1 is driven by U9 (SN74LVC1G17) through R28, 1 kΩ, and C66, 1 µF, on BUZZ_AC; R87, 10 kΩ across BZ1, bleeds the DC off because Murata forbids DC on the piezo. D11 remains the PWM source; firmware implements mute.
 
 ## Display: Seeed 100069905
 
@@ -72,16 +72,16 @@ U13 is TI TCA9534PWR (C783615), powered by ESP_3V3 with C40, 100 nF. A0, A1 and 
 | P6 | CTRL_P6 | J12 pin 5 | contact closed | open |
 | P7 | SW_ON_N | POWER slider through Q11 (J12 pin 6 unused) | slider on | slider off |
 
-J12 pins 1, 2 and 6 are unconnected, pins 7 and 8 are GND. R48, R49 and R52 to R55 are 100 kΩ pull-ups to ESP_3V3 for P0, P1 and P4 to P7. P2 and P3 have no carrier pull-up; U16 pulls both up internally to +GNSS_3V3. Each grounded input draws 33 µA nominal at 3.3 V. SW2 and SW3 connect common to GND through pin 3; pin 1 is unconnected. Both maintained positions are therefore defined without switching directly between power rails. The switch footprint numbers are our convention; the manufacturer drawing does not number the terminals.
+J12 pins 1, 2 and 6 are unconnected, pins 7 and 8 are GND. R48, R49 and R52 to R55 are 100 kΩ pull-ups to ESP_3V3 for P0, P1 and P4 to P7. R88 and R89 pull P2 and P3 up to ESP_3V3 on the expander side; D15 and D16 block that bias from U16, which pulls RESET_N and SAFEBOOT_N up internally to +GNSS_3V3. Each grounded input draws 33 µA nominal at 3.3 V. SW2 and SW3 connect common to GND through pin 3; pin 1 is unconnected. Both maintained positions are therefore defined without switching directly between power rails. The switch footprint numbers are our convention; the manufacturer drawing does not number the terminals.
 
 J12 is for short enclosure wiring and dry contacts to GND. It is not a powered peripheral port. Leave unused contacts open; their pull-ups define their levels. Fit the header by hand; it is DNP and excluded from JLCPCB assembly exports.
 
 GNSS control rules:
 
-- Drive P2 and P3 low only. Set their output-port bits to 0 once and switch the direction bit: output pulls low, input releases. Never drive them high: +GNSS_3V3 is switched by the ADSBee, and a high output into an unpowered receiver exceeds the V_IO + 0.3 V pin limit.
+- Drive P2 and P3 low only. D15 and D16 (1N4148WS, cathode at P2/P3) enforce this in hardware: U13 can only pull the lines low, the receiver's internal pull-ups set the high level. Firmware still uses the direction-bit method: set the output-port bits to 0 once and switch the direction bit, output pulls low, input releases. Never drive them high: +GNSS_3V3 is switched by the ADSBee, and without the diodes a high output into an unpowered receiver would exceed the V_IO + 0.3 V pin limit.
 - Reset: hold P2 low for at least 1 ms.
 - Safeboot: hold P3 low while releasing P2, then release P3. Safeboot is for firmware recovery only.
-- Keep P3 an input in normal operation. The receiver connects SAFEBOOT_N to TIMEPULSE through 1 kΩ, so P3 reads the PPS pulse.
+- Keep P3 an input in normal operation. D16 blocks the receiver's TIMEPULSE from P3, so P3 no longer reads the PPS pulse (review item TCA9534-02 no longer applies); the dedicated PPS line carries it.
 
 Both sliders determine requested state from startup. Keep PWM silent until the first valid mute read, debounce changes, and retain both last known states if a read fails. The touchscreen displays state without overriding the sliders. Low battery must not turn Wi-Fi off while SW3 requests it. Shared peripheral-failure indication and the UART command protocol remain firmware work.
 

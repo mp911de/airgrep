@@ -242,12 +242,12 @@ Worst case: parts at 1 %, NTC ±0.2 K and B ±0.5 %, charger thresholds at their
 | C9, C10, C46 | SYS | 2 x 22 µF 10 V + 100 nF | data sheet 5 x 10 µF |
 | C11 | raw VBAT | 10 µF 25 V | before Q13, near F1 |
 | C47 | CHG_BAT | 22 µF 10 V | after Q13, at U4 BAT |
-| R61 | BATP sense | 150 Ω to VBAT | high-impedance input, value shared with R28 |
+| R61 | BATP sense | 150 Ω to VBAT | high-impedance input |
 | C48 | REGN | 4.7 µF 16 V | |
 | Q13 | SDRV ship FET | CSD17575Q3, C529277 | replaces C49; no gate pull-down |
 | SW4 | QON to GND | 6 x 6 mm momentary, normally open | hand-fitted below BZ1; 6.5 x 4.5 mm pin spacing |
 | D10 | U14 reset clamp | 1N4148WS, C2128 | anode EN, cathode QON |
-| R56 | PROG | 4.7 kΩ 1 % | 1S, 750 kHz (3.0 kΩ for 1.5 MHz) |
+| R56 | PROG | 4.7 kΩ 1 % | 1S, 750 kHz; PWM_FREQ stays at 750 kHz, the only frequency the data sheet allows with the 2.2 µH L1 |
 | R57, R58 | ILIM_HIZ | 120 kΩ / 100 kΩ from REGN (C25808, C25803) | 2.2 V, about 1.5 A clamp |
 | R59, R60 | TS | 80.6 kΩ / 768 kΩ from REGN (C23249, C49196905) | window 3.1 to 43.0 °C, see above |
 | R62, TP8 | INT | 100 kΩ to ESP_3V3 | polled |
@@ -295,7 +295,7 @@ The sink carries 0.36 to 0.42 W of the 0.9 to 1.1 W charger loss in the closed c
 
 ### EMI
 
-`hardware/sim/emi/results_ti.md` reports the charger hot loop at 750 kHz and at 1.5 MHz. The hot loop is C44 (0.1 µF 0402 at the pins), 1.3 mm² and 2.5 nH with the PMID pour under the run (the loop model measures the pour width across each run). At 750 kHz the conducted-emission fundamental at the LISN is 3 dB over the CISPR 32 class B limit with FB1 at its DC-bias inductance (0.1 µH); the 1.5 MHz fundamental sits in the same 56 dBµV band but with half the line density. The bench with the real adapter decides; PWM_FREQ switches the frequency at runtime; PROG 4.7 kΩ makes 750 kHz the default. The receiver-band bound at 868 MHz (FLARM) is −115 dBm for the boost and −114 dBm for the charger on the TI board (−109 dBm at 1.5 MHz with 2 ns edges), below the −105 dBm limit. The limit is the assumed receiver sensitivity, about what a 14 dBm FLARM aircraft 20 km away delivers in free space; the thermal floor (−115 dBm in 250 kHz) is not the reference because cockpit electronics set the real floor. It is a worst-case dipole bound, the bench with the antenna in place decides.
+`hardware/sim/emi/results_ti.md` reports the charger hot loop at 750 kHz and at 1.5 MHz. The hot loop is C44 (0.1 µF 0402 at the pins), 1.3 mm² and 2.5 nH with the PMID pour under the run (the loop model measures the pour width across each run). At 750 kHz the conducted-emission fundamental at the LISN is 3 dB over the CISPR 32 class B limit with FB1 at its DC-bias inductance (0.1 µH); the 1.5 MHz fundamental sits in the same 56 dBµV band but with half the line density. PROG 4.7 kΩ sets 750 kHz and PWM_FREQ must stay there: data sheet 8.2.2.2 allows 1.5 MHz only with a 1 µH inductor, and L1 is 2.2 µH. The 1.5 MHz figures describe a variant with L1 = 1 µH, which needs new ripple and peak-current checks before it is an option. The bench with the real adapter decides at 750 kHz. The receiver-band bound at 868 MHz (FLARM) is −115 dBm for the boost and −114 dBm for the charger on the TI board (−109 dBm for a 1 µH, 1.5 MHz variant with 2 ns edges), below the −105 dBm limit. The limit is the assumed receiver sensitivity, about what a 14 dBm FLARM aircraft 20 km away delivers in free space; the thermal floor (−115 dBm in 250 kHz) is not the reference because cockpit electronics set the real floor. It is a worst-case dipole bound, the bench with the antenna in place decides.
 
 ## Input protection
 

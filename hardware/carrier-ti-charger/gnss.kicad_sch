@@ -7626,7 +7626,7 @@
 				)
 			)
 		)
-		(property "Description" "Antenna current sense and short limit (UBX-20053088 R8)"
+		(property "Description" "Antenna current sense and short limit, 0.25 W (UBX-20053088 R8)"
 			(at 185.42 132.08 0)
 			(hide yes)
 			(show_name no)
@@ -7637,7 +7637,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C17415"
+		(property "LCSC" "C727983"
 			(at 185.42 132.08 0)
 			(hide yes)
 			(show_name no)
@@ -7648,7 +7648,7 @@
 				)
 			)
 		)
-		(property "MPN" "0805W8F100JT5E"
+		(property "MPN" "AC0805FR-7W10RL"
 			(at 185.42 132.08 0)
 			(hide yes)
 			(show_name no)

@@ -195,4 +195,9 @@
 		(uuid "95da7f9a-a35c-43f0-8dcd-ca58d7b01531")
 	)
 	(embedded_fonts no)
+	(model "${KIPRJMOD}/lib/carrier.3dshapes/IND-SMD_L4.2-W4.2-H3.2.step"
+		(offset (xyz 0 0 0.1))
+		(scale (xyz 1 1 1))
+		(rotate (xyz 0 0 90))
+	)
 )

@@ -28,7 +28,7 @@ The GNSS and ADSBee modules have arrived. The display is ordered. The carrier bo
 - [ ] **carrier-ti-charger layout, optional improvements** from the data sheet review (hard rules are met, [power.md](power.md#layout-1)): widen the In2 SW runs to 100 mil or move L1 100 mil north; four VBUS vias at pins 2/3 instead of two; a 0.1 µF at U6 VIN (pin 9, schematic change); REGN trace 12 to 15 mil; trim the "L2 Boost" switch-node zone to an 80 mil band; U7 exposed pad has room for a second via.
 - [x] **BOM consolidation** applied: C5 and C15 (2.2 µF) to the 100 nF 50 V and the 4.7 µF 16 V parts, R23/R31 to 470 Ω, R61 to 150 Ω, value strings unified per LCSC code. 49 to 46 part numbers. Kept: two inductors (L1 FXL0630, L2 CKST0603), C33 22 µF 1206. Critical values untouched.
 
-- [ ] **FLARM interference estimate.** The TI EMI model bounds the boost at −115 dBm and the charger at −114 dBm (−109 dBm at 1.5 MHz with 2 ns edges) in the 868 MHz receiver band. The limit is −105 dBm, the assumed receiver sensitivity and about the level of a 14 dBm FLARM aircraft 20 km away in free space; the earlier −121 dBm target (6 dB below the thermal floor) ignored cockpit electronics, which set the real floor. Check with near-field probing and receiver desense measurements; modeled bounds are not measured interference. See `hardware/sim/emi/results_ti.md`.
+- [ ] **FLARM interference estimate.** The TI EMI model bounds the boost at −115 dBm and the charger at −114 dBm (−109 dBm for a 1 µH, 1.5 MHz variant with 2 ns edges) in the 868 MHz receiver band. The limit is −105 dBm, the assumed receiver sensitivity and about the level of a 14 dBm FLARM aircraft 20 km away in free space; the earlier −121 dBm target (6 dB below the thermal floor) ignored cockpit electronics, which set the real floor. Check with near-field probing and receiver desense measurements; modeled bounds are not measured interference. See `hardware/sim/emi/results_ti.md`.
 
 ## Assumptions to measure
 
@@ -58,7 +58,7 @@ The simulations rest on these. Each one changes a result if it is far off.
   - TDIE, IBAT and VBAT over the ADC against a thermocouple and a meter; the TREG loop holding 100 °C in the closed case.
   - TS transitions at J2 (3.1 / 8.9 / 32.2 / 43.0 °C nominal), NTC open and shorted, thermostat trip to CE.
   - Red LED with USB present, green LED on STAT.
-  - Conducted emission at 750 kHz and 1.5 MHz (PWM_FREQ) with the real adapter.
+  - Conducted emission at 750 kHz with the real adapter. 1.5 MHz needs L1 = 1 µH and is not an option on this board.
 - [ ] **Charger, carrier-max-charger (MAX77757).**
   - Supplement mode with 0.5, 1, 2 and 3 A sources.
   - Input current with a 1.5 A Type-C source that also shorts D+ and D-. It must stay at 1.5 A.
