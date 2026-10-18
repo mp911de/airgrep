@@ -99,7 +99,7 @@ CHARGERS = {
                              r_jt=20.9,  # K/W, RθJC(top), SLUSDV2C thermal table
                              r_tim=20.0,  # K/W, two 0.1 mm epoxy layers (k 1.2 W/m·K) on the 16 mm² top plus the spacer
                              r_sink_open=35.0)},  # K/W, sink to still air, Fischer figure derated for 30 to 40 K
-        ts_hot=43.0, ts_restart=41.6,  # C, T5 acts / releases with RT1 80.6k / RT2 768k (thermal/results_ti.md)
+        ts_hot=42.6, ts_restart=41.2,  # C, T5 acts / releases with RT1 82k / RT2 768k (thermal/results_ti.md)
         foldback_width=2.0,  # K: the analog loop holds the junction at TREG
         default_a=1.0,  # ICHG after power-on or watchdog expiry
         transient_policies=[("default", "1 A default mode, TREG 120 °C", 1.0, 120.0, None),

@@ -345,11 +345,13 @@ def report_treg(cal, results, sensitivities, stems, error):
              "## Control and assumptions", "",
              "Host mode: the ESP32-S3 writes ICHG 1.8 A and the TREG register (60/80/100/120 °C) and pets the watchdog. "
              "Default mode: 1 A and TREG 120 °C, what the chip does after power-on or when the watchdog expires. "
-             "The charger holds the junction at TREG with its analog loop (zero current %.0f K above TREG in this model). "
-             "The nominal pack JEITA stop/restart at 42.1/40.8 °C takes priority. USB keeps supplying the system when "
-             "charging is reduced." % charge.heat.CHG["foldback_width"], "",
+             f"The charger holds the junction at TREG with its analog loop (zero current {charge.heat.CHG['foldback_width']:.0f} K above TREG in this model). "
+             f"The nominal pack JEITA stop/restart at {charge.HOT:.1f}/{charge.RESTART:.1f} °C takes priority. "
+             "USB keeps supplying the system when "
+             "charging is reduced.", "",
              "Other assumptions as in [charging.md](charging.md): fixed 3.7 V cell, USB 5 V / 3 A, 0.8 A system load, "
-             "bottom plate, 5 cm² inlet/outlet, estimated thermal masses, unrouted copper paths assumed where the board "
+             f"selected heatsink, {charge.vent_model.VENT_AREA_CM2:g} cm² per inlet/outlet group before grille blockage, "
+             "estimated thermal masses, unrouted copper paths assumed where the board "
              "has none yet. No SOC evolution, CV taper, charger timer or battery ageing.", "",
              "## Nominal 25 °C ambient results", "",
              "| Pack | Mode | TREG | Peak U4 | Pack stop | Charge added |", "|---|---|---|---|---|---|"]

@@ -57,8 +57,8 @@ CHARGERS = {
                disable=None, hysteresis=0.013,
                effect={"cold": "charging stops below", "cool": "20 % current below (JEITA_ISETC default)",
                        "warm": "VREG - 400 mV above (JEITA_VSET default)", "hot": "charging stops above"},
-               documented={"cold": 3.1, "cool": 8.9, "warm": 32.2, "hot": 43.0},
-               bias={"rt1": 80.6e3, "rt2": 768e3}, pull_down="the CE pin"),
+               documented={"cold": 2.7, "cool": 8.5, "warm": 31.8, "hot": 42.6},
+               bias={"rt1": 82e3, "rt2": 768e3}, pull_down="the CE pin"),
 }
 CE_VIH, CE_VIL = 1.3, 0.4  # BQ25798 CE logic thresholds
 
@@ -79,6 +79,8 @@ PACK_CHARGE_MIN, PACK_CHARGE_MAX = 0.0, 45.0
 NTC_DT = 0.2  # ENTC-EB-100K4262-02 interchangeability, K, 0 to 70 deg C
 NTC_BTOL = 0.005  # B25/85 tolerance
 BIAS_TOL = 0.01  # bias resistors, 1 %
+TI_BIAS_TCR = 100e-6  # R59 specified; R60 assumed pending manufacturer qualification
+TI_BIAS_TEMP = (-40.0, 125.0)  # board temperature, independent of pack temperature
 R8 = 154e3  # MAX77757 bias resistor; the design-check binding reads this literal
 THM_LEAK_MAX, THM_LEAK_TYP = 1e-6, 0.1e-6  # MAX77757 THM input leakage; assumed the same for the BQ25798 TS pin
 Q6_IDSS_MAX, Q6_IDSS_TYP = 1e-6, 10e-9  # 2N7002, 25 deg C
@@ -113,10 +115,12 @@ def transitions(rows, pick=1):
     return {name: crossing(rows, 1, limits[pick]) for name, limits in THRESHOLDS.items()}
 
 
-def bias_corners():
-    """Every ±1 % combination of the bias resistors."""
+def bias_corners(drift=False):
+    """Independent resistor extremes; optional TI temperature-drift screening."""
     names = sorted(BIAS)
-    return [{n: BIAS[n] * (1 + s * BIAS_TOL) for n, s in zip(names, signs)}
+    delta = max(abs(t - 25.0) for t in TI_BIAS_TEMP) if drift else 0.0
+    return [{n: BIAS[n] * (1 + s * BIAS_TOL) * (1 + s * TI_BIAS_TCR * delta)
+             for n, s in zip(names, signs)}
             for signs in itertools.product((-1, 1), repeat=len(names))]
 
 
@@ -124,10 +128,10 @@ def leak_params(ithm, idss):
     return {"ithm": ithm, "q6_idss": idss} if TAG == "max" else {"ithm": ithm}
 
 
-def part_corners(leakages=((0.0, 0.0),)):
+def part_corners(leakages=((0.0, 0.0),), drift=False):
     """All extreme combinations of thermistor offset, B value, bias resistors and leakage."""
     return [dict(bias, ntc_dt=d * NTC_DT, ntc_btol=b * NTC_BTOL, **leak_params(ithm, idss))
-            for d, b, bias, (ithm, idss) in itertools.product((-1, 1), (-1, 1), bias_corners(), leakages)]
+            for d, b, bias, (ithm, idss) in itertools.product((-1, 1), (-1, 1), bias_corners(drift), leakages)]
 
 
 def transition_ranges(runs):
@@ -199,9 +203,22 @@ def jeita_window(report, mc_runs, seed):
     report.add("- Cold cut-off: %s to %s °C with typical leakage against the pack's %s °C rating. "
                "Accepted, the window width follows from the thermistor's B value (docs/power.md)."
                % (deg(min(cold)), deg(max(cold)), deg(PACK_CHARGE_MIN)))
-    report.add("- With leakage at the data sheet maximum: charging up to %s °C and down to %s °C."
+    report.add(("- With leakage at the data sheet maximum: " if TAG == "max" else
+                "- With assumed ±1 µA TS leakage: ") + "charging up to %s °C and down to %s °C."
                % (deg(max(no_leak["hot"] + maximum["hot"])), deg(min(no_leak["cold"] + maximum["cold"]))))
     report.add()
+
+    if TAG == "ti":
+        drift = transition_ranges(part_corners(((-THM_LEAK_TYP, 0.0), (THM_LEAK_TYP, 0.0)), drift=True))
+        report.add("Temperature-drift screening: independent ±100 ppm/°C for R59 and R60 over "
+                   "−40 to +125 °C board temperature, referenced to 25 °C, plus part/threshold "
+                   "corners and assumed ±0.1 µA TS leakage. R59 specifies this TCR; R60's TCR "
+                   "is assumed pending manufacturer qualification. Board temperature is independent "
+                   "of pack temperature. These bounds are conditional, not guaranteed pack limits.")
+        report.add()
+        report.table(["Transition", "Including resistor drift, °C"],
+                     [[name, span(drift[name])] for name in THRESHOLDS])
+        report.add()
 
     currents = (-THM_LEAK_MAX, -THM_LEAK_TYP, THM_LEAK_TYP, THM_LEAK_MAX, THM_LEAK_MAX + Q6_IDSS_MAX)
     table = []

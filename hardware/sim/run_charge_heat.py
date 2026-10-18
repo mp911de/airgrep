@@ -352,14 +352,16 @@ def report(cal, summaries, error):
              "| U4 to top sink / sink to surroundings | %s | %s |" %
              (("%.1f / %.1f K/W" % (cal.r_top, cal.r_sink_air)) if math.isfinite(cal.r_top) else "none",
               "Existing top/spacer/epoxy estimates" if math.isfinite(cal.r_top) else "no top sink on this board"),
-             "| Vents | 5 cm² each, 50% free area, 35 mm height | Existing enclosure model |",
-             "| JEITA hot / restart | 42.1 / 40.8 °C | Nominal pack NTC thresholds |",
+             "| Vents | %g openings, %g cm² each, %g%% free area, %g mm height | Existing enclosure model |"
+             % (2 * vent_model.VENTS_PER_SIDE, vent_model.VENT_OPENING_CM2,
+                100 * vent_model.BLOCKAGE, 1000 * vent_model.VENT_HEIGHT_M),
+             "| JEITA hot / restart | %.1f / %.1f °C | Nominal pack NTC thresholds |" % (HOT, RESTART),
              "| Charger regulation | zero current %.0f K above TREG; policies %s | %s data sheet |"
              % (heat.CHG["foldback_width"], "; ".join("%s: %.1f A, TREG %.0f °C%s" % (p[0], p[1], p[2], ", host ramp %.0f to %.0f °C" % p[3] if p[3] else "")
                                                      for p in policies().values()), heat.CHG["part"]),
              "| Current response / thermal timestep | Assumed 5 s / 1 s implicit Euler | Numerical estimate, not vendor timing |",
              "| Earliest pack thermostat trip | 55 °C | Curves stop here; reset behaviour not modelled |", "",
-             "The 31.4 °C JEITA warm state lowers termination to 4.05 V, not charge current. "
+             "The JEITA warm state lowers termination voltage, not charge current. "
              "At this fixed 3.7 V cell operating point the model remains below that voltage. "
              "No state-of-charge curve, constant-voltage taper, ageing or charge-completion prediction. "
              "The pack NTC is assumed to track pack temperature exactly; real attachment adds delay. "

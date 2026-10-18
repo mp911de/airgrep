@@ -3820,7 +3820,7 @@
 		)
 		(uuid "a52e5484-62f8-405a-9483-98f5a1d1e932")
 	)
-	(text "D+/D- BC1.2 on chip, CC on U15 FUSB303B (USB input sheet). Ship FET Q13, QON reset SW4. PROG 4.7k = 1S, 750 kHz. ILIM_HIZ 2.2 V = 1.5 A clamp, firmware lifts it (EN_EXTILIM) on a 3 A advertisement. TS 80.6k/768k: 3/43 C."
+	(text "D+/D- BC1.2 on chip, CC on U15 FUSB303B (USB input sheet). Ship FET Q13, QON reset SW4. PROG 4.7k = 1S, 750 kHz. ILIM_HIZ 2.2 V = 1.5 A clamp, firmware lifts it (EN_EXTILIM) on a 3 A advertisement. TS 82k/768k: 2.7/42.6 C."
 		(exclude_from_sim no)
 		(at 20.32 30.48 0)
 		(effects
@@ -6839,7 +6839,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1.65k"
+		(property "Value" "1.8k"
 			(at 246.38 144.78 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6861,7 +6861,7 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.uni-royal.cn/en/images/userfile/file/1753752986c56505e6d9ab55c7.pdf"
 			(at 243.84 143.51 0)
 			(hide yes)
 			(show_name no)
@@ -6883,7 +6883,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C22845"
+		(property "LCSC" "C4177"
 			(at 243.84 143.51 0)
 			(hide yes)
 			(show_name no)
@@ -6894,7 +6894,40 @@
 				)
 			)
 		)
-		(property "MPN" "0603WAF1651T5E"
+		(property "TCR" "100 ppm/°C"
+			(at 243.84 143.51 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Tolerance" "1%"
+			(at 243.84 143.51 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "UNI-ROYAL"
+			(at 243.84 143.51 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "0603WAF1801T5E"
 			(at 243.84 143.51 0)
 			(hide yes)
 			(show_name no)
@@ -7122,7 +7155,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "80.6k 1%"
+		(property "Value" "82k 1%"
 			(at 74.93 115.57 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7144,7 +7177,7 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.uni-royal.cn/en/images/userfile/file/1753752986c56505e6d9ab55c7.pdf"
 			(at 77.47 114.3 0)
 			(hide yes)
 			(show_name no)
@@ -7166,7 +7199,51 @@
 				)
 			)
 		)
-		(property "LCSC" "C23249"
+		(property "LCSC" "C23254"
+			(at 77.47 114.3 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "TCR" "100 ppm/°C"
+			(at 77.47 114.3 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Tolerance" "1%"
+			(at 77.47 114.3 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "UNI-ROYAL"
+			(at 77.47 114.3 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "0603WAF8202T5E"
 			(at 77.47 114.3 0)
 			(hide yes)
 			(show_name no)

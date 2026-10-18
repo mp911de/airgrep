@@ -34,7 +34,7 @@ Module outlines in the drawing follow the socket positions. U16 is the soldered 
 
 SW1 to SW3 use HRO K3-1280S-F1, C92658, with the local `carrier:SW-SMD_K3-1280S-F1` footprint. It follows the [manufacturer drawing](../datasheets/hro-k3-1280s.pdf): 2.50 mm terminal pitch, 1.20 x 2.45 mm solder lands, two 0.90 mm holes spaced 6.80 mm, and 3.075 mm from the terminal-row centre to the peg line. The body is 9.10 x 3.50 mm in that drawing, 3.50 mm high, with a 2 mm F1 actuator and 2 mm travel.
 
-Footprint origins are the middle terminal. Read switch positions and rotations from the PCB; allow full actuator travel and housing tolerance in the case. Supplier CAD has inconsistent F2/K1 names and peg offsets. Check an actual F1 sample and the JLCPCB placement preview before ordering.
+Footprint origins are the middle terminal. Read switch positions and rotations from the PCB; allow full actuator travel and housing tolerance in the case. SW1-SW3 share the model documented in [local library sources](../hardware/carrier-ti-charger/lib/README.md). Supplier CAD has inconsistent F2/K1 names and peg offsets. Check an actual F1 sample and the JLCPCB placement preview before ordering.
 
 ### USB-C receptacle in the case
 

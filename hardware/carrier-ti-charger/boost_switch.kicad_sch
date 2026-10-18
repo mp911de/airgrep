@@ -6050,7 +6050,7 @@
 	)
 	(symbol
 		(lib_id "carrier:CKST0603-2.2UH_M")
-		(at 63.5 93.98 0)
+		(at 63.5 93.98 180)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)

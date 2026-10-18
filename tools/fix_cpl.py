@@ -14,6 +14,7 @@ matching the EasyEDA footprint of each LCSC part to our pads by pad number, exce
 unnumbered K3 outer contacts: those use the body and common terminal. Its supplier CAD
 has a peg-offset discrepancy; verify fit and the assembly preview before ordering. Re-running is safe:
 every fixed row is recomputed from the board, not from the previous CPL.
+Rotation-only entries preserve the exported Mid X/Y position.
 
 Rows not listed are left alone; the script only reports those whose CPL position is more than
 0.02 mm from the footprint origin, so a new asymmetric footprint shows up for checking.
@@ -33,7 +34,7 @@ PROJECT = Path(project.resolve())  # --project is not parsed here; set CARRIER_P
 BOARD = PROJECT / "carrier.kicad_pcb"
 CPL = PROJECT / "jlcpcb/production_files/CPL-carrier.csv"
 
-# footprint name: (rotation added to the board rotation, JLC origin in footprint-local mm)
+# footprint name: (rotation added to board rotation, local JLC origin or None to preserve X/Y)
 FIXES = {
     "Texas_DSG0008A_WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm": (0, (0.0, 0.0)),  # U7, C524777; plugin table says 270
     "TDFN-8_L2.0-W2.0-P0.50-EP0.8x1.38_T822": (270, (0.0, 0.0)),  # U8, C2682616; JLC pin 1 bottom left
@@ -41,6 +42,12 @@ FIXES = {
     # HRO drawing leaves outer terminals unnumbered. Our 1/3 convention is reversed
     # relative to the supplier CAD after aligning the body. See workflows/physical-controls.md.
     "USB_C_Receptacle_Hanbo_MC-107DMS": (0, (0.0, -1.322)),  # USB-C, C3039295 (slots and pegs, pads moved 3 Oct)
+    # C88374 supplier CAD has signal below the body; KiCad has it left.
+    # https://lceda.cn/api/products/C88374/components?version=6.4.19.5
+    # Exported pad-box centre is -0.475 mm in local X; shift another 0.28 mm toward signal.
+    "U.FL_Hirose_U.FL-R-SMT-1_Vertical": (270, (-0.475 - 0.28, 0.0)),
+    # Exported pad-box centre is -0.875 mm in local X; shift 1.9 mm toward pad 2.
+    "BAT-SMD_BS-CR2032-8": (0, (-0.875 + 1.9, 0.0)),
     "FC2QFN-24_L3.0-W3.0-P0.40_MAX77757": (0, (0.0019, 0.0736)),  # U4, C7454852
 }
 
@@ -75,11 +82,12 @@ def main():
         brot = fp.GetOrientationDegrees()
         name = str(fp.GetFPID().GetLibItemName())
         if name in FIXES:
-            r, (ox, oy) = FIXES[name]
-            dx, dy = rot(ox, oy, brot)
+            r, offset = FIXES[name]
             old = (row[col["Mid X"]], row[col["Mid Y"]], row[col["Rotation"]])
-            row[col["Mid X"]] = num(x0 + dx)
-            row[col["Mid Y"]] = num(-(y0 + dy))
+            if offset is not None:
+                dx, dy = rot(*offset, brot)
+                row[col["Mid X"]] = num(x0 + dx)
+                row[col["Mid Y"]] = num(-(y0 + dy))
             row[col["Rotation"]] = num((brot + r) % 360)
             new = (row[col["Mid X"]], row[col["Mid Y"]], row[col["Rotation"]])
             fixed.append("%-4s %s  (%s, %s, %s) -> (%s, %s, %s)" % ((ref, name) + old + new))

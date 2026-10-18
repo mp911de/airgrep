@@ -362,6 +362,9 @@ BINDINGS_MAX = [
     (chg("r_batfet"), prose("_path_resistance_ohm", r"BATT-to-SYS switch \((\d+) mΩ typ\)", 1e-3)),
 ]
 BINDINGS_TI = [
+    (sch("R70"), lit(1.8e3, "TPS259474L ILM, nominal 1.85 A")),
+    (sch("R71"), lit(1.8e3, "TPS259474L ILM, nominal 1.85 A")),
+    (sch("R72"), lit(1.8e3, "TPS259474L ILM, nominal 1.85 A")),
     (sch("R73"), sim("run_power", "OVLO_RAIL", (0, 0))),
     (sch("R74"), sim("run_power", "OVLO_RAIL", (1, 0))),
     (sch("R75"), sim("run_power", "OVLO_RAIL", (0, 0))),
@@ -371,7 +374,7 @@ BINDINGS_TI = [
     (sch("R56"), lit(4.7e3, "PROG: 1S, 750 kHz, BQ25798 Table 7-1")),
     (sch("R57"), lit(120e3, "ILIM_HIZ divider top, 2.2 V from REGN 4.8 V for a 1.5 A clamp")),
     (sch("R58"), lit(100e3, "ILIM_HIZ divider bottom")),
-    (sch("R59"), lit(80.6e3, "TS divider RT1 for the 100k B4262 NTC, window 3 to 43 C")),
+    (sch("R59"), lit(82e3, "TS divider RT1 for the 100k B4262 NTC, window 2.7 to 42.6 C")),
     (sch("R60"), lit(768e3, "TS divider RT2")),
     (sch("R19"), lit(1.43e3, "I2C SDA pull-up for the 200 pF Fast-mode envelope with either ESP module")),
     (sch("R20"), lit(1.43e3, "I2C SCL pull-up for the 200 pF Fast-mode envelope with either ESP module")),

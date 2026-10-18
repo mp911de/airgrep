@@ -1143,13 +1143,13 @@ def solve_paths(model, board):
         "USB_VBUS input": path("USB_VBUS input", USB_J1, (CONN["usb"], ("A4", "A9", "B4", "B9")), ("FB1", ("1",))),
         "USB_VBUS": path("USB_VBUS", "USB_VBUS", ("FB1", ("2",)), ("U4", u4["vin"])),
         "CHG_SW": path("CHG_SW", CHG_NETS["sw"], ("U4", u4["sw"]), ("L1", ("1",))),
-        "VSYS": path("VSYS", "VSYS", ("U4", u4["sys"]), ("L2", ("1",))),
+        "VSYS": path("VSYS", "VSYS", ("U4", u4["sys"]), ("L2", None)),
         "VSYS L1": path("VSYS L1", CHG_NETS["sw2"] or "VSYS", ("L1", ("2",)), ("U4", u4["sw2"] or u4["sys"])),
         "VBAT": (path("VBAT", "VBAT", ("F1", ("2",)), (model.ship_fet["ref"], ("5",)))
                  + path("CHG_BAT", model.ship_fet["net"], (model.ship_fet["ref"], ("1", "2", "3")), ("U4", u4["bat"]))
                  if model.ship_fet else path("VBAT", "VBAT", ("F1", ("2",)), ("U4", u4["bat"]))),
         "BAT_IN": path("BAT_IN", "BAT_IN", (CONN["battery"], ("1",)), ("F1", ("1",))),
-        "BOOST_SW": path("BOOST_SW", "BOOST_SW", ("L2", ("2",)), ("U6", ("4", "5", "6", "7"))),
+        "BOOST_SW": path("BOOST_SW", "BOOST_SW", ("L2", None), ("U6", ("4", "5", "6", "7"))),
         "BOOST_5V": path("BOOST_5V", "BOOST_5V", ("U6", ("14", "15", "16")), ("U7", ("1", "2", "4"))),
         "RAIL_5V": path("RAIL_5V", "RAIL_5V", ("U7", ("7", "8")), ("U11", ("5",))),
         "ESP_5V_D": path("ESP_5V_D", "ESP_5V_D", ("U12", ("6",)), (CONN["esp_shunt"], ("1",))),
@@ -1297,7 +1297,7 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
 
         # copper and contacts
         if case["mode"] == "battery":
-            track("VSYS", {("U4", u4["sys"]): i_bat, ("L2", ("1",)): -i_bat})
+            track("VSYS", {("U4", u4["sys"]): i_bat, ("L2", None): -i_bat})
         else:
             track(USB_J1, {(CONN["usb"], ("A4", "A9", "B4", "B9")): i_in, ("FB1", ("1",)): -i_in}, "USB_VBUS input")
             contact("FB1 ferrite bead", pads_of(board, "FB1"), i_in, FB_R[corner])
@@ -1307,7 +1307,7 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
                 # MAX77757: L1 feeds the VSYS copper, the SYS pins take the charge current into the BATFET
                 inj = {("L1", ("2",)): i_l1, ("U4", u4["sys"]): -i_chg}
                 if b["iin"]:
-                    inj[("L2", ("1",))] = -(i_l1 - i_chg)
+                    inj[("L2", None)] = -(i_l1 - i_chg)
                 else:
                     inj[("U4", u4["sys"])] = -i_l1
                 track("VSYS", inj)
@@ -1316,7 +1316,7 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
                 track(CHG_NETS["sw2"], {("L1", ("2",)): i_l1, ("U4", u4["sw2"]): -i_l1}, "VSYS L1")
                 i_sys = i_l1 - i_chg
                 if abs(i_sys) > 1e-9:
-                    track("VSYS", {("U4", u4["sys"]): i_sys, ("L2", ("1",)): -i_sys})
+                    track("VSYS", {("U4", u4["sys"]): i_sys, ("L2", None): -i_sys})
             contact("USB-C contacts", pads_of(board, CONN["usb"], ("A4", "A9", "B4", "B9", "A1", "A12", "B1", "B12")),
                     i_in, 2 * USB_CONTACT[corner] / 4)
         if model.ship_fet:
@@ -1330,7 +1330,7 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
         contact("F1 fuse", pads_of(board, "F1"), i_b, FUSE_R[corner])
         contact("JST-PH battery contacts", pads_of(board, CONN["battery"]), i_b, 2 * JST_CONTACT[corner])
         if load:
-            track("BOOST_SW", {("L2", ("2",)): b["iin"], ("U6", ("4", "5", "6", "7")): -b["iin"]})
+            track("BOOST_SW", {("L2", None): b["iin"], ("U6", ("4", "5", "6", "7")): -b["iin"]})
             track("BOOST_5V", {("U6", ("14", "15", "16")): load, ("U7", ("1", "2", "4")): -load})
             track("RAIL_5V", {("U7", ("7", "8")): load + LED_5V_A, ("U12", ("5",)): -i_esp,
                               ("U11", ("5",)): -i_ads, ("R26", None): -LED_5V_A})

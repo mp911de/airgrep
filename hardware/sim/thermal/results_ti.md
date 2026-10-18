@@ -21,10 +21,10 @@ Nominal parts, typical thresholds, no leakage:
 
 | Transition | TS/REGN | Acts at | Releases at | docs/power.md |
 |---|---|---|---|---|
-| cold (charging stops below) | 73.3 % | 3.1 °C | 4.7 °C | 3.1 °C |
-| cool (20 % current below (JEITA_ISETC default)) | 68.4 % | 8.9 °C | 10.4 °C | 8.9 °C |
-| warm (VREG - 400 mV above (JEITA_VSET default)) | 44.8 % | 32.2 °C | 30.9 °C | 32.2 °C |
-| hot (charging stops above) | 34.2 % | 43.0 °C | 41.6 °C | 43.0 °C |
+| cold (charging stops below) | 73.3 % | 2.7 °C | 4.3 °C | 2.7 °C |
+| cool (20 % current below (JEITA_ISETC default)) | 68.4 % | 8.5 °C | 10.0 °C | 8.5 °C |
+| warm (VREG - 400 mV above (JEITA_VSET default)) | 44.8 % | 31.8 °C | 30.5 °C | 31.8 °C |
+| hot (charging stops above) | 34.2 % | 42.6 °C | 41.2 °C | 42.6 °C |
 
 - PASS: nominal transitions match docs/power.md within 0.1 °C
 
@@ -32,39 +32,49 @@ Worst case in °C. Parts and thresholds: thermistor ±0.2 K and B ±0.5 %, bias 
 
 | Transition | Nominal | Parts and thresholds | plus typical leakage | plus maximum leakage |
 |---|---|---|---|---|
-| cold | 3.1 | 1.3 to 4.8 | 1.1 to 5.0 | −0.5 to 6.3 |
-| cool | 8.9 | 7.8 to 10.1 | 7.7 to 10.2 | 6.4 to 11.3 |
-| warm | 32.2 | 31.2 to 33.1 | 31.1 to 33.2 | 30.4 to 33.9 |
-| hot | 43.0 | 41.9 to 44.1 | 41.8 to 44.2 | 41.3 to 44.7 |
+| cold | 2.7 | 0.8 to 4.4 | 0.7 to 4.6 | −1.0 to 5.9 |
+| cool | 8.5 | 7.4 to 9.6 | 7.2 to 9.8 | 6.0 to 10.9 |
+| warm | 31.8 | 30.8 to 32.7 | 30.7 to 32.8 | 30.0 to 33.5 |
+| hot | 42.6 | 41.5 to 43.7 | 41.4 to 43.8 | 40.8 to 44.3 |
 
-- PASS: hot cut-off at most 44.2 °C with typical leakage, within the pack's 45.0 °C charge rating
-- Cold cut-off: 1.1 to 5.0 °C with typical leakage against the pack's 0.0 °C rating. Accepted, the window width follows from the thermistor's B value (docs/power.md).
-- With leakage at the data sheet maximum: charging up to 44.7 °C and down to −0.5 °C.
+- PASS: hot cut-off at most 43.8 °C with typical leakage, within the pack's 45.0 °C charge rating
+- Cold cut-off: 0.7 to 4.6 °C with typical leakage against the pack's 0.0 °C rating. Accepted, the window width follows from the thermistor's B value (docs/power.md).
+- With assumed ±1 µA TS leakage: charging up to 44.3 °C and down to −1.0 °C.
+
+Temperature-drift screening: independent ±100 ppm/°C for R59 and R60 over −40 to +125 °C board temperature, referenced to 25 °C, plus part/threshold corners and assumed ±0.1 µA TS leakage. R59 specifies this TCR; R60's TCR is assumed pending manufacturer qualification. Board temperature is independent of pack temperature. These bounds are conditional, not guaranteed pack limits.
+
+| Transition | Including resistor drift, °C |
+|---|---|
+| cold | 0.3 to 4.9 |
+| cool | 6.9 to 10.1 |
+| warm | 30.4 to 33.1 |
+| hot | 41.2 to 44.0 |
+
 
 Leakage alone, nominal parts and typical thresholds, °C. Positive current flows out of the TS node to ground (TS pin), negative current into it. The TS pin is assumed at 0.1 µA typical, 1 µA maximum:
 
 | TS node leakage | cold | cool | warm | hot |
 |---|---|---|---|---|
-| −1.0 µA | 4.6 | 10.2 | 32.9 | 43.6 |
-| −0.1 µA | 3.2 | 9.1 | 32.2 | 43.1 |
-| +0.1 µA | 2.9 | 8.8 | 32.1 | 42.9 |
-| +1.0 µA | 1.4 | 7.6 | 31.4 | 42.4 |
-| +2.0 µA | −0.4 | 6.2 | 30.7 | 41.7 |
+| −1.0 µA | 4.2 | 9.8 | 32.5 | 43.2 |
+| −0.1 µA | 2.8 | 8.6 | 31.8 | 42.6 |
+| +0.1 µA | 2.5 | 8.4 | 31.7 | 42.5 |
+| +1.0 µA | 1.0 | 7.2 | 31.0 | 41.9 |
+| +2.0 µA | −0.9 | 5.7 | 30.2 | 41.3 |
 
 Monte Carlo, 400 units, seed 1, °C. Every tolerance is uniform over its full range: thermistor ±0.2 K and B ±0.5 %, bias ±1 %, thresholds between minimum and maximum. TS leakage is within the typical ±0.1 µA.
 
 | Transition | Lowest | 1 % | Median | 99 % | Highest |
 |---|---|---|---|---|---|
-| cold | 1.6 | 1.8 | 3.1 | 4.4 | 4.5 |
-| cool | 8.0 | 8.1 | 8.9 | 9.7 | 9.8 |
-| warm | 31.3 | 31.4 | 32.1 | 32.9 | 32.9 |
-| hot | 42.1 | 42.2 | 43.1 | 43.8 | 44.0 |
+| cold | 1.2 | 1.3 | 2.7 | 4.0 | 4.1 |
+| cool | 7.6 | 7.7 | 8.5 | 9.3 | 9.4 |
+| warm | 30.9 | 31.0 | 31.7 | 32.5 | 32.5 |
+| hot | 41.7 | 41.8 | 42.6 | 43.4 | 43.5 |
 
 - Units that still charge above 45.0 °C: 0 %. Units that still charge below 0.0 °C: 0 %.
 
 ## Thermistor unplugged or shorted
 
-- PASS: unplugged: TS/REGN = 89.0 % with 1 µA leakage pulling down, above the highest cold threshold (74.2 %), charging suspended
+- PASS: unplugged: TS/REGN = 88.8 % with 1 µA leakage pulling down, above the highest cold threshold (74.2 %), charging suspended
 - PASS: shorted: TS/REGN = 0.03 %, below the lowest hot threshold (33.7 %), charging suspended
 
 ## Thermostat closed: Q2 leakage into R12 and the CE pin

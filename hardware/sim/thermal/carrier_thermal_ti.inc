@@ -16,9 +16,9 @@
 * One .param per line: run_thermal.py overrides them by name.
 * REGN LDO, 4.6 to 5.0 V. The thresholds are ratiometric, so its value only scales leakage effects.
 .param vregn=4.8
-* TS divider from REGN: RT1 (R59) 80.6 kOhm 1 %, RT2 (R60) 768 kOhm 1 %: charge window 3 to 43 C nominal, so the
-* worst case with typical TS leakage stays inside the pack's 0 to 45 C rating
-.param rt1=80.6k
+* TS divider from REGN: RT1 (R59) 82 kOhm 1 %, RT2 (R60) 768 kOhm 1 %: nominal window 2.7 to 42.6 C.
+* TS leakage and R60 temperature drift remain qualification assumptions.
+.param rt1=82k
 .param rt2=768k
 * Thermostat network. R43 limits the current into a shorted thermostat lead.
 .param r43=1k

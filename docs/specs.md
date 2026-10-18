@@ -64,17 +64,17 @@ Values follow the BQ25798 default profile and fitted hardware. Host implementati
 
 ### Charge temperature window
 
-R59 80.6 kΩ and R60 768 kΩ adapt the 100 kΩ pack NTC to the BQ25798 TS input. Nominal default transitions from [TI thermal results](../hardware/sim/thermal/results_ti.md):
+R59 82 kΩ and R60 768 kΩ adapt the 100 kΩ pack NTC to the BQ25798 TS input. Nominal default transitions from [TI thermal results](../hardware/sim/thermal/results_ti.md):
 
 | Battery temperature | Charging |
 |---|---|
-| below 3.1 °C | suspended |
-| 3.1 to 8.9 °C | 20 % of programmed current |
-| 8.9 to 32.2 °C | programmed current, 4.20 V |
-| 32.2 to 43.0 °C | programmed current, VREG reduced by 400 mV |
-| above 43.0 °C | suspended |
+| below 2.7 °C | suspended |
+| 2.7 to 8.5 °C | 20 % of programmed current |
+| 8.5 to 31.8 °C | programmed current, 4.20 V |
+| 31.8 to 42.6 °C | programmed current, VREG reduced by 400 mV |
+| above 42.6 °C | suspended |
 
-Parts, threshold and typical-leakage corners give cold cut-off 1.1 to 5.0 °C and hot cut-off 41.8 to 44.2 °C. With the model's assumed ±1 µA leakage, the outer limits become -0.5 and 44.7 °C. These are calculations, not measured pack temperatures.
+Parts, threshold and assumed ±0.1 µA leakage corners give cold cut-off 0.7 to 4.6 °C and hot cut-off 41.4 to 43.8 °C. The resistor-drift screening gives 0.3 to 4.9 °C and 41.2 to 44.0 °C, conditional on R60's assumed TCR. Assumed ±1 µA leakage without drift gives outer limits −1.0 and 44.3 °C. TS leakage is unspecified; see [power.md](power.md#temperature-window-ts) for qualification limits.
 
 ### Protection
 

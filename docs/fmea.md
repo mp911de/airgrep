@@ -27,7 +27,7 @@ Sources: [power design](power.md), [pin maps](interfaces.md), local component da
 | U5, U6 | FB1 open or bypassed | Open removes USB power; bypass can worsen conducted emissions and RF desense. Verify the real adapter and receiver noise floor. |
 | C1, TI3 | Internal charger fault, solder bridge or wrong host VREG overcharges the cell | Pack protection is the last line. Verify 4.20 V regulation with a bench substitute for the pack; clamp and read back host settings. |
 | TI1, TI2 | Host absent or watchdog expires | Defaults are 1 A, 4.20 V, TREG 120 °C and 12 h. Only watchdog-reset registers revert; EN_EXTILIM survives. Firmware must handle source changes independently and reapply the profile on WD_STAT. |
-| TI4 | TS divider wrong or pack too hot | R59 80.6 kΩ / R60 768 kΩ give nominal 3.1 to 43.0 °C cut-offs. Sweep NTC resistance, including open/short, and verify hot leakage. |
+| TI4 | TS divider wrong or pack too hot | R59 82 kΩ / R60 768 kΩ give nominal 2.7 to 42.6 °C cut-offs. Sweep NTC resistance, including open/short, and verify hot leakage. |
 | TI5 | PROG R56 wrong, open or short | Wrong startup configuration can affect cell count and switching frequency. Verify VREG and VSYSMIN before connecting a pack. |
 | TI6, TI8 | ILIM_HIZ network or CC handling fails | R57 120 kΩ / R58 100 kΩ clamp about 1.5 A before host override. Firmware must initialize U15 and follow the lower of CC and BC1.2. Test weak sources, detach and replug. |
 | TI7 | Q2 leakage lifts CE into its undefined input region | R12 is 100 kΩ. The modeled 55 °C maximum leakage gives about 0.464 V, above guaranteed VIL. Measure hot behavior. |

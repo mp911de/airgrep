@@ -101,4 +101,9 @@
 		(drill 0.9)
 		(layers "*.Cu" "*.Mask")
 	)
+	(model "${KIPRJMOD}/lib/carrier.3dshapes/SW-SMD_K3-1280S-F1.step"
+		(offset (xyz 0 -3.075 1))
+		(scale (xyz 1 1 1))
+		(rotate (xyz 0 0 90))
+	)
 )
