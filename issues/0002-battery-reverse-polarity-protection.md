@@ -1,11 +1,11 @@
-# Reverse-polarity protection at J3
+# Reverse-polarity protection at J11
 
 Status: planned
 Created: 2026-10-04
 
 ## Decision
 
-Use TI CSD25404Q3 P-channel MOSFETs for a charging-compatible reverse-polarity protection stage at J3. The selected arrangement is two back-to-back devices in the positive battery path, after F1 and before all VBAT circuitry. Retain F1 for overcurrent protection. No reversed-polarity LED.
+Use TI CSD25404Q3 P-channel MOSFETs for a charging-compatible reverse-polarity protection stage at J11. The selected arrangement is two back-to-back devices in the positive battery path, after F1 and before all VBAT circuitry. Retain F1 for overcurrent protection. No reversed-polarity LED.
 
 The MOSFET selection is settled; polarity detection, gate drive and the complete circuit remain to be designed and validated. This protection is not yet in the schematic or PCB.
 

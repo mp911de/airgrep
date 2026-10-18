@@ -4374,7 +4374,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "a2108d69-f7b1-4012-a660-fada1da5df73")
-		(property "Reference" "J1"
+		(property "Reference" "J14"
 			(at 35.56 67.31 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4494,7 +4494,7 @@
 		(instances
 			(project "carrier"
 				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/8d582056-b074-472b-a300-fd21b59a9139"
-					(reference "J1")
+					(reference "J14")
 					(unit 1)
 				)
 			)

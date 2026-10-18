@@ -56,9 +56,10 @@ PARAMS = os.path.join(HERE, "..", "..", "specs", "power_params.json")
 def select_project(name=None):
     """Bind PROJECT, CHARGER, PCB, OUT and RESULTS to a carrier project (name, path or environment).
     Outputs go to heat/<charger>/. Scripts that import this module read these names at call time."""
-    global PROJECT, CHARGER, PCB, OUT, RESULTS, CHG, ID_RON, ID_VFWD
+    global PROJECT, CHARGER, PCB, OUT, RESULTS, CHG, ID_RON, ID_VFWD, CONN
     PROJECT = project.select(name) if name else project.resolve()
     CHARGER = project.charger(PROJECT)
+    CONN = project.connectors(PROJECT)
     PCB = project.pcb(PROJECT)
     OUT = os.path.join(HERE, "heat", CHARGER)
     RESULTS = os.path.join(OUT, "results.md")
@@ -134,7 +135,7 @@ LS_THETA_JC = 16.4
 # --- Contacts and passives: (nominal, high). Nominal is an estimate, high is the data sheet maximum
 USB_CONTACT = (0.020, 0.040)  # Hanbo MC-107DMS: 40 mΩ max per contact; 4 VBUS + 4 GND contacts
 FB_R = (0.015, 0.020)  # FB1 BLM31KN471SZ1L: 20 mΩ max DCR (LCSC C710518); nominal estimated
-USB_J1 = "USB_VBUS_J1"  # J1 VBUS pins, D3 and C1, ahead of FB1
+USB_J1 = "USB_VBUS_J1"  # USB connector VBUS pins, D3 and C1, ahead of FB1
 JST_CONTACT = (0.005, 0.010)  # JST PH: 10 mΩ max initial per contact
 SOCKET_CONTACT = (0.010, 0.020)  # 2.54 mm pin socket or shunt contact (estimate, no data sheet on file)
 FUSE_R = (0.011, 0.015)  # F1 Littelfuse 0466005.NRHF 5 A (C57525): 11 mΩ nominal cold; high adds self-heating
@@ -1139,7 +1140,7 @@ def solve_paths(model, board):
 
     u4 = CHG_PADS
     r_net = {
-        "USB_VBUS J1": path("USB_VBUS J1", USB_J1, ("J1", ("A4", "A9", "B4", "B9")), ("FB1", ("1",))),
+        "USB_VBUS input": path("USB_VBUS input", USB_J1, (CONN["usb"], ("A4", "A9", "B4", "B9")), ("FB1", ("1",))),
         "USB_VBUS": path("USB_VBUS", "USB_VBUS", ("FB1", ("2",)), ("U4", u4["vin"])),
         "CHG_SW": path("CHG_SW", CHG_NETS["sw"], ("U4", u4["sw"]), ("L1", ("1",))),
         "VSYS": path("VSYS", "VSYS", ("U4", u4["sys"]), ("L2", ("1",))),
@@ -1147,20 +1148,20 @@ def solve_paths(model, board):
         "VBAT": (path("VBAT", "VBAT", ("F1", ("2",)), (model.ship_fet["ref"], ("5",)))
                  + path("CHG_BAT", model.ship_fet["net"], (model.ship_fet["ref"], ("1", "2", "3")), ("U4", u4["bat"]))
                  if model.ship_fet else path("VBAT", "VBAT", ("F1", ("2",)), ("U4", u4["bat"]))),
-        "BAT_IN": path("BAT_IN", "BAT_IN", ("J3", ("1",)), ("F1", ("1",))),
+        "BAT_IN": path("BAT_IN", "BAT_IN", (CONN["battery"], ("1",)), ("F1", ("1",))),
         "BOOST_SW": path("BOOST_SW", "BOOST_SW", ("L2", ("2",)), ("U6", ("4", "5", "6", "7"))),
         "BOOST_5V": path("BOOST_5V", "BOOST_5V", ("U6", ("14", "15", "16")), ("U7", ("1", "2", "4"))),
         "RAIL_5V": path("RAIL_5V", "RAIL_5V", ("U7", ("7", "8")), ("U11", ("5",))),
-        "ESP_5V_D": path("ESP_5V_D", "ESP_5V_D", ("U12", ("6",)), ("JP1", ("1",))),
-        "ADS_5V_D": path("ADS_5V_D", "ADS_5V_D", ("U11", ("6",)), ("JP2", ("1",))),
-        "ADS_5V": path("ADS_5V", "ADS_5V", ("JP2", ("2",)), ("J10", ("1",))),
-        "ESP_5V": path("ESP_5V", "ESP_5V", ("JP1", ("2",)), ("J7", ("1",))),
+        "ESP_5V_D": path("ESP_5V_D", "ESP_5V_D", ("U12", ("6",)), (CONN["esp_shunt"], ("1",))),
+        "ADS_5V_D": path("ADS_5V_D", "ADS_5V_D", ("U11", ("6",)), (CONN["ads_shunt"], ("1",))),
+        "ADS_5V": path("ADS_5V", "ADS_5V", (CONN["ads_shunt"], ("2",)), (CONN["adsbee"], ("1",))),
+        "ESP_5V": path("ESP_5V", "ESP_5V", (CONN["esp_shunt"], ("2",)), (CONN["display_power"], ("1",))),
     }
     # GND at 1 A: the loss in W equals the resistance in Ω
     _, r_gnd_bat, _ = model.gnd_solve([(pads_of(board, "U6", net="GND"), 1.0),
-                                       (pads_of(board, "J3", ("2",)), -1.0)], None)
+                                       (pads_of(board, CONN["battery"], ("2",)), -1.0)], None)
     _, r_gnd_usb, _ = model.gnd_solve([(pads_of(board, "U4", u4["gnd"]), 1.0),
-                                       (pads_of(board, "J1", ("A1", "A12", "B1", "B12")), -1.0)], None)
+                                       (pads_of(board, CONN["usb"], ("A1", "A12", "B1", "B12")), -1.0)], None)
     return r_net, r_gnd_bat, r_gnd_usb
 
 
@@ -1245,7 +1246,7 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
                 vin = vsys - vsys_drop
                 b = boost_losses(vin, load, tj["U6"], tj["L2"], model.fit)
                 i_l1 = i_chg + b["iin"] + 2 * LED_SYS_A
-                r_usb = (2 * USB_CONTACT[corner] / 4 + model.r_net["USB_VBUS J1"] + FB_R[corner]
+                r_usb = (2 * USB_CONTACT[corner] / 4 + model.r_net["USB_VBUS input"] + FB_R[corner]
                          + model.r_net["USB_VBUS"] + model.r_gnd_usb)
                 i_in = 2.5
                 for _ in range(20):
@@ -1298,7 +1299,7 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
         if case["mode"] == "battery":
             track("VSYS", {("U4", u4["sys"]): i_bat, ("L2", ("1",)): -i_bat})
         else:
-            track(USB_J1, {("J1", ("A4", "A9", "B4", "B9")): i_in, ("FB1", ("1",)): -i_in}, "USB_VBUS J1")
+            track(USB_J1, {(CONN["usb"], ("A4", "A9", "B4", "B9")): i_in, ("FB1", ("1",)): -i_in}, "USB_VBUS input")
             contact("FB1 ferrite bead", pads_of(board, "FB1"), i_in, FB_R[corner])
             track("USB_VBUS", {("FB1", ("2",)): i_in, ("U4", u4["vin"]): -i_in})
             track(CHG_NETS["sw"], {("U4", u4["sw"]): i_l1, ("L1", ("1",)): -i_l1}, "CHG_SW")
@@ -1316,7 +1317,7 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
                 i_sys = i_l1 - i_chg
                 if abs(i_sys) > 1e-9:
                     track("VSYS", {("U4", u4["sys"]): i_sys, ("L2", ("1",)): -i_sys})
-            contact("USB-C contacts", pads_of(board, "J1", ("A4", "A9", "B4", "B9", "A1", "A12", "B1", "B12")),
+            contact("USB-C contacts", pads_of(board, CONN["usb"], ("A4", "A9", "B4", "B9", "A1", "A12", "B1", "B12")),
                     i_in, 2 * USB_CONTACT[corner] / 4)
         if model.ship_fet:
             ref = model.ship_fet["ref"]
@@ -1325,36 +1326,36 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
             contact("ship FET", pads_of(board, ref), i_b, model.ship_fet["r_on"][corner])
         else:
             track("VBAT", {("F1", ("2",)): i_b, ("U4", u4["bat"]): -i_b})
-        track("BAT_IN", {("J3", ("1",)): i_b, ("F1", ("1",)): -i_b})
+        track("BAT_IN", {(CONN["battery"], ("1",)): i_b, ("F1", ("1",)): -i_b})
         contact("F1 fuse", pads_of(board, "F1"), i_b, FUSE_R[corner])
-        contact("JST-PH battery contacts", pads_of(board, "J3"), i_b, 2 * JST_CONTACT[corner])
+        contact("JST-PH battery contacts", pads_of(board, CONN["battery"]), i_b, 2 * JST_CONTACT[corner])
         if load:
             track("BOOST_SW", {("L2", ("2",)): b["iin"], ("U6", ("4", "5", "6", "7")): -b["iin"]})
             track("BOOST_5V", {("U6", ("14", "15", "16")): load, ("U7", ("1", "2", "4")): -load})
             track("RAIL_5V", {("U7", ("7", "8")): load + LED_5V_A, ("U12", ("5",)): -i_esp,
                               ("U11", ("5",)): -i_ads, ("R26", None): -LED_5V_A})
-            track("ESP_5V_D", {("U12", ("6",)): i_esp, ("JP1", ("1",)): -i_esp})
-            track("ADS_5V_D", {("U11", ("6",)): i_ads, ("JP2", ("1",)): -i_ads})
-            track("ESP_5V", {("JP1", ("2",)): i_esp, ("J7", ("1",)): -i_esp})
-            track("ADS_5V", {("JP2", ("2",)): i_ads, ("J10", ("1",)): -i_ads})
+            track("ESP_5V_D", {("U12", ("6",)): i_esp, (CONN["esp_shunt"], ("1",)): -i_esp})
+            track("ADS_5V_D", {("U11", ("6",)): i_ads, (CONN["ads_shunt"], ("1",)): -i_ads})
+            track("ESP_5V", {(CONN["esp_shunt"], ("2",)): i_esp, (CONN["display_power"], ("1",)): -i_esp})
+            track("ADS_5V", {(CONN["ads_shunt"], ("2",)): i_ads, (CONN["adsbee"], ("1",)): -i_ads})
             r_sock = SOCKET_CONTACT[corner]
-            contact("shunts and module sockets", pads_of(board, "JP1"), i_esp, 2 * r_sock)
-            contact("shunts and module sockets", pads_of(board, "JP2"), i_ads, 2 * r_sock)
-            contact("shunts and module sockets", pads_of(board, "J7", ("1", "2", "4")), i_esp, r_sock + r_sock / 2)
-            contact("shunts and module sockets", pads_of(board, "J10", ("1", "2", "13")), i_ads, r_sock + r_sock / 2)
+            contact("shunts and module sockets", pads_of(board, CONN["esp_shunt"]), i_esp, 2 * r_sock)
+            contact("shunts and module sockets", pads_of(board, CONN["ads_shunt"]), i_ads, 2 * r_sock)
+            contact("shunts and module sockets", pads_of(board, CONN["display_power"], ("1", "2", "4")), i_esp, r_sock + r_sock / 2)
+            contact("shunts and module sockets", pads_of(board, CONN["adsbee"], ("1", "2", "13")), i_ads, r_sock + r_sock / 2)
 
         # GND pour, DC currents into the pour (AC loops stay at the capacitors)
         gnd_inj = []
         if load:
             gnd_inj.append((pads_of(board, "U6", net="GND"), b["d"] * b["iin"]))
-            gnd_inj.append((pads_of(board, "J10", ("2", "13")), i_ads))
-            gnd_inj.append((pads_of(board, "J7", ("2", "4")), i_esp))
+            gnd_inj.append((pads_of(board, CONN["adsbee"], ("2", "13")), i_ads))
+            gnd_inj.append((pads_of(board, CONN["display_power"], ("2", "4")), i_esp))
         if case["mode"] == "battery":
-            gnd_inj.append((pads_of(board, "J3", ("2",)), -sum(c for _, c in gnd_inj)))
+            gnd_inj.append((pads_of(board, CONN["battery"], ("2",)), -sum(c for _, c in gnd_inj)))
         else:
-            gnd_inj.append((pads_of(board, "J3", ("2",)), i_chg))
+            gnd_inj.append((pads_of(board, CONN["battery"], ("2",)), i_chg))
             gnd_inj.append((pads_of(board, "U4", u4["gnd"]), -(1 - buck["d"]) * i_l1))
-            gnd_inj.append((pads_of(board, "J1", ("A1", "A12", "B1", "B12")), -sum(c for _, c in gnd_inj)))
+            gnd_inj.append((pads_of(board, CONN["usb"], ("A1", "A12", "B1", "B12")), -sum(c for _, c in gnd_inj)))
         _, p_gnd, gmap = model.gnd_solve(gnd_inj, cell_t)
         losses["copper GND pour"] = p_gnd
         for k, v in gmap.items():
@@ -1494,7 +1495,7 @@ def heat_map(path, model, result, title, scale_range=None, heatsink=None):
         for ix in range(g.nx):
             out.append('<rect x="%d" y="%d" width="%d" height="%d" fill="%s"/>'
                        % (ix * scale, iy * scale, scale, scale, color(temps[iy * g.nx + ix])))
-    for ref in ("U4", "L1", "U6", "L2", "U7", "F1", "J3", "J1", "JP1", "JP2"):
+    for ref in ("U4", "L1", "U6", "L2", "U7", "F1", CONN["battery"], CONN["usb"], CONN["esp_shunt"], CONN["ads_shunt"]):
         pads = pads_of(model.board, ref)
         xs = [p.x - p.w / 2 for p in pads] + [p.x + p.w / 2 for p in pads]
         ys = [p.y - p.h / 2 for p in pads] + [p.y + p.h / 2 for p in pads]
@@ -1687,22 +1688,22 @@ def main():
         rep.add()
     rep.table(["Path", "Resistance"], [[k, "%.1f mΩ" % (v * 1e3) + (" (assumed)" if key in nominal.unrouted else "")]
                                        for key, k, v in (
-        ("USB_VBUS J1", "USB_VBUS_J1: J1 VBUS pins to FB1", r_net["USB_VBUS J1"]),
+        ("USB_VBUS input", f"USB_VBUS_J1: {CONN['usb']} VBUS pins to FB1", r_net["USB_VBUS input"]),
         ("USB_VBUS", "USB_VBUS: FB1 to U4 %s" % pin["vin"], r_net["USB_VBUS"]),
         ("CHG_SW", "%s: U4 %s to L1" % (CHG_NETS["sw"], pin["sw"]), r_net["CHG_SW"]),
         ("VSYS L1", "%s: L1 to U4 %s" % (CHG_NETS["sw2"] or "VSYS", "SW2" if CHG_NETS["sw2"] else pin["sys"]), r_net["VSYS L1"]),
         ("VSYS", "VSYS: U4 %s to L2" % pin["sys"], r_net["VSYS"]),
         ("VBAT", "VBAT + CHG_BAT: F1 through Q13 to U4 BAT (copper only)" if CHG.get("ship_fet") else "VBAT: F1 to U4 %s" % pin["bat"], r_net["VBAT"]),
-        ("BAT_IN", "BAT_IN: J3 to F1", r_net["BAT_IN"]),
+        ("BAT_IN", f"BAT_IN: {CONN['battery']} to F1", r_net["BAT_IN"]),
         ("BOOST_SW", "BOOST_SW: L2 to U6 SW", r_net["BOOST_SW"]),
         ("BOOST_5V", "BOOST_5V: U6 VOUT to U7 VIN", r_net["BOOST_5V"]),
         ("RAIL_5V", "RAIL_5V: U7 VOUT to U11 IN", r_net["RAIL_5V"]),
-        ("ESP_5V_D", "U12 OUT to JP1", r_net["ESP_5V_D"]),
-        ("ADS_5V_D", "U11 OUT to JP2", r_net["ADS_5V_D"]),
-        ("ADS_5V", "ADS_5V: JP2 to J10", r_net["ADS_5V"]),
-        ("ESP_5V", "ESP_5V: JP1 to J7", r_net["ESP_5V"]),
-        ("GND bat", "GND: J3 pin 2 to U6 ground pads", r_gnd_bat),
-        ("GND usb", "GND: J1 GND pins to U4 %s" % pin["gnd"], r_gnd_usb))])
+        ("ESP_5V_D", f"U12 OUT to {CONN['esp_shunt']}", r_net["ESP_5V_D"]),
+        ("ADS_5V_D", f"U11 OUT to {CONN['ads_shunt']}", r_net["ADS_5V_D"]),
+        ("ADS_5V", f"ADS_5V: {CONN['ads_shunt']} to {CONN['adsbee']}", r_net["ADS_5V"]),
+        ("ESP_5V", f"ESP_5V: {CONN['esp_shunt']} to {CONN['display_power']}", r_net["ESP_5V"]),
+        ("GND bat", f"GND: {CONN['battery']} pin 2 to U6 ground pads", r_gnd_bat),
+        ("GND usb", f"GND: {CONN['usb']} GND pins to U4 %s" % pin["gnd"], r_gnd_usb))])
 
     # -- cases
     r_enc, a_enc = enclosure_resistance()
@@ -1866,7 +1867,7 @@ def main():
                   "it must stay below the thermostat's lowest opening point %.0f °C (60 °C ± 5 K)"
                   % (label[ck], r["t_pack"], THERMOSTAT_MIN))
     i_jst = max(r["i_bat"] for r in results.values())
-    rep.check(i_jst <= 2.0, "battery current at most %.2f A through J3, JST PH rating 2 A (AWG 24)" % i_jst)
+    rep.check(i_jst <= 2.0, f"battery current at most %.2f A through {CONN['battery']}, JST PH rating 2 A (AWG 24)" % i_jst)
     i_usb = max(r["i_in"] for r in results.values())
     rep.check(i_usb <= 5.0, "USB input current at most %.2f A, MC-107DMS rating 5 A" % i_usb)
     rep.add()

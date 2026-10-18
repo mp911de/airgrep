@@ -120,6 +120,17 @@
 		)
 		(uuid "947c5553-16b7-41ad-a75c-a2cbd39bcf07")
 	)
+	(text "MAX-M10S receiver, U.FL antenna\n3-pin antenna supervisor\nbackup from pack or CR2032"
+		(exclude_from_sim no)
+		(at 181.61 109.22 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "a07de2ef-b682-471c-8420-200428c58e99")
+	)
 	(text "+VUSB 5 V"
 		(exclude_from_sim no)
 		(at 66.04 65.04 0)
@@ -657,6 +668,51 @@
 		)
 	)
 	(sheet
+		(at 180.34 106.68)
+		(size 38.1 30.48)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0.0006)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "a06322b6-1276-4059-95cd-666fc3516e91")
+		(property "Sheetname" "GNSS"
+			(at 180.34 105.92 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "gnss.kicad_sch"
+			(at 180.34 137.92 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "carrier"
+				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d"
+					(page "9")
+				)
+			)
+		)
+	)
+	(sheet
 		(at 73.66 50.8)
 		(size 38.1 30.48)
 		(exclude_from_sim no)
@@ -745,62 +801,6 @@
 				)
 			)
 		)
-	)
-	(sheet
-		(at 180.34 106.68)
-		(size 38.1 30.48)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(stroke
-			(width 0.0006)
-			(type solid)
-		)
-		(fill
-			(color 0 0 0 0)
-		)
-		(uuid "a06322b6-1276-4059-95cd-666fc3516e91")
-		(property "Sheetname" "GNSS"
-			(at 180.34 105.92 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left bottom)
-			)
-		)
-		(property "Sheetfile" "gnss.kicad_sch"
-			(at 180.34 137.92 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left top)
-			)
-		)
-		(instances
-			(project "carrier"
-				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d"
-					(page "9")
-				)
-			)
-		)
-	)
-	(text "MAX-M10S receiver, U.FL antenna\n3-pin antenna supervisor\nbackup from pack or CR2032"
-		(exclude_from_sim no)
-		(at 181.61 109.22 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left top)
-		)
-		(uuid "a07de2ef-b682-471c-8420-200428c58e99")
 	)
 	(sheet_instances
 		(path "/"

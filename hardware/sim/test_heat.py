@@ -221,7 +221,7 @@ class OperatingPointTests(unittest.TestCase):
         self.assertLess(vented["t_pack"], sealed["t_pack"])
 
     def test_battery_path_copper_in_the_power_model_follows_the_board(self):
-        """run_power.R_BOARD copies J3 to F1, F1 to U4 BATT and U4 SYS to L2 from the heat model."""
+        """run_power.R_BOARD copies battery connector to F1, F1 to U4 BATT and U4 SYS to L2 from the heat model."""
         board = sum(self.model.r_net[n] for n in ("BAT_IN", "VBAT", "VSYS"))
         self.assertAlmostEqual(run_power.R_BOARD, board, delta=0.15e-3)
 

@@ -158,8 +158,9 @@ CHG = None
 def bind_charger(tag=None):
     """Charger buck constants and the battery path copper of the project's board."""
     global BUCK_FSW, CHG, R_B2S, R_BOARD, R_SWITCH_BOARD, R_BOARD_SOURCE, RESULTS
-    global ID_NAME, ID_RON, ID_VFWD, ID_CORNERS
+    global ID_NAME, ID_RON, ID_VFWD, ID_CORNERS, CONN
     tag = tag or project.charger(project.resolve())
+    CONN = project.connectors(project.resolve("carrier-ti-charger" if tag == "ti" else "carrier-max-charger"))
     ID_NAME = "TPS259474L" if tag == "ti" else "LM73100"
     ID_RON = (28.2e-3, 45e-3) if tag == "ti" else (28.4e-3, 44.85e-3)
     # TPS25947 specifies no maximum VFWD; retain 28.4 mV as a modelling assumption.
@@ -679,7 +680,7 @@ VHYS_CASES = {"2.5 % (minimum)": 0.025 * VIT, "5 % (typical)": 0.05 * VIT, "7 % 
 TD_CT_OPEN, TP_SUPERVISOR = 40e-6, 30e-6  # reset delay with CT open, propagation delay
 VIN_UVLO = 2.4  # TPS61088 VIN UVLO falling, minimum
 R_B2S = 20e-3  # charger BATT to SYS switch, bind_charger
-# Board copper J3 to F1, F1 to U4 BATT, U4 SYS to L2 from heat/<charger>/calibration.json (run_heat.py
+# Board copper from the battery connector to F1, F1 to U4 BATT, U4 SYS to L2 from heat/<charger>/calibration.json (run_heat.py
 # solves the routed tracks and copper areas). test_heat.py checks them against the heat model.
 R_BOARD = 1.3e-3 + 4.6e-3 + 6.2e-3
 R_SWITCH_BOARD = R_B2S + R_BOARD
@@ -732,7 +733,7 @@ def undervoltage(report):
     report.add()
     report.add("The battery is an open-circuit voltage behind the pack resistance and the harness. "
                "Then follow the " + CHG["part"] + " BATT-to-SYS switch (%.0f mΩ) and the board copper (%.0f mΩ "
-               "from the routed tracks, J3 to L2). The TLV840 on VSYS (VIT− %.1f V, "
+               f"from the routed tracks, {CONN['battery']} to L2). The TLV840 on VSYS (VIT− %.1f V, "
                "hysteresis %s, %.0f µs propagation, %.0f µs reset delay with CT open) pulls PWR_EN "
                "low against R13 100 kΩ. R13 is fed from VSYS through R43 1 kΩ, the closed thermostat "
                "and the closed slider. The boost, load switch and modules are those of the transient "
@@ -1002,10 +1003,10 @@ def layout_coupling(report):
 
     l1, l2 = positions["L1"], positions["L2"]
     table = []
-    for ref, name in (("J2", "thermistor connector"), ("J4", "thermostat connector"),
+    for ref, name in ((CONN["ntc"], "thermistor connector"), (CONN["thermostat"], "thermostat connector"),
                       ("R8", "THM bias"), ("U4", "charger"), ("R14", "boost feedback divider"),
-                      ("U6", "boost"), ("U8", "gauge"), ("J10", "ADSBee socket"),
-                      ("J9", "display socket"), ("J1", "USB-C")):
+                      ("U6", "boost"), ("U8", "gauge"), (CONN["adsbee"], "ADSBee socket"),
+                      (CONN["display_user"], "display socket"), (CONN["usb"], "USB-C")):
         if ref in positions:
             table.append([ref + " " + name, "%.0f mm" % math.dist(l1, positions[ref]),
                           "%.0f mm" % math.dist(l2, positions[ref])])
@@ -1028,7 +1029,7 @@ def layout_coupling(report):
 
     table, worst_thm, worst_fb = [], 0.0, 0.0
     for ref, loop_mm2, what in (("R8", 25, "THM bias network, 25 mm² loop"),
-                                ("J2", 500, "thermistor lead pair at J2, untwisted, 500 mm² loop"),
+                                (CONN["ntc"], 500, f"thermistor lead pair at {CONN['ntc']}, untwisted, 500 mm² loop"),
                                 ("R14", 10, "boost feedback divider, 10 mm² loop"),
                                 ("L2", turns * area * 1e6, "L2 winding (from L1)"),
                                 ("L1", turns * area * 1e6, "L1 winding (from L2)")):
@@ -1037,7 +1038,7 @@ def layout_coupling(report):
                 continue
             volts, r_mm = pickup(src, ref, loop_mm2)
             table.append([what, src, "%.0f mm" % r_mm, "%.3f mV" % (1e3 * volts)])
-            if ref in ("R8", "J2"):
+            if ref in ("R8", CONN["ntc"]):
                 worst_thm = max(worst_thm, volts)
             if ref == "R14":
                 worst_fb = max(worst_fb, volts)

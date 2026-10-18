@@ -1,5 +1,7 @@
 # Design FMEA: carrier board and battery harness
 
+Connector references below predate the TI board renumbering on 2026-10-18. Use the [reference map](interfaces.md#connector-reference-history) for the current designators; the frozen MAX board is unchanged.
+
 Failure modes and effects of the carrier with its pack, NTC and thermostat harness. Rows explicitly naming MAX77757 cover the frozen MAX carrier; the module-feed overvoltage entry covers the active TI carrier. The design is in [power.md](power.md), [interfaces.md](interfaces.md) and [mechanical.md](mechanical.md). The ranked result is at the end: [Top 10 risks](#top-10-risks).
 
 ## Basis

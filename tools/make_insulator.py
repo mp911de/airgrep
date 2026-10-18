@@ -23,6 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import project  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
+CONN = project.connectors(project.resolve())
 CARRIER = Path(project.pcb(project.resolve()))  # both carriers share the outline and holes
 OUT = ROOT / "hardware/insulator/insulator.kicad_pcb"
 REV = "Rev A 2026-10-03"
@@ -80,8 +81,8 @@ for ref in ("MH6", "MH7", "MH8"):
     pad.SetPosition(c)
 
 
-# cable pass-through for the pack leads (BAT, NTC, thermostat) when J2-J4 are mounted on the back
-# of the carrier: one slot between the J2/J3 row and J4, sized for the three 2-wire leads plus one
+# cable pass-through for the pack leads (BAT, NTC, thermostat) when the three pack headers are mounted on the back
+# of the carrier: one slot between the NTC/battery row and the thermostat, sized for the three 2-wire leads plus one
 # more PHR-2 plug (about 6.0 x 4.5 mm) pushed past them without forcing it
 SLOT_W, SLOT_H = 15.0, 7.5
 
@@ -92,10 +93,10 @@ def pin_xy(ref, num):
             return TO(p.GetPosition().x), TO(p.GetPosition().y)
 
 
-row_y = max(pin_xy("J2", "1")[1], pin_xy("J3", "1")[1])
-xs = [pin_xy(r, n)[0] for r in ("J2", "J3", "J4") for n in ("1", "2")]
+row_y = max(pin_xy(CONN["ntc"], "1")[1], pin_xy(CONN["battery"], "1")[1])
+xs = [pin_xy(r, n)[0] for r in (CONN["ntc"], CONN["battery"], CONN["thermostat"]) for n in ("1", "2")]
 SLOT_X = (min(xs) + max(xs)) / 2
-SLOT_Y = (row_y + pin_xy("J4", "1")[1]) / 2
+SLOT_Y = (row_y + pin_xy(CONN["thermostat"], "1")[1]) / 2
 slot = pcbnew.FOOTPRINT(board)
 slot.SetReference("H1")
 slot.Reference().SetVisible(False)
@@ -171,7 +172,7 @@ for ref, x0, y0, x1, y1 in rects:
     boxes.append(box)
     text(pcbnew.F_SilkS, ref, tx, ty, size=1.0)
 
-# labels in the free area below J5, left of J9
+# labels in the free area beside the module sockets
 text(pcbnew.F_SilkS, "CARRIER INSULATOR  %s" % REV, 22.0, 58.0, size=1.2)
 text(pcbnew.F_SilkS, "CARRIER SIDE  -  0.8 mm FR-4, no copper", 22.0, 60.5, size=1.0)
 text(pcbnew.F_SilkS, "outlines: carrier through-hole pins", 22.0, 62.8, size=1.0)

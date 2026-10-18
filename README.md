@@ -37,3 +37,5 @@ A carrier board for three plug-in modules: an ESP32-S3 touch display, an ADSBee 
 - KiCad 10.0.6, including `kicad-cli` and its bundled Python for the scripts that use `pcbnew`. `tools/kpy` runs that Python.
 - Python 3.14; the simulation packages are listed in `hardware/sim/requirements.txt`
 - ngspice 47 (Homebrew) for `hardware/sim/`
+- `python3 tools/report-holes-vias.py path/to/board.kicad_pcb` reports via copper/drill sizes, minimum nominal annular rings, plated and non-plated footprint drills, slots, counts and nets in mil. Edge.Cuts cutouts are excluded.
+- `python3 tools/report-traces.py path/to/board.kicad_pcb` reports straight and arc track widths by layer, with counts and nets in mil. Both reports are read-only, sorted by size, and automatically use `tools/kpy` when needed.

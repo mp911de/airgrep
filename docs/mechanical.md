@@ -20,11 +20,11 @@ Placement rules:
 
 - RF sits at the top: the GNSS module, the ADSBee and the three antenna mounts.
 - Both switching converters sit at the bottom right. The charger inductor L1 is about 37 mm from the GNSS module outline, the boost inductor L2 about 42 mm.
-- POWER slider SW1, LEDs D4 and D5 and the USB-C receptacle J1 line up on the bottom edge and face down. Side clearance in an aircraft is often poor.
+- POWER slider SW1, LEDs D4 and D5 and the USB-C receptacle J14 line up on the bottom edge and face down. Side clearance in an aircraft is often poor.
 - MUTE slider SW2 is on the left edge, next to the buzzer. Wi-Fi slider SW3 is above it on the same edge.
 - The display sits in the middle column, glass to the front.
-- The pack connectors J2, J3, J4 and the pack fuse F1 are at the bottom, left of centre, reachable with the rear cover off.
-- Shunt JP1 is left of the display and stays reachable with the display fitted. JP2 lies under the lower right corner of the ADSBee outline.
+- The pack connectors J12, J11, J13 and the pack fuse F1 are at the bottom, left of centre, reachable with the rear cover off.
+- Shunt JP1 is left of the display and stays reachable with the display fitted. JP3 lies under the lower right corner of the ADSBee outline.
 - The antenna mounts are MH6 (GNSS), MH7 (868 MHz) and MH8 (1090 MHz). MH6 is 20.6 mm from the GNSS SMA axis at x = 19.3, so an SMA adapter or a short lead fits.
 - The ADSBee is portrait, measured 29.86 to 29.89 x 47.46 mm. Its own USB-C faces down, above the boost converter. Its U.FL connectors are at the upper left corner.
 
@@ -41,7 +41,7 @@ Footprint origins are the middle terminal. Board coordinates are integer mil:
 | SW1 | 2420 | 3567 | 0 degrees | bottom |
 | SW2 | 190 | 2590 | 270 degrees | left |
 | SW3 | 190 | 1850 | 270 degrees | left |
-| J12 pin 1 | 1080 | 3080 | 0 degrees | front, inside enclosure |
+| J10 pin 1 | 1080 | 3080 | 0 degrees | front, inside enclosure |
 
 SW2 and SW3 bodies end approximately at the left board edge; their actuators extend about 79 mil beyond it. SW1's body overhangs the lower edge by about 17 mil, with a further 79 mil actuator extension. This keeps its new courtyard clear of the existing circuitry. Include the full actuator travel and housing tolerance when designing the case.
 
@@ -49,14 +49,14 @@ The supplier CAD has inconsistent F2/K1 names and a different peg offset. Use th
 
 ### USB-C receptacle in the case
 
-J1 is mounted so that the shell front extends 1.2 mm past the board edge. The front shell tabs stay about 0.5 mm inside the edge.
+J14 is mounted so that the shell front extends 1.2 mm past the board edge. The front shell tabs stay about 0.5 mm inside the edge.
 
 Place the board edge about 0.5 mm inside the case wall. With a 1.5 to 2 mm wall the receptacle face ends 0.3 to 1.3 mm behind the outer surface, which a USB-C plug reaches. Chamfer the opening.
 
 ## Assembly split
 
 - JLCPCB assembles all SMD parts. They are on the top side.
-- Hand-soldered through-hole parts: module sockets J6 to J11, pack connectors J2 to J4, shunt headers JP1 and JP2, expansion header J12, LEDs D4 and D5. The parts are listed in [bom-hand-sourced.md](bom-hand-sourced.md).
+- Hand-soldered through-hole parts: module sockets J1, J4, J5, J6, J8, J9, pack connectors J11, J12, J13, shunt headers JP1 and JP3, expansion header J10, LEDs D4 and D5. The parts are listed in [bom-hand-sourced.md](bom-hand-sourced.md).
 - All six module sockets are 2.54 mm single-row female headers of one height, 8.5 mm.
 
 ## Mounting
@@ -78,7 +78,7 @@ Notes on the module holes:
 
 Clearance around the 2.7 mm holes on the current board:
 
-- The nearest courtyards are J10 at 3.2 mm from MH12, J9 at 3.6 mm from MH13 and J8 at 5.0 mm from MH14.
+- The nearest courtyards are J6 at 3.2 mm from MH12, J8 at 3.6 mm from MH13 and J9 at 5.0 mm from MH14.
 - `carrier.kicad_dru` keeps copper clear of the holes.
 
 ## Delivered GNSS measurements, 2026-10-08
@@ -116,14 +116,14 @@ A plain board between the carrier and the battery keeps the through-hole pin tai
 | Material | 0.8 mm FR-4, no copper |
 | Case holes | MH1 to MH4, copied from the carrier |
 | Antenna clearance | 11 mm holes at MH6 to MH8 for the bulkhead nuts and pigtails |
-| Cable slot | 15 x 7.5 mm with round ends, centred at (45.1, 80.9), between J2/J3 and J4 |
-| Silkscreen | J2, J3, J4 outlines on the carrier side, BATTERY SIDE on the other |
+| Cable slot | 15 x 7.5 mm with round ends, centred at (45.1, 80.9), between J12/J11 and J13 |
+| Silkscreen | J12, J11, J13 outlines on the carrier side, BATTERY SIDE on the other |
 
 Order it as a separate board in the same JLCPCB cart. It cannot share the four-layer panel.
 
 The standoffs between carrier and insulator must clear the longest pin tail. Trim the hand-soldered tails to about 1.5 mm and use M2.5 spacers of at least 3 mm.
 
-J2, J3 and J4 may go on either side of the carrier; both sides are labelled ([interfaces.md](interfaces.md#silkscreen-labels)). The prototype keeps them on top, with the leads around the board edge. On the back they need a larger gap: about 6 mm for the PH housing plus the mated plug. The slot size is a first guess; it is set by SLOT_W and SLOT_H in the generator.
+J12, J11 and J13 may go on either side of the carrier; both sides are labelled ([interfaces.md](interfaces.md#silkscreen-labels)). The prototype keeps them on top, with the leads around the board edge. On the back they need a larger gap: about 6 mm for the PH housing plus the mated plug. The slot size is a first guess; it is set by SLOT_W and SLOT_H in the generator.
 
 ## Stack
 

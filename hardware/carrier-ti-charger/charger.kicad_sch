@@ -9288,7 +9288,7 @@
 		(in_pos_files yes)
 		(dnp yes)
 		(uuid "74ed168a-34ef-48ac-bba1-d5c71af11015")
-		(property "Reference" "J2"
+		(property "Reference" "J12"
 			(at 44.45 137.16 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9352,7 +9352,7 @@
 		(instances
 			(project "carrier"
 				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/ca5da11d-56a4-4cac-94d5-ee3030474f4d"
-					(reference "J2")
+					(reference "J12")
 					(unit 1)
 				)
 			)

@@ -95,8 +95,8 @@
 (rule "edge clearance 40 mil"
   (constraint edge_clearance (min 40mil)))
 
-(rule "J1 shell pads at the edge 12 mil"
-  (condition "A.Reference == 'J1'")
+(rule "J14 shell pads at the edge 12 mil"
+  (condition "A.Reference == 'J14'")
   (constraint edge_clearance (min 12mil)))
 
 (rule "mounting holes: copper keepaway 12 mil"

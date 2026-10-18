@@ -62,7 +62,7 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 | [esp32-s3.pdf](esp32-s3.pdf) | Display host, v2.2 | [Espressif](https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf) |
 | [lsm6ds3.pdf](lsm6ds3.pdf) | Display IMU, DocID026899 Rev 10 | [ST document, Arduino mirror](https://content.arduino.cc/assets/st_imu_lsm6ds3_datasheet.pdf) |
 
-[AXS5106L](axs5106l.pdf), V1.0 dated 2023-03-22, and [CST5106L](cst5106l.pdf), V1.0 dated 2022-11-02, were supplied by Mark. AXS5106L is the controller identified by Seeed; CST5106L is a comparison source, not an established substitute. Sink-current limits and remaining gaps are recorded in [I2C requirements](../docs/i2c-bus-requirements.md#sink-guarantee-investigation).
+[AXS5106L](axs5106l.pdf), V1.0 dated 2023-03-22, and [CST5106L](cst5106l.pdf), V1.0 dated 2022-11-02, were supplied by Mark. AXS5106L is the controller identified by Seeed; CST5106L is a comparison source, not an established substitute. Sink-current limits and remaining gaps are recorded in [I2C requirements](../docs/i2c-bus-requirements.md#bench-acceptance).
 
 ## Notes
 

@@ -40,7 +40,7 @@ FIXES = {
     "SW-SMD_K3-1280S-F1": (270, (0.0, 0.0)),  # SW1-SW3, C92658; supplier origin is common pad, actuator points right
     # HRO drawing leaves outer terminals unnumbered. Our 1/3 convention is reversed
     # relative to the supplier CAD after aligning the body. See workflows/physical-controls.md.
-    "USB_C_Receptacle_Hanbo_MC-107DMS": (0, (0.0, -1.322)),  # J1, C3039295 (slots and pegs, pads moved 3 Oct)
+    "USB_C_Receptacle_Hanbo_MC-107DMS": (0, (0.0, -1.322)),  # USB-C, C3039295 (slots and pegs, pads moved 3 Oct)
     "FC2QFN-24_L3.0-W3.0-P0.40_MAX77757": (0, (0.0019, 0.0736)),  # U4, C7454852
 }
 

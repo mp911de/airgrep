@@ -37,6 +37,18 @@ def sch(project):
     return os.path.join(project, "carrier.kicad_sch")
 
 
+def connectors(project):
+    """Connector roles shared by tools; designators follow each board's annotation."""
+    if charger(project) == "ti":
+        return dict(display_power="J1", xiao_power="J2", xiao_i2c="J3", display_aux="J4",
+                    adsbee_gnss="J5", adsbee="J6", gnss_antenna="J7", display_user="J8",
+                    display_i2c="J9", controls="J10", battery="J11", ntc="J12",
+                    thermostat="J13", usb="J14", esp_shunt="JP1", ads_shunt="JP3", gnss_led="JP2")
+    return dict(usb="J1", ntc="J2", battery="J3", thermostat="J4", gnss="J5",
+                display_aux="J6", display_power="J7", display_i2c="J8", display_user="J9",
+                adsbee="J10", adsbee_gnss="J11", controls="J12", esp_shunt="JP1", ads_shunt="JP2")
+
+
 def add_argument(parser):
     parser.add_argument("--project", metavar="NAME", default=None,
                         help="carrier project under hardware/ (default $CARRIER_PROJECT or %s)" % DEFAULT)

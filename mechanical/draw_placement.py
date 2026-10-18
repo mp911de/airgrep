@@ -12,11 +12,17 @@ import os
 import re
 from pathlib import Path
 
+import sys
+
 import pcbnew
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
-KICAD = ROOT / "hardware" / os.environ.get("CARRIER_PROJECT", "carrier-ti-charger")
+sys.path.insert(0, str(ROOT / "tools"))
+import project
+
+KICAD = Path(project.resolve())
+CONN = project.connectors(str(KICAD))
 OUT = ROOT / "mechanical"
 
 # Schematic sheet -> (legend text, fill colour). Parts are coloured by the sheet they are on.
@@ -35,8 +41,8 @@ SHEETS = {
 # socket on the board; the offsets come from the module geometry in this folder.
 #   name, note, anchor ref, envelope origin relative to pin 1 (dx, dy), size (w, h), label height, colour
 MODULES = [
-    ("Display", "Seeed 100069905", "J6", (-24.2, -3.88), (26.4, 51.4), 0.53, "#047857"),
-    ("ADSBee 1090U", "measured outline", "J10", (-27.8, -39.11), (29.89, 47.46), 0.42, "#b91c1c"),
+    ("Display", "Seeed 100069905", CONN["display_aux"], (-24.2, -3.88), (26.4, 51.4), 0.53, "#047857"),
+    ("ADSBee 1090U", "measured outline", CONN["adsbee"], (-27.8, -39.11), (29.89, 47.46), 0.42, "#b91c1c"),
 ]
 ADSBEE_USB = (3.0, 9.0)        # reserved overhang below the envelope, assumed width (position along the edge unknown)
 
@@ -44,18 +50,18 @@ ANTENNA = {"MH6": "GNSS", "MH7": "1090 MHz", "MH8": "sub-GHz"}
 
 # Reference labels on the drawing: ref -> side of the part the label goes on (c = centred).
 LABELS = {
-    "J1": "c", "J2": "t", "J3": "t", "J4": "b", "J6": "l", "J7": "r", "J8": "b", "J9": "r",
-    "J10": "l", "J11": "b", "JP1": "l", "JP2": "b", "SW1": "t", "SW2": "r", "SW3": "r", "J12": "b", "U13": "t", "BZ1": "c", "D4": "c", "D5": "c",
+    CONN["usb"]: "c", CONN["ntc"]: "t", CONN["battery"]: "t", CONN["thermostat"]: "b", CONN["display_aux"]: "l", CONN["display_power"]: "r", CONN["display_i2c"]: "b", CONN["display_user"]: "r",
+    CONN["adsbee"]: "l", CONN["adsbee_gnss"]: "b", CONN["esp_shunt"]: "l", CONN["ads_shunt"]: "b", "SW1": "t", "SW2": "r", "SW3": "r", CONN["controls"]: "b", "U13": "t", "BZ1": "c", "D4": "c", "D5": "c",
     "F1": "b", "L1": "c", "L2": "c", "U4": "c", "U5": "b", "U6": "c", "U7": "r", "U8": "t", "U9": "t", "U10": "b",
     "D3": "c", "TP1": "r", "TP2": "l", "TP3": "t", "TP4": "l", "TP5": "l", "TP6": "l", "TP7": "b",
-    "U16": "c", "J13": "r", "SW5": "t", "BT1": "c", "U18": "b",
+    "U16": "c", CONN.get("gnss_antenna", ""): "r", "SW5": "t", "BT1": "c", "U18": "b",
 }
 KEY = [
-    ("J1", "USB-C charging input"), ("J2 J3 J4", "pack NTC, battery, thermostat"),
-    ("J6 J7 J8 J9", "display sockets 1x8, 1x7, 1x4, 1x2"),
-    ("J10 J11", "ADSBee sockets 1x13, 1x5"), ("JP1 JP2", "5 V shunts: display, ADSBee"),
-    ("SW1 SW2 SW3", "POWER, MUTE and Wi-Fi sliders"), ("U13 J12", "control inputs and expansion"), ("D4 D5", "charge LED, power LED"),
-    ("U16 J13 SW5", "GNSS MAX-M10S, U.FL antenna, active antenna switch"), ("BT1 U18", "GNSS backup: CR2032, LDO"),
+    (CONN["usb"], "USB-C charging input"), (f"{CONN['ntc']} {CONN['battery']} {CONN['thermostat']}", "pack NTC, battery, thermostat"),
+    (f"{CONN['display_aux']} {CONN['display_power']} {CONN['display_i2c']} {CONN['display_user']}", "display sockets 1x8, 1x7, 1x4, 1x2"),
+    (f"{CONN['adsbee']} {CONN['adsbee_gnss']}", "ADSBee sockets 1x13, 1x5"), (f"{CONN['esp_shunt']} {CONN['ads_shunt']}", "5 V shunts: display, ADSBee"),
+    ("SW1 SW2 SW3", "POWER, MUTE and Wi-Fi sliders"), (f"U13 {CONN['controls']}", "control inputs and expansion"), ("D4 D5", "charge LED, power LED"),
+    (f"U16 {CONN.get('gnss_antenna', '')} SW5", "GNSS MAX-M10S, U.FL antenna, active antenna switch"), ("BT1 U18", "GNSS backup: CR2032, LDO"),
     ("U4 L1", "charger BQ25798"), ("U6 L2", "boost TPS61088"), ("U7", "load switch TPS22975"),
     ("U5", "undervoltage supervisor"), ("U8 U10", "fuel gauge, barometer"), ("U9 BZ1", "buzzer driver, buzzer"),
     ("F1 D3", "pack fuse, VBUS TVS"), ("TP1 to TP7", "VBAT, VSYS, PWR_EN, THERM_OK, USB_VBUS, GND, 5 V"),
@@ -145,7 +151,7 @@ def build():
         text(x + w / 2, y + h * at, name, size=2.0, anchor="mm", fill=colour, bold=True)
         for i, sub in enumerate(s for s in (note, f"{w:g} x {h:g} mm") if s):
             text(x + w / 2, y + h * at + 2.6 + 2.2 * i, sub, size=1.5, anchor="mm", fill=colour)
-        if anchor == "J10":
+        if anchor == CONN["adsbee"]:
             depth, width = ADSBEE_USB
             rect(x + w / 2 - width / 2, y + h, width, depth, stroke=colour, sw=0.2, dash=True)
             text(x + w / 2, y + h + depth / 2, "USB-C", size=1.5, anchor="mm", fill=colour)

@@ -35,7 +35,7 @@ One entry per decision, with its reason. The design is described in [power.md](p
 
 ## Battery protection
 
-- Reverse-polarity protection at J3 is planned with two CSD25404Q3 back to back. It is not in the schematic or on the board yet. The pair loses 97 mW at 2 A. F1 stays, and there is no reversed-polarity LED. Detection and gate control are still to be designed, see [issue 0002](../issues/0002-battery-reverse-polarity-protection.md).
+- Reverse-polarity protection at J11 is planned with two CSD25404Q3 back to back. It is not in the schematic or on the board yet. The pair loses 97 mW at 2 A. F1 stays, and there is no reversed-polarity LED. Detection and gate control are still to be designed, see [issue 0002](../issues/0002-battery-reverse-polarity-protection.md).
 - There is no P-FET battery disconnect. It would save the off-state draw of about 50 µA. It would also deadlock recovery of a fully discharged pack, drop USB-only operation and add a part. [Issue 0001](../issues/0001-battery-disconnect-switch.md) proposes one for the next revision.
 - The supervisor monitors SYS, not the battery. The device then runs from USB with an empty or missing pack. It is a TLV840 at 2.9 V. The TPS3839 at 3.0 V is not stocked at JLCPCB.
 - A latch follows the supervisor. The load drop across pack, harness and switch exceeds the supervisor's hysteresis. Without the latch the system would restart about every 11 ms at the end of a discharge. A CT capacitor only stretches the off time.

@@ -6,10 +6,10 @@ The GNSS and ADSBee modules have arrived. The display is ordered. The carrier bo
 
 ## Before ordering the board
 
-- [ ] **Reverse-polarity protection at J3.** CSD25404Q3 (LCSC C2865523) selected; design and validate the bidirectional protection stage, including USB-powered reversed-pack insertion and depleted-pack recovery. Coordinate with the planned off-state battery disconnect. No indicator LED; see [issue 0002](../issues/0002-battery-reverse-polarity-protection.md).
+- [ ] **Reverse-polarity protection at J11.** CSD25404Q3 (LCSC C2865523) selected; design and validate the bidirectional protection stage, including USB-powered reversed-pack insertion and depleted-pack recovery. Coordinate with the planned off-state battery disconnect. No indicator LED; see [issue 0002](../issues/0002-battery-reverse-polarity-protection.md).
 - [ ] **USB-C current detection, TI carrier.** FUSB303BTMX (LCSC C895444), R80 and R81 are routed and synchronized between schematic and PCB. Implement `CONTROL1.ENABLE`, CC advertisement handling and conservative fallback in firmware. Verify dead-battery attachment and current limiting with weak sources. 5 V only, no PD negotiation.
 -
-- [ ] **Battery connector rating.** J3 is JST-PH, rated 2 A per contact. The battery current is about 1.9 A at the 1 A load peak and about 3 A at the 1.5 A headroom near empty, and F1 is 5 A. Accept this for short peaks or change the connector ([interfaces.md](interfaces.md#carrier-connectors)).
+- [ ] **Battery connector rating.** J11 is JST-PH, rated 2 A per contact. The battery current is about 1.9 A at the 1 A load peak and about 3 A at the 1.5 A headroom near empty, and F1 is 5 A. Accept this for short peaks or change the connector ([interfaces.md](interfaces.md#carrier-connectors)).
 - [ ] **K3-1280S-F1 fit and assembly placement.** Compare a real C92658 F1 sample with the manufacturer-derived footprint, including its 0.90 mm peg holes and 3.075 mm peg-to-terminal-row offset. The supplier CAD mixes F2/K1 names and uses 3.406 mm; its 3D model is not trusted. Verify SW1-SW3 orientation and seating in the JLCPCB preview before ordering. Details in [physical controls](../workflows/physical-controls.md).
 - [ ] **Display fit.**
   - The 8.5 mm socket stack against the controller and the microSD slot on the back of the display.
@@ -38,17 +38,17 @@ The simulations rest on these. Each one changes a result if it is far off.
 - [ ] **Peak 5 V current**, in particular ADSBee Wi-Fi bursts (assumed 1.0 A peak, 1.5 A short-term headroom).
 - [ ] **Battery pack DC resistance** near empty, new and aged, warm and cold (assumed 50 to 150 mΩ), and harness resistance (assumed 60 to 100 mΩ). They set the voltage at which the undervoltage latch trips.
 - [ ] **Converter noise in the receiver bands.** `hardware/sim/emi/results_max.md` (and `results_ti.md`) puts the edge tails of the boost and the charger within a few dB of the ADS-B and FLARM noise floors, with assumed edges and switch capacitances. Measure the ADSBee noise floor (trigger level) with each converter on and off, then with the snubber R39/C36 fitted (start with 2.2 Ω and 1 nF). The snubber gains under 1 dB at 868 MHz (`emi/spectrum_flarm.pdf`). Moving the switching frequency does not help: U4 is fixed, and the U6 lines sweep 27 MHz with VIN. A shield can over U6/L2 and U4/L1 is the remaining fix. Deferred: it conflicts with the heat sinks. Decide after the heat problem is solved and the bench shows a loss.
-- [x] **USB input ripple.** Closed. The EMI model's worst conducted margin is −5 dB only at an assumed 0.1 µH FB1 corner under 3 A; Murata publishes no DC-bias data for BLM31KN471SZ1L (SimSurfing gives 1.6 µH at 0 A, QNFA9149 rates 4 A at 85 °C). Accepted as unverified. If the bench shows ripple at J1, replace FB1 with the 2.2 µH FC-ALX4030D-2R2MT (+22 dB modelled) or raise C1 to 10 µF (+1.6 dB).
+- [x] **USB input ripple.** Closed. The EMI model's worst conducted margin is −5 dB only at an assumed 0.1 µH FB1 corner under 3 A; Murata publishes no DC-bias data for BLM31KN471SZ1L (SimSurfing gives 1.6 µH at 0 A, QNFA9149 rates 4 A at 85 °C). Accepted as unverified. If the bench shows ripple at J14, replace FB1 with the 2.2 µH FC-ALX4030D-2R2MT (+22 dB modelled) or raise C1 to 10 µF (+1.6 dB).
 - [ ] **Charger and boost temperature** at the intended load, in the enclosure, with the heatsink on U4 (thermocouple on the sink base). Compare against `hardware/sim/heat/ti/results.md`.
 
 ## Bench tests at bring-up
 
 - [ ] **SW4 system reset.** Implement and read back SFET_PRESENT at startup. With battery only and with USB connected, hold SW4 past the typical 10 s trigger and scope VSYS, both 5 V module rails and ESP_3V3. Verify they fall below each device's POR threshold before restart, at minimum load and with the real module capacitors. Test both POWER slider positions. Charger and MAX17048 are outside reset coverage. Confirm the stock 6 mm button fits the 6.5 x 4.5 mm footprint before fabrication.
 
-- [ ] **Module assembly.** Verify socket mating, clearance under the ADSBee rear shield, access to JP2 and room for the ADSBee USB plug above the boost converter.
+- [ ] **Module assembly.** Verify socket mating, clearance under the ADSBee rear shield, access to JP3 and room for the ADSBee USB plug above the boost converter.
 - [ ] **Before first power-up.**
   - Inspect the U6 and U7 solder joints. The exposed pads have unfilled thermal vias next to the paste windows.
-  - Confirm the pack lead polarity at J3 (pin 1, square pad, is plus).
+  - Confirm the pack lead polarity at J11 (pin 1, square pad, is plus).
 - [ ] **Charger, carrier-ti-charger (BQ25798).**
   - Default mode after power-on: 1 A, STAT low, 12 h timer. Then I2C at 0x6B: ICHG 1.8 A, TREG 100 °C, WD_RST every 20 s; pull the host and confirm the fallback to 1 A after 40 s (WD_STAT).
   - D+/D- detection with a USB-A DCP, a PC port, a C-to-C cable from a PD adapter (expect "unknown adapter", 3 A, clamped to 1.5 A by ILIM_HIZ) and an Apple adapter.
@@ -56,7 +56,7 @@ The simulations rest on these. Each one changes a result if it is far off.
   - Dead-battery attach to a Type-C source, U15 unpowered.
   - Weak source: a current-limited 5 V supply, VINDPM holds VBUS.
   - TDIE, IBAT and VBAT over the ADC against a thermocouple and a meter; the TREG loop holding 100 °C in the closed case.
-  - TS transitions at J2 (3.1 / 8.9 / 32.2 / 43.0 °C nominal), NTC open and shorted, thermostat trip to CE.
+  - TS transitions at J12 (3.1 / 8.9 / 32.2 / 43.0 °C nominal), NTC open and shorted, thermostat trip to CE.
   - Red LED with USB present, green LED on STAT.
   - Conducted emission at 750 kHz with the real adapter. 1.5 MHz needs L1 = 1 µH and is not an option on this board.
 - [ ] **Charger, carrier-max-charger (MAX77757).**
@@ -66,13 +66,13 @@ The simulations rest on these. Each one changes a result if it is far off.
   - LED pattern as described in [power.md](power.md#indication).
   - Charging from a weak source may hit the safety timer. This is accepted.
 - [ ] **Thermal cut-off.**
-  - Sweep the resistance at J2 through all THM transitions.
+  - Sweep the resistance at J12 through all THM transitions.
   - NTC open and shorted.
   - Thermostat trip.
   - Switch off with USB present; no backfeed.
 - [ ] **5 V rail.** Start-up, load steps between 0.1 and 0.8 A and between 0.8 and 1 A at the module terminals, boost ripple. Compare against `hardware/sim/power/results_<charger>.md`.
 - [ ] **Undervoltage.** Discharge to cut-off under load. The latch must hold the system off while the battery voltage recovers. Clear it with the slider and with USB. Measure the latched current (about 60 µA expected).
-- [ ] **Physical controls.** Verify U13 address 0x20 alongside all other I2C devices, 400 kHz bus rise time, both slider positions, startup silence, debounce, last-known-state behavior on a disconnected expander, and Wi-Fi command acknowledgment. Check all six J12 inputs with contacts to GND. Measure added current; the budget is an estimate.
+- [ ] **Physical controls.** Verify U13 address 0x20 alongside all other I2C devices, 400 kHz bus rise time, both slider positions, startup silence, debounce, last-known-state behavior on a disconnected expander, and Wi-Fi command acknowledgment. Check all six J10 inputs with contacts to GND. Measure added current; the budget is an estimate.
 - [ ] **GNSS reception next to the charger.** U16 is 41 mm from L1, just past the 40 mm planning target ([mechanical.md](mechanical.md#placement)). Compare reception with and without charging, and with SW5 on and off with each antenna type.
 
 ## Firmware
@@ -82,7 +82,7 @@ The simulations rest on these. Each one changes a result if it is far off.
 - [ ] FLARM 868 MHz decoding is not demonstrated in the ADSBee firmware.
 - [ ] Display firmware: gauge readout, traffic input and buzzer PWM on D11; poll and debounce U13 at 0x20. Apply both sliders at startup, keep PWM silent until mute is read, and retain both last known states on read failure. Show the shared failure icon for expander, gauge or BMP faults.
 - [ ] Deploy and bench-test the custom ADSBee UART console: 115200 8E1, CSBEE plus AT replies. Verify Wi-Fi control, CRC/parity error recovery and dense-traffic throughput with the display. Source support is implemented in the local ADSBee checkout.
-- [ ] BMP580: keep the interrupt output disabled; the INT pin is tied to GND.
+- [ ] BMP580: verify polled initialization with INT intentionally unconnected; configure INT_CONFIG.int_en=1 and int_od=0 per Bosch section 6.2.
 - [ ] Low state of charge: warning and optional backlight dimming. Do not override the Wi-Fi slider.
 
 ## Enclosure

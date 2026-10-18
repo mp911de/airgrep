@@ -15,11 +15,12 @@ The display gets 5 V from two ideal diodes: U12 from the 5 V rail (POWER slider 
 
 - SW_ON_N is the POWER slider through Q11: low means slider on. Low with the thermostat open is not possible (THERM_OK feeds the slider), so slider off plus no charging current can also mean "pack hot"; read the charger's TS status before showing a reason.
 - In charger mode the ESP must not set EN_HIZ on the charger. PMID, and with it the ESP's own supply, drops in HIZ.
-- In charger mode drive ESP_UART_TX (D13) low or set it as input. The ADSBee is unpowered and would be fed through R30 (1 kΩ, about 3 mA).
+- In charger mode drive ESP_UART_TX (display D13, Plus GPIO44) low or set it as input. The ADSBee is unpowered and would be fed through R30 (1 kΩ, about 3 mA).
 
 ## ADSBee UART
 
-- D12 RX, D13 TX. 115200 baud, 8E1, no RTS/CTS. ESP-IDF: `UART_DATA_8_BITS`, `UART_PARITY_EVEN`, `UART_STOP_BITS_1`, `UART_HW_FLOWCTRL_DISABLE`.
+- Display: D12 RX, D13 TX. Alternative XIAO Plus: GPIO7 RX (J2.6), GPIO44 TX (J2.7); use UART1 and route its pins through the GPIO matrix. Both use 115200 baud, 8E1, no RTS/CTS. ESP-IDF: `UART_DATA_8_BITS`, `UART_PARITY_EVEN`, `UART_STOP_BITS_1`, `UART_HW_FLOWCTRL_DISABLE`.
+- The Plus uses GPIO8 (J2.5) for buzzer PWM and retains GPIO5/GPIO6 (J3.5/J3.6) for SDA/SCL. Its firmware profile must omit initialization of the original display, touch controller and IMU. Firmware implementation and physical validation remain open.
 - Provision ADSBee through USB: `AT+BAUD_RATE=COMMS_UART,115200`, `AT+PROTOCOL_OUT=COMMS_UART,CSBEE`, `AT+SETTINGS=SAVE`. Existing saved baud rates survive firmware updates.
 - Send AT commands with LF or CRLF. Keep one command outstanding. Separate CSBEE lines (`#` prefix) from AT replies and verify CSBEE CRC16.
 - On parity, framing or buffer-overrun errors, discard through a clean LF. For a missing/corrupt reply, query state before retrying a state change. Parity cannot detect every corruption.
@@ -40,14 +41,14 @@ The display gets 5 V from two ideal diodes: U12 from the 5 V rail (POWER slider 
 
 ## I2C bus
 
-Use a 3.3 V, 400 kHz bus. Carrier R19/R20 are 1.8 kΩ and operate in parallel with the display module's 5.1 kΩ pull-ups. The calculations and conservative limits are in [I2C bus requirements](i2c-bus-requirements.md). Rules the parts impose:
+Use a 3.3 V bus at up to 400 kHz. Pull-up configuration, electrical limits and bench acceptance are in [I2C bus requirements](i2c-bus-requirements.md). Rules the parts impose:
 
 - The 200 pF design envelope gives a 233 ns worst-case rise time against the FUSB303B 250 ns limit. The AXS5106L data sheet omits sink-current and pin-capacitance limits, so whole-bus compliance cannot be proven without measurement.
 - Never address 0x7E. It is the I3C broadcast address and locks the BMP580 into I3C mode until power-off. Bus scans run 0x08 to 0x77 only.
 - MAX17048: 16-bit words only, both bytes in one transaction. Keep MODE.EnSleep at 0 (default); with it set, the bus at 0 V while the display is off puts the gauge to sleep after 2.5 s. Check STATUS.RI at each power-up; set means the gauge lost power, reload the config.
 - No ACK is normal for the MAX17048 POR command (0x5400 to 0xFE) and the BMP580 soft reset (0xB6 to 0x7E). Do not treat it as a bus error.
 - BQ25798: a transaction not finished within 1.5 s is dropped and the chip returns to idle. WD_FLAG clears on read. Thresholds are absolute (VIH 1.3 V, VIL 0.4 V), fine at 3.3 V. I2C works on battery only, in HIZ and in ship mode, not in shutdown.
-- BMP580: wait 2 ms after ESP_3V3 before the first access, then check CHIP_ID = 0x50 and STATUS.nvm_rdy. Keep INT_CONFIG.int_en disabled because INT is grounded.
+- BMP580: wait 2 ms after ESP_3V3 before the first access, then check CHIP_ID = 0x50 and STATUS.nvm_rdy. INT is intentionally unconnected. Follow Bosch section 6.2: set INT_CONFIG.int_en=1 and int_od=0 (push-pull); poll measurement/status registers. The local datasheet leaves the recommended pad_int_drv value blank, so retain its reset value.
 - FUSB303B: address 0x21 from the ADDR low strap. Fast mode is limited to 400 kHz, 250 ns rise time and 400 pF; its SDA/SCL pin capacitance is 5 pF. Powered from ESP_3V3, so it is never unpowered on a live bus.
 - TCA9534: reads NACK until the first command byte has been written after power-up.
 

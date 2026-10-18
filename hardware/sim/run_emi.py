@@ -1005,8 +1005,8 @@ def rails(report, board, fast):
     report.add("## Rail ripple at the module sockets and the battery harness loop")
     report.add()
     rows = []
-    for net, dest in (("RAIL_5V", "U11/U12 inputs"), ("ESP_5V", "J7.1"), ("ADS_5V", "J10.1"), ("VSYS", "L2, J3"),
-                      ("VBAT", "J3")):
+    for net, dest in (("RAIL_5V", "U11/U12 inputs"), ("ESP_5V", run_heat.CONN["display_power"] + ".1"), ("ADS_5V", run_heat.CONN["adsbee"] + ".1"), ("VSYS", "L2, " + run_heat.CONN["battery"]),
+                      ("VBAT", run_heat.CONN["battery"])):
         length, r, l, c, vias = board.net_parasitics(net)
         rows.append([net, dest, "%.0f mm" % (length * 1e3), "%.1f mΩ" % (r * 1e3), "%.0f nH" % (l * 1e9),
                      "%.0f pF" % (c * 1e12), "%d" % vias])

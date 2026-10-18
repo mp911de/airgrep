@@ -216,7 +216,7 @@ thermostat open -- Q2 -- CHG_DIS = BQ25798 CE (high: charging off)
 
 ### Temperature window (TS)
 
-Same Variohm 100 kΩ NTC on J2. RT1 80.6 kΩ (R59) from REGN and RT2 768 kΩ (R60) to GND put the chip's percent-of-REGN thresholds on the 100 kΩ curve so that the charge window, worst case with typical TS leakage, stays inside the pack's 0 to 45 °C rating. C35 10 nF stays on BAT_TS.
+Same Variohm 100 kΩ NTC on J12. RT1 80.6 kΩ (R59) from REGN and RT2 768 kΩ (R60) to GND put the chip's percent-of-REGN thresholds on the 100 kΩ curve so that the charge window, worst case with typical TS leakage, stays inside the pack's 0 to 45 °C rating. C35 10 nF stays on BAT_TS.
 
 | Transition | TS/REGN | Nominal | Worst case (typical leakage) | Effect (defaults) |
 |---|---|---|---|---|
@@ -303,12 +303,12 @@ The sink carries 0.36 to 0.42 W of the 0.9 to 1.1 W charger loss in the closed c
 |---|---|---|---|
 | D3 | USB_VBUS | SMAJ12A, unidirectional, cathode to VBUS | breakdown 13.3 V minimum, clamp 19.9 V at 20.8 A |
 | D8, D9 | D+, D- | H5VLD3B, 5 V, SOD-323 (C20615805) | at the connector |
-| C1 | USB_VBUS_J1 | 4.7 µF 50 V at J1, before FB1 | the 10 µF hot-plug limit applies at the connector; behind the bead the charger input holds 2 x 10 µF + 2 x 100 nF |
+| C1 | USB_VBUS_J1 | 4.7 µF 50 V at J14, before FB1 | the 10 µF hot-plug limit applies at the connector; behind the bead the charger input holds 2 x 10 µF + 2 x 100 nF |
 | FB1 | USB_VBUS_J1 to USB_VBUS | Murata BLM31KN471SZ1L, 470 Ω at 100 MHz, 4 A, 20 mΩ, 1206 (C710518) | with C1, keeps the charger's 1.3 MHz input ripple off the USB cable |
 
 - A USB-C source does not deliver more than 5 V without PD, so D3 only sees ESD and surge.
 - The BYP capacitors are behind the charger's input switch and do not count as VBUS capacitance.
-- J1, D3 and C1 sit on USB_VBUS_J1, ahead of FB1. The EMI estimate gives 13 to 32 dB conducted margin with FB1 and -2 dB with FB1 replaced by 0 Ω (`hardware/sim/emi/results.md`). FB1's inductance at 3 A is an estimate.
+- J14, D3 and C1 sit on USB_VBUS_J1, ahead of FB1. The EMI estimate gives 13 to 32 dB conducted margin with FB1 and -2 dB with FB1 replaced by 0 Ω (`hardware/sim/emi/results.md`). FB1's inductance at 3 A is an estimate.
 - Reverse blocking, over-voltage lockout and the input current limit are functions of the charger.
 
 ## Battery pack
@@ -330,10 +330,10 @@ At the 1.5 A output headroom the battery current is about 2.8 A at 3.1 V. This i
 
 ### Connector and fuse
 
-- J3 is a JST-PH header, rated 2 A per contact with AWG 24 wire (see [interfaces.md](interfaces.md)). The battery current stays below 2 A up to the 1 A load and exceeds it at the 1.5 A headroom.
+- J11 is a JST-PH header, rated 2 A per contact with AWG 24 wire (see [interfaces.md](interfaces.md)). The battery current stays below 2 A up to the 1 A load and exceeds it at the 1.5 A headroom.
 - F1 is a Littelfuse 0466005.NRHF (5 A, 32 V, very fast acting, 1206, 11 mΩ, 2.5 A²s; LCSC C57525; `datasheets/littelfuse-466.pdf`). Derated for continuous use and 60 °C it carries about 3.4 A.
 - The pack's own PCM is the second line of protection.
-- Reverse-polarity isolation is planned using two CSD25404Q3 MOSFETs (LCSC C2865523), without an indicator LED; see [issue 0002](../issues/0002-battery-reverse-polarity-protection.md). The current schematic and PCB still rely on checking J3 polarity before connection. The control circuit and its interaction with charging remain to be designed and validated.
+- Reverse-polarity isolation is planned using two CSD25404Q3 MOSFETs (LCSC C2865523), without an indicator LED; see [issue 0002](../issues/0002-battery-reverse-polarity-protection.md). The current schematic and PCB still rely on checking J11 polarity before connection. The control circuit and its interaction with charging remain to be designed and validated.
 
 ### Undervoltage cut-off
 
@@ -356,10 +356,10 @@ A latch keeps the system off after a trip. Without it the system restarts when S
 
 ## Thermal protection
 
-The thermostat is a Limitor LIM-P-82-60-5-100-10A: normally closed, auto reset, 60 °C ±5 K, taped to the pack. A user-made lead connects it to J4.
+The thermostat is a Limitor LIM-P-82-60-5-100-10A: normally closed, auto reset, 60 °C ±5 K, taped to the pack. A user-made lead connects it to J13.
 
 ```
-VSYS -- R43 1 kΩ -- THERM_FEED -- J4.1 [thermostat] J4.2 -- THERM_OK
+VSYS -- R43 1 kΩ -- THERM_FEED -- J13.1 [thermostat] J13.2 -- THERM_OK
 THERM_OK -- SW1 slider -- SW_EN -- R13 100 kΩ -- PWR_EN (boost and load switch enable)
 THERM_OK -- Q2 AO3401A gate (source VSYS), drain = CHG_DIS, R12 100 kΩ to GND
 CHG_DIS  -- Q6 2N7002 gate, drain = charger THM
@@ -374,7 +374,7 @@ THERM_OK -- R10 1 MΩ and C31 100 nF to GND
 - R43 limits a short of the thermostat lead to GND to 4.2 mA.
 - R12 holds the Q6 gate at 0.5 V or below at Q2's maximum leakage (5 µA at 55 °C). It carries 42 µA while the thermostat is open.
 - C31 filters noise on the high-impedance thermostat lead.
-- The loads stay off without the thermostat lead, even with USB present. USB-only operation therefore needs the thermostat connected to J4.
+- The loads stay off without the thermostat lead, even with USB present. USB-only operation therefore needs the thermostat connected to J13.
 - Simulated in `hardware/sim/thermal/thermostat_trip.cir`.
 
 ## Off-state draw
@@ -526,6 +526,6 @@ Passives use JLCPCB Basic stock where a Basic value exists. Expected outside Bas
 - the X7R bulk capacitors
 - R8 154 kΩ (C22881)
 - L1, L2, F1, D3, D8, D9
-- J1, SW1, SW2, SW3, BZ1
+- J14, SW1, SW2, SW3, BZ1
 
 The JLCPCB class of each part is not recorded in the project and is not verified here. Check it at the BOM export. Hand-fitted parts are in [bom-hand-sourced.md](bom-hand-sourced.md).

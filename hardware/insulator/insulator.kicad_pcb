@@ -869,7 +869,7 @@
 		(layer "Edge.Cuts")
 		(uuid "3f0d9f5b-f54b-4b06-9809-311f5286068f")
 	)
-	(gr_text "J3"
+	(gr_text "J11"
 		(at 41.418 73.049 0)
 		(layer "F.SilkS")
 		(uuid "8283c246-e7d3-4d4c-a39c-12b1ea67811e")
@@ -880,7 +880,7 @@
 			)
 		)
 	)
-	(gr_text "J4"
+	(gr_text "J13"
 		(at 41.656 88.791 0)
 		(layer "F.SilkS")
 		(uuid "daac394d-7d7f-40c4-a664-9ec8ea7b33f4")
@@ -891,7 +891,7 @@
 			)
 		)
 	)
-	(gr_text "J2"
+	(gr_text "J12"
 		(at 48.742 73.033 0)
 		(layer "F.SilkS")
 		(uuid "0d0a7d6a-934e-4e07-af28-cff40ea0069d")

@@ -4281,7 +4281,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1.8k"
+		(property "Value" "1.43k"
 			(at 217.17 95.25 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4303,7 +4303,7 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/0a975aaa49b7c97f38a963127be4a823.pdf?productCode=C22840"
 			(at 215.9 93.98 0)
 			(hide yes)
 			(show_name no)
@@ -4325,7 +4325,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C4177"
+		(property "LCSC" "C22840"
 			(at 215.9 93.98 0)
 			(hide yes)
 			(show_name no)
@@ -4350,6 +4350,9 @@
 				)
 			)
 		)
+		(property "MPN" "0603WAF1431T5E" (at 215.9 93.98 0) (hide yes) (effects (font (size 1.27 1.27))))
+		(property "Manufacturer" "UNI-ROYAL" (at 215.9 93.98 0) (hide yes) (effects (font (size 1.27 1.27))))
+		(property "Tolerance" "1%" (at 215.9 93.98 0) (hide yes) (effects (font (size 1.27 1.27))))
 	)
 	(symbol
 		(lib_id "power:GND")
@@ -4604,7 +4607,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1.8k"
+		(property "Value" "1.43k"
 			(at 240.03 95.25 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4626,7 +4629,7 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://datasheet.lcsc.com/datasheet/pdf/0a975aaa49b7c97f38a963127be4a823.pdf?productCode=C22840"
 			(at 238.76 93.98 0)
 			(hide yes)
 			(show_name no)
@@ -4648,7 +4651,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C4177"
+		(property "LCSC" "C22840"
 			(at 238.76 93.98 0)
 			(hide yes)
 			(show_name no)
@@ -4673,6 +4676,9 @@
 				)
 			)
 		)
+		(property "MPN" "0603WAF1431T5E" (at 238.76 93.98 0) (hide yes) (effects (font (size 1.27 1.27))))
+		(property "Manufacturer" "UNI-ROYAL" (at 238.76 93.98 0) (hide yes) (effects (font (size 1.27 1.27))))
+		(property "Tolerance" "1%" (at 238.76 93.98 0) (hide yes) (effects (font (size 1.27 1.27))))
 	)
 	(symbol
 		(lib_id "Transistor_FET:AO3401A")
@@ -5852,4 +5858,179 @@
 			(page "1")
 		)
 	)
+
+	(symbol
+		(lib_id "Device:R")
+		(at 215.9000 116.8400 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files no)
+		(dnp yes)
+		(uuid "11630c23-b028-4290-b6a6-16af389b64dd")
+		(property "Reference" "R90"
+			(at 217.1700 115.5700 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "5.1k"
+			(at 217.1700 118.1100 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
+			(at 215.9000 116.8400 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 215.9000 116.8400 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Optional parallel I2C_SDA pull-up, fit only after measuring the bus"
+			(at 215.9000 116.8400 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		
+		(pin "1"
+			(uuid "87f5c439-49a3-48fb-a03d-31818f32c7aa")
+		)
+		(pin "2"
+			(uuid "966e0816-1725-4816-893b-6059bd2af307")
+		)
+		(instances
+			(project "carrier"
+				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/f622a697-5a21-4794-a4ab-94e63edd90cd"
+					(reference "R90")
+					(unit 1)
+				)
+			)
+		)
+		
+		
+		
+	)
+	(global_label "+ESP_3V3" (shape bidirectional) (at 215.9000 113.0300 0) (effects (font (size 1.27 1.27)) (justify left)) (uuid "1b89b68c-4334-427f-80ca-41eb4822a067"))
+	(global_label "I2C_SDA" (shape bidirectional) (at 215.9000 120.6500 0) (effects (font (size 1.27 1.27)) (justify left)) (uuid "4f636254-bab7-403f-bb0c-1c1993320d88"))
+	(symbol
+		(lib_id "Device:R")
+		(at 238.7600 116.8400 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files no)
+		(dnp yes)
+		(uuid "911bf639-65e2-4b2c-a08d-e15fcf7bd4ae")
+		(property "Reference" "R91"
+			(at 240.0300 115.5700 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "5.1k"
+			(at 240.0300 118.1100 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
+			(at 238.7600 116.8400 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 238.7600 116.8400 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Optional parallel I2C_SCL pull-up, fit only after measuring the bus"
+			(at 238.7600 116.8400 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		
+		(pin "1"
+			(uuid "7289fd68-d462-46a3-abb0-780439fe3f95")
+		)
+		(pin "2"
+			(uuid "93246570-70c3-4675-a14a-399f47d46c26")
+		)
+		(instances
+			(project "carrier"
+				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/f622a697-5a21-4794-a4ab-94e63edd90cd"
+					(reference "R91")
+					(unit 1)
+				)
+			)
+		)
+		
+		
+		
+	)
+	(global_label "+ESP_3V3" (shape bidirectional) (at 238.7600 113.0300 0) (effects (font (size 1.27 1.27)) (justify left)) (uuid "92ea4eff-3e0c-4a4e-b573-3510ef8d88f8"))
+	(global_label "I2C_SCL" (shape bidirectional) (at 238.7600 120.6500 0) (effects (font (size 1.27 1.27)) (justify left)) (uuid "8874fcca-0935-4d8c-a448-974194540563"))
 )

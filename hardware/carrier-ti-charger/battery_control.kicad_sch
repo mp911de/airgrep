@@ -5895,7 +5895,7 @@
 		(in_pos_files yes)
 		(dnp yes)
 		(uuid "92616a47-c249-4ca9-907c-78f3fdd79687")
-		(property "Reference" "J4"
+		(property "Reference" "J13"
 			(at 53.34 72.39 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5959,7 +5959,7 @@
 		(instances
 			(project "carrier"
 				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/70bb31ad-859e-4aa6-9d27-4818f29c93a4"
-					(reference "J4")
+					(reference "J13")
 					(unit 1)
 				)
 			)
@@ -7369,7 +7369,7 @@
 		(in_pos_files yes)
 		(dnp yes)
 		(uuid "e0341955-bdd2-415c-b8f4-7c1b9f556eaa")
-		(property "Reference" "J3"
+		(property "Reference" "J11"
 			(at 31.75 45.72 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7433,7 +7433,7 @@
 		(instances
 			(project "carrier"
 				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/70bb31ad-859e-4aa6-9d27-4818f29c93a4"
-					(reference "J3")
+					(reference "J11")
 					(unit 1)
 				)
 			)

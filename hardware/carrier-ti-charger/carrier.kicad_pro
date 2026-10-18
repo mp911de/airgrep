@@ -1004,7 +1004,7 @@
         "uuid": "1d76d2ec-7795-4c71-8167-b1182c3ebc1d"
       }
     ],
-    "used_designators": "#FLG8-11,JP1-2,R1-5,R7,C2-4,C25,#PWR64-82,#PWR101-102,J5-11,U1-2",
+    "used_designators": "#FLG8-11,JP1-3,R1-5,R7,C2-4,C25,#PWR64-82,#PWR101-102,J1-14,U1-2",
     "variants": []
   },
   "sheets": [
@@ -1039,6 +1039,10 @@
     [
       "f622a697-5a21-4794-a4ab-94e63edd90cd",
       "Gauge and status"
+    ],
+    [
+      "a06322b6-1276-4059-95cd-666fc3516e91",
+      "GNSS"
     ]
   ],
   "text_variables": {},

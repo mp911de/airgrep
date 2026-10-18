@@ -17,10 +17,10 @@ It is an awareness aid, not certified avionics. It must not be the primary means
 | Carrier board | 105 x 95 x 1.6 mm, 4 layers; stackup in [power.md](power.md#stackup) |
 | Display module | Seeed XIAO 1.47" IPS Touch Display (ESP32-S3), SKU 100069905 |
 | ADS-B receiver | ADSBee 1090U (RP2040, ESP32-S3 for Wi-Fi, TI CC1312 sub-GHz) |
-| GNSS receiver | u-blox MAX-M10S on the carrier, U.FL antenna connector J13, active or passive antenna (SW5), CR2032 and pack backup |
+| GNSS receiver | u-blox MAX-M10S on the carrier, U.FL antenna connector J7, active or passive antenna (SW5), CR2032 and pack backup |
 | Barometer | Bosch BMP580 on the carrier |
 | Audio | piezo buzzer, 4 kHz; maintained MUTE slider read by firmware |
-| Controls | independent POWER slider; MUTE and Wi-Fi sliders on TCA9534 I2C inputs; six spare inputs on J12; display touch and two display buttons |
+| Controls | independent POWER slider; MUTE and Wi-Fi sliders on TCA9534 I2C inputs; six spare inputs on J10; display touch and two display buttons |
 | Indicators | one green LED, one red/green LED |
 | Weight, enclosure dimensions | to be determined |
 
@@ -131,8 +131,8 @@ The user tapes two temperature sensors to the pack:
 
 | Sensor | Part | Connector |
 |---|---|---|
-| NTC | Variohm ENTC-EB-100K4262-02 (100 kΩ, B 4262 K, ±0.2 °C) | J2 |
-| Thermostat | Limitor LIM-P-82-60 (60 °C ± 5 K, normally closed) | J4 |
+| NTC | Variohm ENTC-EB-100K4262-02 (100 kΩ, B 4262 K, ±0.2 °C) | J12 |
+| Thermostat | Limitor LIM-P-82-60 (60 °C ± 5 K, normally closed) | J13 |
 
 ## Operating conditions
 
