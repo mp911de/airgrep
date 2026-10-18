@@ -28,13 +28,12 @@ D4, D5, J1 to J6, J8 to J13, JP1, JP3 and SW4 are marked DNP, so the assembly BO
 | 1 | SW4 | 6 x 6 mm tactile, normally open | Reset button below BZ1. Standard 6.5 x 4.5 mm pin spacing, 1 mm holes; verify the available button fits before fabrication. | Existing stock, hand-soldered | already owned |
 | 3 | J12, J11, J13 | JST B2B-PH-K-S | JST-PH 2-pin header, vertical, 2 mm | Reichelt [JST PH2P ST](https://www.reichelt.com/de/en/shop/product/jst_pin_header_straight_1x2-pin_ph-185049) | €0.16 each |
 | 1 | D5 | Kingbright L-7104GD | LED 3 mm green, diffused, 20 mcd, 40° (power) | Reichelt [KBT L-7104GD](https://www.reichelt.com/de/en/led-3-mm-leaded-green-20-mcd-40--kbt-l-7104gd-p230824.html) | €0.10 |
-| 1 | D4 | Kingbright L-115WEGW | LED 3 mm red/green, 3-pin, **common cathode**, diffused, 60° (red USB power, green charging or charged) | Reichelt [KBT L-115WEGW](https://www.reichelt.com/de/en/shop/product/led_3_mm_tht_3-pin_red_green_627_565_nm_40_40_mcd_60_-231039) | €0.28 |
+| 1 | D4 | Kingbright L-115WEGW | LED 3 mm red/green, 3-pin, **common cathode**, diffused, 60° (red USB present, green charging, blinking green fault) | Reichelt [KBT L-115WEGW](https://www.reichelt.com/de/en/shop/product/led_3_mm_tht_3-pin_red_green_627_565_nm_40_40_mcd_60_-231039) | €0.28 |
 | 2 | J1, J4, J5, J6, J8, J9 | Female header 2.54 mm, 1x20, straight, 8.5 mm high, cut to length | Module sockets: 8 + 7 + 4 + 2 + 13 + 5 = 39 positions; cutting costs one position per cut, 2 strips are enough | Reichelt [BL 1X20G8 2,54](https://www.reichelt.com/de/en/20-pin-socket-terminal-strip-straight-rm-2-54-h-8-5-mm-bl-1x20g8-2-54-p51827.html) | about €1 each |
 | 1 | JP1, JP3 | Pin header 2.54 mm, 1x40, straight, two 1x2 pieces cut off | Power shunts ESP 5V / ADS 5V; the rest of the strip serves as module pins (below) | Reichelt [SL 1X40G 2,54](https://reichelt.com/de/en/40-pin-header-straight-pitch-2-54-sl-1x40g-2-54-p19506.html) | about €0.30 |
-| 2 pieces | J10 | Pin header 2.54 mm, 1x4, straight, cut from the SL 1X40G strip | Fit side by side in the 2x4 footprint; six dry-contact inputs and two grounds. Eight additional pins from the existing strips. | Reichelt SL 1X40G 2,54 (link above) | included in strip |
+| 2 pieces | J10 | Pin header 2.54 mm, 1x4, straight, cut from the SL 1X40G strip | Fit side by side in the 2x4 footprint; three connected dry-contact inputs, two grounds and three unused pins. Eight additional pins from the existing strips. | Reichelt SL 1X40G 2,54 (link above) | included in strip |
 | 2 | JP1, JP3 | Jumper 2.54 mm, closed, with grip | Shunts | Reichelt [Jumper 2.54 mm closed with handle](https://www.reichelt.com/de/en/shop/product/jumper_2_54_mm_closed_with_handle_black-119938) | €0.10 each |
-| 1 | U4 | Fischer ICK S 10 x 10 x 6.5 (or ICK BGA 10 x 10 x 6) heatsink, a 2.5 x 2.5 x 1.5 mm copper spacer and thermal epoxy (two layers, about 0.1 mm each) | Heatsink on the MAX77757 charger; the spacer lifts it above the neighbouring capacitors. See [power.md](power.md#heatsink) | RS 674-4784 / Bürklin (ICK S), RS 057-7631, DigiKey, Farnell (ICK BGA); spacer cut from 1.5 mm copper sheet | about €2 |
-| 1 | U4 (carrier-ti-charger) | same Fischer sink and spacer as above | The VQFN-HR has no exposed pad; the sink sits on the package top as on the MAX board. A bottom-side plate was a model experiment only, not a design. |
+| 1 | U4 | Fischer ICK S 10 x 10 x 6.5 (or ICK BGA 10 x 10 x 6) heatsink, a 2.5 x 2.5 x 1.5 mm copper spacer and thermal epoxy (two layers, about 0.1 mm each) | Heatsink on BQ25798 U4; the spacer lifts it above neighbouring capacitors. See [power.md](power.md#heatsink) | RS 674-4784 / Bürklin (ICK S), RS 057-7631, DigiKey, Farnell (ICK BGA); spacer cut from 1.5 mm copper sheet | about €2 |
 
 Samtec SSQ sockets (8.51 mm, Mouser or Digi-Key) are an alternative to the BL 1X20G8 strips, with the same height and pitch.
 
@@ -42,7 +41,7 @@ Samtec SSQ sockets (8.51 mm, Mouser or Digi-Key) are an alternative to the BL 1X
 
 | Qty | Part | Description | Where |
 |---|---|---|---|
-| 1 | Pin header 2.54 mm, 1x40, straight (second strip if needed) | Male pins for the display (8 + 7 + 4 + 2), the GNSS module (8) and the ADSBee (13 + 5), only where the module ships without pins fitted | Reichelt [SL 1X40G 2,54](https://reichelt.com/de/en/40-pin-header-straight-pitch-2-54-sl-1x40g-2-54-p19506.html) |
+| 1 | Pin header 2.54 mm, 1x40, straight (second strip if needed) | Male pins for the display (8 + 7 + 4 + 2), the ADSBee (13 + 5), only where the module ships without pins fitted | Reichelt [SL 1X40G 2,54](https://reichelt.com/de/en/40-pin-header-straight-pitch-2-54-sl-1x40g-2-54-p19506.html) |
 
 ## Sensor harnesses (user-made)
 

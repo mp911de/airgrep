@@ -1,6 +1,6 @@
 # Firmware plan
 
-Overview over the progress. Do not spam it with walls of text, only single-sentence like form.
+Software progress across the ADSBee, rtl_433 and DAIDALUS workspaces. Checked items record implementation progress, not live RF or carrier acceptance; [open-issues.md](open-issues.md) owns hardware validation.
 
 - [x] Implement FLARM FAMP in rtl_433 as proof of concept
 - [ ] ADSBee
@@ -10,11 +10,11 @@ Overview over the progress. Do not spam it with walls of text, only single-sente
 
 - [x] Fork-friendly development to minimize conflicts
 - [x] Enable bi-directional AT on UART (115200, 8E1, no flow control)
-- [x] Disable 980 radio and repurpose it for FLARM
+- [x] Repurpose the 978 MHz radio for FLARM
 - [x] Add FLARM support (and define messages for ESP comms)
 - [x] Add GDL90 support
 - [x] show FLARM on Map
-- [ ] Explore Wifi control: Disabled by default, we have a switch to enable it
+- [ ] Integrate Wi-Fi slider control over the custom UART AT interface
 - [ ] Disable any bluetooth
 
 ## ESP32

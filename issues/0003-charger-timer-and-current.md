@@ -1,18 +1,8 @@
 # Charger safety timer and charge current on the 10 Ah pack
 
-Status: resolved by the carrier-ti-charger variant; open for carrier-max-charger
+Status: resolved by selecting BQ25798. MAX77757 development is closed.
 Created: 2026-10-09
 
-## Motivation
+The frozen MAX77757 board's six-hour timer and fixed thermal regulation motivated the charger change. The active BQ25798 has a twelve-hour default timer and host-programmable current, thermal regulation and timer settings. Default charge current is 1 A; host operation targets 1.8 A.
 
-The MAX77757 fast-charge timer is 6 h ± 20 %, so 4.8 h minimum. A full charge of the 10 Ah pack at 1.8 A takes about 5 h 55 min, more from a weak source, so the pack can stop part-full with no automatic retry (FMEA C5). Raising IFAST shortens the charge but adds heat in a part that already regulates at 130 °C in a closed case.
-
-## Resolution
-
-- carrier-ti-charger: the BQ25798 fast-charge timer is 12 h by default and host-programmable (5 to 24 h, or off); the host sets 1.8 A and the timer, and the default mode charges at 1 A. Pack temperature and die temperature are readable over I2C.
-- carrier-max-charger: no board change. Options remain as listed in `docs/power.md` (Earlier charge limiting).
-
-## References
-
-- `docs/fmea.md` C5
-- `docs/charger-comparison.md`
+Current host requirements are in [firmware.md](../docs/firmware.md#charger-host-control-bq25798-i2c-0x6b). Actual full-charge time, weak-source behavior and enclosure temperatures remain bench checks in [open-issues.md](../docs/open-issues.md).

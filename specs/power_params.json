@@ -22,13 +22,13 @@
   "_boost_efficiency_curve": "TPS61088 efficiency vs 5 V output current. TI data sheet SLVSCM8D Figure 6-2 (VIN 3.6 V, VOUT 5 V, forced PWM) minus 2 points for a switching frequency of about 1 MHz and the inductor DCR (10.7 mΩ) of the FC-ALX4030D-2R2MT; the 2 points were set for the earlier 15.5 mΩ CKST0603, so the curve is slightly pessimistic. Linear interpolation between points. The board switches at about 720 kHz (R16 220 kΩ), so the curve is about 1 point pessimistic. tools/power_budget.py uses it as is; hardware/sim/run_heat.py rescales the switching loss and gives the simulated efficiency.",
 
   "path_resistance_ohm": 0.07,
-  "_path_resistance_ohm": "Battery to boost input: JST-PH contacts (about 2 x 10 mΩ), fuse F1 Littelfuse 0466005.NRHF 5 A (11 mΩ nominal), MAX77757 BATT-to-SYS switch (20 mΩ typ), traces. Estimate.",
+  "_path_resistance_ohm": "Conservative 70 mΩ estimate for battery-to-boost path: JST-PH contacts, fuse F1 Littelfuse 0466005.NRHF 5 A (11 mΩ nominal), BQ25798 BATFET (11 mΩ typical), Q13 ship FET (2.6 mΩ typical) and board copper. Not a board extraction.",
 
   "load_switch_ron_ohm": 0.016,
   "_load_switch_ron_ohm": "TPS22975 on-resistance at VBIAS 5 V, TI data sheet typical.",
 
   "battery_side_quiescent_ma": 0.08,
-  "_battery_side_quiescent_ma": "Currents on the battery/VSYS side while running, in addition to the boost: MAX77757 battery-only 0.030 mA (typ, 0.050 max), MAX17048 active 0.023 mA, boost feedback divider 240 kΩ + 75 kΩ at 5 V 0.016 mA, R10 1 MΩ thermostat 0.004 mA, TLV840 0.0002 mA, boost VIN quiescent (included in efficiency). Rounded up.",
+  "_battery_side_quiescent_ma": "Conservative running allowance for BQ25798, active MAX17048, feedback divider, R10 1 MΩ thermostat pull-down and supervisor. GNSS backup draw and total board leakage remain to be measured.",
 
   "off_state": {
     "cell_v": [3.3, 3.7, 4.2],
@@ -60,7 +60,7 @@
     {"name": "Carrier: green power LED D5", "ma": 6.4, "source": "(5.06 V - about 2.0 V LED forward voltage) / 470 Ω (R26)"},
     {"name": "Carrier: BMP580, buzzer driver idle, I2C pull-ups", "ma": 0.1, "source": "BMP580 normal mode below 0.01 mA; 74LVC1G17 below 0.01 mA; display I2C pull-ups about 0.05 mA"},
     {"name": "Carrier: control inputs, both sliders low", "ma": 0.1, "source": "TCA9534: at most 4 uA standby at 3.6 V plus 2 x 33 uA in 100 kOhm pulls at 3.3 V; rounded to 0.1 mA for polling. Each additional grounded spare input adds 33 uA. Estimate, through display LDO."},
-    {"name": "Carrier: buzzer, average", "ma": 0.2, "source": "PKMCS0909 driven from 3.3 V through 150 Ω: about 20 mA while beeping, assumed 1 % duty"}
+    {"name": "Carrier: buzzer, average", "ma": 0.03, "source": "Carrier R28 1 kΩ and C66 1 µF AC-couple BZ1, with R87 10 kΩ bleed. Conservative 3.3 mA driven-current bound at 3.3 V, 1 % duty gives about 0.03 mA average. Estimate."}
   ],
 
   "gnss": {
@@ -69,7 +69,7 @@
     "module_acquisition_ma": 11.3,
     "_module": "u-blox MAX-M10S data sheet UBX-20035208 R02, Table 13, GPS+GAL+GLO: tracking 7.0 + 2.3 mA (VCC + V_IO), acquisition 9.0 + 2.3 mA at 3.0 V",
     "breakout_led_ma": 1.5,
-    "_breakout_led_ma": "SparkFun GPS-18037 power LED; PPS LED blinks only with fix. Estimate.",
+    "_breakout_led_ma": "Unmeasured average allowance for carrier PPS/fix LED D14 through R86 150 Ω and Q16. This is not a SparkFun breakout LED; verify pulse width, LED voltage and current on hardware.",
     "active_antenna_ma": 25,
     "_active_antenna_ma": "Abracon AANE-AP-0164 LNA, 15 to 25 mA at 3.0 to 5.0 V, maximum used (datasheets/abracon-aane-ap-0164.pdf). Set 0 for a passive antenna."
   },
@@ -92,7 +92,7 @@
     "_cc_fraction": "Share of capacity delivered in the constant-current phase. Estimate.",
     "sources": [
       {"name": "USB-C charger 3 A", "input_limit_a": 3.00},
-      {"name": "USB-A charger, Apple 2.4 A signature", "input_limit_a": 2.40},
+      {"name": "USB-A charger, Apple 2.4 A signature (hardware clamp)", "input_limit_a": 1.5},
       {"name": "USB-C charger 1.5 A, or USB-A charger with BC1.2 DCP", "input_limit_a": 1.50},
       {"name": "PC USB 2.0 port (SDP), or default-current USB-C", "input_limit_a": 0.50}
     ],

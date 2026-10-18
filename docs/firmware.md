@@ -1,6 +1,6 @@
 # Display firmware (ESP32-S3)
 
-Requirements the carrier puts on the display firmware. Controls (mute, Wi-Fi, expander polling) are in [workflows/physical-controls.md](../workflows/physical-controls.md); pin maps in [interfaces.md](interfaces.md).
+Requirements the carrier puts on the display firmware. Pin maps and electrical connections are in [interfaces.md](interfaces.md).
 
 ## Operating modes
 
@@ -26,6 +26,19 @@ The display gets 5 V from two ideal diodes: U12 from the 5 V rail (POWER slider 
 - On parity, framing or buffer-overrun errors, discard through a clean LF. For a missing/corrupt reply, query state before retrying a state change. Parity cannot detect every corruption.
 - The link carries at most 10472 bytes/s. Check dense-traffic load on hardware before accepting the reporting rate.
 - Build the local ADSBee fork with `ADSBEE_PROFILE=airgrep bash firmware/build.sh adsbee_1090`. Default builds use 8N1 without UART commands. Deployment, display integration and physical UART verification remain open.
+
+## Physical controls
+
+- Poll U13 at 0x20, debounce SW2/SW3 and apply both positions at startup. Keep PWM silent until the first valid mute read.
+- The touchscreen displays slider states without overriding them. Low battery may dim the backlight but must not turn off Wi-Fi requested by SW3.
+- Retain both last known states if a read fails. Show the shared peripheral-failure indication for expander, gauge or barometer faults.
+- P0/P1/P4-P7 remain inputs, with polarity inversion disabled. Read the input-port register at 0x00. Three dry-contact inputs are exposed on J10, one fewer than the four required by [requirements.md](requirements.md).
+
+## GNSS control
+
+- U13 P2/P3 control RESET_N/SAFEBOOT_N. Initialize their output-port bits to zero; use the direction bits to pull low as outputs or release as inputs. Never drive them high. D15/D16 isolate the receiver's switched supply from the expander pull-ups.
+- Reset: hold P2 low for at least 1 ms, then release.
+- Safeboot recovery: hold P3 low while releasing P2, then release P3. Keep P3 an input during normal operation; it cannot read TIMEPULSE through D16. PPS uses its dedicated line.
 
 ## Charger host control (BQ25798, I2C 0x6B)
 

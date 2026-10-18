@@ -33,15 +33,15 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 | [murata-blm31kn.pdf](murata-blm31kn.pdf) | FB1, BLM31KN471SZ1L | [LCSC C710518](https://www.lcsc.com/datasheet/C710518.pdf) | LCSC mirror |
 | [murata-grm21bz71h475.pdf](murata-grm21bz71h475.pdf) | C1, GRM21BZ71H475KE15L | [Product page](https://www.murata.com/en-us/products/productdetail?partno=GRM21BZ71H475KE15%23) | Manufacturer |
 | [taiyo-yuden-emk316bb7226.pdf](taiyo-yuden-emk316bb7226.pdf) | C33, EMK316BB7226ML-T | [LCSC C385906](https://www.lcsc.com/datasheet/C385906.pdf) | LCSC mirror |
-| [hanbo-mc107dms.pdf](hanbo-mc107dms.pdf) | J1 USB-C | | |
+| [hanbo-mc107dms.pdf](hanbo-mc107dms.pdf) | J14 USB-C | | |
 | [hongjiacheng-h5vld3b.pdf](hongjiacheng-h5vld3b.pdf) | D6 to D9 ESD (CC, D+, D-) | [LCSC C20615805](https://www.lcsc.com/datasheet/C20615805.pdf) | LCSC mirror |
 | [littelfuse-466.pdf](littelfuse-466.pdf) | F1 fuse | [Series page](https://www.littelfuse.com/products/fuses-overcurrent-protection/fuses/surface-mount-fuses/thin-film-fuses/466) | Distributor mirror |
 | [hro-k3-1280s.pdf](hro-k3-1280s.pdf) | SW1 to SW3, K3-1280S-F1 | HRO drawing, 2013-09-26 | LCSC mirror |
 | [tca9534.pdf](tca9534.pdf) | U13, TCA9534PWR | [TI](https://www.ti.com/lit/ds/symlink/tca9534.pdf) | Manufacturer |
 | [ck-js-switches.pdf](ck-js-switches.pdf) | superseded switch | C&K JS102011SAQN, retained as historical reference | Distributor mirror |
-| [jst-ph-series.pdf](jst-ph-series.pdf) | J2, J3, J4 | [Original](https://www.jst-mfg.com/product/pdf/eng/ePH.pdf) | Manufacturer |
+| [jst-ph-series.pdf](jst-ph-series.pdf) | J11, J12, J13 | [Original](https://www.jst-mfg.com/product/pdf/eng/ePH.pdf) | Manufacturer |
 | [samtec-ssq-drawing.pdf](samtec-ssq-drawing.pdf), [footprint](samtec-ssq-footprint.pdf), [catalog](samtec-ssq-catalog.pdf) | Module sockets, alternative part | Samtec SSQ | Manufacturer |
-| [samtec-snt-drawing.pdf](samtec-snt-drawing.pdf) | JP1, JP2 shunts, alternative part | Samtec SNT-100 | Manufacturer |
+| [samtec-snt-drawing.pdf](samtec-snt-drawing.pdf) | JP1, JP3 shunts, alternative part | Samtec SNT-100 | Manufacturer |
 | [variohm-entc-eb.pdf](variohm-entc-eb.pdf) | Pack thermistor | [Series page](https://www.variohm.com/products/temperature-sensors/ntc-thermistor-temperature-sensors/entc-eb-series-) | Distributor mirror |
 | [AKKU_SOLD333290_DB-EN.pdf](AKKU_SOLD333290_DB-EN.pdf), [MSDS](AKKU_SOLD333290_SDB-EN.pdf), [UN38.3](AKKU_SOLD_UN38.3-EN.pdf) | Battery 10 Ah | Fullest Energy FE1160100 | reichelt |
 | [AKKU_SOLD333288_DB-EN.pdf](AKKU_SOLD333288_DB-EN.pdf) | Battery 5 Ah option | | reichelt |
@@ -74,7 +74,7 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 
 | Part | Ref |
 |---|---|
-| Reichelt BL 1X20G8 sockets, SL 1X40G headers and jumpers ([BOM](../docs/bom-hand-sourced.md)); the Samtec SSQ and SNT sheets describe the alternative parts with the same pitch and height | J5 to J12, JP1, JP2 |
+| Reichelt BL 1X20G8 sockets, SL 1X40G headers and jumpers ([BOM](../docs/bom-hand-sourced.md)); the Samtec SSQ and SNT sheets describe the alternative parts with the same pitch and height | J1, J4-J6, J8-J10, JP1, JP3 |
 
 New data sheets go into this directory, with an entry in the manifest and a text extraction in `pdf2text/`.
 

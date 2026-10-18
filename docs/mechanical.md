@@ -6,20 +6,20 @@ Board outline, placement, mounting and the stack behind the display. Headline fi
 
 ![Carrier placement, front view](../mechanical/placement.png)
 
-The drawing is generated from `hardware/carrier-max-charger/carrier.kicad_pcb`, which is the source for every position. Regenerate it after moving parts, from the repository root, with KiCad's Python:
+The drawing is generated from `hardware/carrier-ti-charger/carrier.kicad_pcb`, which is the source for every position. Regenerate it after moving parts, from the repository root, with KiCad's Python:
 
 ```
 tools/kpy mechanical/draw_placement.py
 ```
 
-It writes `mechanical/placement.svg` and `mechanical/placement.png`. Coordinates are KiCad millimetres: front view, origin upper left, X right, Y down.
+It writes `mechanical/placement.svg` and `mechanical/placement.png`. Coordinates follow the PCB. Use board-relative dimensions for enclosure work; the drawing is a generated snapshot.
 
 The board is 105 x 95 mm. The 100 x 60 x 11 mm battery behind it sets the minimum size.
 
 Placement rules:
 
 - RF sits at the top: the GNSS module, the ADSBee and the three antenna mounts.
-- Both switching converters sit at the bottom right. The charger inductor L1 is about 37 mm from the GNSS module outline, the boost inductor L2 about 42 mm.
+- Both switching converters sit toward the bottom right. Read current separation from the PCB before checking RF clearance.
 - POWER slider SW1, LEDs D4 and D5 and the USB-C receptacle J14 line up on the bottom edge and face down. Side clearance in an aircraft is often poor.
 - MUTE slider SW2 is on the left edge, next to the buzzer. Wi-Fi slider SW3 is above it on the same edge.
 - The display sits in the middle column, glass to the front.
@@ -28,24 +28,13 @@ Placement rules:
 - The antenna mounts are MH6 (GNSS), MH7 (868 MHz) and MH8 (1090 MHz). MH6 is 20.6 mm from the GNSS SMA axis at x = 19.3, so an SMA adapter or a short lead fits.
 - The ADSBee is portrait, measured 29.86 to 29.89 x 47.46 mm. Its own USB-C faces down, above the boost converter. Its U.FL connectors are at the upper left corner.
 
-Module outlines in the drawing follow the socket positions. GNSS and ADSBee sizes use the physical measurements recorded below and in [adsbee-estimate.md](../mechanical/adsbee-estimate.md); their edge offsets remain approximate. The display outline comes from manufacturer CAD (`mechanical/source-geometry.json`).
+Module outlines in the drawing follow the socket positions. U16 is the soldered MAX-M10S; ADSBee dimensions use [adsbee-estimate.md](../mechanical/adsbee-estimate.md), with approximate edge offsets. The display outline comes from manufacturer CAD (`mechanical/source-geometry.json`).
 
 ### Control sliders
 
 SW1 to SW3 use HRO K3-1280S-F1, C92658, with the local `carrier:SW-SMD_K3-1280S-F1` footprint. It follows the [manufacturer drawing](../datasheets/hro-k3-1280s.pdf): 2.50 mm terminal pitch, 1.20 x 2.45 mm solder lands, two 0.90 mm holes spaced 6.80 mm, and 3.075 mm from the terminal-row centre to the peg line. The body is 9.10 x 3.50 mm in that drawing, 3.50 mm high, with a 2 mm F1 actuator and 2 mm travel.
 
-Footprint origins are the middle terminal. Board coordinates are integer mil:
-
-| Ref | X | Y | KiCad rotation | Access |
-|---|---|---|---|---|
-| SW1 | 2420 | 3567 | 0 degrees | bottom |
-| SW2 | 190 | 2590 | 270 degrees | left |
-| SW3 | 190 | 1850 | 270 degrees | left |
-| J10 pin 1 | 1080 | 3080 | 0 degrees | front, inside enclosure |
-
-SW2 and SW3 bodies end approximately at the left board edge; their actuators extend about 79 mil beyond it. SW1's body overhangs the lower edge by about 17 mil, with a further 79 mil actuator extension. This keeps its new courtyard clear of the existing circuitry. Include the full actuator travel and housing tolerance when designing the case.
-
-The supplier CAD has inconsistent F2/K1 names and a different peg offset. Use the manufacturer-derived footprint, and check an actual F1 sample and the JLCPCB assembly preview before ordering. No verified F1 3D model is assigned. See [physical controls](../workflows/physical-controls.md) for the comparison.
+Footprint origins are the middle terminal. Read switch positions and rotations from the PCB; allow full actuator travel and housing tolerance in the case. Supplier CAD has inconsistent F2/K1 names and peg offsets. Check an actual F1 sample and the JLCPCB placement preview before ordering.
 
 ### USB-C receptacle in the case
 
@@ -63,12 +52,14 @@ Place the board edge about 0.5 mm inside the case wall. With a 1.5 to 2 mm wall 
 
 All mounting hardware is M2.5. The carrier has four plated 2.7 mm case holes (KiCad stock `MountingHole_2.7mm_M2.5_Pad_Via`), three non-plated 2.7 mm module holes (`MountingHole_2.7mm_M2.5`) and three plated 6.5 mm antenna holes (`MountingHole_6.5mm_Pad`).
 
-| Use | References | Centres (X, Y) in mm | Basis |
-|---|---|---|---|
-| Case | MH1, MH2, MH3, MH4 | (3.556, 3.556), (101.600, 3.556), (3.556, 91.440), (101.600, 91.440) | 3.40 to 3.56 mm from the edges |
-| Display | MH13 | (47.511, 64.195) | Seeed 100069905 hole H1, within 0.029 mm of the module CAD |
-| ADSBee | MH12, MH14 | (98.2726, 18.1610), (75.3618, 58.6740) | measured, rounded to whole mil |
-| Antenna bulkheads | MH6, MH7, MH8 | (39.878, 7.112), (61.976, 7.112), (91.948, 7.112) | 6.5 mm hole, 11 mm keepout |
+| Use | References |
+|---|---|
+| Case | MH1 to MH4 |
+| Display | MH13 |
+| ADSBee | MH12, MH14 |
+| Antenna bulkheads | MH6 to MH8 |
+
+Hole centres are defined by the PCB, rather than copied here.
 
 Notes on the module holes:
 
@@ -76,35 +67,7 @@ Notes on the module holes:
 - ADSBee: MH12 and MH14 use the measured diagonal pair, rounded to a 22.9108 x 40.5130 mm pattern (902 x 1595 mil). The [measurement record](../mechanical/adsbee-estimate.md#physical-measurements-2026-10-08) includes the independent diagonal cross-check.
 - Module standoffs are 8.5 mm nominal to match the sockets. Case standoff height depends on the enclosure.
 
-Clearance around the 2.7 mm holes on the current board:
-
-- The nearest courtyards are J6 at 3.2 mm from MH12, J8 at 3.6 mm from MH13 and J9 at 5.0 mm from MH14.
-- `carrier.kicad_dru` keeps copper clear of the holes.
-
-## Delivered GNSS measurements, 2026-10-08
-
-View: components facing the observer, 8-hole header at the bottom. Caliper readings in mm. Hole spans are between farthest walls, including diagonal spans. ADSBee readings and applied carrier positions are in [adsbee-estimate.md](../mechanical/adsbee-estimate.md#physical-measurements-2026-10-08).
-
-| Measurement | Reading |
-|---|---|
-| Bare PCB width x height | 31.12 x 38.62 |
-| All mounting hole diameters | 3.30 |
-| All header hole diameters | 0.99 |
-| Left PCB edge to nearest wall of each left mounting hole | 1.30 |
-| Right PCB edge to nearest wall of each right mounting hole | 1.20 |
-| Top edge to nearest wall of top-left / top-right mounting hole | 1.27 / 1.30 |
-| Bottom edge to nearest header-hole / mounting-hole wall | 0.85 / 1.10 |
-| Across the two top mounting holes, outer span | 28.69 |
-| Large mounting-hole diagonal | 44.95 |
-| Full 8-hole header outer span | 18.84 |
-| Top-left mounting hole to leftmost header hole | 36.50 |
-| Top-left mounting hole to rightmost header hole | 42.55 |
-| Top-right mounting hole to rightmost header hole | 36.72 |
-| Bottom-left mounting hole to leftmost header hole, diagonal | 6.13 |
-
-Keep the manufacturer's header and mounting-hole coordinates. The top mounting centre span is 25.39 mm versus 25.40 mm in CAD. The CAD mounting pattern (25.40 x 33.02 mm) predicts a 44.959 mm outer diagonal, agreeing with 44.95 mm measured. The short mounting-to-header diagonal is 6.13 mm versus 6.161 mm calculated using CAD centres and the measured hole diameters.
-
-The header centre span reads 17.85 mm versus nominal 17.78 mm. The long header diagonals disagree with one another by 0.225 mm under a parallel-row assumption. Do not move individual CAD holes to fit these readings or interpret the displayed hundredths as positioning accuracy. The placement drawing uses the measured 31.12 x 38.62 mm envelope. Horizontal registration centres the additional width around the CAD outline; vertical registration uses the measured 0.85 mm bottom gap plus the 0.495 mm header-hole radius. Edge registration remains approximate.
+Use `carrier.kicad_dru` and the current PCB for mounting-hole clearances. The former removable GNSS board's caliper measurements do not apply to U16.
 
 ## Insulator board
 
@@ -116,14 +79,14 @@ A plain board between the carrier and the battery keeps the through-hole pin tai
 | Material | 0.8 mm FR-4, no copper |
 | Case holes | MH1 to MH4, copied from the carrier |
 | Antenna clearance | 11 mm holes at MH6 to MH8 for the bulkhead nuts and pigtails |
-| Cable slot | 15 x 7.5 mm with round ends, centred at (45.1, 80.9), between J12/J11 and J13 |
+| Cable slot | 15 x 7.5 mm with round ends, position derived by the generator from the carrier connectors |
 | Silkscreen | J12, J11, J13 outlines on the carrier side, BATTERY SIDE on the other |
 
 Order it as a separate board in the same JLCPCB cart. It cannot share the four-layer panel.
 
 The standoffs between carrier and insulator must clear the longest pin tail. Trim the hand-soldered tails to about 1.5 mm and use M2.5 spacers of at least 3 mm.
 
-J12, J11 and J13 may go on either side of the carrier; both sides are labelled ([interfaces.md](interfaces.md#silkscreen-labels)). The prototype keeps them on top, with the leads around the board edge. On the back they need a larger gap: about 6 mm for the PH housing plus the mated plug. The slot size is a first guess; it is set by SLOT_W and SLOT_H in the generator.
+J12, J11 and J13 may go on either side of the carrier; both sides are labelled ([interfaces.md](interfaces.md#silkscreen-labels)). The prototype keeps them on top, with the leads around the board edge. On the back they need a larger gap: about 6 mm for the PH housing plus the mated plug. Verify slot size and position against the harness; SLOT_W and SLOT_H in the generator set its size.
 
 ## Stack
 

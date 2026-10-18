@@ -63,7 +63,7 @@ J1 signals:
 | 6 | ESP_UART_RX | D12, from ADSBee COMMS TX through R29, 1 kΩ |
 | 7 | ESP_UART_TX | D13, to ADSBee COMMS RX through R30, 1 kΩ |
 
-- D11 to D13 are the only free GPIOs the module exposes. Charger STAT and INOKB are therefore not wired to the display. The firmware reads the charging state from the fuel gauge.
+- D11 to D13 are the only free GPIOs the module exposes. Charger STAT and INT are not wired to the display GPIOs. Firmware polls BQ25798 for charging status and MAX17048 for state of charge.
 - D14 and D15 on J4 are used inside the module (IMU interrupt, button B). D14 also reaches the otherwise vacant J3.1 socket; D15 is unconnected on the carrier.
 - Pull-ups, electrical limits and bench acceptance are in [I2C bus requirements](i2c-bus-requirements.md).
 
@@ -115,14 +115,14 @@ BMP580 U10 pin 7 (INT) is intentionally unconnected. Poll the sensor over I2C; c
 
 ## Physical control inputs and GNSS control
 
-U13 is TI TCA9534PWR (C783615), powered by ESP_3V3 with C40, 100 nF. A0, A1 and A2 are grounded for address 0x20. INT is unconnected; firmware polls over the shared 400 kHz bus. Leave all eight channels configured as inputs and polarity inversion disabled. Read the input-port register, 0x00. P2 and P3 control the GNSS receiver; see below.
+U13 is TI TCA9534PWR (C783615), powered by ESP_3V3 with C40, 100 nF. A0, A1 and A2 are grounded for address 0x20. INT is unconnected; firmware polls over the shared 400 kHz bus. P0/P1/P4-P7 are inputs. P2/P3 provide low-only GNSS control. Configuration and sequencing are in [firmware.md](firmware.md#gnss-control).
 
 | U13 pin | Net | Connection | Raw low | Raw high |
 |---|---|---|---|---|
 | P0 | BUZZ_ENABLE | SW2 common, pin 2 | mute | buzzer permitted |
 | P1 | WIFI_ENABLE | SW3 common, pin 2 | Wi-Fi off | Wi-Fi on |
 | P2 | GNSS_RESET_N | U16 RESET_N, pin 9 | GNSS in reset | run |
-| P3 | GNSS_SAFEBOOT_N | U16 SAFEBOOT_N, pin 18 | safeboot at start-up | run; follows TIMEPULSE once running |
+| P3 | GNSS_SAFEBOOT_N | U16 SAFEBOOT_N, pin 18 | safeboot at start-up | released; isolated from TIMEPULSE by D16 |
 | P4 | CTRL_P4 | J10 pin 3 | contact closed | open |
 | P5 | CTRL_P5 | J10 pin 4 | contact closed | open |
 | P6 | CTRL_P6 | J10 pin 5 | contact closed | open |
@@ -132,14 +132,7 @@ J10 pins 1, 2 and 6 are unconnected, pins 7 and 8 are GND. R48, R49 and R52 to R
 
 J10 is for short enclosure wiring and dry contacts to GND. It is not a powered peripheral port. Leave unused contacts open; their pull-ups define their levels. Fit the header by hand; it is DNP and excluded from JLCPCB assembly exports.
 
-GNSS control rules:
-
-- Drive P2 and P3 low only. D15 and D16 (1N4148WS, cathode at P2/P3) enforce this in hardware: U13 can only pull the lines low, the receiver's internal pull-ups set the high level. Firmware still uses the direction-bit method: set the output-port bits to 0 once and switch the direction bit, output pulls low, input releases. Never drive them high: +GNSS_3V3 is switched by the ADSBee, and without the diodes a high output into an unpowered receiver would exceed the V_IO + 0.3 V pin limit.
-- Reset: hold P2 low for at least 1 ms.
-- Safeboot: hold P3 low while releasing P2, then release P3. Safeboot is for firmware recovery only.
-- Keep P3 an input in normal operation. D16 blocks the receiver's TIMEPULSE from P3, so P3 no longer reads the PPS pulse (review item TCA9534-02 no longer applies); the dedicated PPS line carries it.
-
-Both sliders determine requested state from startup. Keep PWM silent until the first valid mute read, debounce changes, and retain both last known states if a read fails. The touchscreen displays state without overriding the sliders. Low battery must not turn Wi-Fi off while SW3 requests it. Shared peripheral-failure indication and the UART command protocol remain firmware work.
+D15/D16 isolate the expander pull-ups from the switched GNSS rail. Firmware must pull reset and safeboot low or release them, as specified in [GNSS control](firmware.md#gnss-control). Slider behavior is specified in [physical controls](firmware.md#physical-controls).
 
 ## GNSS: MAX-M10S (U16)
 

@@ -54,9 +54,9 @@ def rail_loads(p, wifi, fix, brightness):
         rows.append((load["name"], ma, load["source"]))
     g = p["gnss"]
     module = g["module_tracking_ma"] if fix else g["module_acquisition_ma"]
-    rows.append((f"GNSS: MAX-M10S, breakout LED, active antenna ({'tracking' if fix else 'acquisition, no fix'})",
+    rows.append((f"GNSS: MAX-M10S, fix LED allowance, active antenna ({'tracking' if fix else 'acquisition, no fix'})",
                  module + g["breakout_led_ma"] + g["active_antenna_ma"],
-                 g["_module"] + "; " + g["_active_antenna_ma"]))
+                 g["_module"] + "; " + g["_breakout_led_ma"] + "; " + g["_active_antenna_ma"]))
     return rows
 
 
@@ -133,8 +133,11 @@ def standby(p, bats):
     nominal = p["battery_nominal_v"]
     lines = ["### Standby (POWER slider off, no USB)", "",
              "Typical and maximum from the data sheets; the two resistor paths are computed from the cell voltage. "
+             "The GNSS backup supply and unbudgeted board leakage are omitted; this is a partial budget. "
              "The pack's own protection IC and cell self-discharge come on top.", ""]
     for key, variant in p["charging"]["variants"].items():
+        if key != "ti":
+            continue
         items = off["common"] + off["variants"][key]
         lines += [f"{variant['label']}:", "",
                   f"| Source | Typ at {nominal:g} V | Max at {nominal:g} V |", "|---|---|---|"]
@@ -148,8 +151,7 @@ def standby(p, bats):
         typ_ma, max_ma = (x / 1000.0 for x in totals[nominal])
         for bt in bats:
             lines.append(f"- {bt['capacity_mah']} mAh: {pct(typ_ma * 24 * 30.4 / bt['capacity_mah'], 2)} per month typical, "
-                         f"{pct(max_ma * 24 * 30.4 / bt['capacity_mah'], 2)} maximum. A full pack would last about "
-                         f"{bt['capacity_mah'] / typ_ma / 24 / 365:.0f} years on the circuit alone.")
+                         f"{pct(max_ma * 24 * 30.4 / bt['capacity_mah'], 2)} maximum for the budgeted paths.")
         lines.append("")
     return lines
 
@@ -171,7 +173,7 @@ def render(p):
         "The display's Wi-Fi is off in all cases; the display talks to the ADSBee over UART.",
         "",
         "The boost efficiency is a budget estimate from the TI data sheet curve, derated for about 1 MHz. "
-        "The heat model simulates the board at about 720 kHz and gives about 1 point more at the typical load (`hardware/sim/heat/max/results.md`).",
+        "The board switches at about 720 kHz; this budget curve retains its conservative frequency allowance. Board-specific losses are in `hardware/sim/heat/ti/results.md`.",
         "",
     ]
     for brightness in p["brightness_levels"]:
@@ -211,17 +213,20 @@ def render(p):
         "",
         "The charge current is limited by the charger setting and by the input limit of the source. "
         "The charger powers the system first; only the rest charges the cell. "
+        "The off column omits charger-mode display consumption, so those times are optimistic. "
         f"\"On\" is the typical scenario: Wi-Fi off, GNSS fix, backlight {pct(dimmed)}, {typ['p_batt_w']:.2f} W.",
         "",
     ]
     for key, variant in p["charging"]["variants"].items():
+        if key != "ti":
+            continue
         settings = [("", variant)]
         if variant.get("default_current_a"):
             settings.append((f" (default mode, {variant['default_current_a']:g} A, no host)",
                              dict(variant, charge_current_a=variant["default_current_a"])))
         for suffix, v in settings:
             lines += [
-                f"{variant['label']}{suffix}: {v['charge_current_a']:g} A, charger efficiency {pct(v['charger_efficiency'])}. {variant['note']}.",
+                f"{variant['label']}{suffix}: {v['charge_current_a']:g} A, charger efficiency {pct(v['charger_efficiency'])}.",
                 "",
                 "| Source | Input limit | " + " | ".join(f"{b['capacity_mah']} mAh off / on" for b in bats) + " |",
                 "|---|---|" + "---|" * len(bats),

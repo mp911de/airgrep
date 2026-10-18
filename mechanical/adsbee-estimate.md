@@ -1,6 +1,6 @@
 # ADSBee 1090U: measured geometry
 
-The delivered module was measured with calipers on 2026-10-08. J11, MH12 and MH14 use the measured positions below.
+The delivered module was measured with calipers on 2026-10-08. Connector references and absolute carrier coordinates below describe that historical placement. On the active TI board, the main and GNSS sockets are J6 and J5; use the PCB for current absolute positions. The measured module geometry remains relevant.
 
 ## Physical measurements, 2026-10-08
 
