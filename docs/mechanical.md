@@ -55,7 +55,7 @@ All mounting hardware is M2.5. The carrier has four plated 2.7 mm case holes (Ki
 | Case              | MH1 to MH4 |
 | Display           | MH13       |
 | ADSBee            | MH12, MH14 |
-| Antenna bulkheads | MH6 to MH8 |
+| Antenna bulkheads | MH6ANTGNSS, MH7ADS1090, MH8ADS980 |
 
 Hole centres are defined by the PCB, rather than copied here.
 
@@ -76,9 +76,9 @@ A plain board between the carrier and the battery keeps the through-hole pin tai
 | Outline           | same as the carrier                                                                        |
 | Material          | 0.8 mm FR-4, no copper                                                                     |
 | Case holes        | MH1 to MH4, copied from the carrier                                                        |
-| Antenna clearance | 11 mm holes at MH6 to MH8 for the bulkhead nuts and pigtails                               |
+| Antenna clearance | 11 mm holes at the three antenna bulkheads for the nuts and pigtails                       |
 | Cable slot        | 15 x 7.5 mm with round ends, position derived by the generator from the carrier connectors |
-| Silkscreen        | J12, J11, J13 outlines on the carrier side, BATTERY SIDE on the other                      |
+| Silkscreen        | none on the carrier side; OSHW logo, BATTERY SIDE and CABLES on the battery side            |
 
 Order it as a separate board in the same JLCPCB cart. It cannot share the four-layer panel.
 

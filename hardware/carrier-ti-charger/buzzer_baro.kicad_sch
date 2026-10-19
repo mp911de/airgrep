@@ -6676,10 +6676,10 @@
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
-		(in_bom no)
+		(in_bom yes)
 		(on_board yes)
-		(in_pos_files no)
-		(dnp yes)
+		(in_pos_files yes)
+		(dnp no)
 		(uuid "cdd35707-4d9d-4059-a245-40cbc7b9c09c")
 		(property "Reference" "U10"
 			(at 181.61 54.61 0)
