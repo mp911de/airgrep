@@ -32,25 +32,39 @@ The display gets 5 V from two ideal diodes: U12 from the 5 V rail (POWER slider 
 - Poll U13 at 0x20, debounce SW2/SW3 and apply both positions at startup. Keep PWM silent until the first valid mute read.
 - The touchscreen displays slider states without overriding them. Low battery may dim the backlight but must not turn off Wi-Fi requested by SW3.
 - Retain both last known states if a read fails. Show the shared peripheral-failure indication for expander, gauge or barometer faults.
-- P0/P1/P4-P7 remain inputs, with polarity inversion disabled. Read the input-port register at 0x00. Three dry-contact inputs are exposed on J10, one fewer than the four required by [requirements.md](requirements.md).
+- P0/P1/P7 remain inputs, with polarity inversion disabled. Read the input-port register at 0x00. P4-P6 on J10 are RST_1, RST_2 and LCD_LED for an optional external display. Leave them as inputs unless that display is fitted. Before enabling outputs, preload P4/P5 high (resets released) and P6 low (backlight off), preserving the P2/P3 output bits. The existing 100 kΩ pull-ups default these signals high before initialization. Backlight control through U13 is on/off only.
 
 ## GNSS control
 
-- U13 P2/P3 control RESET_N/SAFEBOOT_N. Initialize their output-port bits to zero; use the direction bits to pull low as outputs or release as inputs. Never drive them high. D15/D16 isolate the receiver's switched supply from the expander pull-ups.
+- Optional JP4 connects GNSS_TXO to standalone XIAO Plus D10/GPIO9 for a second UART RX. Keep GPIO9 input-only with internal pulls disabled through startup and charger mode; never transmit on it. Match ADSBee's configured GNSS baud rate and parse its enabled message stream. JP4 must remain open with the original display fitted because its J1.4 pad is GND.
+- U13 P2/P3 control RESET_N/SAFEBOOT_N. Initialize their output-port bits to zero; use the direction bits to pull low as outputs or release as inputs. Never drive them high. D11/D12 isolate the receiver's switched supply from the expander pull-ups.
 - Reset: hold P2 low for at least 1 ms, then release.
-- Safeboot recovery: hold P3 low while releasing P2, then release P3. Keep P3 an input during normal operation; it cannot read TIMEPULSE through D16. PPS uses its dedicated line.
+- Safeboot recovery: hold P3 low while releasing P2, then release P3. Keep P3 an input during normal operation; it cannot read TIMEPULSE through D12. PPS uses its dedicated line.
+
+
+## Firmware
+
+- [ ] Charger mode and host control: see [firmware.md](firmware.md).
+- [ ] **ADSBee GNSS UART power sequencing.** `GNSSReceiver::Init()` in ADSBee `pico/application/peripherals/gnss/gnss_receiver.cc` switches GNSS power off, enables UART TX, then restores power; `SetEnable(false)` also leaves TX driven. Keep TX high impedance while GNSS V_IO is off, including shutdown, and enable UART only after the receiver supply is valid. Verify cold start, disable/re-enable and host reset. Backfeed or failed startup has not been measured.
+
+- [ ] Verify FLARM 868 MHz reception on the ADSBee hardware; software progress is in [firmware-plan.md](firmware-plan.md).
+- [ ] Display firmware: gauge readout, traffic input and buzzer PWM on display D11 or Plus GPIO8; poll and debounce U13 at 0x20. Apply both sliders at startup, keep PWM silent until mute is read, and retain both last known states on read failure. Show the shared failure icon for expander, gauge or BMP faults.
+- [ ] Deploy and bench-test the custom ADSBee UART console: 115200 8E1, CSBEE plus AT replies. Verify Wi-Fi control, CRC/parity error recovery and dense-traffic throughput with the display. Source support is implemented in the local ADSBee checkout.
+- [ ] BMP580: verify polled initialization with INT intentionally unconnected; configure INT_CONFIG.int_en=1 and int_od=0 per Bosch section 6.2.
+- [ ] Low state of charge: warning and optional backlight dimming. Do not override the Wi-Fi slider.
+
 
 ## Charger host control (BQ25798, I2C 0x6B)
 
 - Set REG14 bit 7 (`SFET_PRESENT`) using read-modify-write during initialization and after register reset. Q13 is populated; the POR default is zero and disables ship-FET features. Read back the bit before treating the QON reset button as available. Firmware implementation remains required.
-- SW4 held for about 10 s requests the charger's hardware system power reset, about 350 ms off. D10 holds the USB/PMID display feed off until release. Reinitialize peripherals after boot; the charger and MAX17048 stay powered and retain state.
+- SW4 held for about 10 s requests the charger's hardware system power reset, about 350 ms off. D6 holds the USB/PMID display feed off until release. Reinitialize peripherals after boot; the charger and MAX17048 stay powered and retain state.
 
 - Without a host the charger runs its defaults: 1 A, TREG 120 °C, watchdog 40 s. The hardware TS window is 3 to 43 °C.
 - The host may raise ICHG to 1.8 A and set TREG to 100 °C (or 80 °C). Every register marked "reset by WATCHDOG" falls back when the watchdog expires: reset the watchdog well inside 40 s, and re-apply the whole profile whenever WD_STAT is set.
 - INT is not wired to the ESP (TP8 only). Poll STAT, faults and the ADC (VBUS, IBUS, IBAT, VBAT, VSYS, TS, TDIE) every 1 to 2 s while awake.
 - Input current: the display load on PMID counts inside IINDPM. Keep IINDPM at the detected source limit (500 mA on a standard USB port).
 - USB-C initialization: wait 100 ms after U15 (FUSB303B, 0x21) has VDD valid and EN_N low before its first I2C access (`tEN`, datasheet page 9), then set `CONTROL1.ENABLE` (register 0x05 bit 3). Poll `STATUS.ATTACH`, `STATUS.BC_LVL` and `STATUS.VBUSOK`; require attached, VBUS valid and `TYPE.SINK` before using the advertised current.
-- USB source current: explicit CC advertisements of 1.5 A or 3 A take precedence over BC1.2; set IINDPM accordingly. With default CC current, use the completed BQ25798 D+/D- detection result instead: 500 mA for SDP or unknown sources, 1.5 A for CDP/DCP, and the detected non-standard adapter limit capped at 1.5 A. Default CC on an A-to-C cable does not cap a detected charger at 500 mA. Clear EN_EXTILIM only for a valid 3 A CC advertisement; otherwise retain the ILIM_HIZ 1.5 A clamp. On detach, invalid status/type or a lower advertisement, set EN_EXTILIM = 1 first, then update IINDPM. A replug reruns BC1.2 and overwrites IINDPM; reapply this policy after detection completes. EN_EXTILIM survives the watchdog, only REG_RST resets it. Current precedence follows [USB-IF section 4.6](https://usb.org/sites/default/files/USB%20Type%20C%20Functional%20Test%20Specification%202019%2004%2030.pdf); D+/D- results are in BQ25798 table 7-4.
+- USB source current: explicit CC advertisements of 1.5 A or 3 A take precedence over BC1.2; set IINDPM accordingly. With default CC current, use the completed BQ25798 D+/D- detection result instead: 500 mA for SDP or unknown sources, 1.5 A for CDP/DCP, and the detected non-standard adapter limit capped at 1.5 A. Default CC on an A-to-C cable does not cap a detected charger at 500 mA. Clear EN_EXTILIM only for a valid 3 A CC advertisement; otherwise retain the ILIM_HIZ 1.5 A set. On detach, invalid status/type or a lower advertisement, set EN_EXTILIM = 1 first, then update IINDPM. A replug reruns BC1.2 and overwrites IINDPM; reapply this policy after detection completes. EN_EXTILIM survives the watchdog, only REG_RST resets it. Current precedence follows [USB-IF section 4.6](https://usb.org/sites/default/files/USB%20Type%20C%20Functional%20Test%20Specification%202019%2004%2030.pdf); D+/D- results are in BQ25798 table 7-4.
 - Adaptive current: lower ICHG when TDIE approaches TREG or the pack approaches the 43 °C stop; charger mode with the modules off allows the full 1.8 A in the closed case (heat model, device-off case).
 
 ## I2C bus

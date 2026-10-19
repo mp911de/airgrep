@@ -12,15 +12,13 @@ The drawing is generated from `hardware/carrier-ti-charger/carrier.kicad_pcb`, w
 tools/kpy mechanical/draw_placement.py
 ```
 
-It writes `mechanical/placement.svg` and `mechanical/placement.png`. Coordinates follow the PCB. Use board-relative dimensions for enclosure work; the drawing is a generated snapshot.
-
 The board is 105 x 95 mm. The 100 x 60 x 11 mm battery behind it sets the minimum size.
 
 Placement rules:
 
 - RF sits at the top: the GNSS module, the ADSBee and the three antenna mounts.
 - Both switching converters sit toward the bottom right. Read current separation from the PCB before checking RF clearance.
-- POWER slider SW1, LEDs D4 and D5 and the USB-C receptacle J14 line up on the bottom edge and face down. Side clearance in an aircraft is often poor.
+- POWER slider SW1, LEDs D2 and D3 and the USB-C receptacle J14 line up on the bottom edge and face down. Side clearance in an aircraft is often poor.
 - MUTE slider SW2 is on the left edge, next to the buzzer. Wi-Fi slider SW3 is above it on the same edge.
 - The display sits in the middle column, glass to the front.
 - The pack connectors J12, J11, J13 and the pack fuse F1 are at the bottom, left of centre, reachable with the rear cover off.
@@ -45,18 +43,18 @@ Place the board edge about 0.5 mm inside the case wall. With a 1.5 to 2 mm wall 
 ## Assembly split
 
 - JLCPCB assembles all SMD parts. They are on the top side.
-- Hand-soldered through-hole parts: module sockets J1, J4, J5, J6, J8, J9, pack connectors J11, J12, J13, shunt headers JP1 and JP3, expansion header J10, LEDs D4 and D5. The parts are listed in [bom-hand-sourced.md](bom-hand-sourced.md).
+- Hand-soldered through-hole parts: module sockets J1, J4, J5, J6, J8, J9, pack connectors J11, J12, J13, shunt headers JP1 and JP3, expansion header J10, LEDs D2 and D3. The parts are listed in [bom-hand-sourced.md](bom-hand-sourced.md).
 - All six module sockets are 2.54 mm single-row female headers of one height, 8.5 mm.
 
 ## Mounting
 
 All mounting hardware is M2.5. The carrier has four plated 2.7 mm case holes (KiCad stock `MountingHole_2.7mm_M2.5_Pad_Via`), three non-plated 2.7 mm module holes (`MountingHole_2.7mm_M2.5`) and three plated 6.5 mm antenna holes (`MountingHole_6.5mm_Pad`).
 
-| Use | References |
-|---|---|
-| Case | MH1 to MH4 |
-| Display | MH13 |
-| ADSBee | MH12, MH14 |
+| Use               | References |
+|-------------------|------------|
+| Case              | MH1 to MH4 |
+| Display           | MH13       |
+| ADSBee            | MH12, MH14 |
 | Antenna bulkheads | MH6 to MH8 |
 
 Hole centres are defined by the PCB, rather than copied here.
@@ -73,14 +71,14 @@ Use `carrier.kicad_dru` and the current PCB for mounting-hole clearances. The fo
 
 A plain board between the carrier and the battery keeps the through-hole pin tails off the pack. It is a separate KiCad project, `hardware/insulator/insulator.kicad_pcb`, generated from the carrier by `tools/make_insulator.py`.
 
-| Property | Value |
-|---|---|
-| Outline | same as the carrier |
-| Material | 0.8 mm FR-4, no copper |
-| Case holes | MH1 to MH4, copied from the carrier |
-| Antenna clearance | 11 mm holes at MH6 to MH8 for the bulkhead nuts and pigtails |
-| Cable slot | 15 x 7.5 mm with round ends, position derived by the generator from the carrier connectors |
-| Silkscreen | J12, J11, J13 outlines on the carrier side, BATTERY SIDE on the other |
+| Property          | Value                                                                                      |
+|-------------------|--------------------------------------------------------------------------------------------|
+| Outline           | same as the carrier                                                                        |
+| Material          | 0.8 mm FR-4, no copper                                                                     |
+| Case holes        | MH1 to MH4, copied from the carrier                                                        |
+| Antenna clearance | 11 mm holes at MH6 to MH8 for the bulkhead nuts and pigtails                               |
+| Cable slot        | 15 x 7.5 mm with round ends, position derived by the generator from the carrier connectors |
+| Silkscreen        | J12, J11, J13 outlines on the carrier side, BATTERY SIDE on the other                      |
 
 Order it as a separate board in the same JLCPCB cart. It cannot share the four-layer panel.
 

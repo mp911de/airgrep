@@ -11,4 +11,7 @@ carrier_drc_violations.json
 netmap/
 hardware/sim/**/*.svg
 hardware/sim/**/*.pdf
+hardware/**/bom/
+hardware/**/jlcpcb/gerber/
+hardware/**/jlcpcb/production_files/
 pdf2text/

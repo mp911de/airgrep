@@ -12,8 +12,8 @@ A carrier board for a removable ESP32-S3 touch display and ADSBee 1090U receiver
 | Path | Content |
 |---|---|
 | [docs/requirements.md](docs/requirements.md) | What the device must do. Read first. |
+| [docs/checklist-draft.md](docs/checklist-draft.md) | Draft hardware review checks, investigation guidance and trial evaluation |
 | [docs/specs.md](docs/specs.md) | Technical data: radio, charging, battery, power budget, runtimes and validation limits |
-| [docs/power.md](docs/power.md) | Power design: charger, boost, load switch, undervoltage latch, thermostat, gauge |
 | [docs/decisions.md](docs/decisions.md) | Reasons behind the design decisions |
 | [docs/mechanical.md](docs/mechanical.md) | Board outline, mounting holes, module placement, battery, antennas, enclosure |
 | [docs/interfaces.md](docs/interfaces.md) | Pin maps of the modules and the carrier connectors |
