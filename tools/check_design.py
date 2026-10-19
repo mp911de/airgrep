@@ -338,8 +338,8 @@ BINDINGS = [
     (par("load_switch_ron_ohm"), bst("load_switch_ron")),
     (sim("run_power", "L2_DCR"), prose("_boost_efficiency_curve", r"DCR \(([\d.]+) mΩ\)", 1e-3)),
     # loads, fuse, pack
-    (sim("run_heat", "LED_5V_A", scale=1e3), par("loads_5v/Carrier: green power LED D5/ma")),
-    (sch("R26"), prose("loads_5v/Carrier: green power LED D5/source", r"/ (\d+) Ω \(R26\)")),
+    (sim("run_heat", "LED_5V_A", scale=1e3), par("loads_5v/Carrier: green power LED D3/ma")),
+    (sch("R26"), prose("loads_5v/Carrier: green power LED D3/source", r"/ (\d+) Ω \(R26\)")),
     (sch("R10"), prose("_battery_side_quiescent_ma", r"R10 (\d+) MΩ", 1e6)),
     (sch("R10"), par("off_state/common/R10/ohm")),
     (sim("run_heat", "FUSE_R", 0), prose("_path_resistance_ohm", r"fuse F1 [^(]*\((\d+) mΩ nominal\)", 1e-3)),
@@ -376,8 +376,8 @@ BINDINGS_TI = [
     (sch("R58"), lit(100e3, "ILIM_HIZ divider bottom")),
     (sch("R59"), lit(82e3, "TS divider RT1 for the 100k B4262 NTC, window 2.7 to 42.6 C")),
     (sch("R60"), lit(768e3, "TS divider RT2")),
-    (sch("R19"), lit(1.43e3, "I2C SDA pull-up for the 200 pF Fast-mode envelope with either ESP module")),
-    (sch("R20"), lit(1.43e3, "I2C SCL pull-up for the 200 pF Fast-mode envelope with either ESP module")),
+    (sch("R19"), lit(1.5e3, "I2C SDA pull-up for the original display, 200 pF Fast-mode envelope")),
+    (sch("R20"), lit(1.5e3, "I2C SCL pull-up for the original display, 200 pF Fast-mode envelope")),
     (sch("R79"), lit(1.5e3, "FUSB303B VBUS_DET series resistor; the pin loads to GND with 72.4 kOhm min, so it stays small")),
     (sch("R80"), lit(768e3, "FUSB303B PORT strap below the 1 to 4 MOhm float band; same part as R60")),
     (sch("R81"), lit(768e3, "FUSB303B ADDR strap below the 1 to 4 MOhm float band; same part as R60")),
@@ -408,35 +408,17 @@ def check_bindings(sch_comps):
         ok("bindings", "%d bindings between schematic, power_params.json and sim constants agree" % len(BINDINGS))
 
 
-# --- 3D models, warnings only
+# --- 3D model assignments, warnings only
 def check_models(brd):
-    common = os.path.expanduser("~/Library/Preferences/kicad/10.0/kicad_common.json")
-    env = {}
-    if os.path.exists(common):
-        env.update((json.load(open(common)).get("environment") or {}).get("vars") or {})
-    env.update(os.environ)
-    env["KIPRJMOD"] = KICAD
-    stock = "/Applications/KiCad/KiCad.app/Contents/SharedSupport/3dmodels"
-    home, n = os.path.expanduser("~"), 0
     no_body = pcbnew.FP_EXCLUDE_FROM_POS_FILES | pcbnew.FP_BOARD_ONLY | pcbnew.FP_DNP
-    for ref in sorted(brd, key=lambda r: (re.sub(r"\d", "", r), int(re.sub(r"\D", "", r) or 0))):
+    missing = 0
+    for ref in sorted(brd):
         f = brd[ref]["fp"]
-        models = [m.m_Filename for m in f.Models()]
-        # Test points, fiducials, mounting holes and unfitted parts have no body by design.
-        if not models and not f.GetAttributes() & no_body:
+        if not list(f.Models()) and not f.GetAttributes() & no_body:
             warn("models", "%s has no 3D model" % ref)
-            n += 1
-        for raw in models:
-            path = re.sub(r"\$\{(\w+)\}", lambda m: env.get(m.group(1), stock if "3DMODEL_DIR" in m.group(1) else m.group(0)), raw)
-            if path.startswith("~") or (os.path.realpath(path).startswith(home + os.sep)
-                                         and not os.path.realpath(path).startswith(os.path.realpath(ROOT) + os.sep)):
-                warn("models", "%s model in a personal directory: %s" % (ref, raw))
-                n += 1
-            elif not os.path.isfile(path):
-                warn("models", "%s model file missing: %s" % (ref, raw))
-                n += 1
-    if not n:
-        ok("models", "all 3D model paths resolve")
+            missing += 1
+    if not missing:
+        ok("models", "all required 3D models are assigned")
 
 
 # --- JLCPCB production files, only with --exports

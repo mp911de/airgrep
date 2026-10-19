@@ -9,7 +9,7 @@
 #
 # Steps: ERC, DRC with zone refill in memory and schematic parity, net names, schematic
 # against board per reference, value bindings to specs/power_params.json and the sim
-# constants, 3D models (warnings only), sim unit tests. The checks other than the kicad-cli
+# constants, 3D model assignments (warnings only), sim unit tests. The checks other than the kicad-cli
 # runs and the unit tests live in tools/check_design.py.
 # Output: one "ok" line per passing step, one "FAIL" line per finding, "warn" lines do not fail.
 # Board coordinates are in mil. The check reads the working tree, not the git index.

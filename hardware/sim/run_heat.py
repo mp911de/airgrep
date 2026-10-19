@@ -135,7 +135,7 @@ LS_THETA_JC = 16.4
 # --- Contacts and passives: (nominal, high). Nominal is an estimate, high is the data sheet maximum
 USB_CONTACT = (0.020, 0.040)  # Hanbo MC-107DMS: 40 mΩ max per contact; 4 VBUS + 4 GND contacts
 FB_R = (0.015, 0.020)  # FB1 BLM31KN471SZ1L: 20 mΩ max DCR (LCSC C710518); nominal estimated
-USB_J1 = "USB_VBUS_J1"  # USB connector VBUS pins, D3 and C1, ahead of FB1
+USB_J1 = "USB_VBUS_J1"  # USB connector VBUS pins, D1 and C1, ahead of FB1
 JST_CONTACT = (0.005, 0.010)  # JST PH: 10 mΩ max initial per contact
 SOCKET_CONTACT = (0.010, 0.020)  # 2.54 mm pin socket or shunt contact (estimate, no data sheet on file)
 FUSE_R = (0.011, 0.015)  # F1 Littelfuse 0466005.NRHF 5 A (C57525): 11 mΩ nominal cold; high adds self-heating
@@ -191,8 +191,8 @@ def under_heatsink(board, ref, size_mm, bottom=False):
 # --- Operating points
 VOUT = run_power.VOUT
 CHARGE_A = None  # design charge current, chargers.py
-LED_5V_A = 0.0064  # D5 through R26
-LED_SYS_A = 0.0035  # each of the D4 halves through R23 / R31
+LED_5V_A = 0.0064  # D3 through R26
+LED_SYS_A = 0.0035  # each of the D2 halves through R23 / R31
 CASES = []  # chargers.case_table
 CORNERS = ("nominal", "high")  # index into the (nominal, high) pairs above
 U4_LOSSES = ()  # loss labels of the charger, chargers.py
@@ -1365,11 +1365,11 @@ def run_case(model, case, env_key, ambient, k_buck, max_iterations=16,
         if load:
             p = VOUT * LED_5V_A
             losses["LEDs and series resistors"] = losses.get("LEDs and series resistors", 0.0) + p
-            pad_heat(heat, g, pads_of(board, "R26") + pads_of(board, "D5"), p)
+            pad_heat(heat, g, pads_of(board, "R26") + pads_of(board, "D3"), p)
         if case["mode"] == "usb":
             p = 2 * LED_SYS_A * op["VSYS"]
             losses["LEDs and series resistors"] = losses.get("LEDs and series resistors", 0.0) + p
-            pad_heat(heat, g, pads_of(board, "R23") + pads_of(board, "R31") + pads_of(board, "D4"), p)
+            pad_heat(heat, g, pads_of(board, "R23") + pads_of(board, "R31") + pads_of(board, "D2"), p)
 
         # inside the case: board losses, modules, battery
         board_loss = sum(losses.values())

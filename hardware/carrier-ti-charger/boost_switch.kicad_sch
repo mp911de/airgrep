@@ -427,7 +427,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "carrier:+5V"
+		(symbol "Mark:+5V"
 			(power global)
 			(pin_numbers
 				(hide yes)
@@ -566,7 +566,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "carrier:+BOOST_5V"
+		(symbol "Mark:+BOOST_5V"
 			(power global)
 			(pin_numbers
 				(hide yes)
@@ -705,7 +705,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "carrier:+VSYS"
+		(symbol "Mark:+VSYS"
 			(power global)
 			(pin_numbers
 				(hide yes)
@@ -844,7 +844,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "carrier:CKST0603-2.2UH_M"
+		(symbol "Mark:CKST0603-2.2UH_M"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -870,7 +870,7 @@
 					)
 				)
 			)
-			(property "Footprint" "carrier:IND-SMD_L7.4-W6.6"
+			(property "Footprint" "Mark:IND-SMD_L7.4-W6.6"
 				(at 0 -7.62 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1035,7 +1035,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "carrier:TPS22975DSGR"
+		(symbol "Mark:TPS22975DSGR"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -1061,7 +1061,7 @@
 					)
 				)
 			)
-			(property "Footprint" "carrier:WSON-8_L2.0-W2.0-P0.50-TL-EP"
+			(property "Footprint" "Mark:WSON-8_L2.0-W2.0-P0.50-TL-EP"
 				(at 0 -13.97 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1317,7 +1317,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "carrier:TPS61088RHLR"
+		(symbol "Mark:TPS61088RHLR"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -1343,7 +1343,7 @@
 					)
 				)
 			)
-			(property "Footprint" "carrier:VQFN-20_L4.6-W3.6-P0.50-BL"
+			(property "Footprint" "Mark:VQFN-20_L4.6-W3.6-P0.50-BL"
 				(at 0 -31.75 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -3119,7 +3119,7 @@
 		)
 	)
 	(global_label "PWR_EN"
-		(shape bidirectional)
+		(shape input)
 		(at 87.63 130.81 180)
 		(effects
 			(font
@@ -3677,7 +3677,7 @@
 		)
 	)
 	(symbol
-		(lib_id "carrier:+5V")
+		(lib_id "Mark:+5V")
 		(at 250.19 82.55 0)
 		(unit 1)
 		(body_style 1)
@@ -3878,7 +3878,7 @@
 				)
 			)
 		)
-		(property "Footprint" "carrier:TestPoint_Pad_D1.5mm"
+		(property "Footprint" "Mark:TestPoint_Pad_D1.5mm"
 			(at 275.59 82.55 0)
 			(hide yes)
 			(show_name no)
@@ -4510,7 +4510,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
+		(property "Footprint" "Mark:C_0402_1005Metric_NoSilk"
 			(at 129.54 80.01 0)
 			(hide yes)
 			(show_name no)
@@ -4780,7 +4780,7 @@
 				)
 			)
 		)
-		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
+		(property "Footprint" "Mark:C_0402_1005Metric_NoSilk"
 			(at 82.55 91.44 0)
 			(hide yes)
 			(show_name no)
@@ -5358,7 +5358,7 @@
 		)
 	)
 	(symbol
-		(lib_id "carrier:TPS22975DSGR")
+		(lib_id "Mark:TPS22975DSGR")
 		(at 229.87 101.6 0)
 		(unit 1)
 		(body_style 1)
@@ -5390,7 +5390,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "carrier:Texas_DSG0008A_WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm"
+		(property "Footprint" "Mark:Texas_DSG0008A_WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm"
 			(at 229.87 101.6 0)
 			(hide yes)
 			(show_name no)
@@ -5471,7 +5471,7 @@
 		)
 	)
 	(symbol
-		(lib_id "carrier:TPS61088RHLR")
+		(lib_id "Mark:TPS61088RHLR")
 		(at 101.6 101.6 0)
 		(unit 1)
 		(body_style 1)
@@ -5502,7 +5502,7 @@
 				)
 			)
 		)
-		(property "Footprint" "carrier:VQFN-20_L4.6-W3.6-P0.50-BL"
+		(property "Footprint" "Mark:VQFN-20_L4.6-W3.6-P0.50-BL"
 			(at 101.6 101.6 0)
 			(hide yes)
 			(show_name no)
@@ -5803,7 +5803,7 @@
 		)
 	)
 	(symbol
-		(lib_id "carrier:+BOOST_5V")
+		(lib_id "Mark:+BOOST_5V")
 		(at 121.92 72.39 0)
 		(unit 1)
 		(body_style 1)
@@ -6049,7 +6049,7 @@
 		)
 	)
 	(symbol
-		(lib_id "carrier:CKST0603-2.2UH_M")
+		(lib_id "Mark:CKST0603-2.2UH_M")
 		(at 63.5 93.98 180)
 		(unit 1)
 		(body_style 1)
@@ -6079,7 +6079,7 @@
 				)
 			)
 		)
-		(property "Footprint" "carrier:IND-SMD_L4.2-W4.2_FC-ALX4030D"
+		(property "Footprint" "Mark:IND-SMD_L4.2-W4.2_FC-ALX4030D"
 			(at 63.5 93.98 0)
 			(hide yes)
 			(show_name no)
@@ -6984,7 +6984,7 @@
 		)
 	)
 	(symbol
-		(lib_id "carrier:+VSYS")
+		(lib_id "Mark:+VSYS")
 		(at 20.32 72.39 0)
 		(unit 1)
 		(body_style 1)

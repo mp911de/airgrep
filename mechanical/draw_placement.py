@@ -51,20 +51,20 @@ ANTENNA = {"MH6": "GNSS", "MH7": "1090 MHz", "MH8": "sub-GHz"}
 # Reference labels on the drawing: ref -> side of the part the label goes on (c = centred).
 LABELS = {
     CONN["usb"]: "c", CONN["ntc"]: "t", CONN["battery"]: "t", CONN["thermostat"]: "b", CONN["display_aux"]: "l", CONN["display_power"]: "r", CONN["display_i2c"]: "b", CONN["display_user"]: "r",
-    CONN["adsbee"]: "l", CONN["adsbee_gnss"]: "b", CONN["esp_shunt"]: "l", CONN["ads_shunt"]: "b", "SW1": "t", "SW2": "r", "SW3": "r", CONN["controls"]: "b", "U13": "t", "BZ1": "c", "D4": "c", "D5": "c",
+    CONN["adsbee"]: "l", CONN["adsbee_gnss"]: "b", CONN["esp_shunt"]: "l", CONN["ads_shunt"]: "b", "SW1": "t", "SW2": "r", "SW3": "r", CONN["controls"]: "b", "U13": "t", "BZ1": "c", "D2": "c", "D3": "c",
     "F1": "b", "L1": "c", "L2": "c", "U4": "c", "U5": "b", "U6": "c", "U7": "r", "U8": "t", "U9": "t", "U10": "b",
-    "D3": "c", "TP1": "r", "TP2": "l", "TP3": "t", "TP4": "l", "TP5": "l", "TP6": "l", "TP7": "b",
+    "D1": "c", "TP1": "r", "TP2": "l", "TP3": "t", "TP4": "l", "TP5": "l", "TP6": "l", "TP7": "b",
     "U16": "c", CONN.get("gnss_antenna", ""): "r", "SW5": "t", "BT1": "c", "U18": "b",
 }
 KEY = [
     (CONN["usb"], "USB-C charging input"), (f"{CONN['ntc']} {CONN['battery']} {CONN['thermostat']}", "pack NTC, battery, thermostat"),
     (f"{CONN['display_aux']} {CONN['display_power']} {CONN['display_i2c']} {CONN['display_user']}", "display sockets 1x8, 1x7, 1x4, 1x2"),
     (f"{CONN['adsbee']} {CONN['adsbee_gnss']}", "ADSBee sockets 1x13, 1x5"), (f"{CONN['esp_shunt']} {CONN['ads_shunt']}", "5 V shunts: display, ADSBee"),
-    ("SW1 SW2 SW3", "POWER, MUTE and Wi-Fi sliders"), (f"U13 {CONN['controls']}", "control inputs and expansion"), ("D4 D5", "charge LED, power LED"),
+    ("SW1 SW2 SW3", "POWER, MUTE and Wi-Fi sliders"), (f"U13 {CONN['controls']}", "control inputs and expansion"), ("D2 D3", "charge LED, power LED"),
     (f"U16 {CONN.get('gnss_antenna', '')} SW5", "GNSS MAX-M10S, U.FL antenna, active antenna switch"), ("BT1 U18", "GNSS backup: CR2032, LDO"),
     ("U4 L1", "charger BQ25798"), ("U6 L2", "boost TPS61088"), ("U7", "load switch TPS22975"),
     ("U5", "undervoltage supervisor"), ("U8 U10", "fuel gauge, barometer"), ("U9 BZ1", "buzzer driver, buzzer"),
-    ("F1 D3", "pack fuse, VBUS TVS"), ("TP1 to TP7", "VBAT, VSYS, PWR_EN, THERM_OK, USB_VBUS, GND, 5 V"),
+    ("F1 D1", "pack fuse, VBUS TVS"), ("TP1 to TP7", "VBAT, VSYS, PWR_EN, THERM_OK, USB_VBUS, GND, 5 V"),
     ("MH1 to MH4", "case, 2.7 mm"), ("MH6 to MH8", "antenna bulkheads, 6.5 mm"),
     ("MH12 to MH14", "module standoffs, 2.7 mm"),
 ]

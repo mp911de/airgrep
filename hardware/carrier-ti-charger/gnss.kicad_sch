@@ -1980,6 +1980,479 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Mark:+GNSS_3V3"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "+GNSS_3V3"
+				(at 0 3.556 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+GNSS_3V3\""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "+GNSS_3V3_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+GNSS_3V3_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Mark:+VBAT"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "+VBAT"
+				(at 0 3.556 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+VBAT\""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "+VBAT_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+VBAT_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Mark:TLV9001IDBV"
+			(pin_names
+				(offset 0.127)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "U"
+				(at 0 5.08 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "TLV9001IDBV"
+				(at 0 -5.08 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" "Package_TO_SOT_SMD:SOT-23-5"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Datasheet" "https://www.ti.com/lit/ds/symlink/tlv9001.pdf"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Single 1 MHz rail-to-rail input/output op amp, SOT-23-5 (DBV): OUT 1, V- 2, IN+ 3, IN- 4, V+ 5"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "single opamp"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "SOT?23* *SC*70*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "TLV9001IDBV_0_1"
+				(polyline
+					(pts
+						(xy -5.08 5.08) (xy 5.08 0) (xy -5.08 -5.08) (xy -5.08 5.08)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin power_in line
+					(at -2.54 -7.62 90)
+					(length 3.81)
+					(name "V-"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -2.54 7.62 270)
+					(length 3.81)
+					(name "V+"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(symbol "TLV9001IDBV_1_1"
+				(pin output line
+					(at 7.62 0 180)
+					(length 2.54)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -7.62 2.54 0)
+					(length 2.54)
+					(name "+"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -7.62 -2.54 0)
+					(length 2.54)
+					(name "-"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "RF_GPS:MAX-M10S"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -3183,673 +3656,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "carrier:+GNSS_3V3"
-			(power global)
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "#PWR"
-				(at 0 -3.81 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "+GNSS_3V3"
-				(at 0 3.556 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "Power symbol creates a global label with name \"+GNSS_3V3\""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "global power"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "+GNSS_3V3_0_1"
-				(polyline
-					(pts
-						(xy -0.762 1.27) (xy 0 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 2.54) (xy 0.762 1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 0) (xy 0 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "+GNSS_3V3_1_1"
-				(pin power_in line
-					(at 0 0 90)
-					(length 0)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "carrier:+VBAT"
-			(power global)
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "#PWR"
-				(at 0 -3.81 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "+VBAT"
-				(at 0 3.556 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "Power symbol creates a global label with name \"+VBAT\""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "global power"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "+VBAT_0_1"
-				(polyline
-					(pts
-						(xy -0.762 1.27) (xy 0 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 2.54) (xy 0.762 1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 0) (xy 0 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "+VBAT_1_1"
-				(pin power_in line
-					(at 0 0 90)
-					(length 0)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "carrier:TLV9001IDBV"
-			(pin_names
-				(offset 0.127)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "U"
-				(at 0 5.08 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Value" "TLV9001IDBV"
-				(at 0 -5.08 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" "Package_TO_SOT_SMD:SOT-23-5"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Datasheet" "https://www.ti.com/lit/ds/symlink/tlv9001.pdf"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "Single 1 MHz rail-to-rail input/output op amp, SOT-23-5 (DBV): OUT 1, V- 2, IN+ 3, IN- 4, V+ 5"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "single opamp"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_fp_filters" "SOT?23* *SC*70*"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "TLV9001IDBV_0_1"
-				(polyline
-					(pts
-						(xy -5.08 5.08) (xy 5.08 0) (xy -5.08 -5.08) (xy -5.08 5.08)
-					)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin power_in line
-					(at -2.54 -7.62 90)
-					(length 3.81)
-					(name "V-"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at -2.54 7.62 270)
-					(length 3.81)
-					(name "V+"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(symbol "TLV9001IDBV_1_1"
-				(pin output line
-					(at 7.62 0 180)
-					(length 2.54)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -7.62 2.54 0)
-					(length 2.54)
-					(name "+"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -7.62 -2.54 0)
-					(length 2.54)
-					(name "-"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "carrier:TPS7A0233PDBV"
-			(pin_names
-				(offset 0.254)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "U"
-				(at -5.08 5.715 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Value" "TPS7A0233PDBV"
-				(at 0 5.715 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" "Package_TO_SOT_SMD:SOT-23-5"
-				(at 0 8.255 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" "https://www.ti.com/lit/ds/symlink/tps7a02.pdf"
-				(at 0 2.54 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "200 mA nanopower LDO, 25 nA quiescent, 3.3 V fixed output, SOT-23-5 (DBV): IN 1, GND 2, EN 3, NC 4, OUT 5"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "linear regulator ldo fixed positive"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_fp_filters" "SOT?23?5*"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "TPS7A0233PDBV_0_1"
-				(rectangle
-					(start -5.08 4.445)
-					(end 5.08 -5.08)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-			)
-			(symbol "TPS7A0233PDBV_1_1"
-				(pin power_in line
-					(at -7.62 2.54 0)
-					(length 2.54)
-					(name "IN"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at 0 -7.62 90)
-					(length 2.54)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -7.62 0 0)
-					(length 2.54)
-					(name "EN"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin no_connect line
-					(at 5.08 0 180)
-					(length 2.54)
-					(hide yes)
-					(name "NC"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_out line
-					(at 7.62 2.54 180)
-					(length 2.54)
-					(name "OUT"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "power:GND"
 			(power global)
 			(pin_numbers
@@ -4080,6 +3886,163 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Mark:XC6206P332MR"
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "U"
+				(at -3.81 3.175 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "XC6206P332MR"
+				(at 0 3.175 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+				(at 0 5.715 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(italic yes)
+					)
+				)
+			)
+			(property "Datasheet" "https://www.torexsemi.com/file/xc6206/XC6206.pdf"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Torex 3.3 V 200 mA LDO, SOT-23"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "300mA LDO Regulator Fixed Positive"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "SOT?23*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "XC6206P332MR_0_1"
+				(rectangle
+					(start -5.08 1.905)
+					(end 5.08 -5.08)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "XC6206P332MR_1_1"
+				(pin power_in line
+					(at 0 -7.62 90)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_out line
+					(at 7.62 0 180)
+					(length 2.54)
+					(name "VO"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at -7.62 0 0)
+					(length 2.54)
+					(name "VI"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 	)
 	(text "Antenna feed and 3-pin supervisor (UBX-20053088 Figure 10)"
 		(exclude_from_sim no)
@@ -4092,7 +4055,7 @@
 		)
 		(uuid "01e27b75-ee01-4b69-92a0-f0b0f25106e9")
 	)
-	(text "Backup supply: pack through TPS7A02, CR2032 cell, diode-OR (neither source charges the other)"
+	(text "Backup supply: pack through XC6206, CR2032 cell, diode-OR (neither source charges the other)"
 		(exclude_from_sim no)
 		(at 40.64 35.56 0)
 		(effects
@@ -4115,7 +4078,7 @@
 		)
 		(uuid "516391c6-7c6a-4fd3-8d92-e4363b23eb37")
 	)
-	(text "Fix LED: PPS runs only with a fix; cut JP4 to disable"
+	(text "Fix LED: PPS runs only with a fix; cut JP2 to disable"
 		(exclude_from_sim no)
 		(at 60.96 119.38 0)
 		(effects
@@ -4147,12 +4110,6 @@
 			(justify left bottom)
 		)
 		(uuid "e8f52c9c-fb09-426d-aaca-31bc10212cd1")
-	)
-	(junction
-		(at 55.88 48.26)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "04d88aba-fe69-4c0f-b955-69841e6ab782")
 	)
 	(junction
 		(at 50.8 48.26)
@@ -4298,7 +4255,7 @@
 	)
 	(wire
 		(pts
-			(xy 104.14 93.98) (xy 124.46 93.98)
+			(xy 102.87 93.98) (xy 124.46 93.98)
 		)
 		(stroke
 			(width 0)
@@ -4538,16 +4495,6 @@
 	)
 	(wire
 		(pts
-			(xy 55.88 50.8) (xy 60.96 50.8)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "766ecbff-7e1c-4871-8c36-9fe53507c0cb")
-	)
-	(wire
-		(pts
 			(xy 179.07 101.6) (xy 185.42 101.6)
 		)
 		(stroke
@@ -4665,16 +4612,6 @@
 			(type default)
 		)
 		(uuid "9ed1018d-a2e8-4da0-ac9b-20eb87254a9b")
-	)
-	(wire
-		(pts
-			(xy 55.88 48.26) (xy 55.88 50.8)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a9a8506f-b5d5-44f6-8e6d-18949f3a07e7")
 	)
 	(wire
 		(pts
@@ -5126,7 +5063,7 @@
 	)
 	(global_label "GNSS_TXO"
 		(shape output)
-		(at 104.14 93.98 180)
+		(at 102.87 93.98 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5136,7 +5073,7 @@
 		)
 		(uuid "11f9e1d5-f2ef-430c-82ed-a18db56177df")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 104.14 93.98 0)
+			(at 102.87 93.98 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5756,7 +5693,7 @@
 		)
 	)
 	(symbol
-		(lib_id "carrier:+GNSS_3V3")
+		(lib_id "Mark:+GNSS_3V3")
 		(at 83.82 124.46 0)
 		(unit 1)
 		(body_style 1)
@@ -5865,7 +5802,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "carrier:ublox_MAX-M10S"
+		(property "Footprint" "Mark:ublox_MAX-M10S"
 			(at 139.7 101.6 0)
 			(hide yes)
 			(show_name no)
@@ -6189,7 +6126,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "314bfe3b-deb3-451b-a7f5-108f1917eaf6")
-		(property "Reference" "D12"
+		(property "Reference" "D8"
 			(at 116.84 44.45 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6275,14 +6212,14 @@
 		(instances
 			(project "carrier"
 				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/a06322b6-1276-4059-95cd-666fc3516e91"
-					(reference "D12")
+					(reference "D8")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "carrier:+GNSS_3V3")
+		(lib_id "Mark:+GNSS_3V3")
 		(at 96.52 76.2 0)
 		(unit 1)
 		(body_style 1)
@@ -6436,7 +6373,7 @@
 		)
 	)
 	(symbol
-		(lib_id "carrier:TLV9001IDBV")
+		(lib_id "Mark:TLV9001IDBV")
 		(at 223.52 144.78 0)
 		(mirror x)
 		(unit 1)
@@ -6724,7 +6661,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "50290fa9-5862-48cb-91ac-f10206c250fd")
-		(property "Reference" "D11"
+		(property "Reference" "D7"
 			(at 198.12 106.68 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6746,7 +6683,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "carrier:D_0402_1005Metric"
+		(property "Footprint" "Mark:D_0402_1005Metric"
 			(at 195.58 107.95 0)
 			(hide yes)
 			(show_name no)
@@ -6810,7 +6747,7 @@
 		(instances
 			(project "carrier"
 				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/a06322b6-1276-4059-95cd-666fc3516e91"
-					(reference "D11")
+					(reference "D7")
 					(unit 1)
 				)
 			)
@@ -6971,129 +6908,6 @@
 		)
 	)
 	(symbol
-		(lib_id "carrier:TPS7A0233PDBV")
-		(at 68.58 50.8 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "55d2fcb7-02fd-44dd-885f-3342d9912319")
-		(property "Reference" "U18"
-			(at 63.5 43.18 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "TPS7A0233PDBVR"
-			(at 63.5 40.64 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Package_TO_SOT_SMD:SOT-23-5"
-			(at 68.58 50.8 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" "https://www.ti.com/lit/ds/symlink/tps7a02.pdf"
-			(at 68.58 50.8 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Always-on 3.3 V backup supply from the pack, 25 nA quiescent"
-			(at 68.58 50.8 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C2887324"
-			(at 68.58 50.8 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "TPS7A0233PDBVR"
-			(at 68.58 50.8 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Manufacturer" "Texas Instruments"
-			(at 68.58 50.8 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "c2d21865-05cc-4129-a1aa-44f6149a314b")
-		)
-		(pin "2"
-			(uuid "c1fb7eba-48da-4553-bce3-9bc90883f0c3")
-		)
-		(pin "3"
-			(uuid "dad1554f-5d3c-4fed-baa7-1da56f3bfd32")
-		)
-		(pin "4"
-			(uuid "4088a95e-56ce-4da5-be47-fc2df7108abb")
-		)
-		(pin "5"
-			(uuid "8de29da0-cacf-4990-a12f-4bfe8b249872")
-		)
-		(instances
-			(project "carrier"
-				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/a06322b6-1276-4059-95cd-666fc3516e91"
-					(reference "U18")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:R")
 		(at 185.42 132.08 0)
 		(unit 1)
@@ -7126,7 +6940,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "carrier:R_0805_2012Metric_NoSilk"
+		(property "Footprint" "Mark:R_0805_2012Metric_NoSilk"
 			(at 185.42 132.08 0)
 			(hide yes)
 			(show_name no)
@@ -7392,7 +7206,7 @@
 		)
 	)
 	(symbol
-		(lib_id "carrier:+VBAT")
+		(lib_id "Mark:+VBAT")
 		(at 45.72 48.26 0)
 		(unit 1)
 		(body_style 1)
@@ -7655,7 +7469,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
+		(property "Footprint" "Mark:C_0402_1005Metric_NoSilk"
 			(at 101.6 80.01 0)
 			(hide yes)
 			(show_name no)
@@ -7758,7 +7572,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "carrier:U.FL_Hirose_U.FL-R-SMT-1_Vertical"
+		(property "Footprint" "Mark:U.FL_Hirose_U.FL-R-SMT-1_Vertical"
 			(at 218.44 101.6 0)
 			(hide yes)
 			(show_name no)
@@ -8584,7 +8398,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
+		(property "Footprint" "Mark:C_0402_1005Metric_NoSilk"
 			(at 228.6 156.21 0)
 			(hide yes)
 			(show_name no)
@@ -8665,7 +8479,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "e6e23585-a2c9-4b04-ad13-c91679540250")
-		(property "Reference" "D14"
+		(property "Reference" "D10"
 			(at 86.36 149.86 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8751,7 +8565,7 @@
 		(instances
 			(project "carrier"
 				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/a06322b6-1276-4059-95cd-666fc3516e91"
-					(reference "D14")
+					(reference "D10")
 					(unit 1)
 				)
 			)
@@ -8790,7 +8604,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "carrier:BAT-SMD_BS-CR2032-8"
+		(property "Footprint" "Mark:BAT-SMD_BS-CR2032-8"
 			(at 101.6 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -8904,7 +8718,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "carrier:C_0402_1005Metric_NoSilk"
+		(property "Footprint" "Mark:C_0402_1005Metric_NoSilk"
 			(at 175.26 101.6 0)
 			(hide yes)
 			(show_name no)
@@ -9007,7 +8821,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "carrier:SW-SMD_SHOUHAN_2.54-1P_TPGT"
+		(property "Footprint" "Mark:SW-SMD_SHOUHAN_2.54-1P_TPGT"
 			(at 185.42 119.38 0)
 			(hide yes)
 			(show_name no)
@@ -9345,7 +9159,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f2fa42fb-8f3c-4028-a9c4-3e7d9ed6d619")
-		(property "Reference" "D13"
+		(property "Reference" "D9"
 			(at 116.84 59.69 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9431,7 +9245,7 @@
 		(instances
 			(project "carrier"
 				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/a06322b6-1276-4059-95cd-666fc3516e91"
-					(reference "D13")
+					(reference "D9")
 					(unit 1)
 				)
 			)
@@ -9708,6 +9522,133 @@
 				)
 			)
 		)
+	)
+	(symbol
+		(lib_id "Mark:XC6206P332MR")
+		(at 68.58 48.26 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "04aea006-593d-455b-8fe3-da3d46b0191f")
+		(property "Reference" "U18"
+			(at 63.5 43.18 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "XC6206P332MR"
+			(at 63.5 40.64 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+			(at 68.58 48.26 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" "https://www.torexsemi.com/file/xc6206/XC6206.pdf"
+			(at 68.58 48.26 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Always-on 3.3 V backup supply from the pack, about 1 uA quiescent"
+			(at 68.58 48.26 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C5446"
+			(at 68.58 48.26 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "XC6206P332MR"
+			(at 68.58 48.26 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "Torex"
+			(at 68.58 48.26 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "e3231ad7-f200-4b4d-a754-0e6ffa99c949")
+		)
+		(pin "2"
+			(uuid "2e382ecf-89f2-49a5-a458-570cbcbc4f7f")
+		)
+		(pin "3"
+			(uuid "6e728266-e492-48ab-a157-700ca87ef972")
+		)
+		(instances
+			(project "carrier"
+				(path "/1d76d2ec-7795-4c71-8167-b1182c3ebc1d/a06322b6-1276-4059-95cd-666fc3516e91"
+					(reference "U18")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 68.58 55.88) (xy 68.58 58.42)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "dda0a80e-f6f1-43e9-b25c-fcf0b85d5131")
 	)
 	(sheet_instances
 		(path "/"

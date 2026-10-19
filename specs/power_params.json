@@ -57,7 +57,7 @@
     {"name": "Display: XIAO ESP32-S3 Plus MCU, Wi-Fi off", "ma": 45, "source": "estimate: ESP32-S3 dual core at 160 to 240 MHz without radio, 40 to 50 mA (Espressif ESP32-S3 data sheet, active mode); onboard LDO passes current 1:1 from 5 V"},
     {"name": "Display: 1.47 in IPS panel and touch controller", "ma": 8, "source": "estimate: LCD controller about 5 mA, capacitive touch about 2 to 3 mA; Seeed publishes no figure"},
     {"name": "Display: backlight at 100 %", "ma": 30, "scales_with_brightness": true, "source": "estimate: 1.47 in IPS backlight, 2 white LEDs at about 15 mA; Seeed publishes no figure"},
-    {"name": "Carrier: green power LED D5", "ma": 6.4, "source": "(5.06 V - about 2.0 V LED forward voltage) / 470 Ω (R26)"},
+    {"name": "Carrier: green power LED D3", "ma": 6.4, "source": "(5.06 V - about 2.0 V LED forward voltage) / 470 Ω (R26)"},
     {"name": "Carrier: BMP580, buzzer driver idle, I2C pull-ups", "ma": 0.1, "source": "BMP580 normal mode below 0.01 mA; 74LVC1G17 below 0.01 mA; display I2C pull-ups about 0.05 mA"},
     {"name": "Carrier: control inputs, both sliders low", "ma": 0.1, "source": "TCA9534: at most 4 uA standby at 3.6 V plus 2 x 33 uA in 100 kOhm pulls at 3.3 V; rounded to 0.1 mA for polling. Each additional grounded spare input adds 33 uA. Estimate, through display LDO."},
     {"name": "Carrier: buzzer, average", "ma": 0.03, "source": "Carrier R28 1 kΩ and C66 1 µF AC-couple BZ1, with R87 10 kΩ bleed. Conservative 3.3 mA driven-current bound at 3.3 V, 1 % duty gives about 0.03 mA average. Estimate."}
@@ -69,7 +69,7 @@
     "module_acquisition_ma": 11.3,
     "_module": "u-blox MAX-M10S data sheet UBX-20035208 R02, Table 13, GPS+GAL+GLO: tracking 7.0 + 2.3 mA (VCC + V_IO), acquisition 9.0 + 2.3 mA at 3.0 V",
     "breakout_led_ma": 1.5,
-    "_breakout_led_ma": "Unmeasured average allowance for carrier PPS/fix LED D14 through R86 150 Ω and Q16. This is not a SparkFun breakout LED; verify pulse width, LED voltage and current on hardware.",
+    "_breakout_led_ma": "Unmeasured average allowance for carrier PPS/fix LED D10 through R86 150 Ω and Q16. This is not a SparkFun breakout LED; verify pulse width, LED voltage and current on hardware.",
     "active_antenna_ma": 25,
     "_active_antenna_ma": "Abracon AANE-AP-0164 LNA, 15 to 25 mA at 3.0 to 5.0 V, maximum used (datasheets/abracon-aane-ap-0164.pdf). Set 0 for a passive antenna."
   },
