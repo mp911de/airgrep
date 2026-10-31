@@ -1,6 +1,8 @@
-# Portable ADS-B / FLARM receiver carrier PCB
+# airgrep
 
-A carrier board for a removable ESP32-S3 touch display and ADSBee 1090U receiver, with a soldered MAX-M10S GNSS receiver. It adds a single-cell Li-ion charger, a 5 V boost rail, a fuel gauge, a barometer and a buzzer.
+A portable ADS-B / FLARM receiver. Started as carrier board for a removable ESP32-S3 touch display and ADSBee 1090U receiver, with a soldered MAX-M10S GNSS receiver. It adds a single-cell Li-ion charger, a 5 V boost rail, a fuel gauge, a barometer and a buzzer.
+
+<img src="hardware/carrier-ti-charger/render/PCBA%20Render%20F.png" alt="PCBA Render" style="width:400px;"/>
 
 ## Current state
 
