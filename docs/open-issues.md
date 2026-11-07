@@ -20,6 +20,10 @@ The simulations rest on these. Each one changes a result if it is far off.
 
 ## Bench tests at bring-up
 
+- [ ] **Correct BT1 coin-cell holder polarity.** The PCB connects BT1 pad 1 to GNSS_CELL and pad 2 to GND, but the BS-CR2032-8 holder's positive side contact is connected to GND. Mark confirmed side-contact continuity to GND and no bottom-contact continuity to GND on the assembled board. Correct the polarity mapping for the next revision: positive side contact to GNSS_CELL, negative bottom contact to GND. Mark will rework the delivered boards himself. Keep the coin cell out until corrected and verify contact polarity before fitting it.
+
+- [ ] **Reduce GNSS PPS LED brightness.** Mark reports that D10 is far too bright on the assembled board. Reduce its brightness and verify that PPS remains clearly visible without glare.
+
 - [ ] **SW4 system reset.** Implement and read back SFET_PRESENT at startup. With battery only and with USB connected, hold SW4 past the typical 10 s trigger and scope VSYS, both 5 V module rails and ESP_3V3. Verify they fall below each device's POR threshold before restart, at minimum load and with the real module capacitors. Test both POWER slider positions. Charger and MAX17048 are outside reset coverage. Confirm the stock 6 mm button fits the 6.5 x 4.5 mm footprint before fabrication.
 
 - [ ] **Before first power-up.**
