@@ -17,14 +17,16 @@ source ~/.espressif/tools/activate_idf_v6.1.sh
 
 `CMakePresets.json` defines one preset per module and purpose. Each builds into
 `build/<preset>/` with its own `sdkconfig`, layered from `sdkconfig.defaults`,
-`sdkconfig.board.<module>` and, for tests, `sdkconfig.test`.
+`sdkconfig.board.<preset>` and, for tests, `sdkconfig.test`.
 
-| Preset         | Module                                                       | Binary            |
-|----------------|--------------------------------------------------------------|-------------------|
-| `display`      | Seeed 1.47 inch touch display, UART GPIO39/40, buzzer GPIO38 | application       |
-| `s3`           | bare XIAO ESP32-S3 Plus, UART GPIO7/44, buzzer GPIO8         | application       |
-| `display-test` | as `display`                                                 | Unity test runner |
-| `s3-test`      | as `s3`                                                      | Unity test runner |
+| Preset           | Module                                                       | Binary             |
+|------------------|--------------------------------------------------------------|--------------------|
+| `display`        | Seeed 1.47 inch touch display, UART GPIO39/40, buzzer GPIO38 | application        |
+| `s3`             | bare XIAO ESP32-S3 Plus, UART GPIO7/44, buzzer GPIO8         | application        |
+| `display-test`   | as `display`                                                 | Unity test runner  |
+| `s3-test`        | as `s3`                                                      | Unity test runner  |
+| `display-hwtest` | as `display`, `sdkconfig.hwtest`                             | hardware test mode |
+| `s3-hwtest`      | as `s3`, `sdkconfig.hwtest`                                  | hardware test mode |
 
 Command line, from `firmware/`:
 
@@ -35,15 +37,26 @@ idf.py --preset s3-test menuconfig                      # airgrep > tags to run 
 ```
 
 The XIAO programs over its native USB port, the console (`ESP_LOGx`) uses USB Serial/JTAG.
-Log level defaults to info, debug is compiled in and can be raised per tag with
-`esp_log_level_set`.
+Log level defaults to info, debug is compiled in. The application runs the IDF console on
+the same port: `help`, `log_level <tag|*> <level>`. Tags: `airgrep`, `loop`, `adsbee`,
+`i2c`.
+
+Hardware test mode boots the normal application and loop, then prints one line per check,
+`HWTEST <name> PASS|FAIL <detail>`, for a host script to judge. First check: I2C presence
+of
+the gauge (0x36) and the USB controller (0x21).
+
+A fresh build directory configured through a preset needs the toolchain file once:
+`idf.py --preset s3-test -DCMAKE_TOOLCHAIN_FILE=$IDF_PATH/tools/cmake/toolchain-esp32s3.cmake reconfigure`.
 
 ## Tests
 
-Tests live in `components/<name>/test/` as Unity `TEST_CASE`s. Tags: `[adsbee]` line
-splitter, pure logic. `[buzzer]` and `[i2c]` carry `[hw]` and need the carrier. The test
-build runs the tags from `CONFIG_AIRGREP_TEST_TAGS` at boot, then opens the Unity menu on
-the console: Enter lists the tests, a quoted name, an index, a `[tag]` or `*` runs them.
+Tests live in `components/<name>/test/` as Unity `TEST_CASE`s. Tags: `[adsbee]` decoder,
+pure logic. `[loop]` runs the real loop task with a 10 ms tick (`sdkconfig.test`) and
+asserts through the public API only. Hardware paths have no Unity tests, hardware test
+mode covers them. The test build runs the tags from `CONFIG_AIRGREP_TEST_TAGS` at boot,
+then opens the Unity menu on the console: Enter lists the tests, a quoted name, an index,
+a `[tag]` or `*` runs them.
 
 ## CLion
 
@@ -63,10 +76,12 @@ the console: Enter lists the tests, a quoted name, an index, a `[tag]` or `*` ru
 
 ```
 firmware/
-  main/            app_main.c (application) or test_main.c (test preset), Kconfig.projbuild
+  main/            main.cpp and console.c (application) or test_main.c (test preset), Kconfig.projbuild
   components/
-    board/         Kconfig module choice and pin numbers, board.h
-    adsbee_link/   UART1 8E1 to the ADSBee, line splitter, test/
-    buzzer/        LEDC PWM at 4 kHz, mute, test/
-    i2c_bus/       shared 400 kHz master bus, scan 0x08 to 0x77, test/
+    loop/          event loop task, promises, scheduling, Kconfig, test/
+    airgrep/       carrier hardware: board.h pin map, I2C bus, buzzer, ADSBee UART link and decoder, Kconfig, test/
+    hwtest/        hardware test mode checks and HWTEST report line
 ```
+
+Boot order in `main.cpp`: loop first, then console, I2C, buzzer, ADSBee link. Every
+request goes through the loop, so a silent or unpowered part costs one timeout.

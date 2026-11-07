@@ -1,10 +1,17 @@
 menu "airgrep"
 
-    config AIRGREP_TEST_TAGS
-        string "Unity tags to run at boot, space separated"
-        default "[adsbee]"
-        help
-            Tests with these tags run after boot in the test build, then the
-            Unity menu opens. Empty runs nothing and opens the menu directly.
+	config AIRGREP_TEST_TAGS
+		string "Unity tags to run at boot, space separated"
+		default "[adsbee] [loop]"
+		help
+			Tests with these tags run after boot in the test build, then the
+			Unity menu opens. Empty runs nothing and opens the menu directly.
+
+	config AIRGREP_HWTEST
+		bool "Hardware test mode"
+		default n
+		help
+			Boots the normal loop, then runs the hardware checks and prints
+			one "HWTEST <name> PASS|FAIL <detail>" line per check.
 
 endmenu

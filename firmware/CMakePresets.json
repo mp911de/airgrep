@@ -1,71 +1,103 @@
 {
-  "version": 3,
-  "configurePresets": [
-    {
-      "name": "s3",
-      "displayName": "airgrep on XIAO ESP32-S3 Plus",
-      "generator": "Ninja",
-      "binaryDir": "build/plus",
-      "cacheVariables": {
-        "IDF_TARGET": "esp32s3",
-        "SDKCONFIG": "build/plus/sdkconfig",
-        "SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.plus"
-      }
-    },
-    {
-      "name": "display",
-      "displayName": "Seeed display module, app",
-      "generator": "Ninja",
-      "binaryDir": "build/display",
-      "cacheVariables": {
-        "IDF_TARGET": "esp32s3",
-        "SDKCONFIG": "build/display/sdkconfig",
-        "SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display"
-      }
-    },
-    {
-      "name": "s3-test",
-      "displayName": "airgrep on ESP32-S3 Plus, tests",
-      "generator": "Ninja",
-      "binaryDir": "build/plus-test",
-      "cacheVariables": {
-        "IDF_TARGET": "esp32s3",
-        "SDKCONFIG": "build/plus-test/sdkconfig",
-        "SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.plus;sdkconfig.test",
-        "AIRGREP_TEST": "ON",
-        "TEST_COMPONENTS": "adsbee_link buzzer i2c_bus"
-      }
-    },
-    {
-      "name": "display-test",
-      "displayName": "Seeed display module, tests",
-      "generator": "Ninja",
-      "binaryDir": "build/display-test",
-      "cacheVariables": {
-        "IDF_TARGET": "esp32s3",
-        "SDKCONFIG": "build/display-test/sdkconfig",
-        "SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display;sdkconfig.test",
-        "AIRGREP_TEST": "ON",
-        "TEST_COMPONENTS": "adsbee_link buzzer i2c_bus"
-      }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "s3",
-      "configurePreset": "s3"
-    },
-    {
-      "name": "display",
-      "configurePreset": "display"
-    },
-    {
-      "name": "s3-test",
-      "configurePreset": "s3-test"
-    },
-    {
-      "name": "display-test",
-      "configurePreset": "display-test"
-    }
-  ]
+	"version": 3,
+	"configurePresets": [
+		{
+			"name": "esp32s3",
+			"hidden": true,
+			"generator": "Ninja",
+			"cacheVariables": {
+				"IDF_TARGET": "esp32s3"
+			}
+		},
+		{
+			"name": "s3",
+			"displayName": "airgrep on XIAO ESP32-S3 Plus",
+			"inherits": "esp32s3",
+			"binaryDir": "build/s3",
+			"cacheVariables": {
+				"SDKCONFIG": "build/s3/sdkconfig",
+				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.s3"
+			}
+		},
+		{
+			"name": "display",
+			"displayName": "Seeed display module, app",
+			"inherits": "esp32s3",
+			"binaryDir": "build/display",
+			"cacheVariables": {
+				"SDKCONFIG": "build/display/sdkconfig",
+				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display"
+			}
+		},
+		{
+			"name": "s3-test",
+			"displayName": "airgrep on ESP32-S3 Plus, tests",
+			"inherits": "esp32s3",
+			"binaryDir": "build/s3-test",
+			"cacheVariables": {
+				"SDKCONFIG": "build/s3-test/sdkconfig",
+				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.s3;sdkconfig.test",
+				"AIRGREP_TEST": "ON",
+				"TEST_COMPONENTS": "airgrep loop"
+			}
+		},
+		{
+			"name": "display-test",
+			"displayName": "Seeed display module, tests",
+			"inherits": "esp32s3",
+			"binaryDir": "build/display-test",
+			"cacheVariables": {
+				"SDKCONFIG": "build/display-test/sdkconfig",
+				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display;sdkconfig.test",
+				"AIRGREP_TEST": "ON",
+				"TEST_COMPONENTS": "airgrep loop"
+			}
+		},
+		{
+			"name": "s3-hwtest",
+			"displayName": "airgrep on ESP32-S3 Plus, hardware test mode",
+			"inherits": "esp32s3",
+			"binaryDir": "build/s3-hwtest",
+			"cacheVariables": {
+				"SDKCONFIG": "build/s3-hwtest/sdkconfig",
+				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.s3;sdkconfig.hwtest"
+			}
+		},
+		{
+			"name": "display-hwtest",
+			"displayName": "Seeed display module, hardware test mode",
+			"inherits": "esp32s3",
+			"binaryDir": "build/display-hwtest",
+			"cacheVariables": {
+				"SDKCONFIG": "build/display-hwtest/sdkconfig",
+				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display;sdkconfig.hwtest"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "s3",
+			"configurePreset": "s3"
+		},
+		{
+			"name": "display",
+			"configurePreset": "display"
+		},
+		{
+			"name": "s3-test",
+			"configurePreset": "s3-test"
+		},
+		{
+			"name": "display-test",
+			"configurePreset": "display-test"
+		},
+		{
+			"name": "s3-hwtest",
+			"configurePreset": "s3-hwtest"
+		},
+		{
+			"name": "display-hwtest",
+			"configurePreset": "display-hwtest"
+		}
+	]
 }

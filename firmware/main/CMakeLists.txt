@@ -1,6 +1,6 @@
 idf_build_get_property(test AIRGREP_TEST)
 if (test)
-    idf_component_register(SRCS "test_main.c" PRIV_REQUIRES unity board)
+    idf_component_register(SRCS "test_main.c" PRIV_REQUIRES unity airgrep)
 else ()
-    idf_component_register(SRCS "main.c" PRIV_REQUIRES board adsbee_link buzzer i2c_bus)
+    idf_component_register(SRCS "main.cpp" "console.c" PRIV_REQUIRES airgrep loop hwtest console)
 endif ()
