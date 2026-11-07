@@ -1,0 +1,14 @@
+<NMEA(GNGGA, time=17:18:12, lat=53.4150191667, NS=N, lon=7.1891593333, EW=E, quality=1, numSV=12, HDOP=0.86, alt=-1.2, altUnit=M, sep=45.5, sepUnit=M, diffAge=, diffStation=)>
+<NMEA(GNGSA, opMode=A, navMode=3, svid_01=12, svid_02=29, svid_03=25, svid_04=11, svid_05=6, svid_06=32, svid_07=13, svid_08=28, svid_09=, svid_10=, svid_11=, svid_12=, PDOP=1.64, HDOP=0.86, VDOP=1.4, systemId=1)>
+<NMEA(GNGSA, opMode=A, navMode=3, svid_01=32, svid_02=3, svid_03=11, svid_04=16, svid_05=12, svid_06=, svid_07=, svid_08=, svid_09=, svid_10=, svid_11=, svid_12=, PDOP=1.64, HDOP=0.86, VDOP=1.4, systemId=3)>
+<NMEA(GNGSA, opMode=A, navMode=3, svid_01=38, svid_02=34, svid_03=25, svid_04=13, svid_05=19, svid_06=, svid_07=, svid_08=, svid_09=, svid_10=, svid_11=, svid_12=, PDOP=1.64, HDOP=0.86, VDOP=1.4, systemId=4)>
+<NMEA(GNGSA, opMode=A, navMode=3, svid_01=, svid_02=, svid_03=, svid_04=, svid_05=, svid_06=, svid_07=, svid_08=, svid_09=, svid_10=, svid_11=, svid_12=, PDOP=1.64, HDOP=0.86, VDOP=1.4, systemId=5)>
+<NMEA(GNGLL, lat=53.4150191667, NS=N, lon=7.1891593333, EW=E, time=17:18:12, status=A, posMode=A)>
+<NMEA(GNRMC, time=17:18:17, status=A, lat=53.4150115, NS=N, lon=7.1891668333, EW=E, spd=0.043, cog=, date=2026-11-01, mv=, mvEW=, posMode=A, navStatus=V)>
+<NMEA(GNVTG, cogt=, cogtUnit=T, cogm=, cogmUnit=M, sogn=0.043, sognUnit=N, sogk=0.08, sogkUnit=K, posMode=A)>
+<NMEA(GNGGA, time=17:18:17, lat=53.4150115, NS=N, lon=7.1891668333, EW=E, quality=1, numSV=12, HDOP=0.75, alt=-2.7, altUnit=M, sep=45.5, sepUnit=M, diffAge=, diffStation=)>
+<NMEA(GNGSA, opMode=A, navMode=3, svid_01=12, svid_02=29, svid_03=25, svid_04=11, svid_05=6, svid_06=32, svid_07=13, svid_08=28, svid_09=, svid_10=, svid_11=, svid_12=, PDOP=1.36, HDOP=0.75, VDOP=1.13, systemId=1)>
+<NMEA(GNGSA, opMode=A, navMode=3, svid_01=32, svid_02=3, svid_03=11, svid_04=16, svid_05=12, svid_06=, svid_07=, svid_08=, svid_09=, svid_10=, svid_11=, svid_12=, PDOP=1.36, HDOP=0.75, VDOP=1.13, systemId=3)>
+<NMEA(GNGSA, opMode=A, navMode=3, svid_01=38, svid_02=34, svid_03=25, svid_04=13, svid_05=23, svid_06=19, svid_07=, svid_08=, svid_09=, svid_10=, svid_11=, svid_12=, PDOP=1.36, HDOP=0.75, VDOP=1.13, systemId=4)>
+<NMEA(GNGSA, opMode=A, navMode=3, svid_01=, svid_02=, svid_03=, svid_04=, svid_05=, svid_06=, svid_07=, svid_08=, svid_09=, svid_10=, svid_11=, svid_12=, PDOP=1.36, HDOP=0.75, VDOP=1.13, systemId=5)>
+<NMEA(GNGLL, lat=53.41501

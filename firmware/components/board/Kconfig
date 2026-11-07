@@ -1,0 +1,36 @@
+menu "airgrep board"
+
+    choice AIRGREP_BOARD
+        prompt "Controller module"
+        default AIRGREP_BOARD_PLUS
+
+        config AIRGREP_BOARD_DISPLAY
+            bool "Seeed 1.47 inch touch display (J1/J4/J9)"
+        config AIRGREP_BOARD_PLUS
+            bool "XIAO ESP32-S3 Plus (J2/J3)"
+    endchoice
+
+    config AIRGREP_PIN_UART_RX
+        int
+        default 39 if AIRGREP_BOARD_DISPLAY
+        default 7 if AIRGREP_BOARD_PLUS
+
+    config AIRGREP_PIN_UART_TX
+        int
+        default 40 if AIRGREP_BOARD_DISPLAY
+        default 44 if AIRGREP_BOARD_PLUS
+
+    config AIRGREP_PIN_BUZZER
+        int
+        default 38 if AIRGREP_BOARD_DISPLAY
+        default 8 if AIRGREP_BOARD_PLUS
+
+    config AIRGREP_PIN_SDA
+        int
+        default 5
+
+    config AIRGREP_PIN_SCL
+        int
+        default 6
+
+endmenu

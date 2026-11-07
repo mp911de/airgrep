@@ -1,0 +1,3 @@
+# The Unity menu busy-waits on console input.
+CONFIG_ESP_TASK_WDT_EN=n
+CONFIG_UNITY_ENABLE_BACKTRACE_ON_FAIL=y

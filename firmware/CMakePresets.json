@@ -1,0 +1,71 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "s3",
+      "displayName": "airgrep on XIAO ESP32-S3 Plus",
+      "generator": "Ninja",
+      "binaryDir": "build/plus",
+      "cacheVariables": {
+        "IDF_TARGET": "esp32s3",
+        "SDKCONFIG": "build/plus/sdkconfig",
+        "SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.plus"
+      }
+    },
+    {
+      "name": "display",
+      "displayName": "Seeed display module, app",
+      "generator": "Ninja",
+      "binaryDir": "build/display",
+      "cacheVariables": {
+        "IDF_TARGET": "esp32s3",
+        "SDKCONFIG": "build/display/sdkconfig",
+        "SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display"
+      }
+    },
+    {
+      "name": "s3-test",
+      "displayName": "airgrep on ESP32-S3 Plus, tests",
+      "generator": "Ninja",
+      "binaryDir": "build/plus-test",
+      "cacheVariables": {
+        "IDF_TARGET": "esp32s3",
+        "SDKCONFIG": "build/plus-test/sdkconfig",
+        "SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.plus;sdkconfig.test",
+        "AIRGREP_TEST": "ON",
+        "TEST_COMPONENTS": "adsbee_link buzzer i2c_bus"
+      }
+    },
+    {
+      "name": "display-test",
+      "displayName": "Seeed display module, tests",
+      "generator": "Ninja",
+      "binaryDir": "build/display-test",
+      "cacheVariables": {
+        "IDF_TARGET": "esp32s3",
+        "SDKCONFIG": "build/display-test/sdkconfig",
+        "SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display;sdkconfig.test",
+        "AIRGREP_TEST": "ON",
+        "TEST_COMPONENTS": "adsbee_link buzzer i2c_bus"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "s3",
+      "configurePreset": "s3"
+    },
+    {
+      "name": "display",
+      "configurePreset": "display"
+    },
+    {
+      "name": "s3-test",
+      "configurePreset": "s3-test"
+    },
+    {
+      "name": "display-test",
+      "configurePreset": "display-test"
+    }
+  ]
+}
