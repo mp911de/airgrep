@@ -11,6 +11,7 @@
 #include "i2c_bus.h"
 #include "loop.hpp"
 #include "sdkconfig.h"
+#include "settings/settings.hpp"
 #if CONFIG_AIRGREP_HWTEST
 #include "hwtest.hpp"
 #endif
@@ -43,6 +44,7 @@ static void start_adsbee(Completion complete) {
 // because buzzer and adsbee subscribe to its pins during their init.
 static const Component components[] = {
 	{"Event loop", [](Completion complete) { loop::start(); complete(ESP_OK); }},
+	{"Settings", [](Completion complete) { complete(settings::init()); }},
 	{"I2C", [](Completion complete) { complete(i2c_bus_init()); }},
 	{"ADSbee", start_adsbee},
 	{"Charger", charger::init},

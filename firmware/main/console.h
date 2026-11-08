@@ -23,6 +23,7 @@ esp_err_t console_register_beep(void);
 esp_err_t console_register_adsbee(void);
 esp_err_t console_register_gnss(void);
 esp_err_t console_register_clock(void);
+esp_err_t console_register_settings(void);
 
 #ifdef __cplusplus
 }

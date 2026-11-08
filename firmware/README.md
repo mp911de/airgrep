@@ -133,6 +133,18 @@ and `--alarm` use 4000 Hz unless a frequency follows the option. Double uses a
 Playback stays silent until the first valid mute read. Muting stops a running
 scheme, unmuting does not resume it. A failed expander read retains the mute state.
 
+`gnss` prints the receiver state the ADSBee pushes once per second as a `#GNSS:` frame in
+the
+AIRGREP protocol: fix validity and GGA quality, satellites used, HDOP, position, altitude
+in feet
+and metres, speed in knots and km/h, track, UTC time and epoch, best C/N0, satellite
+counts per
+state, SBAS mode, system, satellites and corrections, antenna and power supervisor state,
+jamming,
+and the M10 module, software, hardware and BBR state. Empty frame fields print as UNKNOWN
+or `-`.
+The frame grammar is documented in the ADSBee fork, docs/adsbee-1090/airgrep-telemetry.md.
+
 `adsbee` shows link state, TX attachment, last update, ping age from the last AT reply,
 and CSBEE traffic/error counters.
 The RX task and a 100 ms liveness poll run regardless of ADSBee presence or power.
@@ -141,6 +153,13 @@ AIRGREP frame arrives in that power cycle. It detaches on power-off, expander er
 a power sample older than 500 ms, or three seconds without valid telemetry.
 `Liveness::rx_timeout_us` sets that RX timeout. Power loss clears readiness, so
 each new power cycle waits for new RX. No AT commands are sent automatically.
+After every TX attach the link sends `AT+PROTOCOL_OUT=COMMS_UART,AIRGREP` twice, 100 ms
+apart.
+The first copy ends whatever the floating line left in the ADSBee's input, the second
+selects
+the AIRGREP output protocol, then `AT+DEVICE_INFO?` fills the device info. Requests are
+refused until
+the init writes are through.
 `adsbee --at AT+DEVICE_INFO?` sends
 one command and collects its multiline reply for 900 ms, up to 2047 bytes. Reply lines
 go to the debug log, the `AT+DEVICE_INFO?` reply is also kept for `adsbee`. Console

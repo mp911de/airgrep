@@ -25,6 +25,10 @@ namespace {
 		char text[32];
 		std::strftime(text, sizeof text, "%Y-%m-%d %H:%M:%S", &utc);
 		std::printf("%-20s %s UTC%s\n", "Time", text, state.set ? "" : ", UNSET");
+		tm local;
+		localtime_r(&tv.tv_sec, &local);
+		std::strftime(text, sizeof text, "%Y-%m-%d %H:%M:%S %Z", &local);
+		std::printf("%-20s %s\n", "Local", text);
 		int64_t now = esp_timer_get_time();
 		if (state.set)
 			std::printf("%-20s GNSS time ping %lld s ago, correction %+lld ms, RTT %lld ms, PPS %lu\n", "Source",

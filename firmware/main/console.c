@@ -99,6 +99,9 @@ esp_err_t console_start(void) {
 		err = console_register_clock();
 	}
 	if (err == ESP_OK) {
+		err = console_register_settings();
+	}
+	if (err == ESP_OK) {
 		err = logs_register();
 	}
 	if (err == ESP_OK) {
