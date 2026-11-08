@@ -60,6 +60,62 @@ CASE(command, "AT commands must be non-empty, fit the buffer and carry no line b
 	TEST_ASSERT_FALSE(adsbee::acceptable_command("AT\r", 16));
 }
 
+CASE(gnss_full, "GNSS frame decodes every field in order") {
+	const char* frame =
+		"#GNSS:1,2,11,50.500000,-8.250000,1234,87,271.5,0.90,070509,1762588800123,2,1,1,47,24,5,4,3,2,10,12,11,13,1,ENABLED,EGNOS,2,-312,45,MAX-M10S,ROM SPG 5.10 (7b202e),00000A00,OK,ABCD";
+	adsbee::Gnss g;
+	TEST_ASSERT_TRUE(adsbee::decode_gnss(frame, std::strlen(frame), g));
+	TEST_ASSERT_TRUE(g.fix);
+	TEST_ASSERT_EQUAL_INT(2, g.quality);
+	TEST_ASSERT_EQUAL_INT(11, g.satellites);
+	TEST_ASSERT_FLOAT_WITHIN(0.000001f, 50.5f, g.latitude);
+	TEST_ASSERT_FLOAT_WITHIN(0.000001f, -8.25f, g.longitude);
+	TEST_ASSERT_EQUAL_INT32(1234, g.altitude_ft);
+	TEST_ASSERT_FLOAT_WITHIN(0.01f, 87, g.speed_kt);
+	TEST_ASSERT_FLOAT_WITHIN(0.01f, 271.5f, g.track_deg);
+	TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.9f, g.hdop);
+	TEST_ASSERT_TRUE(g.utc_known);
+	TEST_ASSERT_EQUAL_UINT(7, g.utc_hour);
+	TEST_ASSERT_EQUAL_UINT(5, g.utc_minute);
+	TEST_ASSERT_EQUAL_UINT(9, g.utc_second);
+	TEST_ASSERT_EQUAL_UINT64(1762588800123ULL, g.epoch_ms);
+	TEST_ASSERT_EQUAL_INT(2, g.antenna);
+	TEST_ASSERT_EQUAL_INT(1, g.antenna_power);
+	TEST_ASSERT_EQUAL_INT(1, g.jamming);
+	TEST_ASSERT_EQUAL_INT(47, g.max_cno);
+	TEST_ASSERT_EQUAL_INT(24, g.seen);
+	TEST_ASSERT_EQUAL_INT(1, g.unhealthy);
+	TEST_ASSERT_EQUAL_STRING("ENABLED", g.sbas_mode);
+	TEST_ASSERT_EQUAL_STRING("EGNOS", g.sbas_system);
+	TEST_ASSERT_EQUAL_INT(2, g.sbas_satellites);
+	TEST_ASSERT_TRUE(g.sbas_corrections);
+	TEST_ASSERT_EQUAL_INT32(-312, g.prc_cm);
+	TEST_ASSERT_EQUAL_INT32(45, g.ic_cm);
+	TEST_ASSERT_EQUAL_STRING("MAX-M10S", g.module);
+	TEST_ASSERT_EQUAL_STRING("ROM SPG 5.10 (7b202e)", g.software);
+	TEST_ASSERT_EQUAL_STRING("00000A00", g.hardware);
+	TEST_ASSERT_TRUE(g.bbr);
+}
+
+CASE(gnss_empty,
+	"GNSS frame with empty fields reports unknowns and rejects wrong shapes") {
+	const char* frame = "#GNSS:0,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,2695";
+	adsbee::Gnss g;
+	TEST_ASSERT_TRUE(adsbee::decode_gnss(frame, std::strlen(frame), g));
+	TEST_ASSERT_FALSE(g.fix);
+	TEST_ASSERT_EQUAL_INT(0, g.quality);
+	TEST_ASSERT_FLOAT_WITHIN(0.001f, -1, g.hdop);
+	TEST_ASSERT_FALSE(g.utc_known);
+	TEST_ASSERT_EQUAL_UINT64(0, g.epoch_ms);
+	TEST_ASSERT_EQUAL_INT(-1, g.antenna);
+	TEST_ASSERT_EQUAL_INT(-1, g.seen);
+	TEST_ASSERT_EQUAL_STRING("", g.sbas_mode);
+	TEST_ASSERT_FALSE(g.sbas_corrections);
+	TEST_ASSERT_FALSE(g.bbr);
+	TEST_ASSERT_FALSE(adsbee::decode_gnss("#GNSS:0,0,2695", 14, g));
+	TEST_ASSERT_FALSE(adsbee::decode_gnss("#M10:1:WARN:00:01/01:5,72B", 26, g));
+}
+
 CASE(power, "ADSBee TX requires fresh successful power on and fails closed") {
 	TEST_ASSERT_FALSE(adsbee::Power{}.permits_tx(1000000));
 	TEST_ASSERT_TRUE((adsbee::Power{true, 1000000, 0}).permits_tx(1500000));
@@ -128,6 +184,8 @@ CASE(power_loss, "Power errors and missed samples require new RX before TX resum
 int main() {
 	UNITY_BEGIN();
 	RUN_TEST(command);
+	RUN_TEST(gnss_full);
+	RUN_TEST(gnss_empty);
 	RUN_TEST(power);
 	RUN_TEST(crc);
 	RUN_TEST(m10_crc);

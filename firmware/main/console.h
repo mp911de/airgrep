@@ -21,6 +21,8 @@ esp_err_t console_register_baro(void);
 esp_err_t console_register_fusb(void);
 esp_err_t console_register_beep(void);
 esp_err_t console_register_adsbee(void);
+esp_err_t console_register_gnss(void);
+esp_err_t console_register_clock(void);
 
 #ifdef __cplusplus
 }

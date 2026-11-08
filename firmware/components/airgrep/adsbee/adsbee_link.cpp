@@ -4,6 +4,7 @@
 #include <new>
 #include <atomic>
 
+#include "adsbee_clock.hpp"
 #include "adsbee_protocol.hpp"
 #include "board.h"
 #include "driver/gpio.h"
@@ -50,9 +51,12 @@ namespace adsbee {
 		decoder_t decoder;
 		QueueHandle_t events;
 		bool started, tx_attached;
+		loop::Handle init_step;
+		unsigned init_sent;
 		Link liveness;
 		loop::Handle periodic;
 		void update_tx();
+
 		struct Request {
 			char command[256]{};
 			uint32_t window_ms = 0;
@@ -69,7 +73,8 @@ namespace adsbee {
 
 		char device_info_text[2048];
 		StaticSemaphore_t device_info_storage;
-		SemaphoreHandle_t device_info_lock = xSemaphoreCreateMutexStatic(&device_info_storage);
+		SemaphoreHandle_t device_info_lock = xSemaphoreCreateMutexStatic(
+			&device_info_storage);
 
 		void record_error(esp_err_t error) {
 			int64_t now = esp_timer_get_time();
@@ -87,7 +92,11 @@ namespace adsbee {
 			};
 			esp_err_t result = gpio_config(&config);
 			tx_attached = false;
-			State::update([](State& state) { state.tx_attached = false; });
+			loop::cancel(init_step);
+			init_step = {};
+			State::update([](State& state) {
+				state.tx_attached = state.initialized = false;
+			});
 			if (pending) {
 				record_error(ESP_ERR_INVALID_STATE);
 				loop::fail(pending->handle, loop::Outcome::error);
@@ -101,7 +110,7 @@ namespace adsbee {
 		void settle(Request* request, const Message* reply) {
 			if (pending == request) pending = nullptr;
 			loop::cancel(request->finish);
-			if (reply && std::strcmp(request->command, "AT+DEVICE_INFO?") == 0) {
+			if (reply && std::strcmp(request->command, ADSBEE_DEVICE_INFO_COMMAND) == 0) {
 				xSemaphoreTake(device_info_lock, portMAX_DELAY);
 				std::memcpy(device_info_text, reply->text, reply->len + 1);
 				xSemaphoreGive(device_info_lock);
@@ -116,7 +125,9 @@ namespace adsbee {
 			if (!request || request->handle.slot != handle.slot ||
 				request->handle.generation != handle.generation)
 				return;
-			if (request->uart_errors != uart_errors.load()) error = ESP_ERR_INVALID_RESPONSE;
+			if (request->uart_errors != uart_errors.load())
+				error =
+					ESP_ERR_INVALID_RESPONSE;
 			else if (!request->reply.length) error = ESP_ERR_TIMEOUT;
 			else {
 				message = static_cast<Message*>(std::malloc(
@@ -145,8 +156,17 @@ namespace adsbee {
 				liveness.poll(esp_timer_get_time());
 				liveness.received(message.received_us);
 				update_tx();
+				Gnss gnss;
+				if (decode_gnss(message.text, message.len, gnss)) {
+					State::update([&](State& state) {
+						state.gnss = gnss;
+						state.gnss_us = message.received_us;
+					});
+					timesync::fix(gnss.fix);
+				}
 			}
-			if (message.kind == DECODER_AT_REPLY) ESP_LOGD(tag, "reply %s", message.text);
+			if (message.kind == DECODER_AT_REPLY)
+				ESP_LOGD(tag, "reply %s", message.text);
 			if (message.kind == DECODER_AT_REPLY && pending &&
 				!pending->reply.append(message.text, message.len)) {
 				record_error(ESP_ERR_INVALID_SIZE);
@@ -181,15 +201,15 @@ namespace adsbee {
 			message->received_us = now;
 			std::memcpy(message->text, text, length + 1);
 			if (!loop::hsubmit({
-								"adsbee rx", [message](loop::Handle, loop::Value&) {
-									receive(*message);
+									"adsbee rx", [message](loop::Handle, loop::Value&) {
+										receive(*message);
+										std::free(message);
+										return loop::Result::done;
+									},
+									1000
+								}, {}, [message](loop::Outcome) {
 									std::free(message);
-									return loop::Result::done;
-								},
-								1000
-							}, {}, [message](loop::Outcome) {
-								std::free(message);
-							})) {
+								})) {
 				std::free(message);
 				record_error(ESP_ERR_NO_MEM);
 			}
@@ -227,36 +247,74 @@ namespace adsbee {
 			}
 		}
 
+		esp_err_t write_line(const char* text) {
+			if (uart_write_bytes(uart, text, std::strlen(text)) < 0 || uart_write_bytes(
+				uart, "\n", 1) < 0)
+				return ESP_FAIL;
+			return ESP_OK;
+		}
+
+		loop::Handle submit_request(const char* command, uint32_t window_ms,
+									loop::SuccessListener success,
+									loop::ErrorListener failure);
+
+		// Device initialization after TX attach: ADSBEE_INIT_REPEATS copies of the init command,
+		// ADSBEE_INIT_REPEAT_MS apart, then one AT+DEVICE_INFO? whose reply fills the device info.
+		// Requests wait until the init writes are through.
+		loop::Result init(loop::Handle, loop::Value&) {
+			init_step = {};
+			if (!tx_attached) return loop::Result::done;
+			esp_err_t result = write_line(ADSBEE_INIT_COMMAND);
+			if (result != ESP_OK) {
+				record_error(result);
+				return loop::Result::done;
+			}
+			if (++init_sent < ADSBEE_INIT_REPEATS) {
+				init_step = loop::schedule(ADSBEE_INIT_REPEAT_MS, {"adsbee init", init});
+				if (!init_step.valid()) record_error(ESP_ERR_NO_MEM);
+				return loop::Result::done;
+			}
+			State::update([](State& state) { state.initialized = true; });
+			submit_request(ADSBEE_DEVICE_INFO_COMMAND, ADSBEE_REPLY_WINDOW_MS, {}, {});
+			timesync::attached();
+			return loop::Result::done;
+		}
+
 		void update_tx() {
 			int64_t now = esp_timer_get_time();
 			liveness.poll(now);
 			bool alive = liveness.permits_tx(now);
 			State::update([&](State& state) { state.known = alive; });
 			if (!started || !alive) {
-				if (tx_attached) detach();
+				if (tx_attached) {
+					detach();
+				}
 				return;
 			}
-			if (!tx_attached) {
-				// Never reattach while a cancelled command is still shifting out.
-				esp_err_t result = uart_wait_tx_done(uart, 0);
-				if (result == ESP_OK)
-					result = uart_set_pin(uart, tx, UART_PIN_NO_CHANGE,
-										UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-				if (result != ESP_OK) {
-					record_error(result);
-					detach();
-					return;
-				}
-				tx_attached = true;
-				State::update([](State& state) { state.tx_attached = true; });
+			if (tx_attached) {
+				return;
 			}
+			// Never reattach while a cancelled command is still shifting out.
+			esp_err_t result = uart_wait_tx_done(uart, 0);
+			if (result == ESP_OK)
+				result = uart_set_pin(uart, tx, UART_PIN_NO_CHANGE,
+									UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+			if (result != ESP_OK) {
+				record_error(result);
+				detach();
+				return;
+			}
+			tx_attached = true;
+			State::update([](State& state) { state.tx_attached = true; });
+			init_sent = 0;
+			if (!loop::hsubmit("adsbee init", init)) record_error(ESP_ERR_NO_MEM);
 		}
 
 		// Runs on the loop: claims the single request slot, opens the response
 		// window and writes the command. Returns pending until the window closes.
 		loop::Result send(Request* request, loop::Handle handle) {
 			update_tx();
-			if (!started || !tx_attached) {
+			if (!started || !tx_attached || !State::copy().initialized) {
 				record_error(ESP_ERR_INVALID_STATE);
 				return loop::Result::error;
 			}
@@ -278,10 +336,9 @@ namespace adsbee {
 				return loop::Result::error;
 			}
 			pending = request;
-			if (uart_write_bytes(uart, request->command, std::strlen(request->command)) <
-				0 ||
-				uart_write_bytes(uart, "\n", 1) < 0) {
-				record_error(ESP_FAIL);
+			esp_err_t written = write_line(request->command);
+			if (written != ESP_OK) {
+				record_error(written);
 				return loop::Result::error;
 			}
 			return loop::Result::pending;
@@ -356,6 +413,7 @@ namespace adsbee {
 			result = uart_set_pin(uart, UART_PIN_NO_CHANGE, BOARD_PIN_UART_RX,
 								UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 		}
+		if (result == ESP_OK) result = timesync::start();
 		if (result == ESP_OK) {
 			periodic = loop::schedule_periodic(ADSBEE_POLL_MS, {
 													"adsbee liveness",

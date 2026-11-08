@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "adsbee_protocol.hpp"
+#include <cstdlib>
 #include <cstring>
 
 namespace adsbee {
@@ -63,6 +64,112 @@ namespace adsbee {
 		}
 		uint16_t crc = crc16(text, comma);
 		return expected == static_cast<uint16_t>((crc >> 8) | (crc << 8));
+	}
+
+	namespace {
+		constexpr char kGnssPrefix[] = "#GNSS:";
+		constexpr size_t kGnssFields = 34;
+
+		struct Field {
+			const char* text;
+			size_t length;
+			bool empty() const { return length == 0; }
+		};
+
+		// Splits the payload between the prefix and the last comma into exactly kGnssFields fields.
+		bool split(const char* text, size_t length, Field fields[kGnssFields]) {
+			size_t start = sizeof kGnssPrefix - 1, comma = length;
+			while (comma && text[comma - 1] != ',') --comma;
+			if (!comma || comma < start) return false;
+			size_t end = comma - 1, count = 0, begin = start;
+			for (size_t i = start; i <= end; i++) {
+				if (i == end || text[i] == ',') {
+					if (count == kGnssFields) return false;
+					fields[count++] = {text + begin, i - begin};
+					begin = i + 1;
+				}
+			}
+			return count == kGnssFields;
+		}
+
+		long integer(const Field& field, long fallback) {
+			if (field.empty()) return fallback;
+			char buffer[24];
+			size_t n = field.length < sizeof buffer - 1
+							? field.length
+							: sizeof buffer - 1;
+			std::memcpy(buffer, field.text, n);
+			buffer[n] = 0;
+			return std::strtol(buffer, nullptr, 10);
+		}
+
+		float decimal(const Field& field, float fallback) {
+			if (field.empty()) return fallback;
+			char buffer[24];
+			size_t n = field.length < sizeof buffer - 1
+							? field.length
+							: sizeof buffer - 1;
+			std::memcpy(buffer, field.text, n);
+			buffer[n] = 0;
+			return std::strtof(buffer, nullptr);
+		}
+
+		void copy(const Field& field, char* out, size_t capacity) {
+			size_t n = field.length < capacity - 1 ? field.length : capacity - 1;
+			std::memcpy(out, field.text, n);
+			out[n] = 0;
+		}
+	}
+
+	bool decode_gnss(const char* text, size_t length, Gnss& out) {
+		if (length < sizeof kGnssPrefix - 1 || std::memcmp(
+			text, kGnssPrefix, sizeof kGnssPrefix - 1) != 0)
+			return false;
+		Field f[kGnssFields];
+		if (!split(text, length, f)) return false;
+		out = Gnss{};
+		out.fix = integer(f[0], 0) == 1;
+		out.quality = int8_t(integer(f[1], -1));
+		out.satellites = int8_t(integer(f[2], -1));
+		if (out.fix) {
+			out.latitude = decimal(f[3], 0);
+			out.longitude = decimal(f[4], 0);
+			out.altitude_ft = int32_t(integer(f[5], 0));
+			out.speed_kt = decimal(f[6], 0);
+			out.track_deg = decimal(f[7], 0);
+		}
+		out.hdop = decimal(f[8], -1);
+		if (f[9].length == 6) {
+			out.utc_known = true;
+			out.utc_hour = uint8_t((f[9].text[0] - '0') * 10 + (f[9].text[1] - '0'));
+			out.utc_minute = uint8_t((f[9].text[2] - '0') * 10 + (f[9].text[3] - '0'));
+			out.utc_second = uint8_t((f[9].text[4] - '0') * 10 + (f[9].text[5] - '0'));
+		}
+		if (!f[10].empty()) {
+			char buffer[24];
+			copy(f[10], buffer, sizeof buffer);
+			out.epoch_ms = std::strtoull(buffer, nullptr, 10);
+		}
+		out.antenna = int8_t(integer(f[11], -1));
+		out.antenna_power = int8_t(integer(f[12], -1));
+		out.jamming = int8_t(integer(f[13], -1));
+		int16_t* counts[] = {
+			&out.max_cno, &out.seen, &out.no_signal, &out.searching, &out.acquired,
+			&out.unusable, &out.locked, &out.ephemeris, &out.used, &out.healthy,
+			&out.unhealthy
+		};
+		for (size_t i = 0; i < 11; i++) *counts[i] = int16_t(integer(f[14 + i], -1));
+		copy(f[25], out.sbas_mode, sizeof out.sbas_mode);
+		copy(f[26], out.sbas_system, sizeof out.sbas_system);
+		out.sbas_satellites = int16_t(integer(f[27], -1));
+		out.sbas_corrections = !f[28].empty() && !f[29].empty();
+		out.prc_cm = int32_t(integer(f[28], 0));
+		out.ic_cm = int32_t(integer(f[29], 0));
+		copy(f[30], out.module, sizeof out.module);
+		copy(f[31], out.software, sizeof out.software);
+		copy(f[32], out.hardware, sizeof out.hardware);
+		out.bbr = f[33].length == 2 && std::memcmp(f[33].text, "OK", 2) == 0;
+		return true;
 	}
 
 	bool Power::permits_tx(int64_t now_us) const {

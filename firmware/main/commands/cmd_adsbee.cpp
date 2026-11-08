@@ -22,10 +22,13 @@ namespace {
 		const auto state = adsbee::State::copy();
 		int64_t now = esp_timer_get_time();
 		if (state.updated_us) std::printf("%-20s %lld ms ago\n", "Updated", (long long)((now - state.updated_us) / 1000));
-		std::printf("%-20s %s\n%-20s %s\n", "Status", state.known ? "OK" : "UNKNOWN",
-			"TX", state.tx_attached ? "ATTACHED" : "DETACHED");
-		if (state.reply_us) std::printf("%-20s %lld ms\n", "Ping age", (long long)((now - state.reply_us) / 1000));
-		else std::printf("%-20s UNKNOWN\n", "Ping age");
+		std::printf("%-20s %s\n%-20s %s\n%-20s %s\n", "Status",
+					state.known ? "OK" : "UNKNOWN",
+					"TX", state.tx_attached ? "ATTACHED" : "DETACHED",
+					"Init", state.initialized ? "DONE" : "PENDING");
+		if (state.reply_us) std::printf("%-20s %lld ms\n", "AT age",
+										(long long)((now - state.reply_us) / 1000));
+		else std::printf("%-20s UNKNOWN\n", "AT age");
 		if (state.last_error != ESP_OK)
 			std::printf("%-20s %s, %lld ms ago\n", "Last error", esp_err_to_name(state.last_error),
 				(long long)((now - state.error_us) / 1000));
@@ -33,6 +36,12 @@ namespace {
 			"CSBEE lines", (unsigned long)state.telemetry_lines, "CRC failures", (unsigned long)state.crc_failures,
 			"Parity errors", (unsigned long)state.parity_errors, "Framing errors", (unsigned long)state.framing_errors,
 			"Overruns", (unsigned long)state.overruns);
+		if (state.gnss_us)
+			std::printf("%-20s %s, %d used, %lld s ago\n", "GNSS",
+						state.gnss.fix ? "VALID" : "NONE",
+						state.gnss.satellites,
+						(long long)((now - state.gnss_us) / 1000000));
+		else std::printf("%-20s UNKNOWN\n", "GNSS");
 		static char device_info[2048];
 		if (adsbee::device_info(device_info, sizeof device_info)) std::printf("%-20s\n%s", "Device info", device_info);
 		else std::printf("%-20s UNKNOWN\n", "Device info");
