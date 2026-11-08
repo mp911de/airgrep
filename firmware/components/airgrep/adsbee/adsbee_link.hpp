@@ -58,7 +58,10 @@ struct State {
 	using Handler = void (*)(const Message&, void* ctx);
 
 	bool subscribe(Predicate predicate, Handler handler, void* ctx);
-	// Subscribes to the expander power pin. Call before expander initialization.
+	// Installs the UART driver with RX attached, 115200 8E1. The UART boot row.
+	esp_err_t uart_init();
+	// Starts the link on the installed UART and subscribes to the expander power pin. Call
+	// after uart_init and before expander initialization.
 	esp_err_t start();
 	loop::Handle poll_handle();
 

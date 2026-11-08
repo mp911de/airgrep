@@ -398,25 +398,29 @@ namespace adsbee {
 
 	loop::Handle poll_handle() { return periodic; }
 
+	esp_err_t uart_init() {
+		esp_err_t result = uart_driver_install(uart, ADSBEE_UART_RX_BUFFER, ADSBEE_UART_TX_BUFFER,
+											ADSBEE_UART_QUEUE, &events, 0);
+		if (result == ESP_OK) result = uart_param_config(uart, &uart_config);
+		if (result == ESP_OK)
+			result = uart_set_pin(uart, UART_PIN_NO_CHANGE, BOARD_PIN_UART_RX,
+								UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+		if (result != ESP_OK) {
+			uart_driver_delete(uart);
+			events = nullptr;
+		}
+		return result;
+	}
+
 	esp_err_t start() {
+		if (!events) return ESP_ERR_INVALID_STATE;
 		if (!expander::subscribe(power_sample)) return ESP_ERR_NO_MEM;
 		esp_err_t result = detach();
 		if (result != ESP_OK) {
 			return result;
 		}
 		adsbee_decoder_init(&decoder, on_message, nullptr);
-
-		result = uart_driver_install(uart, ADSBEE_UART_RX_BUFFER, ADSBEE_UART_TX_BUFFER,
-									ADSBEE_UART_QUEUE, &events, 0);
-		if (result != ESP_OK) {
-			return result;
-		}
-		result = uart_param_config(uart, &uart_config);
-		if (result == ESP_OK) {
-			result = uart_set_pin(uart, UART_PIN_NO_CHANGE, BOARD_PIN_UART_RX,
-								UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-		}
-		if (result == ESP_OK) result = timesync::start();
+		result = timesync::start();
 		if (result == ESP_OK) {
 			periodic = loop::schedule_periodic(ADSBEE_POLL_MS, {
 													"adsbee liveness",
@@ -436,7 +440,6 @@ namespace adsbee {
 		if (result != ESP_OK) {
 			loop::cancel(periodic);
 			periodic = {};
-			uart_driver_delete(uart);
 			record_error(result);
 			return result;
 		}

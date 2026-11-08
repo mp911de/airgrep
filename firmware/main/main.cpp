@@ -5,6 +5,7 @@
 #include "charger/bq25798.hpp"
 #include "console.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "i2c_expander/tca9534.hpp"
 #include "usb/fusb303.hpp"
 #include <cstdio>
@@ -50,6 +51,7 @@ static const Component components[] = {
 	{"Settings", [](Completion complete) { complete(settings::init()); }},
 	{"Time zones", [](Completion complete) { complete(tz::init()); }},
 	{"I2C", [](Completion complete) { complete(i2c_bus_init()); }},
+	{"UART", [](Completion complete) { complete(adsbee::uart_init()); }},
 	{"ADSbee", start_adsbee},
 	{
 		"Wi-Fi",
@@ -66,18 +68,31 @@ static const Component components[] = {
 // Same label column as the banner rows above it.
 #define BOOT_LABEL_WIDTH 16
 
-static void report(const Component& component, esp_err_t result) {
-	if (result == ESP_OK) std::printf("%-*s OK\n", BOOT_LABEL_WIDTH, component.name);
-	else if (result == ESP_ERR_NOT_FOUND) std::printf("%-*s OFF\n", BOOT_LABEL_WIDTH, component.name);
-	else std::printf("%-*s FAIL %s\n", BOOT_LABEL_WIDTH, component.name, esp_err_to_name(result));
+// A row whose init blocked the boot for longer than this shows its time. Rows that complete
+// later from the loop did not block and show none.
+#define BOOT_SLOW_MS 50
+
+static bool in_init;
+
+static void report(const Component& component, esp_err_t result, int64_t started_us) {
+	if (result == ESP_OK) std::printf("%-*s OK", BOOT_LABEL_WIDTH, component.name);
+	else if (result == ESP_ERR_NOT_FOUND) std::printf("%-*s OFF", BOOT_LABEL_WIDTH, component.name);
+	else std::printf("%-*s FAIL %s", BOOT_LABEL_WIDTH, component.name, esp_err_to_name(result));
+	int64_t blocked_us = esp_timer_get_time() - started_us;
+	if (in_init && blocked_us >= BOOT_SLOW_MS * 1000)
+		std::printf(" (%lld ms)", (long long)(blocked_us / 1000));
+	std::puts("");
 }
 
 extern "C" void app_main(void) {
 	console_banner();
 	for (const Component& component : components) {
-		component.init([&component](esp_err_t outcome) {
-			report(component, outcome);
+		int64_t started_us = esp_timer_get_time();
+		in_init = true;
+		component.init([&component, started_us](esp_err_t outcome) {
+			report(component, outcome, started_us);
 		});
+		in_init = false;
 	}
 #if CONFIG_AIRGREP_HWTEST
 	hwtest::run();

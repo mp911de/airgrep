@@ -12,5 +12,7 @@ else ()
             INCLUDE_DIRS "." "log" "commands" "system"
             PRIV_REQUIRES airgrep loop hwtest console esp_app_format esp_timer efuse spi_flash esp_psram)
 endif ()
-# Wraps an esp_private symbol of the log component. Verified on ESP-IDF v6.1, re-check on upgrades.
-target_link_libraries(${COMPONENT_LIB} INTERFACE "-Wl,--wrap=esp_log_level_get_timeout")
+# Wraps an esp_private symbol of the log component and the console's terminal probe.
+# Verified on ESP-IDF v6.1, re-check on upgrades.
+target_link_libraries(${COMPONENT_LIB} INTERFACE "-Wl,--wrap=esp_log_level_get_timeout"
+        "-Wl,--wrap=linenoiseProbe")

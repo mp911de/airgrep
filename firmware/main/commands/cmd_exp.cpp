@@ -18,8 +18,8 @@ namespace {
 		}
 		const auto state = expander::State::copy();
 		if (!command_status::header(state.status, state.updated_us, state.last_error, state.error_us)) return 0;
-		static const char* names[] = {"mute", "wifi", "gnss reset", "gnss safeboot",
-			"display reset 1", "display reset 2", "backlight", "power"};
+		static const char* names[] = {"Buzzer Mute", "WLAN", "M10S Reset", "M10S Safeboot",
+			"Display Reset 1", "Display Reset 2", "Backlight", "Power"};
 		static const char* signals[] = {"BUZZ_ENABLE", "WIFI_ENABLE", "RESET_N", "SAFEBOOT_N",
 			"RST_1", "RST_2", "LCD_LED", "PWR_ON"};
 		for (unsigned pin = 0; pin < 8; pin++) {

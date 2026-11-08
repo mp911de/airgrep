@@ -10,8 +10,8 @@
 namespace fusb {
 #define FUSB_I2C_ADDR 0x21
 #define FUSB_POLL_PERIOD_MS 250
-// tEN: first I2C access no earlier than 100 ms after VDD valid and EN_N low.
-#define FUSB_ENABLE_DELAY_MS 100
+// tEN: no I2C access within 100 ms after a soft reset. At power-up it ran out before boot.
+#define FUSB_RESET_DELAY_MS 100
 
 	const i2c_device_config_t i2c_config = {
 		.dev_addr_length = I2C_ADDR_BIT_LEN_7,
