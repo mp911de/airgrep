@@ -3,4 +3,4 @@ CONFIG_ESP_TASK_WDT_EN=n
 CONFIG_UNITY_ENABLE_BACKTRACE_ON_FAIL=y
 # Loop tests measure timeouts against a 10 ms tick.
 CONFIG_AIRGREP_LOOP_TICK_MS=10
-CONFIG_AIRGREP_TEST_TAGS="[adsbee] [loop] [logs] [system] [settings] [expander] [charger] [battery] [barometer] [fusb] [buzzer] [wifi]"
+CONFIG_AIRGREP_TEST_TAGS="[adsbee] [loop] [logs] [system] [settings] [expander] [charger] [battery] [barometer] [fusb] [buzzer] [wifi] [traffic]"

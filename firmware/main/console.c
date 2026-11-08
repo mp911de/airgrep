@@ -3,7 +3,7 @@
 #include "esp_console.h"
 #include <stdio.h>
 
-#define CONSOLE_MAX_COMMANDS 16
+#define CONSOLE_MAX_COMMANDS 24
 
 // Copies of the entries. The string literals they point to live in flash.
 static struct {
@@ -111,6 +111,9 @@ esp_err_t console_start(void) {
 	}
 	if (err == ESP_OK) {
 		err = console_register_wifi();
+	}
+	if (err == ESP_OK) {
+		err = console_register_traffic();
 	}
 	if (err == ESP_OK) {
 		err = logs_register();

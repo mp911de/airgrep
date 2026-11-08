@@ -25,6 +25,7 @@ esp_err_t console_register_gnss(void);
 esp_err_t console_register_clock(void);
 esp_err_t console_register_settings(void);
 esp_err_t console_register_wifi(void);
+esp_err_t console_register_traffic(void);
 
 #ifdef __cplusplus
 }

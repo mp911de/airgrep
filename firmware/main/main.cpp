@@ -13,6 +13,7 @@
 #include "loop.hpp"
 #include "sdkconfig.h"
 #include "settings/settings.hpp"
+#include "traffic/traffic.hpp"
 #include "tz/tz.hpp"
 #include "wifi/wifi_ap.hpp"
 #include "device_info.h"
@@ -33,15 +34,18 @@ static bool is_csbee(const adsbee::Message& m) {
 	return m.kind == DECODER_CSBEE;
 }
 
-static void log_csbee(const adsbee::Message& m, void*) {
+static void feed_traffic(const adsbee::Message& m, void*) {
 	ESP_LOGV(TAG, "csbee %s", m.text);
+	traffic::ingest(m.text, m.len, m.received_us);
 }
 
+// The traffic table has no boot row of its own, it is the ADSbee's consumer.
 static void start_adsbee(Completion complete) {
-	if (!adsbee::subscribe(is_csbee, log_csbee, nullptr)) {
-		ESP_LOGW(TAG, "csbee subscriber not registered");
-	}
-	complete(adsbee::start());
+	esp_err_t result = traffic::start();
+	if (result == ESP_OK && !adsbee::subscribe(is_csbee, feed_traffic, nullptr)) result =
+		ESP_ERR_NO_MEM;
+	if (result == ESP_OK) result = adsbee::start();
+	complete(result);
 }
 
 // Boot order is the table order. The loop and the I/O ports come first, the expander last
