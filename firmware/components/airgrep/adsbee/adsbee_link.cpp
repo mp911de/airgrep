@@ -6,6 +6,8 @@
 
 #include "adsbee_clock.hpp"
 #include "adsbee_protocol.hpp"
+#include "tz/tz.hpp"
+#include "wifi/wifi_ap.hpp"
 #include "board.h"
 #include "driver/gpio.h"
 #include "driver/uart.h"
@@ -163,6 +165,7 @@ namespace adsbee {
 						state.gnss_us = message.received_us;
 					});
 					timesync::fix(gnss.fix);
+					tz::position(gnss.fix, gnss.latitude, gnss.longitude);
 				}
 			}
 			if (message.kind == DECODER_AT_REPLY)
@@ -276,7 +279,7 @@ namespace adsbee {
 			}
 			State::update([](State& state) { state.initialized = true; });
 			submit_request(ADSBEE_DEVICE_INFO_COMMAND, ADSBEE_REPLY_WINDOW_MS, {}, {});
-			timesync::attached();
+			wifi::attached();
 			return loop::Result::done;
 		}
 

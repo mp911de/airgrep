@@ -33,14 +33,12 @@ namespace {
 		portEXIT_CRITICAL(&mutex);
 	}
 
+	// Mute gates each tone, the scheme keeps stepping silently so unmuting resumes it.
 	esp_err_t step() {
 		const auto& tone = current->steps[index];
-		if (!buzzer_gate(buzzer_state().mute, tone.on)) {
-			buzzer_off();
-			return ESP_OK;
-		}
 		esp_err_t result = ESP_OK;
-		if (tone.on) result = buzzer_pwm_tone(buzzer_step_frequency(&tone, frequency));
+		if (tone.on && buzzer_gate(buzzer_state().mute, true))
+			result = buzzer_pwm_tone(buzzer_step_frequency(&tone, frequency));
 		else buzzer_pwm_off();
 		if (result != ESP_OK) {
 			buzzer_off();
@@ -79,9 +77,6 @@ namespace {
 			return ESP_ERR_INVALID_STATE;
 		}
 		buzzer_off();
-		if (!buzzer_gate(buzzer_state().mute, true)) {
-			return ESP_OK;
-		}
 		current = scheme;
 		frequency = hz;
 		index = 0;
@@ -113,7 +108,8 @@ void buzzer_set_mute(bool mute) {
 	portENTER_CRITICAL(&mutex);
 	state.mute = mute ? BUZZER_MUTE_ON : BUZZER_MUTE_OFF;
 	portEXIT_CRITICAL(&mutex);
-	if (mute) buzzer_off();
+	// Cut a sounding tone at once, the scheme itself continues muted.
+	if (mute && ready) buzzer_pwm_off();
 }
 
 esp_err_t buzzer_play(const char* name, uint32_t hz) {

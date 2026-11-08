@@ -1,6 +1,7 @@
 #include "console.h"
 #include "commands/cmd_logs.h"
 #include "esp_console.h"
+#include "linenoise/linenoise.h"
 #include <stdio.h>
 
 #define CONSOLE_MAX_COMMANDS 16
@@ -60,6 +61,10 @@ esp_err_t console_start(void) {
 	esp_err_t err =
 		esp_console_new_repl_usb_serial_jtag(&dev_config, &repl_config, &repl);
 	if (err == ESP_OK) {
+		// The IDF probes the terminal for 500 ms at boot. idf.py monitor answers too late and
+		// the console lands in dumb mode without history or completion. Every terminal on this
+		// port handles escape sequences, so the probe result is overridden.
+		linenoiseSetDumbMode(0);
 		err = register_help();
 	}
 	if (err == ESP_OK) {
@@ -100,6 +105,9 @@ esp_err_t console_start(void) {
 	}
 	if (err == ESP_OK) {
 		err = console_register_settings();
+	}
+	if (err == ESP_OK) {
+		err = console_register_wifi();
 	}
 	if (err == ESP_OK) {
 		err = logs_register();

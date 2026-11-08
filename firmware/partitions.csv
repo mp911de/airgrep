@@ -1,0 +1,9 @@
+# 16 MB flash. Fixed offsets: NVS stays where it is forever, the time zone table sits at the
+# top of flash, and the space between the app and the table is free for graphics and OTA.
+# Name,     Type, SubType, Offset,   Size,     Flags
+nvs,        data, nvs,     0x9000,   0x6000,
+phy_init,   data, phy,     0xF000,   0x1000,
+factory,    app,  factory, 0x10000,  0x800000,
+# 0x810000 to 0xE00000 unused, about 6 MB.
+# TZL time zone table built by tzdb/ (make tzdata), flashed with tools/flash-tzdata.sh.
+tzdata,     data, 0x40,    0xE00000, 0x200000,

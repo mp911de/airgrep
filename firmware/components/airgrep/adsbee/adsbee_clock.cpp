@@ -5,6 +5,7 @@
 #include "adsbee_link.hpp"
 #include "adsbee_time.hpp"
 #include "esp_log.h"
+#include "esp_random.h"
 #include "esp_timer.h"
 
 namespace adsbee::timesync {
@@ -26,6 +27,7 @@ namespace adsbee::timesync {
 		TimeSample samples[ADSBEE_TIME_PING_COUNT];
 		unsigned sent;
 		bool running, had_fix;
+		loop::Handle scheduled;
 
 		void error(esp_err_t result) {
 			int64_t now = esp_timer_get_time();
@@ -126,27 +128,36 @@ namespace adsbee::timesync {
 		}
 
 		loop::Result periodic(loop::Handle, loop::Value&) {
-			const auto link = adsbee::State::copy();
-			if (link.tx_attached && link.initialized) sync();
+			if (had_fix) sync();
+			return loop::Result::done;
+		}
+
+		// The burst itself. The delay in sync() keeps it clear of the init sequence and spreads
+		// the load across devices.
+		loop::Result begin(loop::Handle, loop::Value&) {
+			scheduled = {};
+			sent = 0;
+			if (!loop::hsubmit("timesync burst", ping)) {
+				running = false;
+				State::update([](State& state) { state.running = false; });
+				error(ESP_ERR_NO_MEM);
+			}
 			return loop::Result::done;
 		}
 	}
 
 	esp_err_t sync() {
 		if (running) return ESP_ERR_INVALID_STATE;
-		if (!adsbee::State::copy().tx_attached) return ESP_ERR_INVALID_STATE;
+		const auto link = adsbee::State::copy();
+		if (!link.tx_attached || !link.initialized) return ESP_ERR_INVALID_STATE;
+		uint32_t delay = ADSBEE_TIME_SYNC_DELAY_MS + esp_random() %
+			ADSBEE_TIME_SYNC_JITTER_MS;
+		scheduled = loop::schedule(delay, {"timesync delay", begin});
+		if (!scheduled.valid()) return ESP_ERR_NO_MEM;
 		running = true;
-		sent = 0;
 		State::update([](State& state) { state.running = true; });
-		if (!loop::hsubmit("timesync burst", ping)) {
-			running = false;
-			State::update([](State& state) { state.running = false; });
-			return ESP_ERR_NO_MEM;
-		}
 		return ESP_OK;
 	}
-
-	void attached() { sync(); }
 
 	void fix(bool valid) {
 		if (valid && !had_fix) sync();

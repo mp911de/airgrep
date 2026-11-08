@@ -6,6 +6,7 @@
 #include "freertos/FreeRTOS.h"
 #include "nvs.h"
 #include "nvs_flash.h"
+#include "tz/tz.hpp"
 
 namespace settings {
 	namespace {
@@ -22,10 +23,8 @@ namespace settings {
 			portEXIT_CRITICAL(&mutex);
 		}
 
-		void apply(const Settings& settings) {
-			setenv("TZ", settings.tz_rule, 1);
-			tzset();
-		}
+		// The time zone policy lives in tz, which reads the settings back.
+		void apply(const Settings&) { tz::apply(); }
 
 		esp_err_t save(const Settings& settings) {
 			if (!nvs_ready) return ESP_ERR_INVALID_STATE;

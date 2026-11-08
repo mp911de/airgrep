@@ -12,6 +12,9 @@
 #include "loop.hpp"
 #include "sdkconfig.h"
 #include "settings/settings.hpp"
+#include "tz/tz.hpp"
+#include "wifi/wifi_ap.hpp"
+#include "device_info.h"
 #if CONFIG_AIRGREP_HWTEST
 #include "hwtest.hpp"
 #endif
@@ -41,12 +44,17 @@ static void start_adsbee(Completion complete) {
 }
 
 // Boot order is the table order. The loop and the I/O ports come first, the expander last
-// because buzzer and adsbee subscribe to its pins during their init.
+// because buzzer, adsbee and wifi subscribe to its pins during their init.
 static const Component components[] = {
 	{"Event loop", [](Completion complete) { loop::start(); complete(ESP_OK); }},
 	{"Settings", [](Completion complete) { complete(settings::init()); }},
+	{"Time zones", [](Completion complete) { complete(tz::init()); }},
 	{"I2C", [](Completion complete) { complete(i2c_bus_init()); }},
 	{"ADSbee", start_adsbee},
+	{
+		"Wi-Fi",
+		[](Completion complete) { complete(wifi::start(device_info()->device_id)); }
+	},
 	{"Charger", charger::init},
 	{"Battery", battery::init},
 	{"Baro", barometer::init},

@@ -11,7 +11,9 @@ namespace adsbee {
 #define ADSBEE_TIME_PING_SPACING_MS 200
 #define ADSBEE_TIME_PING_WINDOW_MS 150
 #define ADSBEE_TIME_SYNC_PERIOD_MS 300000
-// Corrections above this step the clock, smaller ones slew so time never runs backwards.
+#define ADSBEE_TIME_SYNC_DELAY_MS 3000
+#define ADSBEE_TIME_SYNC_JITTER_MS 5000
+	// Corrections above this step the clock, smaller ones slew so time never runs backwards.
 #define ADSBEE_TIME_STEP_THRESHOLD_US 1000000
 
 	// Reply to AT+TIME_PING=<echo>: TIME_PING=<echo>,<epoch_ms>,<pps_count>.
