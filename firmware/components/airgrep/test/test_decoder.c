@@ -1,5 +1,5 @@
 #include <string.h>
-#include "decoder.h"
+#include "adsbee/adsbee_decoder.h"
 #include "unity.h"
 
 typedef struct {
@@ -25,8 +25,8 @@ TEST_CASE (
 {
     capture_t c = {0};
     decoder_t d;
-    decoder_init(&d, capture, &c);
-    decoder_feed(&d, "OK\n", 3);
+    adsbee_decoder_init(&d, capture, &c);
+    adsbee_decoder_feed(&d, "OK\n", 3);
     TEST_ASSERT_EQUAL(1, c.count);
     TEST_ASSERT_EQUAL_STRING("OK", c.last);
     TEST_ASSERT_EQUAL(DECODER_AT_REPLY, c.last_kind);
@@ -42,8 +42,8 @@ TEST_CASE (
 {
     capture_t c = {0};
     decoder_t d;
-    decoder_init(&d, capture, &c);
-    decoder_feed(&d, "OK\r\n", 4);
+    adsbee_decoder_init(&d, capture, &c);
+    adsbee_decoder_feed(&d, "OK\r\n", 4);
     TEST_ASSERT_EQUAL(1, c.count);
     TEST_ASSERT_EQUAL_STRING("OK", c.last);
 }
@@ -58,8 +58,8 @@ TEST_CASE (
 {
     capture_t c = {0};
     decoder_t d;
-    decoder_init(&d, capture, &c);
-    decoder_feed(&d, "#A:ABC\n", 7);
+    adsbee_decoder_init(&d, capture, &c);
+    adsbee_decoder_feed(&d, "#A:ABC\n", 7);
     TEST_ASSERT_EQUAL(DECODER_CSBEE, c.last_kind);
     TEST_ASSERT_EQUAL_STRING("#A:ABC", c.last);
 }
@@ -74,9 +74,9 @@ TEST_CASE (
 {
     capture_t c = {0};
     decoder_t d;
-    decoder_init(&d, capture, &c);
-    decoder_feed(&d, "AT+", 3);
-    decoder_feed(&d, "X\n\n\r\n", 5);
+    adsbee_decoder_init(&d, capture, &c);
+    adsbee_decoder_feed(&d, "AT+", 3);
+    adsbee_decoder_feed(&d, "X\n\n\r\n", 5);
     TEST_ASSERT_EQUAL(1, c.count);
     TEST_ASSERT_EQUAL_STRING("AT+X", c.last);
 }
@@ -91,10 +91,10 @@ TEST_CASE (
 {
     capture_t c = {0};
     decoder_t d;
-    decoder_init(&d, capture, &c);
-    decoder_feed(&d, "garb", 4);
-    decoder_error(&d);
-    decoder_feed(&d, "age\nOK\n", 7);
+    adsbee_decoder_init(&d, capture, &c);
+    adsbee_decoder_feed(&d, "garb", 4);
+    adsbee_decoder_error(&d);
+    adsbee_decoder_feed(&d, "age\nOK\n", 7);
     TEST_ASSERT_EQUAL(1, c.count);
     TEST_ASSERT_EQUAL_STRING("OK", c.last);
 }
@@ -109,11 +109,11 @@ TEST_CASE (
 {
     capture_t c = {0};
     decoder_t d;
-    decoder_init(&d, capture, &c);
-    char big[DECODER_MAX + 10];
+    adsbee_decoder_init(&d, capture, &c);
+    char big[ADSBEE_DECODER_SIZE + 10];
     memset(big, 'x', sizeof big);
-    decoder_feed(&d, big, sizeof big);
-    decoder_feed(&d, "\nOK\n", 4);
+    adsbee_decoder_feed(&d, big, sizeof big);
+    adsbee_decoder_feed(&d, "\nOK\n", 4);
     TEST_ASSERT_EQUAL(1, c.count);
     TEST_ASSERT_EQUAL_STRING("OK", c.last);
 }

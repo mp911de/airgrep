@@ -1,6 +1,5 @@
 #include "i2c_bus.h"
 #include "board.h"
-#include "sdkconfig.h"
 
 static i2c_master_bus_handle_t s_bus;
 
@@ -25,4 +24,10 @@ i2c_master_bus_handle_t i2c_bus_handle(void) {
 
 bool i2c_bus_present(uint8_t address) {
 	return i2c_master_probe(s_bus, address, CONFIG_AIRGREP_I2C_TIMEOUT_MS) == ESP_OK;
+}
+
+esp_err_t i2c_bus_add_if_present(const i2c_device_config_t* config, i2c_master_dev_handle_t* device) {
+	if (!s_bus) return ESP_ERR_INVALID_STATE;
+	if (!i2c_bus_present(config->device_address)) return ESP_ERR_NOT_FOUND;
+	return i2c_master_bus_add_device(s_bus, config, device);
 }

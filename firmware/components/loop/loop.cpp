@@ -377,12 +377,21 @@ namespace loop {
 				(int)SCHEDULED);
 	}
 
+	bool hsubmit(const Event& event, SuccessListener on_success,
+				ErrorListener on_error) {
+		return enqueue(event, 0, 0, on_success, on_error).valid();
+	}
+
+	bool hsubmit(const char* name, Action action) {
+		return enqueue(Event{name, action}, 0, 0, {}, {}).valid();
+	}
+
 	Handle submit(const Event& event, SuccessListener on_success,
 				ErrorListener on_error) {
 		return enqueue(event, 0, 0, on_success, on_error);
 	}
 
-	Handle post(const char* name, Action action) {
+	Handle submit(const char* name, Action action) {
 		return enqueue(Event{name, action}, 0, 0, {}, {});
 	}
 

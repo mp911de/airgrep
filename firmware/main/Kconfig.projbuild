@@ -2,7 +2,7 @@ menu "airgrep"
 
 	config AIRGREP_TEST_TAGS
 		string "Unity tags to run at boot, space separated"
-		default "[adsbee] [loop]"
+		default "[adsbee] [loop] [logs] [expander] [charger] [battery] [barometer] [fusb] [buzzer]"
 		help
 			Tests with these tags run after boot in the test build, then the
 			Unity menu opens. Empty runs nothing and opens the menu directly.

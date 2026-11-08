@@ -82,9 +82,13 @@ namespace loop {
 
 	// All return an invalid handle when the queue, the slots or the scheduled
 	// array are full. The submitter then frees its own payload.
+	bool hsubmit(const Event& event, SuccessListener on_success = {},
+				ErrorListener on_error = {});
+	bool hsubmit(const char* name, Action action);
+
 	Handle submit(const Event& event, SuccessListener on_success = {},
 				ErrorListener on_error = {});
-	Handle post(const char* name, Action action);
+	Handle submit(const char* name, Action action);
 	// The timeout of a scheduled event counts from its due time.
 	Handle schedule(uint32_t delay_ms, const Event& event,
 					SuccessListener on_success = {},

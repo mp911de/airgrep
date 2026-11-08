@@ -12,7 +12,7 @@ extern "C" {
 // discarding through the next LF. Lines starting with '#' are CSBEE reports,
 // everything else is an AT reply.
 
-#define DECODER_MAX 512
+#define ADSBEE_DECODER_SIZE 512
 
 typedef enum {
 	DECODER_AT_REPLY,
@@ -22,16 +22,16 @@ typedef enum {
 typedef void (*decoder_cb)(const char* text, size_t len, decoder_kind_t kind, void* ctx);
 
 typedef struct {
-	char buf[DECODER_MAX];
+	char buf[ADSBEE_DECODER_SIZE];
 	size_t len;
 	bool discarding;
 	decoder_cb on_message;
 	void* ctx;
 } decoder_t;
 
-void decoder_init(decoder_t* d, decoder_cb on_message, void* ctx);
-void decoder_feed(decoder_t* d, const char* data, size_t len);
-void decoder_error(decoder_t* d);
+void adsbee_decoder_init(decoder_t* d, decoder_cb on_message, void* ctx);
+void adsbee_decoder_feed(decoder_t* d, const char* data, size_t len);
+void adsbee_decoder_error(decoder_t* d);
 
 #ifdef __cplusplus
 }

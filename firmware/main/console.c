@@ -1,80 +1,106 @@
 #include "console.h"
-#include <stdio.h>
-#include <string.h>
-#include "argtable3/argtable3.h"
+#include "commands/cmd_logs.h"
 #include "esp_console.h"
-#include "esp_log.h"
-#include "sdkconfig.h"
+#include <stdio.h>
 
+#define CONSOLE_MAX_COMMANDS 16
+
+// Copies of the entries. The string literals they point to live in flash.
 static struct {
-	struct arg_str* tag;
-	struct arg_str* level;
-	struct arg_end* end;
-} s_log_level_args;
+	const char *command, *hint, *help;
+} commands[CONSOLE_MAX_COMMANDS];
 
-static const char* s_level_names[] = {
-	"none", "error", "warn", "info", "debug", "verbose"
-};
+static size_t command_count;
 
-// Same command as ESP-IDF's console example, cmd_system_common.c.
-static int log_level(int argc, char** argv) {
-	if (arg_parse(argc, argv, (void**)&s_log_level_args) != 0) {
-		arg_print_errors(stderr, s_log_level_args.end, argv[0]);
+esp_err_t console_register(const esp_console_cmd_t* command) {
+	if (command_count == CONSOLE_MAX_COMMANDS) {
+		return ESP_ERR_NO_MEM;
+	}
+	esp_err_t err = esp_console_cmd_register(command);
+	if (err == ESP_OK) {
+		commands[command_count].command = command->command;
+		commands[command_count].hint = command->hint ? command->hint : "";
+		commands[command_count].help = command->help;
+		command_count++;
+	}
+	return err;
+}
+
+// One line per command: name and synopsis padded to a column, then one sentence.
+static int help(int argc, char** argv) {
+	(void)argv;
+	if (argc != 1) {
+		printf("usage: help\n");
 		return 1;
 	}
-	const char* tag = s_log_level_args.tag->sval[0];
-	const char* name = s_log_level_args.level->sval[0];
-	esp_log_level_t level;
-	for (level = ESP_LOG_NONE; level <= ESP_LOG_VERBOSE; level++) {
-		if (strcmp(name, s_level_names[level]) == 0) {
-			break;
-		}
+	for (size_t i = 0; i < command_count; i++) {
+		printf("%s%s%s\n  %s\n", commands[i].command, *commands[i].hint ? " " : "",
+				commands[i].hint,
+				commands[i].help);
+		if (i + 1 < command_count) printf("\n");
 	}
-	if (level > ESP_LOG_VERBOSE) {
-		printf("Invalid log level '%s', choose from none|error|warn|info|debug|verbose\n",
-				name);
-		return 1;
-	}
-	if (level > CONFIG_LOG_MAXIMUM_LEVEL) {
-		printf("Log level %s exceeds CONFIG_LOG_MAXIMUM_LEVEL %s\n", s_level_names[level],
-				s_level_names[CONFIG_LOG_MAXIMUM_LEVEL]);
-		return 1;
-	}
-	esp_log_level_set(tag, level);
 	return 0;
 }
 
-static esp_err_t register_log_level(void) {
-	s_log_level_args.tag = arg_str1(NULL, NULL, "<tag|*>", "Log tag, or * for all tags");
-	s_log_level_args.level =
-		arg_str1(NULL, NULL, "<none|error|warn|info|debug|verbose>", "Level");
-	s_log_level_args.end = arg_end(2);
-	const esp_console_cmd_t cmd = {
-		.command = "log_level",
-		.help = "Set the log level for all tags or one tag",
-		.hint = NULL,
-		.func = &log_level,
-		.argtable = &s_log_level_args,
+static esp_err_t register_help(void) {
+	static const esp_console_cmd_t command = {
+		.command = "help", .hint = "", .help = "List the commands with their synopsis.",
+		.func = help,
 	};
-	return esp_console_cmd_register(&cmd);
+	return console_register(&command);
 }
 
 esp_err_t console_start(void) {
 	esp_console_repl_config_t repl_config = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
 	repl_config.prompt = "airgrep>";
+	repl_config.task_stack_size = 8192;
 	esp_console_dev_usb_serial_jtag_config_t dev_config =
 		ESP_CONSOLE_DEV_USB_SERIAL_JTAG_CONFIG_DEFAULT();
 	esp_console_repl_t* repl = NULL;
 	esp_err_t err =
 		esp_console_new_repl_usb_serial_jtag(&dev_config, &repl_config, &repl);
 	if (err == ESP_OK) {
-		err = esp_console_register_help_command();
+		err = register_help();
 	}
 	if (err == ESP_OK) {
-		err = register_log_level();
+		err = console_register_uptime();
+	}
+	if (err == ESP_OK) {
+		err = console_register_tasks();
+	}
+	if (err == ESP_OK) {
+		err = console_register_reboot();
+	}
+	if (err == ESP_OK) {
+		err = console_register_exp();
+	}
+	if (err == ESP_OK) {
+		err = console_register_charger();
+	}
+	if (err == ESP_OK) {
+		err = console_register_battery_level();
+	}
+	if (err == ESP_OK) {
+		err = console_register_baro();
+	}
+	if (err == ESP_OK) {
+		err = console_register_fusb();
+	}
+	if (err == ESP_OK) {
+		err = console_register_beep();
+	}
+	if (err == ESP_OK) {
+		err = console_register_adsbee();
+	}
+	if (err == ESP_OK) {
+		err = logs_register();
+	}
+	if (err == ESP_OK) {
+		err = logs_start();
 	}
 	if (err == ESP_OK) {
 		err = esp_console_start_repl(repl);
+		if (err != ESP_OK) logs_stop();
 	}
 	return err;
 }
