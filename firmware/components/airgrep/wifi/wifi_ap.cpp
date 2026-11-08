@@ -24,8 +24,13 @@ namespace wifi {
 		constexpr const char* tag = "wifi";
 		constexpr uint8_t kSwitchMask = 1 << 1; // P1, WIFI_ENABLE
 		Config wanted;
-		bool switch_known;
+		bool switch_known, dirty;
 		loop::Handle attach_step;
+
+		void mark_dirty(bool value) {
+			dirty = value;
+			State::update([&](State& state) { state.pending_apply = value; });
+		}
 
 		void error(esp_err_t result) {
 			int64_t now = esp_timer_get_time();
@@ -55,11 +60,10 @@ namespace wifi {
 				state.reported_us = message.received_us;
 				if (mismatch) state.mismatches++;
 			});
-			if (mismatch) {
+			if (mismatch)
 				ESP_LOGW(tag, "ADSBee runs Wi-Fi %s as %s, resending", reported.enabled ? "on" : "off",
 						reported.ssid);
-				apply();
-			}
+			if (mismatch || dirty) apply();
 		}
 
 		void switch_sample(const expander::State& state, uint8_t changed, void*) {
@@ -76,13 +80,16 @@ namespace wifi {
 		}
 
 		loop::Result periodic(loop::Handle, loop::Value&) {
-			if (link_ready()) poll();
+			if (!link_ready()) return loop::Result::done;
+			if (dirty) apply();
+			else poll();
 			return loop::Result::done;
 		}
 	}
 
 	esp_err_t apply() {
 		if (!switch_known || !link_ready()) {
+			if (switch_known) mark_dirty(true);
 			error(ESP_ERR_INVALID_STATE);
 			return ESP_ERR_INVALID_STATE;
 		}
@@ -92,9 +99,11 @@ namespace wifi {
 			return ESP_ERR_INVALID_SIZE;
 		}
 		if (!adsbee::request(command, {}, {}).valid()) {
+			mark_dirty(true);
 			error(ESP_ERR_INVALID_STATE);
 			return ESP_ERR_INVALID_STATE;
 		}
+		mark_dirty(false);
 		int64_t now = esp_timer_get_time();
 		State::update([&](State& state) {
 			state.sent_us = now;

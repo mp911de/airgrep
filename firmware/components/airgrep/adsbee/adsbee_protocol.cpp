@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "adsbee_protocol.hpp"
+#include "csbee_fields.hpp"
 #include <cstdlib>
 #include <cstring>
 
@@ -69,56 +70,11 @@ namespace adsbee {
 	namespace {
 		constexpr char kGnssPrefix[] = "#GNSS:";
 		constexpr size_t kGnssFields = 34;
-
-		struct Field {
-			const char* text;
-			size_t length;
-			bool empty() const { return length == 0; }
-		};
-
-		// Splits the payload between the prefix and the last comma into exactly kGnssFields fields.
-		bool split(const char* text, size_t length, Field fields[kGnssFields]) {
-			size_t start = sizeof kGnssPrefix - 1, comma = length;
-			while (comma && text[comma - 1] != ',') --comma;
-			if (!comma || comma < start) return false;
-			size_t end = comma - 1, count = 0, begin = start;
-			for (size_t i = start; i <= end; i++) {
-				if (i == end || text[i] == ',') {
-					if (count == kGnssFields) return false;
-					fields[count++] = {text + begin, i - begin};
-					begin = i + 1;
-				}
-			}
-			return count == kGnssFields;
-		}
-
-		long integer(const Field& field, long fallback) {
-			if (field.empty()) return fallback;
-			char buffer[24];
-			size_t n = field.length < sizeof buffer - 1
-							? field.length
-							: sizeof buffer - 1;
-			std::memcpy(buffer, field.text, n);
-			buffer[n] = 0;
-			return std::strtol(buffer, nullptr, 10);
-		}
-
-		float decimal(const Field& field, float fallback) {
-			if (field.empty()) return fallback;
-			char buffer[24];
-			size_t n = field.length < sizeof buffer - 1
-							? field.length
-							: sizeof buffer - 1;
-			std::memcpy(buffer, field.text, n);
-			buffer[n] = 0;
-			return std::strtof(buffer, nullptr);
-		}
-
-		void copy(const Field& field, char* out, size_t capacity) {
-			size_t n = field.length < capacity - 1 ? field.length : capacity - 1;
-			std::memcpy(out, field.text, n);
-			out[n] = 0;
-		}
+		using csbee::Field;
+		using csbee::split;
+		using csbee::integer;
+		using csbee::decimal;
+		using csbee::copy;
 	}
 
 	bool decode_gnss(const char* text, size_t length, Gnss& out) {
@@ -126,7 +82,7 @@ namespace adsbee {
 			text, kGnssPrefix, sizeof kGnssPrefix - 1) != 0)
 			return false;
 		Field f[kGnssFields];
-		if (!split(text, length, f)) return false;
+		if (!split(text, length, sizeof kGnssPrefix - 1, kGnssFields, f)) return false;
 		out = Gnss{};
 		out.fix = integer(f[0], 0) == 1;
 		out.quality = int8_t(integer(f[1], -1));

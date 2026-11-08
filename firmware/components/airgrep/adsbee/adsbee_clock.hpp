@@ -5,10 +5,6 @@
 #include "freertos/FreeRTOS.h"
 
 // Sets the system clock from the ADSBee's PPS-disciplined time with AT+TIME_PING bursts.
-// A burst is due on every no-fix to fix transition and every ADSBEE_TIME_SYNC_PERIOD_MS while
-// the fix holds. It starts ADSBEE_TIME_SYNC_DELAY_MS plus a random share of
-// ADSBEE_TIME_SYNC_JITTER_MS later, clear of the init sequence's requests. The clock is only
-// touched when the receiver had PPS.
 namespace adsbee::timesync {
 	struct State {
 		bool set = false; // the system clock was set from the ADSBee at least once
@@ -38,7 +34,5 @@ namespace adsbee::timesync {
 	// Called by the link: subscribes to TIME_PING replies and starts the periodic check.
 	esp_err_t start();
 	// Schedules a ping burst. ESP_ERR_INVALID_STATE while one is due or the link is down.
-	esp_err_t sync();
-	// Link hook on every GNSS frame, runs on the loop.
-	void fix(bool valid);
+	esp_err_t schedule_nss_time_sync();
 }

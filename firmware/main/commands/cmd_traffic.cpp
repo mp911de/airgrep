@@ -21,17 +21,15 @@ namespace {
 		traffic::Source source;
 		char callsign[TRAFFIC_CALLSIGN_SIZE];
 		int16_t squawk;
-		bool alt_valid, speed_valid, direction_valid, relative_valid;
+		bool alt_valid, speed_valid, direction_valid, position_valid, relative_valid;
 		int32_t alt_ft;
 		int16_t speed_kt;
-		float track_deg, distance_nm, bearing_deg;
+		float track_deg, latitude, longitude, distance_nm, bearing_deg;
 	};
 
 	struct Collect {
 		Row* rows;
 		size_t count, capacity;
-		bool own_valid;
-		float own_latitude, own_longitude;
 	};
 
 	void collect(const traffic::Target& t, void* context) {
@@ -48,9 +46,9 @@ namespace {
 		r.speed_kt = t.speed_kt;
 		r.direction_valid = t.direction_valid;
 		r.track_deg = t.track_deg;
-		r.relative_valid = c->own_valid &&
-			traffic::relative(t, c->own_latitude, c->own_longitude, r.distance_nm,
-							r.bearing_deg);
+		r.position_valid = t.position_valid;
+		r.latitude = t.latitude;
+		r.longitude = t.longitude;
 	}
 
 	// Nearest first, then the targets without a distance by address.
@@ -72,11 +70,15 @@ namespace {
 			std::puts("FAIL no memory");
 			return 1;
 		}
-		const auto link = adsbee::State::copy();
-		c.own_valid = link.gnss_us && link.gnss.fix;
-		c.own_latitude = link.gnss.latitude;
-		c.own_longitude = link.gnss.longitude;
 		traffic::each(collect, &c);
+		const auto link = adsbee::State::copy();
+		const bool own_valid = link.gnss_us && link.gnss.fix;
+		for (size_t i = 0; i < c.count; i++) {
+			Row& r = c.rows[i];
+			r.relative_valid = own_valid && r.position_valid &&
+				traffic::relative(r.latitude, r.longitude, link.gnss.latitude,
+								link.gnss.longitude, r.distance_nm, r.bearing_deg);
+		}
 		std::qsort(c.rows, c.count, sizeof(Row), compare);
 		std::printf("%-8s %-9s %-17s %-5s %7s %5s %4s %6s %4s\n", "ADDRESS", "CALLSIGN",
 					"SOURCE", "SQWK",
@@ -109,9 +111,9 @@ namespace {
 				unsigned(c.count), counters.stats.aircraft,
 				counters.stats.demods_per_second,
 				counters.stats.es_fps, (long long)((now - counters.stats_us) / 1000000),
-				c.own_valid ? "" : ", no own position");
+				own_valid ? "" : ", no own position");
 		else std::printf("%u targets, no statistics yet%s\n", unsigned(c.count),
-						c.own_valid ? "" : ", no own position");
+						own_valid ? "" : ", no own position");
 		return 0;
 	}
 
@@ -218,8 +220,8 @@ namespace {
 			std::puts("usage: traffic [address], six hex digits");
 			return 1;
 		}
-		traffic::Target found[2];
-		size_t n = traffic::find(uint32_t(address), found, 2);
+		traffic::Target found[traffic::source_count];
+		size_t n = traffic::find(uint32_t(address), found, traffic::source_count);
 		if (!n) {
 			std::printf("%06lx not in the table\n", address);
 			return 1;

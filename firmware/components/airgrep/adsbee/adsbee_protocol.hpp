@@ -17,12 +17,10 @@ namespace adsbee {
 		bool append(const char* line, size_t size);
 	};
 
-	// One #GNSS frame, the ADSBee's receiver state pushed once per second. Counts and codes
-	// are -1 when the frame left the field empty. Fix fields are only valid with fix set.
 	struct Gnss {
 		bool fix = false;
 		int8_t quality = -1; // GGA: 0 none, 1 GPS, 2 DGPS/SBAS
-		int8_t satellites = -1; // used in the fix
+		int8_t satellites = -1; // used in the GPS fix
 		float latitude = 0, longitude = 0; // degrees, north and east positive
 		int32_t altitude_ft = 0;
 		float speed_kt = 0, track_deg = 0;

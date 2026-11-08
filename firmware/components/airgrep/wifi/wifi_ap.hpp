@@ -14,7 +14,7 @@ namespace wifi {
 #define WIFI_AP_PASSWORD "airgrep-wifi"
 #define WIFI_AP_CHANNEL 11
 #define WIFI_AP_POLL_PERIOD_MS 60000
-// After TX attach the time sync burst owns the link for about a second.
+// After TX attach the time schedule_nss_time_sync burst owns the link for about a second.
 #define WIFI_AP_ATTACH_DELAY_MS 2000
 // Query after a set, once its reply window has closed.
 #define WIFI_AP_VERIFY_DELAY_MS 1000
@@ -24,6 +24,7 @@ namespace wifi {
 		bool switch_known = false; // the slider was read at least once
 		bool wanted = false; // slider position, Wi-Fi on
 		bool reported_known = false;
+		bool pending_apply = false; // a slider position the link could not take yet
 		Config reported; // last +WIFI_AP= reply
 		int64_t sent_us = 0, reported_us = 0;
 		uint32_t sent = 0, mismatches = 0;

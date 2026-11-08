@@ -1,4 +1,5 @@
 #include "traffic_protocol.hpp"
+#include "adsbee/csbee_fields.hpp"
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -30,52 +31,12 @@ namespace traffic {
 		constexpr unsigned kQualifierAdsbOther = 5, kQualifierAdsr = 6;
 		constexpr unsigned kQualifierTisbTrackFile = 7, kQualifierTisbOther = 8;
 
-		struct Field {
-			const char* text;
-			size_t length;
-			bool empty() const { return length == 0; }
-		};
-
-		// Splits the payload between the prefix and the CRC's comma into exactly count fields.
-		bool split(const char* text, size_t length, size_t prefix, size_t count,
-					Field* fields) {
-			size_t comma = length;
-			while (comma && text[comma - 1] != ',') --comma;
-			if (!comma || comma < prefix) return false;
-			size_t end = comma - 1, found = 0, begin = prefix;
-			for (size_t i = prefix; i <= end; i++) {
-				if (i == end || text[i] == ',') {
-					if (found == count) return false;
-					fields[found++] = {text + begin, i - begin};
-					begin = i + 1;
-				}
-			}
-			return found == count;
-		}
-
-		void copy(const Field& field, char* out, size_t capacity) {
-			size_t n = field.length < capacity - 1 ? field.length : capacity - 1;
-			std::memcpy(out, field.text, n);
-			out[n] = 0;
-		}
-
-		long integer(const Field& field, int base = 10) {
-			char buffer[24];
-			copy(field, buffer, sizeof buffer);
-			return std::strtol(buffer, nullptr, base);
-		}
-
-		unsigned long unsigned_integer(const Field& field, int base = 10) {
-			char buffer[24];
-			copy(field, buffer, sizeof buffer);
-			return std::strtoul(buffer, nullptr, base);
-		}
-
-		float decimal(const Field& field) {
-			char buffer[24];
-			copy(field, buffer, sizeof buffer);
-			return std::strtof(buffer, nullptr);
-		}
+		using csbee::Field;
+		using csbee::split;
+		using csbee::copy;
+		using csbee::integer;
+		using csbee::hex;
+		using csbee::decimal;
 
 		bool starts(const char* text, size_t length, const char* prefix) {
 			size_t n = std::strlen(prefix);
@@ -101,7 +62,7 @@ namespace traffic {
 			!split(text, length, sizeof TRAFFIC_AIRCRAFT_PREFIX - 1, kAircraftFields, f))
 			return false;
 		out = Target{};
-		unsigned long icao = unsigned_integer(f[0], 16);
+		unsigned long icao = hex(f[0]);
 		out.address = icao & 0xFFFFFF;
 		switch (icao >> 24) {
 		case 0: out.source = Source::adsb;
@@ -116,7 +77,7 @@ namespace traffic {
 		default: out.source = Source::other;
 			break;
 		}
-		out.flags = uint32_t(unsigned_integer(f[1], 16));
+		out.flags = uint32_t(hex(f[1]));
 		if (!(f[2].length == 1 && f[2].text[0] == '?')) {
 			copy(f[2], out.callsign, sizeof out.callsign);
 			for (size_t n = std::strlen(out.callsign); n && out.callsign[n - 1] == ' '; n
@@ -143,8 +104,8 @@ namespace traffic {
 		out.baro_rate_fpm = int16_t(integer(f[11]));
 		out.gnss_rate_valid = out.flags & kFlagGnssRate;
 		out.gnss_rate_fpm = int16_t(integer(f[12]));
-		out.nicnac = uint16_t(unsigned_integer(f[13], 16));
-		out.acdims = uint32_t(unsigned_integer(f[14], 16));
+		out.nicnac = uint16_t(hex(f[13]));
+		out.acdims = uint32_t(hex(f[14]));
 		out.adsb_version = uint8_t(integer(f[15]));
 		out.rssi_dbm = int8_t(integer(f[16]));
 		out.signal_quality_db = uint8_t(integer(f[17]));
@@ -160,10 +121,9 @@ namespace traffic {
 			return false;
 		out = Target{};
 		out.source = Source::flarm;
-		out.version = uint8_t(integer(f[0]));
-		out.address = uint32_t(unsigned_integer(f[1], 16)) & 0xFFFFFF;
-		out.id_type = FlarmId(integer(f[2]) & 3);
-		unsigned flags = unsigned(unsigned_integer(f[3], 16));
+		out.address = uint32_t(hex(f[1])) & 0xFFFFFF;
+		out.id_type = FlarmAddressType(integer(f[2]) & 1);
+		unsigned flags = unsigned(hex(f[3]));
 		out.stealth = flags & 1;
 		out.no_track = flags & 2;
 		out.aircraft_type = uint8_t(integer(f[4]));
@@ -189,8 +149,8 @@ namespace traffic {
 		out.sil = uint8_t(integer(f[17]));
 		out.sda = uint8_t(integer(f[18]));
 		out.nic = uint8_t(integer(f[19]));
-		out.fix_secs = uint32_t(unsigned_integer(f[20]));
-		out.age_ms = uint32_t(unsigned_integer(f[21]));
+		out.fix_secs = uint32_t(integer(f[20]));
+		out.age_ms = uint32_t(integer(f[21]));
 		out.version = uint8_t(integer(f[22]));
 		out.version_max = uint8_t(integer(f[23]));
 		out.rssi_dbm = int8_t(integer(f[24]));
@@ -213,16 +173,23 @@ namespace traffic {
 		out.raw_uat_fps = uint16_t(integer(f[6]));
 		out.uat_fps = uint16_t(integer(f[7]));
 		out.aircraft = uint16_t(integer(f[8]));
-		out.tscal = uint32_t(unsigned_integer(f[9]));
-		out.uptime_s = uint32_t(unsigned_integer(f[10]));
+		out.tscal = uint32_t(integer(f[9]));
+		out.uptime_s = uint32_t(integer(f[10]));
 		return true;
 	}
 
 	bool relative(const Target& target, float ref_latitude, float ref_longitude,
 				float& distance_nm, float& bearing_deg) {
-		if (!target.position_valid) return false;
-		float lat1 = ref_latitude * kDegToRad, lat2 = target.latitude * kDegToRad;
-		float dlat = lat2 - lat1, dlon = (target.longitude - ref_longitude) * kDegToRad;
+		return target.position_valid && relative(target.latitude, target.longitude,
+												ref_latitude, ref_longitude, distance_nm,
+												bearing_deg);
+	}
+
+	bool relative(float latitude, float longitude, float ref_latitude,
+				float ref_longitude,
+				float& distance_nm, float& bearing_deg) {
+		float lat1 = ref_latitude * kDegToRad, lat2 = latitude * kDegToRad;
+		float dlat = lat2 - lat1, dlon = (longitude - ref_longitude) * kDegToRad;
 		float a = std::sin(dlat / 2) * std::sin(dlat / 2) +
 			std::cos(lat1) * std::cos(lat2) * std::sin(dlon / 2) * std::sin(dlon / 2);
 		distance_nm = 2 * std::atan2(std::sqrt(a), std::sqrt(1 - a)) * kEarthRadiusNm;
@@ -270,13 +237,8 @@ namespace traffic {
 					: "?";
 	}
 
-	const char* flarm_id_name(FlarmId id) {
-		switch (id) {
-		case FlarmId::random: return "RANDOM";
-		case FlarmId::icao: return "ICAO";
-		case FlarmId::flarm: return "FLARM";
-		default: return "FLARM EXT";
-		}
+	const char* flarm_id_name(FlarmAddressType id) {
+		return id == FlarmAddressType::icao ? "ICAO" : "SYNTHETIC";
 	}
 
 	const char* flarm_movement_name(uint8_t movement) {

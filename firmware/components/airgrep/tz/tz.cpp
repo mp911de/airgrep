@@ -6,6 +6,7 @@
 #include "esp_log.h"
 #include "esp_partition.h"
 #include "esp_timer.h"
+#include "adsbee/adsbee_link.hpp"
 #include "settings/settings.hpp"
 extern "C" {
 #include "tz_lookup.h"
@@ -60,7 +61,7 @@ namespace tz {
 		set_rule(rule && *rule ? rule : kUtc);
 	}
 
-	void position(bool fix, float latitude, float longitude) {
+	static void position(bool fix, float latitude, float longitude) {
 		if (!ready) return;
 		int64_t now = esp_timer_get_time();
 		if (!fix || !std::isfinite(latitude) || !std::isfinite(longitude)) {
@@ -91,6 +92,10 @@ namespace tz {
 		}
 	}
 
+	static void on_gnss(const adsbee::Gnss& gnss, int64_t, void*) {
+		position(gnss.fix, gnss.latitude, gnss.longitude);
+	}
+
 	esp_err_t init() {
 		const esp_partition_t* partition = esp_partition_find_first(
 			ESP_PARTITION_TYPE_DATA, esp_partition_subtype_t(TZ_PARTITION_SUBTYPE), TZ_PARTITION_LABEL);
@@ -107,6 +112,7 @@ namespace tz {
 			if (length > partition->size || !tz_init(&table, data, length)) result = ESP_ERR_NOT_FOUND;
 			else {
 				ready = true;
+				if (!adsbee::subscribe_gnss(on_gnss, nullptr)) result = ESP_ERR_NO_MEM;
 				uint16_t zones = uint16_t(little32(bytes + 20));
 				uint16_t year = uint16_t(tz_rule_year(&table));
 				const char* source = tz_source(&table);

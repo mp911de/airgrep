@@ -76,16 +76,21 @@ namespace settings {
 			if (result == ESP_OK) {
 				status.loaded = true;
 				status.stored_version = settings.version;
+				publish(settings, status);
+				apply(settings);
 			}
-			publish(settings, status);
-			apply(settings);
+			else publish(settings::copy(), status);
 			return result;
 		}
+
+		// An unreadable or newer blob stays in NVS until reset or format replace it.
+		bool blob_kept;
 	}
 
 	esp_err_t init() {
 		Settings settings = defaults();
 		Status status;
+		blob_kept = false;
 		esp_err_t result = nvs_flash_init();
 		nvs_ready = result == ESP_OK;
 		if (nvs_ready) {
@@ -98,13 +103,11 @@ namespace settings {
 				ESP_LOGW(tag, "stored settings version %u unusable: %s", status.stored_version,
 						esp_err_to_name(result));
 				settings = defaults();
+				blob_kept = true;
 			}
 		}
 		status.last_error = result;
-		if (result == ESP_OK && !status.loaded) {
-			status.loaded = true;
-			status.stored_version = settings.version;
-		}
+		if (result == ESP_OK && !status.loaded) status.stored_version = settings.version;
 		publish(settings, status);
 		apply(settings);
 		return result;
@@ -125,12 +128,16 @@ namespace settings {
 	}
 
 	esp_err_t set(const char* name, const char* value) {
+		if (blob_kept) return ESP_ERR_INVALID_STATE;
 		Settings settings = copy();
 		if (!assign(settings, name, value)) return ESP_ERR_INVALID_ARG;
 		return commit(settings);
 	}
 
-	esp_err_t reset() { return commit(defaults()); }
+	esp_err_t reset() {
+		blob_kept = false;
+		return commit(defaults());
+	}
 
 	esp_err_t format() {
 		esp_err_t result = nvs_flash_deinit();

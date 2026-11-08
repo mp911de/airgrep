@@ -22,8 +22,9 @@ namespace traffic {
 		flarm,
 	};
 
-	// FLARM address types, the id_type field.
-	enum class FlarmId : uint8_t { random, icao, flarm, flarm_ext };
+	constexpr size_t source_count = 6;
+
+	enum class FlarmAddressType : uint8_t { icao, synthetic };
 
 	struct Target {
 		uint32_t address = 0; // 24 bit, qualifier stripped
@@ -54,7 +55,7 @@ namespace traffic {
 		uint16_t squitter_fps = 0, es_fps = 0;
 
 		// FLARM only
-		FlarmId id_type = FlarmId::random;
+		FlarmAddressType id_type = FlarmAddressType::icao;
 		bool stealth = false, no_track = false;
 		uint8_t aircraft_type = 0; // FLARM aircraft type code
 		uint8_t movement = 0; // 0 unknown, 1 ground, 2 flying, 3 circling
@@ -93,13 +94,16 @@ namespace traffic {
 	// reference to the target. False when the target has no position.
 	bool relative(const Target& target, float ref_latitude, float ref_longitude,
 				float& distance_nm, float& bearing_deg);
+	bool relative(float latitude, float longitude, float ref_latitude,
+				float ref_longitude,
+				float& distance_nm, float& bearing_deg);
 
 	// Names for the console, upper case.
 	const char* source_name(Source source);
 	// ADS-B emitter category as the web shows it, A3 style, or the raw code.
 	void category_name(uint8_t category, char out[4]);
 	const char* flarm_aircraft_name(uint8_t aircraft_type);
-	const char* flarm_id_name(FlarmId id);
+	const char* flarm_id_name(FlarmAddressType id);
 	const char* flarm_movement_name(uint8_t movement);
 	const char* flarm_urgency_name(uint8_t urgency);
 	// Comma separated flag words from the Mode S FLAGS word, empty when none is set.

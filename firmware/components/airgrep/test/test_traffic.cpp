@@ -121,7 +121,7 @@ CASE(flarm, "FLARM line decodes and normalizes to feet and knots") {
 	TEST_ASSERT_TRUE(decode(kFlarm, t));
 	TEST_ASSERT_EQUAL(int(traffic::Source::flarm), int(t.source));
 	TEST_ASSERT_EQUAL_HEX32(0xF09000, t.address);
-	TEST_ASSERT_EQUAL(int(traffic::FlarmId::icao), int(t.id_type));
+	TEST_ASSERT_EQUAL(int(traffic::FlarmAddressType::synthetic), int(t.id_type));
 	TEST_ASSERT_FALSE(t.stealth);
 	TEST_ASSERT_FALSE(t.no_track);
 	TEST_ASSERT_EQUAL_UINT8(1, t.aircraft_type);
@@ -151,7 +151,7 @@ CASE(flarm, "FLARM line decodes and normalizes to feet and knots") {
 	TEST_ASSERT_FALSE(t.position_valid);
 	TEST_ASSERT_TRUE(t.stealth);
 	TEST_ASSERT_TRUE(t.no_track);
-	TEST_ASSERT_EQUAL(int(traffic::FlarmId::random), int(t.id_type));
+	TEST_ASSERT_EQUAL(int(traffic::FlarmAddressType::icao), int(t.id_type));
 	TEST_ASSERT_EQUAL_STRING("MAYDAY", traffic::flarm_urgency_name(t.urgency));
 }
 

@@ -18,7 +18,8 @@ namespace {
 			arg_print_errors(stderr, args.end, argv[0]);
 			return 1;
 		}
-		if (args.sync->count) return command_status::ack(adsbee::timesync::sync());
+		if (args.sync->count) return command_status::ack(
+			adsbee::timesync::schedule_nss_time_sync());
 		const auto state = adsbee::timesync::State::copy();
 		int64_t now = esp_timer_get_time();
 		timeval tv;
@@ -46,7 +47,7 @@ namespace {
 						zone.source, zone.zones,
 						zone.rule_year, (unsigned long)zone.table_bytes);
 		else std::printf("%-20s OFF\n", "Table");
-		// The RTC keeps the time across resets, so without a sync this boot the time is still
+		// The RTC keeps the time across resets, so without a schedule_nss_time_sync this boot the time is still
 		// the last one it was set to.
 		if (state.set) {
 			time_t synced_at = tv.tv_sec - time_t((now - state.synced_us) / 1000000);
@@ -68,11 +69,12 @@ namespace {
 }
 
 extern "C" esp_err_t console_register_clock(void) {
-	args.sync = arg_lit0(nullptr, "sync", "Start a time ping burst now");
+	args.sync = arg_lit0(nullptr, "schedule_nss_time_sync",
+						"Start a time ping burst now");
 	args.end = arg_end(2);
 	if (arg_nullcheck(reinterpret_cast<void**>(&args))) return ESP_ERR_NO_MEM;
 	const esp_console_cmd_t entry = {
-		.command = "clock", .help = "Show the system clock and its GNSS sync, or sync now.",
+		.command = "clock", .help = "Show the system clock and its GNSS time sync.",
 		.hint = "[--sync]", .func = command, .argtable = &args,
 		.func_w_context = nullptr, .context = nullptr,
 	};

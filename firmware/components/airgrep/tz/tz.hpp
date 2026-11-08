@@ -25,7 +25,7 @@ namespace tz {
 		uint16_t zones = 0;
 		uint16_t rule_year = 0; // the year the POSIX rules in the table describe
 		char source[TZ_SOURCE_SIZE]{}; // <tzdb release>/<dataset> the table was built from
-		bool detected = false; // the last position with a fix hit a zone
+		bool detected = false; // the last position with a gps fix hit a zone
 		char zone[TZ_ZONE_NAME_SIZE]{}; // IANA name of the detected zone
 		char rule[TZ_RULE_SIZE]{}; // the POSIX rule currently applied, whatever its source
 		int64_t detected_us = 0; // monotonic time of the last lookup that produced a zone
@@ -45,13 +45,6 @@ namespace tz {
 		static portMUX_TYPE mutex_;
 	};
 
-	// Maps and validates the table. ESP_ERR_NOT_FOUND without a partition or a valid table,
-	// the firmware then runs on tz_rule or UTC. Applies the time zone once at the end.
 	esp_err_t init();
-	// Position from the ADSBee, called on every GNSS frame. Without a fix nothing changes,
-	// with one the table is consulted once per TZ_LOOKUP_PERIOD_MS, or at once when the fix
-	// was lost or the stream paused for TZ_STALE_MS.
-	void position(bool fix, float latitude, float longitude);
-	// Recomputes and applies TZ from settings and the detection state. Settings call it after a change.
 	void apply();
 }

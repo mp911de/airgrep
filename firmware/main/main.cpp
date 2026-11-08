@@ -1,3 +1,4 @@
+#include "adsbee/adsbee_clock.hpp"
 #include "adsbee/adsbee_link.hpp"
 #include "baro/barometer.hpp"
 #include "battery/max17048.hpp"
@@ -57,6 +58,7 @@ static const Component components[] = {
 	{"I2C", [](Completion complete) { complete(i2c_bus_init()); }},
 	{"UART", [](Completion complete) { complete(adsbee::uart_init()); }},
 	{"ADSbee", start_adsbee},
+	{"Clock", [](Completion complete) { complete(adsbee::timesync::start()); }},
 	{
 		"Wi-Fi",
 		[](Completion complete) { complete(wifi::start(device_info()->device_id)); }
@@ -79,12 +81,19 @@ static const Component components[] = {
 static bool in_init;
 
 static void report(const Component& component, esp_err_t result, int64_t started_us) {
-	if (result == ESP_OK) std::printf("%-*s OK", BOOT_LABEL_WIDTH, component.name);
-	else if (result == ESP_ERR_NOT_FOUND) std::printf("%-*s OFF", BOOT_LABEL_WIDTH, component.name);
-	else std::printf("%-*s FAIL %s", BOOT_LABEL_WIDTH, component.name, esp_err_to_name(result));
+	if (result == ESP_OK) {
+		std::printf("%-*s OK", BOOT_LABEL_WIDTH, component.name);
+	}
+	else if (result == ESP_ERR_NOT_FOUND) {
+		std::printf("%-*s OFF", BOOT_LABEL_WIDTH, component.name);
+	}
+	else {
+		std::printf("%-*s FAIL %s", BOOT_LABEL_WIDTH, component.name, esp_err_to_name(result));
+	}
 	int64_t blocked_us = esp_timer_get_time() - started_us;
-	if (in_init && blocked_us >= BOOT_SLOW_MS * 1000)
+	if (in_init && blocked_us >= BOOT_SLOW_MS * 1000) {
 		std::printf(" (%lld ms)", (long long)(blocked_us / 1000));
+	}
 	std::puts("");
 }
 

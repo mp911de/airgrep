@@ -10,7 +10,7 @@
 
 
 namespace adsbee {
-#define ADSBEE_UART_BAUD 115200
+#define ADSBEE_UART_BAUD 921600
 #define ADSBEE_REQUEST_TIMEOUT_MS 1000
 #define ADSBEE_REPLY_WINDOW_MS 900
 #define ADSBEE_UART_RX_BUFFER 2048
@@ -58,16 +58,15 @@ struct State {
 	using Handler = void (*)(const Message&, void* ctx);
 
 	bool subscribe(Predicate predicate, Handler handler, void* ctx);
-	// Installs the UART driver with RX attached, 115200 8E1. The UART boot row.
+	// Every decoded #GNSS frame, after State carries it. Runs on the loop task.
+	using GnssHandler = void (*)(const Gnss&, int64_t received_us, void* ctx);
+	bool subscribe_gnss(GnssHandler handler, void* ctx);
 	esp_err_t uart_init();
-	// Starts the link on the installed UART and subscribes to the expander power pin. Call
-	// after uart_init and before expander initialization.
 	esp_err_t start();
 	loop::Handle poll_handle();
 
-	// Listeners run on the loop task. Failures leave the reason in State::last_error.
 	loop::Handle request(const char* command, loop::SuccessListener on_reply,
 						loop::ErrorListener on_error, uint32_t timeout_ms = ADSBEE_REQUEST_TIMEOUT_MS);
-	// Copies the reply to the last explicit AT+DEVICE_INFO?. Returns 0 while unknown.
+	bool busy();
 	size_t device_info(char* out, size_t capacity);
 } // namespace adsbee

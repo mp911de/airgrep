@@ -24,6 +24,7 @@ namespace {
 						(long long)((now - state.error_us) / 1000000));
 		if (state.switch_known) std::printf("%-20s %s\n", "Switch", state.wanted ? "ON" : "OFF");
 		else std::printf("%-20s UNKNOWN\n", "Switch");
+		std::printf("%-20s %s\n", "Pending apply", state.pending_apply ? "YES" : "NO");
 		if (state.reported_known) {
 			const wifi::Config& c = state.reported;
 			std::printf("%-20s %s, %s, channel %u (%lld s ago)\n", "ADSBee", c.enabled ? "ON" : "OFF",

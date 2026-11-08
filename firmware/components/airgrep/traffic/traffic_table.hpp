@@ -20,7 +20,6 @@ namespace traffic {
 		// Targets with this address, any source. Returns how many were written, at most count.
 		size_t find(uint32_t address, Target* out, size_t count) const;
 		size_t size() const { return size_; }
-		size_t capacity() const { return capacity_; }
 		// Visits every present target.
 		template <typename F>
 		void each(F f) const {
