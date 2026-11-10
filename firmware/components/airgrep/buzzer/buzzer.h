@@ -19,8 +19,6 @@ typedef struct {
 	bool playing;
 } buzzer_state_t;
 buzzer_state_t buzzer_state(void);
-// Subscribes to the expander mute pin. Call before expander
-// initialization.
 esp_err_t buzzer_init(void);
 esp_err_t buzzer_play(const char* scheme, uint32_t hz);
 void buzzer_set_mute(bool mute);

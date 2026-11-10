@@ -8,9 +8,9 @@ else ()
             "commands/cmd_reboot.c" "commands/cmd_logs.c" "log/log_ring.c" "log/log_session.c" "commands/cmd_exp.cpp"
             "commands/cmd_charger.cpp" "commands/cmd_battery_level.cpp" "commands/cmd_baro.cpp"
             "commands/cmd_fusb.cpp" "commands/cmd_beep.cpp" "commands/cmd_adsbee.cpp" "commands/cmd_gnss.cpp" "commands/cmd_clock.cpp" "commands/cmd_settings.cpp" "commands/cmd_wifi.cpp" "commands/cmd_traffic.cpp"
-            "commands/command_status.cpp" "commands/cmd_tasks.c" "system/device_info.c" "system/task_stats.c"
+            "commands/command_status.cpp" "commands/cmd_tasks.c" "system/task_stats.c"
             INCLUDE_DIRS "." "log" "commands" "system"
-            PRIV_REQUIRES airgrep loop hwtest console esp_app_format esp_timer efuse spi_flash esp_psram)
+            PRIV_REQUIRES airgrep loop hwtest console esp_timer esp_driver_gpio)
 endif ()
 # Wraps an esp_private symbol of the log component and the console's terminal probe.
 # Verified on ESP-IDF v6.1, re-check on upgrades.

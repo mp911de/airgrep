@@ -1,5 +1,5 @@
 #include "console.h"
-#include "device_info.h"
+#include "system/device_info.h"
 
 #define BANNER_LABEL_WIDTH 16
 #include <stdio.h>

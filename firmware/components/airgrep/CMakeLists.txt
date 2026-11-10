@@ -4,6 +4,8 @@ idf_component_register(SRCS "adsbee/adsbee_link.cpp" "adsbee/adsbee_decoder.c" "
         "usb/fusb303.cpp" "usb/fusb303_i2c.cpp" "buzzer/buzzer_pattern.c" "adsbee/adsbee_protocol.cpp" "adsbee/adsbee_time.cpp" "adsbee/adsbee_clock.cpp"
         "settings/settings.cpp" "settings/settings_model.cpp" "tz/tz.cpp" "tz/tz_lookup.c" "wifi/wifi_ap.cpp" "wifi/wifi_protocol.cpp"
         "traffic/traffic.cpp" "traffic/traffic_protocol.cpp" "traffic/traffic_table.cpp"
+        "system/system.cpp" "system/power_mode.c" "system/device_info.c"
         INCLUDE_DIRS "."
         REQUIRES loop esp_driver_i2c nvs_flash esp_partition
-        PRIV_REQUIRES esp_driver_uart esp_driver_ledc esp_driver_gpio esp_timer)
+        PRIV_REQUIRES esp_driver_uart esp_driver_ledc esp_driver_gpio esp_timer esp_pm
+        esp_app_format efuse spi_flash esp_psram)

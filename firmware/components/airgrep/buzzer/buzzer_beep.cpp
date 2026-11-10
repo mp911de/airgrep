@@ -1,7 +1,8 @@
 #include "buzzer.h"
 #include "buzzer_pwm.h"
 #include "esp_log.h"
-#include "i2c_expander/tca9534.hpp"
+#include "esp_pm.h"
+#include "freertos/FreeRTOS.h"
 #include "loop.hpp"
 
 namespace {
@@ -13,10 +14,19 @@ size_t index;
 const buzzer_scheme_t* current;
 loop::Handle next;
 
+esp_pm_lock_handle_t clock_lock;
+
+// A playing scheme holds the clock: scaling can detune the tone and light sleep
+// stops it.
 void playing(bool value) {
 	portENTER_CRITICAL(&mutex);
+	bool changed = state.playing != value;
 	state.playing = value;
 	portEXIT_CRITICAL(&mutex);
+	if (changed && clock_lock) {
+		value ? esp_pm_lock_acquire(clock_lock)
+			  : esp_pm_lock_release(clock_lock);
+	}
 }
 
 // Mute gates each tone, the scheme keeps stepping silently so unmuting resumes
@@ -81,36 +91,12 @@ buzzer_state_t buzzer_state(void) {
 	return result;
 }
 
-namespace {
-void hello() { buzzer_play("startup", 0); }
-void goodbye() { buzzer_play("shutdown", 0); }
-
-// P7 is the POWER slider. The first read reports every pin as changed, so a
-// boot with the slider already on says hello too.
-void power_changed(bool on) {
-	if (on) {
-		hello();
-	} else {
-		goodbye();
-	}
-}
-}  // namespace
-
 esp_err_t buzzer_init(void) {
-	bool subscribed = expander::subscribe(
-		[](const expander::State& input, uint8_t changed, void*) {
-			if (!input.updated_us || input.updated_us < input.error_us) {
-				return;
-			}
-			buzzer_set_mute(input.input.mute);
-			if (changed & 0x80) {
-				power_changed(input.input.power);
-			}
-		});
-	if (!subscribed) {
-		return ESP_ERR_NO_MEM;
+	esp_err_t result =
+		esp_pm_lock_create(ESP_PM_APB_FREQ_MAX, 0, "buzzer", &clock_lock);
+	if (result == ESP_OK || result == ESP_ERR_NOT_SUPPORTED) {
+		result = buzzer_pwm_init();
 	}
-	esp_err_t result = buzzer_pwm_init();
 	ready = result == ESP_OK;
 	return result;
 }

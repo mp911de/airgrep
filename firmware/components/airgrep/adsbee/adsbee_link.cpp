@@ -41,7 +41,7 @@ constexpr uart_config_t uart_config = {
 	.flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
 	.rx_flow_ctrl_thresh = 0,
 	.rx_glitch_filt_thresh = 0,
-	.source_clk = UART_SCLK_DEFAULT,
+	.source_clk = UART_SCLK_XTAL,
 	.flags = {},
 };
 constexpr gpio_num_t tx = static_cast<gpio_num_t>(BOARD_PIN_UART_TX);

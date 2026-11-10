@@ -20,6 +20,16 @@
 			}
 		},
 		{
+			"name": "s3-uart0",
+			"displayName": "airgrep on XIAO ESP32-S3 Plus, console on UART0",
+			"inherits": "esp32s3",
+			"binaryDir": "build/s3-uart0",
+			"cacheVariables": {
+				"SDKCONFIG": "build/s3-uart0/sdkconfig",
+				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.s3;sdkconfig.uart0"
+			}
+		},
+		{
 			"name": "display",
 			"displayName": "Seeed display module, app",
 			"inherits": "esp32s3",
@@ -78,6 +88,10 @@
 		{
 			"name": "s3",
 			"configurePreset": "s3"
+		},
+		{
+			"name": "s3-uart0",
+			"configurePreset": "s3-uart0"
 		},
 		{
 			"name": "display",

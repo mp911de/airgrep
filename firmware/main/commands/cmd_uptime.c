@@ -3,13 +3,14 @@
 
 #include "argtable3/argtable3.h"
 #include "console.h"
-#include "device_info.h"
 #include "esp_console.h"
 #include "esp_heap_caps.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "sdkconfig.h"
+#include "system/device_info.h"
+#include "system/system.h"
 #include "task_stats.h"
 
 #define UPTIME_LABEL_WIDTH 20
@@ -71,6 +72,7 @@ static int uptime(int argc, char** argv) {
 			   (unsigned)(seconds / 3600 % 24), (unsigned)(seconds / 60 % 60),
 			   (unsigned)(seconds % 60));
 	}
+	printf("%-20s %s\n", "Mode", power_mode_name(system_mode()));
 	load();
 	heap("Internal RAM", MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT, raw);
 	heap("PSRAM", MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT, raw);

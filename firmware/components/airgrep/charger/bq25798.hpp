@@ -64,6 +64,8 @@ struct State {
 		return BatteryDetected::unknown;
 	}
 
+	bool is_valid();
+
 	template <typename F>
 	static void update(F f) {
 		portENTER_CRITICAL(&mutex_);

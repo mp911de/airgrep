@@ -3,7 +3,9 @@
 #include <stdio.h>
 
 #include "commands/cmd_logs.h"
+#include "driver/gpio.h"
 #include "esp_console.h"
+#include "sdkconfig.h"
 
 #define CONSOLE_MAX_COMMANDS 24
 
@@ -68,11 +70,22 @@ esp_err_t console_start(void) {
 	esp_console_repl_config_t repl_config = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
 	repl_config.prompt = "airgrep>";
 	repl_config.task_stack_size = 8192;
+	esp_console_repl_t* repl = NULL;
+#if CONFIG_ESP_CONSOLE_UART
+	esp_console_dev_uart_config_t dev_config =
+		ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();
+	esp_err_t err = esp_console_new_repl_uart(&dev_config, &repl_config, &repl);
+	// Light sleep stops the UART and its input is lost. TX stays driven, a
+	// floating line reads as noise.
+	if (err == ESP_OK) {
+		err = gpio_sleep_sel_dis(CONFIG_ESP_CONSOLE_UART_TX_GPIO);
+	}
+#else
 	esp_console_dev_usb_serial_jtag_config_t dev_config =
 		ESP_CONSOLE_DEV_USB_SERIAL_JTAG_CONFIG_DEFAULT();
-	esp_console_repl_t* repl = NULL;
 	esp_err_t err =
 		esp_console_new_repl_usb_serial_jtag(&dev_config, &repl_config, &repl);
+#endif
 	if (err == ESP_OK) {
 		err = register_help();
 	}

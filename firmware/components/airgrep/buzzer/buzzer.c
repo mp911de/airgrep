@@ -1,6 +1,7 @@
 #include "board.h"
 #include "buzzer_pattern.h"
 #include "buzzer_pwm.h"
+#include "driver/gpio.h"
 #include "driver/ledc.h"
 
 #define MODE LEDC_LOW_SPEED_MODE
@@ -30,7 +31,9 @@ esp_err_t buzzer_pwm_init(void) {
 		.duty = 0,
 		.hpoint = 0,
 	};
-	return ledc_channel_config(&channel);
+	err = ledc_channel_config(&channel);
+	// Light sleep would float the pin at the input of U9.
+	return err == ESP_OK ? gpio_sleep_sel_dis(BOARD_PIN_BUZZER) : err;
 }
 
 esp_err_t buzzer_pwm_tone(uint32_t hz, uint8_t volume) {

@@ -9,6 +9,7 @@
 #include "esp_efuse_table.h"
 #include "esp_flash.h"
 #include "esp_mac.h"
+#include "esp_pm.h"
 #include "esp_system.h"
 #include "sdkconfig.h"
 #if CONFIG_SPIRAM
@@ -112,9 +113,18 @@ void device_info_print(int width) {
 		   app->version, app->date, app->time);
 	printf("%-*s %s\n", width, "IDF", app->idf_ver);
 	printf("%-*s %s\n", width, "Board", BOARD_NAME);
-	printf("%-*s ESP32-S3 (%s) rev v%u.%u, %u cores @ %u MHz\n", width, "Chip",
-		   package, info->revision / 100, info->revision % 100, info->cores,
-		   CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ);
+	// Both cores share one clock. The range shows when it scales.
+	esp_pm_config_t clock = {
+		.max_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ,
+		.min_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ,
+	};
+	esp_pm_get_configuration(&clock);
+	printf("%-*s ESP32-S3 (%s) rev v%u.%u, %u cores @ ", width, "Chip", package,
+		   info->revision / 100, info->revision % 100, info->cores);
+	if (clock.min_freq_mhz != clock.max_freq_mhz) {
+		printf("%d to ", clock.min_freq_mhz);
+	}
+	printf("%d MHz\n", clock.max_freq_mhz);
 	printf(
 		"%-*s Flash %lu MB (JEDEC 0x%06lX, embedded %s), PSRAM %u MB "
 		"(embedded %s %s)\n",

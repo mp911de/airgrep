@@ -7,7 +7,6 @@
 #include "buzzer/buzzer.h"
 #include "charger/bq25798.hpp"
 #include "console.h"
-#include "device_info.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "i2c_bus.h"
@@ -15,6 +14,8 @@
 #include "loop.hpp"
 #include "sdkconfig.h"
 #include "settings/settings.hpp"
+#include "system/device_info.h"
+#include "system/system.h"
 #include "traffic/traffic.hpp"
 #include "tz/tz.hpp"
 #include "usb/fusb303.hpp"
@@ -55,8 +56,8 @@ static void start_adsbee(Completion complete) {
 }
 
 // Boot order is the table order. The loop and the I/O ports come first, the
-// expander last because buzzer, adsbee and wifi subscribe to its pins during
-// their init.
+// expander last because system, adsbee and wifi subscribe to its pins during
+// their init. System plays chimes, so the buzzer comes before it.
 static const Component components[] = {
 	{"Event loop",
 	 [](Completion complete) {
@@ -78,6 +79,7 @@ static const Component components[] = {
 	{"Baro", barometer::init},
 	{"FUSB", fusb::init},
 	{"Buzzer", [](Completion complete) { complete(buzzer_init()); }},
+	{"System", [](Completion complete) { complete(system_init()); }},
 	{"I2CExpander", expander::init},
 };
 
