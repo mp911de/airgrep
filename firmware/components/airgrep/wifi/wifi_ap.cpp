@@ -40,11 +40,6 @@ namespace wifi {
 			});
 		}
 
-		bool link_ready() {
-			const auto link = adsbee::State::copy();
-			return link.tx_attached && link.initialized;
-		}
-
 		bool is_reply(const adsbee::Message& message) {
 			return message.kind == DECODER_AT_REPLY &&
 				std::strncmp(message.text, WIFI_AP_REPLY, sizeof WIFI_AP_REPLY - 1) == 0;
@@ -76,11 +71,11 @@ namespace wifi {
 				s.wanted = wanted.enabled;
 			});
 			// Before the link is up the attach hook sends the position, no error to record.
-			if ((first || (changed & kSwitchMask)) && link_ready()) apply();
+			if ((first || (changed & kSwitchMask)) && adsbee::ready()) apply();
 		}
 
 		loop::Result periodic(loop::Handle, loop::Value&) {
-			if (!link_ready()) return loop::Result::done;
+			if (!adsbee::ready()) return loop::Result::done;
 			if (dirty) apply();
 			else poll();
 			return loop::Result::done;
@@ -88,7 +83,7 @@ namespace wifi {
 	}
 
 	esp_err_t apply() {
-		if (!switch_known || !link_ready()) {
+		if (!switch_known || !adsbee::ready()) {
 			if (switch_known) mark_dirty(true);
 			error(ESP_ERR_INVALID_STATE);
 			return ESP_ERR_INVALID_STATE;
@@ -119,7 +114,7 @@ namespace wifi {
 	}
 
 	esp_err_t poll() {
-		if (!link_ready()) return ESP_ERR_INVALID_STATE;
+		if (!adsbee::ready()) return ESP_ERR_INVALID_STATE;
 		if (!adsbee::request(WIFI_AP_QUERY_COMMAND, {}, {}).valid()) {
 			error(ESP_ERR_INVALID_STATE);
 			return ESP_ERR_INVALID_STATE;

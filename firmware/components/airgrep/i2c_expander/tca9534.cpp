@@ -247,7 +247,8 @@ namespace expander {
 		Pulse* pulse = new(std::nothrow) Pulse{pin};
 		if (!pulse) return ESP_ERR_NO_MEM;
 		if (!loop::hsubmit("exp trigger", [pulse](loop::Handle, loop::Value&) {
-			if (pulse_active || !State::copy().configured) {
+			const State current = State::copy();
+			if (pulse_active || !current.configured) {
 				error(ESP_ERR_INVALID_STATE);
 				delete pulse;
 				return loop::Result::done;
@@ -257,7 +258,7 @@ namespace expander {
 				assert_pin(pulse);
 				return loop::Result::done;
 			}
-			esp_err_t result = write(1, State::copy().raw_output & ~(1u << pulse->pin));
+			esp_err_t result = write(1, current.raw_output & ~(1u << pulse->pin));
 			if (result != ESP_OK) {
 				finish(pulse, result);
 				return loop::Result::done;

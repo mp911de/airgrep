@@ -116,7 +116,7 @@ namespace adsbee {
 
 		void release(Request* request) {
 			request->~Request();
-			::operator delete(request);
+			operator delete(request);
 		}
 
 		void after_request_cleanup(Request* request, bool replied) {
@@ -318,7 +318,7 @@ namespace adsbee {
 		// window and writes the command. Returns pending until the window closes.
 		loop::Result send(Request* request, loop::Handle handle) {
 			update_tx();
-			if (!started || !tx_attached || !State::copy().initialized) {
+			if (!started || !ready()) {
 				record_error(ESP_ERR_INVALID_STATE);
 				return loop::Result::error;
 			}
@@ -357,7 +357,7 @@ namespace adsbee {
 				record_error(ESP_ERR_INVALID_ARG);
 				return {};
 			}
-			void* storage = ::operator new(sizeof(Request) + std::strlen(command) + 1,
+			void* storage = operator new(sizeof(Request) + std::strlen(command) + 1,
 											std::nothrow);
 			if (!storage) return {};
 			auto* request = new(storage) Request;
@@ -410,6 +410,11 @@ namespace adsbee {
 	}
 
 	loop::Handle poll_handle() { return periodic; }
+
+	bool ready() {
+		const auto link = State::copy();
+		return link.tx_attached && link.initialized;
+	}
 
 	esp_err_t uart_init() {
 		esp_err_t result = uart_driver_install(uart, ADSBEE_UART_RX_BUFFER,

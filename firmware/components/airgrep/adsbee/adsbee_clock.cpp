@@ -114,7 +114,7 @@ namespace adsbee::timesync {
 		}
 
 		loop::Result ping(loop::Handle, loop::Value&) {
-			if (!adsbee::State::copy().tx_attached) {
+			if (!ready()) {
 				running = false;
 				State::update([](State& state) { state.running = false; });
 				error(ESP_ERR_INVALID_STATE);
@@ -124,7 +124,7 @@ namespace adsbee::timesync {
 				attempted++;
 				// Later bursts only keep drift small, so a sample skipped for a busy link is fine.
 				// The first fix matters, that one still sends and fails loudly.
-				if (adsbee::busy() && State::copy().set) {
+				if (busy() && State::copy().set) {
 					if (!loop::schedule(
 						ADSBEE_TIME_PING_SPACING_MS, {"timesync ping", ping}).valid()) {
 						finish();
@@ -139,7 +139,7 @@ namespace adsbee::timesync {
 				samples[sent] = TimeSample{};
 				samples[sent].t1_us = t1;
 				sent++;
-				if (!adsbee::request(command, {}, {}, ADSBEE_TIME_PING_WINDOW_MS).valid())
+				if (!request(command, {}, {}, ADSBEE_TIME_PING_WINDOW_MS).valid())
 					error(ESP_ERR_INVALID_STATE);
 				if (!loop::schedule(ADSBEE_TIME_PING_SPACING_MS, {"timesync ping", ping}).
 					valid()) {
@@ -177,8 +177,7 @@ namespace adsbee::timesync {
 		if (running) {
 			return ESP_ERR_INVALID_STATE;
 		}
-		const auto link = adsbee::State::copy();
-		if (!link.tx_attached || !link.initialized) {
+		if (!ready()) {
 			return ESP_ERR_INVALID_STATE;
 		}
 		uint32_t delay = ADSBEE_TIME_SYNC_DELAY_MS + esp_random() %
@@ -193,7 +192,7 @@ namespace adsbee::timesync {
 	}
 
 	namespace {
-		void on_gnss(const adsbee::Gnss& gnss, int64_t, void*) {
+		void on_gnss(const Gnss& gnss, int64_t, void*) {
 			if (gnss.fix && !had_gps_fix) {
 				had_gps_fix = schedule_nss_time_sync() == ESP_OK;
 			}
@@ -204,8 +203,8 @@ namespace adsbee::timesync {
 	}
 
 	esp_err_t start() {
-		if (!adsbee::subscribe(is_time_ping, on_time_ping, nullptr) ||
-			!adsbee::subscribe_gnss(on_gnss, nullptr))
+		if (!subscribe(is_time_ping, on_time_ping, nullptr) ||
+			!subscribe_gnss(on_gnss, nullptr))
 			return ESP_ERR_NO_MEM;
 		if (!loop::schedule_periodic(
 			ADSBEE_TIME_SYNC_PERIOD_MS, {"timesync period", periodic}).valid())

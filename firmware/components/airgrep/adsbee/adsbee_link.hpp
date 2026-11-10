@@ -68,5 +68,7 @@ struct State {
 	loop::Handle request(const char* command, loop::SuccessListener on_reply,
 						loop::ErrorListener on_error, uint32_t timeout_ms = ADSBEE_REQUEST_TIMEOUT_MS);
 	bool busy();
+	// TX attached and the init sequence done, so the link takes requests.
+	bool ready();
 	size_t device_info(char* out, size_t capacity);
 } // namespace adsbee
