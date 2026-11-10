@@ -1,4 +1,5 @@
 #include "charger/bq25798_i2c.hpp"
+#include <cmath>
 #include "unity.h"
 
 #ifdef ESP_PLATFORM
@@ -193,6 +194,28 @@ CASE(ts, "Charger ts register decodes datasheet values") {
 	TEST_ASSERT_FLOAT_WITHIN(0.00001f, 50.0f, charger::decode_ts(0x02, 0x00));
 }
 
+CASE(ntc_temperature, "Charger NTC estimate follows the selected divider and beta curve") {
+	// Independently calculated TS ratios for the nominal 100k B4262 sensor.
+	TEST_ASSERT_FLOAT_WITHIN(0.05f, 0.0f, charger::estimate_ntc_c(75.278928f));
+	TEST_ASSERT_FLOAT_WITHIN(0.05f, 25.0f, charger::estimate_ntc_c(51.900308f));
+	TEST_ASSERT_FLOAT_WITHIN(0.05f, 60.0f, charger::estimate_ntc_c(20.884195f));
+	TEST_ASSERT_FLOAT_WITHIN(0.05f, 85.0f, charger::estimate_ntc_c(9.902284f));
+	TEST_ASSERT_FLOAT_WITHIN(0.05f, 25.0f, charger::estimate_ntc_c(charger::decode_ts(0x02, 0x13)));
+}
+
+CASE(ntc_invalid, "Charger NTC estimate rejects invalid ratios and sensor range violations") {
+	const float invalid[] = {-1.0f, 0.0f, 0.001f, 90.0f, 90.35295f, 100.0f, 101.0f, NAN, INFINITY};
+	for (float percent : invalid)
+		TEST_ASSERT_TRUE(std::isnan(charger::estimate_ntc_c(percent)));
+}
+
+CASE(detect_battery, "Battery detection calls a VBAT drop above 1500 mV no battery") {
+	TEST_ASSERT_EQUAL(BatteryDetected::yes, charger::detect_battery(4100, 4050));
+	TEST_ASSERT_EQUAL(BatteryDetected::yes, charger::detect_battery(4100, 2600));
+	TEST_ASSERT_EQUAL(BatteryDetected::no, charger::detect_battery(4100, 2500));
+	TEST_ASSERT_EQUAL(BatteryDetected::yes, charger::detect_battery(3000, 3100));
+}
+
 CASE(tdie, "Charger tdie register decodes datasheet values") {
 	TEST_ASSERT_FLOAT_WITHIN(0.001f, -40.0f, charger::decode_tdie(0xff, 0xb0));
 	TEST_ASSERT_FLOAT_WITHIN(0.001f, 25.0f, charger::decode_tdie(0x00, 0x32));
@@ -201,8 +224,11 @@ CASE(tdie, "Charger tdie register decodes datasheet values") {
 #ifndef ESP_PLATFORM
 int main() {
 	UNITY_BEGIN();
+	RUN_TEST(detect_battery);
 	RUN_TEST(tdie);
 	RUN_TEST(ts);
+	RUN_TEST(ntc_temperature);
+	RUN_TEST(ntc_invalid);
 	RUN_TEST(vsys);
 	RUN_TEST(vbat);
 	RUN_TEST(vbus);

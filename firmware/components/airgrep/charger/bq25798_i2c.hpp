@@ -1,12 +1,14 @@
 #pragma once
 
 #include <cstdint>
+#include "device.h"
 
 namespace charger {
 	// Register fields shared by driver and decoder, BQ25798 datasheet section 7.5.1.
 	static constexpr uint8_t kWatchdogReset = 1 << 3; // REG10 WD_RST
 	static constexpr uint8_t kWatchdogFieldMask = 0x07; // REG10 WATCHDOG_2:0
 	static constexpr uint8_t kSfetPresent = 1 << 7; // REG14 SFET_PRESENT
+	static constexpr uint8_t kDischargeSensing = 1 << 5; // REG14 EN_IBAT
 	static constexpr uint8_t kAdcEnable = 1 << 7; // REG2E ADC_EN
 	static constexpr uint8_t kAdcOneShot = 1 << 6; // REG2E ADC_RATE, 0 is continuous
 
@@ -70,9 +72,15 @@ namespace charger {
 		bool detection_done;
 	};
 
+	// Without a pack the BAT pin falls to about 2.5 V once charging stops (data sheet 7.3.8).
+	// A drop above 1500 mV between a charging and a disabled VBAT reading means no battery.
+	BatteryDetected detect_battery(unsigned vbat_charging_mv, unsigned vbat_disabled_mv);
+
 	Status0 decode_status0(uint8_t raw);
 	float decode_tdie(uint8_t high, uint8_t low);
 	float decode_ts(uint8_t high, uint8_t low);
+	// Nominal divider and beta-model estimate, NaN for invalid or out-of-range input.
+	float estimate_ntc_c(float ts_percent);
 	// VBUS, VBAT and VSYS ADC registers share the 1 mV per LSB format.
 	unsigned decode_adc_mv(uint8_t high, uint8_t low);
 	int decode_ibat(uint8_t high, uint8_t low);

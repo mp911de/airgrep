@@ -27,6 +27,15 @@ namespace battery {
 		esp_err_t last_error = ESP_OK;
 		bool identity_known = false, configured = false;
 
+		// The gauge sits on the pack side, so no gauge means no pack and a live cell reading
+		// means one is fitted.
+		BatteryDetected battery() const {
+			if (status == Status::off) return BatteryDetected::no;
+			if (status == Status::ok && updated_us && updated_us >= error_us && volts >= 2.5f)
+				return BatteryDetected::vbat;
+			return BatteryDetected::unknown;
+		}
+
 		template <typename F> static void update(F f) {
 			portENTER_CRITICAL(&mutex_);
 			f(storage());

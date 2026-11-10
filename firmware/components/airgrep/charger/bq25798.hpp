@@ -17,6 +17,7 @@ namespace charger {
 		.scl_speed_hz = I2C_BUS_SPEED, .scl_wait_us = 0, .flags = {},
 	};
 
+
 	struct State {
 		Status status = Status::unknown;
 		uint8_t raw[0x49]{};
@@ -36,10 +37,22 @@ namespace charger {
 		unsigned charge_current_ma = 0, input_current_ma = 0, thermal_limit_c = 0;
 		int ibus_ma = 0, ibat_ma = 0;
 		unsigned vbus_mv = 0, vbat_mv = 0, vsys_mv = 0;
+		BatteryDetected battery_detected = BatteryDetected::unknown;
+		unsigned battery_detection_vbat_mv = 0;
+		bool battery_detection_vbat_valid = false;
 		float ts_percent = 0, die_c = 0;
 		int64_t updated_us = 0, error_us = 0, adc_ready_us = 0;
 		esp_err_t last_error = ESP_OK;
 		bool identity_known = false, configured = false, adc_valid = false;
+
+		// The battery test result when one ran. Otherwise, without VBUS the system runs from
+		// the pack, so a valid VBAT reading proves it. With VBUS the BAT pin carries the charger's
+		// own voltage and says nothing (data sheet 7.3.8).
+		BatteryDetected battery() const {
+			if (battery_detected != BatteryDetected::unknown) return battery_detected;
+			if (adc_valid && !status0.vbus && vbat_mv >= 3000) return BatteryDetected::vbat;
+			return BatteryDetected::unknown;
+		}
 
 		template <typename F>
 		static void update(F f) {
@@ -56,6 +69,17 @@ namespace charger {
 	};
 
 	using Completion = loop::Callable<void(esp_err_t)>;
+	struct ChargeResult {
+		esp_err_t error = ESP_OK, restore_error = ESP_OK;
+		bool initial_enabled = false, before_valid = false, after_valid = false;
+		uint16_t vbat_before = 0, vbat_after = 0;
+		int ibat_after_ma = 0; // taken with vbat_after, negative while discharging
+	};
+
+	using ChargeCompletion = loop::Callable<void(ChargeResult)>;
+	esp_err_t set_charge_enabled(bool enabled, ChargeCompletion complete);
+	esp_err_t battery_test(ChargeCompletion complete);
+	esp_err_t verify_battery(ChargeCompletion complete);
 	void init(Completion complete);
 	loop::Handle poll_handle();
 }

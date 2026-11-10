@@ -1,4 +1,5 @@
 #include "bq25798_i2c.hpp"
+#include <cmath>
 
 namespace charger {
 	namespace {
@@ -7,6 +8,11 @@ namespace charger {
 		constexpr int kAdcRange = 1 << 16;
 		constexpr float kTdieCPerLsb = 0.5f;               // REG41
 		constexpr float kTsPercentPerLsb = 100.0f / 1024;  // REG3F, 0.0976563 %
+		constexpr float kTsPullupOhms = 82000.0f;   // R59, REGN to TS
+		constexpr float kTsPulldownOhms = 768000.0f; // R60, TS to GND
+		// Variohm ENTC-EB-100K4262-02, nominal beta model without an R/T table.
+		constexpr float kNtcR25Ohms = 100000.0f;
+		constexpr float kNtcBetaKelvin = 4262.0f;
 		constexpr unsigned kLimitFieldMask = 0x1ff;        // REG03 ICHG_8:0, REG06 IINDPM_8:0
 		constexpr unsigned kIchgMaPerLsb = 10;             // REG03
 		constexpr unsigned kIindpmMaPerLsb = 10;           // REG06
@@ -25,7 +31,6 @@ namespace charger {
 		constexpr unsigned kTregBaseC = 60;
 		constexpr unsigned kTregStepC = 20;
 		// REG14
-		constexpr uint8_t kDischargeSensing = 1 << 5;  // EN_IBAT
 		constexpr uint8_t kExternalLimit = 1 << 1;     // EN_EXTILIM
 		// REG0F
 		constexpr uint8_t kHighImpedance = 1 << 2;     // EN_HIZ
@@ -79,6 +84,11 @@ namespace charger {
 		constexpr uint8_t kDetectionDone = 1 << 0;
 	}
 
+	BatteryDetected detect_battery(unsigned vbat_charging_mv, unsigned vbat_disabled_mv) {
+		return int(vbat_charging_mv) - int(vbat_disabled_mv) > 1500 ? BatteryDetected::no
+			: BatteryDetected::yes;
+	}
+
 	float decode_tdie(uint8_t high, uint8_t low) {
 		unsigned raw = (unsigned(high) << 8) | low;
 		return (raw & kAdcSignBit ? int(raw) - kAdcRange : int(raw)) * kTdieCPerLsb;
@@ -86,6 +96,19 @@ namespace charger {
 
 	float decode_ts(uint8_t high, uint8_t low) {
 		return ((unsigned(high) << 8) | low) * kTsPercentPerLsb;
+	}
+
+	float estimate_ntc_c(float ts_percent) {
+		float ratio = ts_percent / 100.0f;
+		if (!std::isfinite(ratio) || ratio <= 0 || ratio >= 1) return NAN;
+		float parallel_ohms = kTsPullupOhms * ratio / (1 - ratio);
+		float ntc_conductance = 1 / parallel_ohms - 1 / kTsPulldownOhms;
+		if (ntc_conductance <= 0) return NAN;
+		float kelvin_inverse = 1 / 298.15f + std::log(1 / (ntc_conductance * kNtcR25Ohms)) / kNtcBetaKelvin;
+		if (kelvin_inverse <= 0) return NAN;
+		float temperature = 1 / kelvin_inverse - 273.15f;
+		// The selected NTC is specified for -40 to 150 C.
+		return temperature >= -40 && temperature <= 150 ? temperature : NAN;
 	}
 
 	unsigned decode_adc_mv(uint8_t high, uint8_t low) {

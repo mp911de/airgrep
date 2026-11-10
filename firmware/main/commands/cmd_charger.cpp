@@ -1,10 +1,58 @@
 #include "console.h"
 #include "charger/bq25798.hpp"
+#include "battery/max17048.hpp"
+#include "settings/settings.hpp"
 #include <cstdio>
+#include <cmath>
+#include "argtable.hpp"
 #include "esp_console.h"
 #include "command_status.hpp"
+#include "freertos/semphr.h"
 
 namespace {
+	struct {
+		struct arg_lit *battery_test, *verify_battery, *enable_charge, *disable_charge;
+		struct arg_end* end;
+	} args;
+
+	int charge_command(bool test, bool enabled) {
+		struct Reply {
+			StaticSemaphore_t storage;
+			SemaphoreHandle_t done;
+			charger::ChargeResult result;
+		} reply{};
+		reply.done = xSemaphoreCreateBinaryStatic(&reply.storage);
+		auto complete = [&reply](charger::ChargeResult result) {
+			reply.result = result;
+			xSemaphoreGive(reply.done);
+		};
+		esp_err_t queued = test ? charger::battery_test(complete)
+			: charger::set_charge_enabled(enabled, complete);
+		if (queued != ESP_OK) {
+			vSemaphoreDelete(reply.done);
+			return command_status::ack(queued);
+		}
+		// The driver completes every exit path. Keep the reply alive through restoration.
+		xSemaphoreTake(reply.done, portMAX_DELAY);
+		vSemaphoreDelete(reply.done);
+		const auto& result = reply.result;
+		if (test && result.before_valid) {
+			std::printf("%-20s %s\n", "Initial EN_CHG", result.initial_enabled ? "ON" : "OFF");
+			std::printf("%-20s %u mV (0x%04X)\n", "VBAT before", result.vbat_before, result.vbat_before);
+		}
+		if (test && result.after_valid) {
+			std::printf("%-20s %u mV (0x%04X)\n", "VBAT after 1 s OFF", result.vbat_after, result.vbat_after);
+			std::printf("%-20s %+d mA\n", "IBAT after 1 s OFF", result.ibat_after_ma);
+			std::printf("%-20s %+ld mW\n", "Battery power",
+						long(result.ibat_after_ma) * long(result.vbat_after) / 1000);
+		}
+		if (result.restore_error != ESP_OK)
+			std::printf("%-20s FAIL %s\n", "Restore EN_CHG", esp_err_to_name(result.restore_error));
+		else if (test && result.before_valid)
+			std::printf("%-20s %s\n", "Restored EN_CHG", result.initial_enabled ? "ON" : "OFF");
+		return command_status::ack(result.error != ESP_OK ? result.error : result.restore_error);
+	}
+
 	// Label column: name and register, padded to the shared 20 character width.
 	void label(const char* name, const char* reg) {
 		int written = std::printf("%s (%s)", name, reg);
@@ -42,20 +90,45 @@ namespace {
 		label(name, reg);
 		if (state.raw[0x2f] & (1u << disable_bit))
 			std::printf("DISABLED (0x%04X)\n", raw);
-		else if (address == 0x33 && !state.status0.vbus && !state.control5.
-			discharge_sensing)
-			std::printf("UNAVAILABLE, EN_IBAT off in battery-only mode (0x%04X)\n", raw);
 		else if (!state.adc_valid)
 			std::printf("PENDING (0x%04X)\n", raw);
+		else if (address == 0x3f) {
+			float temperature = charger::estimate_ntc_c(value);
+			std::printf("%.*f %s (", decimals, value, unit);
+			if (std::isfinite(temperature)) std::printf("≈%.1f°C, ", temperature);
+			else std::printf("NTC UNAVAILABLE, ");
+			std::printf("0x%04X)\n", raw);
+		}
 		else std::printf("%.*f %s (0x%04X)\n", decimals, value, unit, raw);
 	}
 
-	int command(int argc, char**) {
-		if (argc != 1) {
-			std::puts("usage: charger");
+	int command(int argc, char** argv) {
+		if (arg_parse(argc, argv, reinterpret_cast<void**>(&args))) {
+			arg_print_errors(stderr, args.end, argv[0]);
 			return 1;
 		}
+		if (args.battery_test->count + args.verify_battery->count + args.enable_charge->count + args.disable_charge->count > 1) {
+			std::puts("Choose one of --battery-test, --verify-battery, --enable-charge, --disable-charge");
+			return 1;
+		}
+		if (args.verify_battery->count)
+			return command_status::ack(charger::verify_battery([](charger::ChargeResult) {}));
+		if (args.battery_test->count || args.enable_charge->count || args.disable_charge->count)
+			return charge_command(args.battery_test->count, args.enable_charge->count);
 		const auto state = charger::State::copy();
+		std::printf("%-20s %s\n", "Battery", battery_detected_name(state.battery()));
+		if (state.battery_detection_vbat_valid)
+			std::printf("%-20s %u mV\n", "Detection VBAT", state.battery_detection_vbat_mv);
+		else std::printf("%-20s UNKNOWN\n", "Detection VBAT");
+		if (state.adc_valid) {
+			std::printf("%-20s %+ld mW\n", "Battery power", long(state.ibat_ma) * long(state.vbat_mv) / 1000);
+			// Gauge SOC times the configured pack capacity over the measured discharge current.
+			const auto gauge = battery::State::copy();
+			const unsigned capacity_mah = settings::copy().battery_mah;
+			if (state.ibat_ma < 0 && gauge.status == Status::ok && gauge.soc >= 0 && gauge.soc <= 100)
+				std::printf("%-20s %.1f h to EMPTY (%u mAh, SOC %.0f %%)\n", "Remaining",
+							gauge.soc / 100 * capacity_mah / -state.ibat_ma, capacity_mah, gauge.soc);
+		}
 		if (!command_status::header(state.status, state.updated_us, state.last_error, state.error_us)) return 0;
 		const auto* raw = state.raw;
 		static const char* charge[] = {
@@ -104,10 +177,16 @@ namespace {
 }
 
 extern "C" esp_err_t console_register_charger(void) {
+	args.battery_test = arg_lit0(nullptr, "battery-test", "Measure VBAT before and after 1 s with charging disabled, then restore EN_CHG");
+	args.verify_battery = arg_lit0(nullptr, "verify-battery", "Run the battery test and record NO for a drop greater than 1500 mV, YES otherwise");
+	args.enable_charge = arg_lit0(nullptr, "enable-charge", "Set EN_CHG without changing other configuration");
+	args.disable_charge = arg_lit0(nullptr, "disable-charge", "Clear EN_CHG without changing other configuration");
+	args.end = arg_end(2);
+	if (arg_nullcheck(reinterpret_cast<void**>(&args))) return ESP_ERR_NO_MEM;
 	const esp_console_cmd_t entry = {
 		.command = "charger",
-		.help = "Show charger status, faults, ADC readings and configuration.",
-		.hint = "", .func = command, .argtable = nullptr,
+		.help = "Show charger status, control charging or measure battery voltage decay.",
+		.hint = "[--battery-test | --verify-battery | --enable-charge | --disable-charge]", .func = command, .argtable = &args,
 		.func_w_context = nullptr, .context = nullptr,
 	};
 	return console_register(&entry);

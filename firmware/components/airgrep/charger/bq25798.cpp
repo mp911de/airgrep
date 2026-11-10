@@ -3,6 +3,7 @@
 #include "esp_timer.h"
 #include "i2c_bus.h"
 #include "sdkconfig.h"
+#include <new>
 
 namespace charger {
 	constexpr const char* tag = "charger";
@@ -87,8 +88,20 @@ namespace charger {
 		busy = false;
 	}
 
+	void publish_state() {
+		State::update([](State& current) {
+			// Detection belongs to explicit verification, not to the periodic sample.
+			state.battery_detected = current.battery_detected;
+			state.battery_detection_vbat_mv = current.battery_detection_vbat_mv;
+			state.battery_detection_vbat_valid = current.battery_detection_vbat_valid;
+			state.last_error = current.last_error;
+			state.error_us = current.error_us;
+			current = state;
+		});
+	}
+
 	void publish() {
-		State::update([](State& current) { state = current; });
+		publish_state();
 		busy = false;
 	}
 
@@ -109,6 +122,195 @@ namespace charger {
 		const uint8_t bytes[] = {reg, value};
 		return i2c_master_transmit(device, bytes, sizeof bytes,
 									CONFIG_AIRGREP_I2C_TIMEOUT_MS);
+	}
+
+	// Charge operations. One runs at a time on the loop, guarded by busy like the poll.
+	namespace {
+		constexpr uint8_t kChargeEnable = 1 << 5; // REG0F EN_CHG
+		constexpr uint32_t kSettleMs = 1000;
+
+		struct Operation {
+			ChargeCompletion complete;
+			void (*observe)(const ChargeResult&) = nullptr;
+			ChargeResult result;
+			bool changed = false; // EN_CHG was written, restore it before completing
+		} operation;
+
+		void publish_control() {
+			State::update([](State& shared) {
+				shared.raw[kRegChargerControl0] = state.raw[kRegChargerControl0];
+				shared.control0 = decode_control0(state.raw[kRegChargerControl0]);
+			});
+		}
+
+		esp_err_t read_enabled(bool& enabled) {
+			esp_err_t result = read({kRegChargerControl0, 1});
+			enabled = state.raw[kRegChargerControl0] & kChargeEnable;
+			return result;
+		}
+
+		// The only writer of EN_CHG: read, modify, write, read back.
+		esp_err_t set_charge_enabled(bool enabled) {
+			bool current;
+			esp_err_t result = read_enabled(current);
+			if (result != ESP_OK) return result;
+			uint8_t control = state.raw[kRegChargerControl0] & ~kChargeEnable;
+			if (enabled) control |= kChargeEnable;
+			result = write(kRegChargerControl0, control);
+			if (result != ESP_OK) return result;
+			result = read_enabled(current);
+			if (result == ESP_OK && current != enabled) result = ESP_ERR_INVALID_RESPONSE;
+			if (result == ESP_OK) publish_control();
+			return result;
+		}
+
+		void complete_operation() {
+			const auto finished = operation;
+			busy = false;
+			if (finished.result.error != ESP_OK) record_error(finished.result.error);
+			if (finished.result.restore_error != ESP_OK) record_error(finished.result.restore_error);
+			if (finished.observe) finished.observe(finished.result);
+			finished.complete(finished.result);
+		}
+
+		// Every exit of the battery test passes here, so restoration exists once.
+		void restore_and_complete() {
+			auto& result = operation.result;
+			if (operation.changed) result.restore_error = set_charge_enabled(result.initial_enabled);
+			complete_operation();
+		}
+
+		void fail(esp_err_t error) {
+			operation.result.error = error;
+			restore_and_complete();
+		}
+
+		void apply_charge_enabled(bool enabled) {
+			operation.result.error = set_charge_enabled(enabled);
+			complete_operation();
+		}
+
+		// Battery test: VBAT while charging, 1 s with charging off, VBAT again, restore.
+		esp_err_t read_vbat(uint16_t& mv, bool& valid) {
+			esp_err_t result = read({kRegVbatAdc, 2});
+			mv = decode_adc_mv(state.raw[kRegVbatAdc], state.raw[kRegVbatAdc + 1]);
+			valid = result == ESP_OK;
+			return result;
+		}
+
+		esp_err_t adc_continuous() {
+			esp_err_t result = read({kRegAdcControl, 3});
+			if (result != ESP_OK) return result;
+			bool enabled = state.raw[kRegAdcControl] & kAdcEnable;
+			bool one_shot = state.raw[kRegAdcControl] & kAdcOneShot;
+			bool vbat_disabled = state.raw[kRegAdcFunctionDisable0] & (1 << 4);
+			return enabled && !one_shot && !vbat_disabled ? ESP_OK : ESP_ERR_INVALID_STATE;
+		}
+
+		// A failed write may still have reached the device, so changed is set regardless.
+		esp_err_t switch_and_settle(bool enabled, void (*then)()) {
+			esp_err_t result = set_charge_enabled(enabled);
+			operation.changed = true;
+			if (result != ESP_OK) return result;
+			loop::Event settle{"charger settle", [then](loop::Handle, loop::Value&) {
+				then();
+				return loop::Result::done;
+			}};
+			auto settled = loop::schedule(kSettleMs, settle, {},
+										[](loop::Outcome) { fail(ESP_ERR_NO_MEM); });
+			return settled.valid() ? ESP_OK : ESP_ERR_NO_MEM;
+		}
+
+		void measure_disabled() {
+			auto& result = operation.result;
+			esp_err_t error = read_vbat(result.vbat_after, result.after_valid);
+			if (error == ESP_OK) error = read({kRegIbatAdc, 2});
+			if (error == ESP_OK)
+				result.ibat_after_ma = decode_ibat(state.raw[kRegIbatAdc], state.raw[kRegIbatAdc + 1]);
+			if (error != ESP_OK) result.error = error;
+			restore_and_complete();
+		}
+
+		void measure_charging() {
+			auto& result = operation.result;
+			esp_err_t error = read_vbat(result.vbat_before, result.before_valid);
+			if (error == ESP_OK) error = switch_and_settle(false, measure_disabled);
+			if (error != ESP_OK) fail(error);
+		}
+
+		void start_battery_test() {
+			auto& result = operation.result;
+			esp_err_t error = read_enabled(result.initial_enabled);
+			if (error == ESP_OK) error = adc_continuous();
+			// Charging off needs one settle period with it on to get the charging reading.
+			if (error == ESP_OK && !result.initial_enabled)
+				error = switch_and_settle(true, measure_charging);
+			else if (error == ESP_OK) measure_charging();
+			if (error != ESP_OK) fail(error);
+		}
+
+		void record_detection(const ChargeResult& result) {
+			State::update([&](State& shared) {
+				shared.battery_detection_vbat_mv = result.after_valid ? result.vbat_after : 0;
+				shared.battery_detection_vbat_valid = result.after_valid;
+				if (result.error == ESP_OK && result.restore_error == ESP_OK &&
+					result.before_valid && result.after_valid)
+					shared.battery_detected = detect_battery(result.vbat_before, result.vbat_after);
+			});
+		}
+
+		void start_verify_battery() {
+			operation.observe = record_detection;
+			start_battery_test();
+		}
+
+		// Admission: hop onto the loop, run start when the driver is idle and the device known.
+		// A battery test also needs the configured continuous ADC.
+		esp_err_t submit(const char* name, bool needs_adc, ChargeCompletion complete, void (*start)()) {
+			if (!complete) return ESP_ERR_INVALID_ARG;
+			struct Pending { ChargeCompletion complete; bool needs_adc; void (*start)(); };
+			auto* pending = new(std::nothrow) Pending{complete, needs_adc, start};
+			if (!pending) return ESP_ERR_NO_MEM;
+			bool queued = loop::hsubmit(name, [pending](loop::Handle, loop::Value&) {
+				const auto admitted = *pending;
+				delete pending;
+				const auto current = State::copy();
+				if (!device || !current.identity_known || busy ||
+					(admitted.needs_adc && (!current.configured || !current.adc_valid))) {
+					ChargeResult result;
+					result.error = ESP_ERR_INVALID_STATE;
+					record_error(result.error);
+					admitted.complete(result);
+					return loop::Result::done;
+				}
+				busy = true;
+				state = current;
+				operation = {};
+				operation.complete = admitted.complete;
+				admitted.start();
+				return loop::Result::done;
+			});
+			if (!queued) delete pending;
+			return queued ? ESP_OK : ESP_ERR_NO_MEM;
+		}
+	}
+
+	esp_err_t set_charge_enabled(bool enabled, ChargeCompletion complete) {
+		return submit("charger enable", false, complete,
+					enabled ? +[] { apply_charge_enabled(true); } : +[] { apply_charge_enabled(false); });
+	}
+
+	esp_err_t battery_test(ChargeCompletion complete) {
+		return submit("charger battery test", true, complete, start_battery_test);
+	}
+
+	esp_err_t verify_battery(ChargeCompletion complete) {
+		State::update([](State& shared) {
+			shared.battery_detected = BatteryDetected::unknown;
+			shared.battery_detection_vbat_mv = 0;
+			shared.battery_detection_vbat_valid = false;
+		});
+		return submit("charger verify battery", true, complete, start_verify_battery);
 	}
 
 	esp_err_t kick_watchdog() {
@@ -218,8 +420,10 @@ namespace charger {
 			break;
 		case 2: result = kick_watchdog();
 			break;
+		// EN_IBAT keeps IBAT readable in battery-only mode. The ADC it feeds already runs
+		// continuously, the data sheet lists no separate cost for the sense path.
 		case 3: result = write(kRegChargerControl5,
-								state.raw[kRegChargerControl5] | kSfetPresent);
+								state.raw[kRegChargerControl5] | kSfetPresent | kDischargeSensing);
 			break;
 		case 4:
 			result = write(kRegAdcControl, kAdcProfile);
@@ -240,14 +444,15 @@ namespace charger {
 			return loop::Result::done;
 		}
 		decode_configuration();
-		if (!state.control5.ship_fet || state.control1.watchdog_ms != CHARGER_WATCHDOG_MS ||
+		if (!state.control5.ship_fet || !state.control5.discharge_sensing ||
+			state.control1.watchdog_ms != CHARGER_WATCHDOG_MS ||
 			state.raw[kRegAdcControl] != kAdcProfile) {
 			error(ESP_ERR_INVALID_RESPONSE);
 			return loop::Result::done;
 		}
 		state.configured = true;
 		state.adc_valid = false;
-		State::update([](State& current) { state = current; });
+		publish_state();
 		step = 0;
 		next("charger polling", poll_configured);
 		return loop::Result::done;

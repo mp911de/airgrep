@@ -15,6 +15,35 @@ CASE(defaults, "Defaults carry the current version and UTC") {
 	TEST_ASSERT_EQUAL_UINT16(SETTINGS_VERSION, s.version);
 	TEST_ASSERT_EQUAL_STRING("UTC0", s.tz_rule);
 	TEST_ASSERT_EQUAL_UINT8(1, s.tz_detect);
+	TEST_ASSERT_EQUAL_UINT16(5000, s.battery_mah);
+}
+
+CASE(number, "Number fields take decimal 0 to 65535 and nothing else") {
+	settings::Settings s = settings::defaults();
+	TEST_ASSERT_TRUE(settings::assign(s, "battery_mah", " 10000 "));
+	TEST_ASSERT_EQUAL_UINT16(10000, s.battery_mah);
+	TEST_ASSERT_TRUE(settings::assign(s, "battery_mah", "65535"));
+	TEST_ASSERT_FALSE(settings::assign(s, "battery_mah", "65536"));
+	TEST_ASSERT_FALSE(settings::assign(s, "battery_mah", "-1"));
+	TEST_ASSERT_FALSE(settings::assign(s, "battery_mah", "5k"));
+	TEST_ASSERT_FALSE(settings::assign(s, "battery_mah", ""));
+	TEST_ASSERT_EQUAL_UINT16(65535, s.battery_mah);
+	char text[8];
+	TEST_ASSERT_EQUAL_UINT(5, settings::format(s, *settings::find("battery_mah"), text, sizeof text));
+	TEST_ASSERT_EQUAL_STRING("65535", text);
+	TEST_ASSERT_EQUAL_UINT(2, settings::format(s, *settings::find("battery_mah"), text, 3));
+	TEST_ASSERT_EQUAL_STRING("65", text);
+}
+
+CASE(migrate_v1, "A version 1 blob keeps its zone fields and gains the default capacity") {
+	settings::SettingsV1 v1{1, "CET-1CEST,M3.5.0,M10.5.0/3", 0, 0};
+	settings::Settings out{};
+	TEST_ASSERT_TRUE(settings::migrate(&v1, sizeof v1, out));
+	TEST_ASSERT_EQUAL_UINT16(SETTINGS_VERSION, out.version);
+	TEST_ASSERT_EQUAL_STRING("CET-1CEST,M3.5.0,M10.5.0/3", out.tz_rule);
+	TEST_ASSERT_EQUAL_UINT8(0, out.tz_detect);
+	TEST_ASSERT_EQUAL_UINT16(5000, out.battery_mah);
+	TEST_ASSERT_FALSE(settings::migrate(&v1, sizeof v1 + 1, out));
 }
 
 CASE(boolean, "Boolean fields accept on, off, true, false, 1, 0 and nothing else") {
@@ -67,8 +96,9 @@ CASE(assign, "Assign trims text, enforces the field size and rejects unknown fie
 CASE(table, "The field table lists every field once and formats it") {
 	size_t count;
 	const settings::Field* fields = settings::fields(count);
-	TEST_ASSERT_EQUAL_UINT(2, count);
+	TEST_ASSERT_EQUAL_UINT(3, count);
 	TEST_ASSERT_EQUAL_STRING("tz_rule", fields[0].name);
+	TEST_ASSERT_EQUAL_STRING("battery_mah", fields[2].name);
 	TEST_ASSERT_EQUAL_PTR(fields, settings::find("tz_rule"));
 	TEST_ASSERT_NULL(settings::find("TZ_RULE"));
 	settings::Settings s = settings::defaults();
@@ -84,7 +114,9 @@ int main() {
 	UNITY_BEGIN();
 	RUN_TEST(defaults);
 	RUN_TEST(boolean);
+	RUN_TEST(number);
 	RUN_TEST(migrate);
+	RUN_TEST(migrate_v1);
 	RUN_TEST(assign);
 	RUN_TEST(table);
 	return UNITY_END();

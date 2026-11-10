@@ -6,7 +6,6 @@ namespace battery {
 		constexpr float kVcellVoltsPerLsb = 0.000078125f;
 		constexpr float kSocPercentPerLsb = 1.0f / 256.0f;
 		constexpr float kCratePercentPerHourPerLsb = 0.208f;
-		constexpr float kRemainingDeadBandPercentPerHour = 1.0f;
 
 		constexpr uint16_t kStatusRi = 1u << 8;
 		constexpr uint16_t kStatusVh = 1u << 9;
@@ -25,7 +24,7 @@ namespace battery {
 	}
 	uint16_t acknowledge_reset(uint16_t raw_status) { return raw_status & ~kStatusRi; }
 	Remaining remaining_time(float soc, float rate) {
-		if (!(soc >= 0 && soc <= 100) || (rate > -kRemainingDeadBandPercentPerHour && rate < kRemainingDeadBandPercentPerHour)) return {};
+		if (!(soc >= 0 && soc <= 100) || rate == 0) return {};
 		return {true, rate < 0 ? soc / -rate : (100 - soc) / rate};
 	}
 }

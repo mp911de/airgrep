@@ -20,11 +20,11 @@ namespace battery {
 	namespace {
 		// MAX17048 datasheet: slave address 0x6C/0x6D (7-bit 0x36), register summary table 2.
 		constexpr uint8_t kRegVcell = 0x02;
-		constexpr uint8_t kRegSoc = 0x04; // read together with VCELL
+		constexpr uint8_t kRegSoc = 0x04;
 		constexpr uint8_t kRegVersion = 0x08;
 		constexpr uint8_t kRegCrate = 0x16;
 		constexpr uint8_t kRegStatus = 0x1a;
-		constexpr unsigned kSampleReads = 3; // VCELL with SOC, CRATE, STATUS
+		constexpr unsigned kSampleReads = 4; // VCELL, SOC, CRATE, STATUS
 		i2c_master_dev_handle_t device;
 		loop::Handle periodic;
 		State sample;
@@ -49,19 +49,6 @@ namespace battery {
 			return result;
 		}
 
-		// VCELL and SOC are adjacent, one transaction reads both.
-		esp_err_t read_vcell_soc(uint16_t& vcell, uint16_t& soc) {
-			uint8_t reg = kRegVcell, bytes[4];
-			esp_err_t result = i2c_master_transmit_receive(
-				device, &reg, 1, bytes, sizeof bytes,
-				CONFIG_AIRGREP_I2C_TIMEOUT_MS);
-			if (result == ESP_OK) {
-				vcell = (uint16_t(bytes[0]) << 8) | bytes[1];
-				soc = (uint16_t(bytes[2]) << 8) | bytes[3];
-			}
-			return result;
-		}
-
 		esp_err_t write(uint8_t reg, uint16_t word) {
 			uint8_t bytes[3] = {reg, uint8_t(word >> 8), uint8_t(word)};
 			return i2c_master_transmit(device, bytes, sizeof bytes, CONFIG_AIRGREP_I2C_TIMEOUT_MS);
@@ -76,10 +63,14 @@ namespace battery {
 
 		loop::Result sample_word(loop::Handle, loop::Value&) {
 			esp_err_t result;
+			// One register per transaction. A 4 byte read from VCELL returned the VCELL word
+			// twice on the bench, the data sheet's auto increment did not cross into SOC.
 			switch (step++) {
-			case 0: result = read_vcell_soc(sample.raw_vcell, sample.raw_soc);
+			case 0: result = read(kRegVcell, sample.raw_vcell);
 				break;
-			case 1: result = read(kRegCrate, sample.raw_crate);
+			case 1: result = read(kRegSoc, sample.raw_soc);
+				break;
+			case 2: result = read(kRegCrate, sample.raw_crate);
 				break;
 			default: result = read(kRegStatus, sample.raw_status);
 				break;

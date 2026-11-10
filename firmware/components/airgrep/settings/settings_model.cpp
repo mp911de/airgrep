@@ -1,4 +1,5 @@
 #include "settings_model.hpp"
+#include <cstdio>
 #include <cstring>
 
 namespace settings {
@@ -7,6 +8,7 @@ namespace settings {
 		result.version = SETTINGS_VERSION;
 		std::strncpy(result.tz_rule, SETTINGS_DEFAULT_TZ_RULE, sizeof result.tz_rule - 1);
 		result.tz_detect = SETTINGS_DEFAULT_TZ_DETECT;
+		result.battery_mah = SETTINGS_DEFAULT_BATTERY_MAH;
 		return result;
 	}
 
@@ -14,20 +16,29 @@ namespace settings {
 		if (!blob || size < sizeof(uint16_t)) return false;
 		uint16_t version;
 		std::memcpy(&version, blob, sizeof version);
-		// Version 1 is the first layout. Each later version adds a case that converts
-		// the previous struct here, oldest first, so a blob walks forward step by step.
-		if (version == 1 && size == sizeof(Settings)) {
-			std::memcpy(&out, blob, sizeof out);
-			out.tz_rule[sizeof out.tz_rule - 1] = 0;
-			return true;
+		// Each version adds a case that converts the previous struct, oldest first, so a blob
+		// walks forward step by step. New fields take their defaults.
+		Settings result = defaults();
+		if (version == 1 && size == sizeof(SettingsV1)) {
+			SettingsV1 v1;
+			std::memcpy(&v1, blob, sizeof v1);
+			std::memcpy(result.tz_rule, v1.tz_rule, sizeof result.tz_rule);
+			result.tz_detect = v1.tz_detect;
+			version = 2;
 		}
-		return false;
+		else if (version == 2 && size == sizeof(Settings)) std::memcpy(&result, blob, sizeof result);
+		else return false;
+		result.version = version;
+		result.tz_rule[sizeof result.tz_rule - 1] = 0;
+		out = result;
+		return true;
 	}
 
 	namespace {
 		const Field table[] = {
 			{"tz_rule", Type::text, offsetof(Settings, tz_rule), SETTINGS_TZ_RULE_SIZE},
 			{"tz_detect", Type::boolean, offsetof(Settings, tz_detect), 1},
+			{"battery_mah", Type::number, offsetof(Settings, battery_mah), 2},
 		};
 
 		bool equals(const char* text, size_t length, const char* word) {
@@ -67,6 +78,18 @@ namespace settings {
 			reinterpret_cast<uint8_t*>(&settings)[field->offset] = on ? 1 : 0;
 			return true;
 		}
+		case Type::number: {
+			if (!length || length > 5) return false;
+			unsigned parsed = 0;
+			for (size_t i = 0; i < length; i++) {
+				if (value[i] < '0' || value[i] > '9') return false;
+				parsed = parsed * 10 + unsigned(value[i] - '0');
+			}
+			if (parsed > UINT16_MAX) return false;
+			uint16_t number = uint16_t(parsed);
+			std::memcpy(reinterpret_cast<char*>(&settings) + field->offset, &number, sizeof number);
+			return true;
+		}
 		}
 		return false;
 	}
@@ -89,6 +112,12 @@ namespace settings {
 			std::memcpy(out, word, length);
 			out[length] = 0;
 			return length;
+		}
+		case Type::number: {
+			uint16_t number;
+			std::memcpy(&number, reinterpret_cast<const char*>(&settings) + field.offset, sizeof number);
+			int length = std::snprintf(out, capacity, "%u", unsigned(number));
+			return length < 0 ? 0 : size_t(length) >= capacity ? capacity - 1 : size_t(length);
 		}
 		}
 		out[0] = 0;

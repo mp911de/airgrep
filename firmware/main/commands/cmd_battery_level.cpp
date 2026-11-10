@@ -1,5 +1,6 @@
 #include "console.h"
 #include "battery/max17048.hpp"
+#include "charger/bq25798.hpp"
 #include <cstdio>
 #include "esp_console.h"
 #include "command_status.hpp"
@@ -8,6 +9,11 @@ namespace {
 	int command(int argc, char**) {
 		if (argc != 1) { std::puts("usage: battery_level"); return 1; }
 		const auto state = battery::State::copy();
+		// A battery test result wins. Without one the charger and the gauge must both see VBAT.
+		auto detected = charger::State::copy().battery();
+		if (detected == BatteryDetected::vbat && state.battery() != BatteryDetected::vbat)
+			detected = BatteryDetected::unknown;
+		std::printf("%-20s %s\n", "Battery", battery_detected_name(detected));
 		if (!command_status::header(state.status, state.updated_us, state.last_error, state.error_us)) return 0;
 		std::printf("%-20s %.2f %% (0x%04X)\n", "Charge (SOC)", state.soc, state.raw_soc);
 		std::printf("%-20s %.4f V (0x%04X)\n", "Voltage (VCELL)", state.volts, state.raw_vcell);
