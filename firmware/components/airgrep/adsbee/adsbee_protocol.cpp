@@ -132,10 +132,8 @@ bool decode_gnss(const char* text, size_t length, Gnss& out) {
 }
 
 bool Power::permits_tx(int64_t now_us) const {
-	/*return on && updated_us > 0 && error_us < updated_us &&
-		now_us >= updated_us && now_us - updated_us <= Link::kStaleTimeoutUs;*/
-
-	return true;
+	return on && updated_us > 0 && error_us < updated_us &&
+		   now_us >= updated_us && now_us - updated_us <= Link::kStaleTimeoutUs;
 }
 
 void Link::update_power(Power power, int64_t now_us) {
