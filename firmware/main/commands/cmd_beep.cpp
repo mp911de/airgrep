@@ -12,7 +12,7 @@
 
 namespace {
 	struct {
-		struct arg_lit* schemes[5];
+		struct arg_lit* schemes[BUZZER_SCHEME_COUNT];
 		struct arg_str* value;
 		struct arg_end* end;
 	} args;
@@ -34,7 +34,7 @@ namespace {
 		}
 		unsigned selected = 0;
 		const char* name = nullptr;
-		for (size_t i = 0; i < 5; i++)
+		for (size_t i = 0; i < BUZZER_SCHEME_COUNT; i++)
 			if (args.schemes[i]->count) {
 				selected++;
 				name = buzzer_scheme_at(i)->name;
@@ -52,7 +52,7 @@ namespace {
 			hz = parsed;
 		}
 		if (!valid) {
-			std::puts("usage: beep [--short|--long|--double|--alarm|--sweep] [hz] | off");
+			std::puts("usage: beep [--short|--long|--double|--alarm|--sweep|--startup|--shutdown] [hz] | off");
 			return 1;
 		}
 		bool queued = loop::hsubmit("beep command", [name, hz](loop::Handle, loop::Value&) {
@@ -66,7 +66,7 @@ namespace {
 }
 
 extern "C" esp_err_t console_register_beep(void) {
-	for (size_t i = 0; i < 5; i++)
+	for (size_t i = 0; i < BUZZER_SCHEME_COUNT; i++)
 		args.schemes[i] = arg_lit0(nullptr, buzzer_scheme_at(i)->name,
 									"Play this beep scheme");
 	args.value = arg_str0(nullptr, nullptr, "hz|off",
@@ -76,7 +76,8 @@ extern "C" esp_err_t console_register_beep(void) {
 	const esp_console_cmd_t entry = {
 		.command = "beep",
 		.help = "Show mute and schemes, play a beep, or stop playback.",
-		.hint = "[--short|--long|--double|--alarm|--sweep] [hz] | off", .func = command,
+		.hint = "[--short|--long|--double|--alarm|--sweep|--startup|--shutdown] [hz] | off",
+		.func = command,
 		.argtable = &args, .func_w_context = nullptr, .context = nullptr,
 	};
 	return console_register(&entry);

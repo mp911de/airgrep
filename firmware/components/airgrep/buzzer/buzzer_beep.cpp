@@ -38,7 +38,7 @@ namespace {
 		const auto& tone = current->steps[index];
 		esp_err_t result = ESP_OK;
 		if (tone.on && buzzer_gate(buzzer_state().mute, true))
-			result = buzzer_pwm_tone(buzzer_step_frequency(&tone, frequency));
+			result = buzzer_pwm_tone(buzzer_step_frequency(&tone, frequency), current->volume);
 		else buzzer_pwm_off();
 		if (result != ESP_OK) {
 			buzzer_off();
@@ -92,11 +92,24 @@ buzzer_state_t buzzer_state(void) {
 	return result;
 }
 
+namespace {
+	void hello() { buzzer_play("startup", 0); }
+	void goodbye() { buzzer_play("shutdown", 0); }
+
+	// P7 is the POWER slider. The first read reports every pin as changed, so a boot with the
+	// slider already on says hello too.
+	void power_changed(bool on) {
+		if (on) hello();
+		else goodbye();
+	}
+}
+
 esp_err_t buzzer_init(void) {
-	bool subscribed = expander::subscribe([](const expander::State& input, uint8_t, void*) {
-		if (input.updated_us && input.updated_us >= input.error_us) {
-			buzzer_set_mute(input.input.mute);
-		}
+	bool subscribed = expander::subscribe([](const expander::State& input, uint8_t changed,
+											void*) {
+		if (!input.updated_us || input.updated_us < input.error_us) return;
+		buzzer_set_mute(input.input.mute);
+		if (changed & 0x80) power_changed(input.input.power);
 	});
 	if (!subscribed) return ESP_ERR_NO_MEM;
 	esp_err_t result = buzzer_pwm_init();

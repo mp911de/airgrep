@@ -8,7 +8,8 @@ extern "C" {
 #endif
 
 esp_err_t buzzer_pwm_init(void);
-esp_err_t buzzer_pwm_tone(uint32_t hz);
+// Volume in percent, 100 is 50 % duty.
+esp_err_t buzzer_pwm_tone(uint32_t hz, uint8_t volume);
 void buzzer_pwm_off(void);
 
 #ifdef __cplusplus

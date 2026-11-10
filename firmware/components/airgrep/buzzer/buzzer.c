@@ -14,6 +14,7 @@
 
 #include "buzzer_pwm.h"
 #include "board.h"
+#include "buzzer_pattern.h"
 #include "driver/ledc.h"
 
 #define MODE LEDC_LOW_SPEED_MODE
@@ -46,9 +47,10 @@ esp_err_t buzzer_pwm_init(void) {
 	return ledc_channel_config(&channel);
 }
 
-esp_err_t buzzer_pwm_tone(uint32_t hz) {
+esp_err_t buzzer_pwm_tone(uint32_t hz, uint8_t volume) {
 	esp_err_t result = ledc_set_freq(MODE, TIMER, hz);
-	if (result == ESP_OK) result = ledc_set_duty(MODE, CHANNEL, DUTY_50);
+	if (result == ESP_OK)
+		result = ledc_set_duty(MODE, CHANNEL, buzzer_volume_duty(volume, DUTY_50));
 	if (result == ESP_OK) result = ledc_update_duty(MODE, CHANNEL);
 	return result;
 }
