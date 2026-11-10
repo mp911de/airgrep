@@ -1,6 +1,7 @@
+#include <cstring>
+
 #include "adsbee/adsbee_protocol.hpp"
 #include "unity.h"
-#include <cstring>
 
 #ifdef ESP_PLATFORM
 #define CASE(name, description) TEST_CASE(description, "[adsbee]")
@@ -22,16 +23,20 @@ CASE(crc, "CSBEE CRC covers the trailing comma and accepts unpadded hex") {
 }
 
 CASE(m10_crc, "AIRGREP M10 frames use the same checksum validator as CSBee") {
-	const char* mon = "#M10:33:MON:00:01/01:0,0,1,2,1,0,50,4000,0,0,100,0,100,E6DB";
+	const char* mon =
+		"#M10:33:MON:00:01/01:0,0,1,2,1,0,50,4000,0,0,100,0,100,E6DB";
 	const char* short_crc = "#M10:1:WARN:00:01/01:5,72B";
-	const char* old_format = "#M10:33:MON:00:01/01:0,0,1,2,1,0,50,4000,0,0,100,0,100*BF08";
+	const char* old_format =
+		"#M10:33:MON:00:01/01:0,0,1,2,1,0,50,4000,0,0,100,0,100*BF08";
 	TEST_ASSERT_TRUE(adsbee::valid_csbee(mon, std::strlen(mon)));
 	TEST_ASSERT_TRUE(adsbee::valid_csbee(short_crc, std::strlen(short_crc)));
 	TEST_ASSERT_FALSE(adsbee::valid_csbee(old_format, std::strlen(old_format)));
-	TEST_ASSERT_FALSE(adsbee::valid_csbee("#M10:1:WARN:00:01/01:6,72B", std::strlen(short_crc)));
+	TEST_ASSERT_FALSE(adsbee::valid_csbee("#M10:1:WARN:00:01/01:6,72B",
+										  std::strlen(short_crc)));
 }
 
-CASE(reply, "AT replies retain all lines and refuse overflow without partial append") {
+CASE(reply,
+	 "AT replies retain all lines and refuse overflow without partial append") {
 	adsbee::Reply reply;
 	TEST_ASSERT_TRUE(reply.append("Part Code: test", 15));
 	TEST_ASSERT_TRUE(reply.append("ESP32 Disabled", 14));
@@ -51,7 +56,8 @@ CASE(full_reply, "A full reply rejects further lines without overflowing") {
 	TEST_ASSERT_EQUAL_UINT(2047, reply.length);
 }
 
-CASE(command, "AT commands must be non-empty, fit the buffer and carry no line break") {
+CASE(command,
+	 "AT commands must be non-empty, fit the buffer and carry no line break") {
 	TEST_ASSERT_TRUE(adsbee::acceptable_command("AT+DEVICE_INFO?", 16));
 	TEST_ASSERT_FALSE(adsbee::acceptable_command("AT+DEVICE_INFO?", 15));
 	TEST_ASSERT_FALSE(adsbee::acceptable_command("", 16));
@@ -62,7 +68,10 @@ CASE(command, "AT commands must be non-empty, fit the buffer and carry no line b
 
 CASE(gnss_full, "GNSS frame decodes every field in order") {
 	const char* frame =
-		"#GNSS:1,2,11,50.500000,-8.250000,1234,87,271.5,0.90,070509,1762588800123,2,1,1,47,24,5,4,3,2,10,12,11,13,1,ENABLED,EGNOS,2,-312,45,MAX-M10S,ROM SPG 5.10 (7b202e),00000A00,OK,ABCD";
+		"#GNSS:1,2,11,50.500000,-8.250000,1234,87,271.5,0.90,070509,"
+		"1762588800123,2,1,1,47,24,5,4,3,2,10,12,11,13,1,ENABLED,EGNOS,2,-"
+		"312,"
+		"45,MAX-M10S,ROM SPG 5.10 (7b202e),00000A00,OK,ABCD";
 	adsbee::Gnss g;
 	TEST_ASSERT_TRUE(adsbee::decode_gnss(frame, std::strlen(frame), g));
 	TEST_ASSERT_TRUE(g.fix);
@@ -98,7 +107,7 @@ CASE(gnss_full, "GNSS frame decodes every field in order") {
 }
 
 CASE(gnss_empty,
-	"GNSS frame with empty fields reports unknowns and rejects wrong shapes") {
+	 "GNSS frame with empty fields reports unknowns and rejects wrong shapes") {
 	const char* frame = "#GNSS:0,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,2695";
 	adsbee::Gnss g;
 	TEST_ASSERT_TRUE(adsbee::decode_gnss(frame, std::strlen(frame), g));
@@ -121,13 +130,17 @@ CASE(power, "ADSBee TX requires fresh successful power on and fails closed") {
 	TEST_ASSERT_TRUE((adsbee::Power{true, 1000000, 0}).permits_tx(1500000));
 	TEST_ASSERT_FALSE((adsbee::Power{true, 1000000, 0}).permits_tx(1500001));
 	TEST_ASSERT_FALSE((adsbee::Power{false, 1000000, 0}).permits_tx(1000000));
-	TEST_ASSERT_FALSE((adsbee::Power{true, 1000000, 1000001}).permits_tx(1000001));
-	TEST_ASSERT_FALSE((adsbee::Power{true, 1000000, 1000000}).permits_tx(1000000));
-	TEST_ASSERT_TRUE((adsbee::Power{true, 1250000, 1000001}).permits_tx(1250000));
+	TEST_ASSERT_FALSE(
+		(adsbee::Power{true, 1000000, 1000001}).permits_tx(1000001));
+	TEST_ASSERT_FALSE(
+		(adsbee::Power{true, 1000000, 1000000}).permits_tx(1000000));
+	TEST_ASSERT_TRUE(
+		(adsbee::Power{true, 1250000, 1000001}).permits_tx(1250000));
 	TEST_ASSERT_FALSE((adsbee::Power{true, 1000000, 0}).permits_tx(999999));
 }
 
-CASE(lifecycle, "ADSBee waits for new RX after charger mode and every power cycle") {
+CASE(lifecycle,
+	 "ADSBee waits for new RX after charger mode and every power cycle") {
 	adsbee::Link link;
 	link.update_power({false, 1000000, 0}, 1000000);
 	link.received(1100000);
@@ -148,19 +161,22 @@ CASE(lifecycle, "ADSBee waits for new RX after charger mode and every power cycl
 	TEST_ASSERT_TRUE(link.permits_tx(2400000));
 }
 
-CASE(rx_timeout, "ADSBee RX liveness expires and recovers without active probes") {
+CASE(rx_timeout,
+	 "ADSBee RX liveness expires and recovers without active probes") {
 	adsbee::Link link;
 	link.update_power({true, 1000000, 0}, 1000000);
 	link.received(1100000);
-	for (int64_t now = 1250000; now <= 4000000; now += 250000)
+	for (int64_t now = 1250000; now <= 4000000; now += 250000) {
 		link.update_power({true, now, 0}, now);
+	}
 	TEST_ASSERT_TRUE(link.permits_tx(4100000));
 	TEST_ASSERT_FALSE(link.permits_tx(4100001));
 	link.received(4200000);
 	TEST_ASSERT_TRUE(link.permits_tx(4200000));
 }
 
-CASE(power_loss, "Power errors and missed samples require new RX before TX resumes") {
+CASE(power_loss,
+	 "Power errors and missed samples require new RX before TX resumes") {
 	adsbee::Link link;
 	link.update_power({true, 1000000, 0}, 1000000);
 	link.received(1100000);

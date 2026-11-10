@@ -111,10 +111,29 @@ Only the ADC, ship-FET presence and 20 s watchdog are configured. Polls read
 WD_STAT before resetting the watchdog, and reapply configuration after expiry.
 ADC values remain pending until a full conversion cycle has elapsed. IBAT
 discharge sensing is left unchanged and reported unavailable when disabled.
+The TS line includes an approximate NTC temperature using R59 = 82 kΩ,
+R60 = 768 kΩ and the 100 kΩ, B4262 nominal beta curve. Constants live in
+`bq25798_i2c.cpp`. Invalid ratios and estimates outside -40 to 150 °C show
+NTC UNAVAILABLE. The estimate does not include component tolerances or thermal lag.
+`charger --enable-charge` and `charger --disable-charge` change only EN_CHG.
+`charger --battery-test` enables charging for 1 s if initially disabled, then
+measures VBAT before and after 1 s with charging disabled and restores EN_CHG.
+It reports voltages without deciding battery presence. Restoration failures are
+reported separately. Toggling EN_CHG restarts the charging cycle.
+`charger --verify-battery` queues the same test and immediately returns OK when
+queued. It records battery detection as NO
+when VBAT drops by more than 1500 mV, YES otherwise. Detection starts UNKNOWN and
+returns to UNKNOWN on a failed verification. The post-disable voltage is retained
+as `battery_detection_vbat_mv` when measured. Detection stays in RAM until the next
+verification or reboot; ordinary charger polls and `--battery-test` retain it.
+`charger` shows Battery and Detection VBAT, including UNKNOWN before a result is
+available. Check `charger` for completion and errors after triggering verification.
 
 `battery_level` prints the latest 2 s gauge sample, charge or discharge rate,
 remaining time and alerts, including RI. Estimates are hidden below 1 %/h or
 outside 0 to 100 % state of charge. Gauge configuration and alerts are retained.
+`Battery` shows the charger's last detection result as UNKNOWN, YES or NO, even
+when no gauge sample is available.
 
 `baro` prints the latest 1 s sample and configuration. Pressure is enabled in
 normal mode at 1 Hz, with existing OSR and IIR settings retained. `baro --reset`

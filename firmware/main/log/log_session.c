@@ -1,5 +1,7 @@
 #include "log_session.h"
+
 #include <string.h>
+
 #include "esp_private/log_level.h"
 #include "freertos/FreeRTOS.h"
 
@@ -15,7 +17,8 @@ void log_session_begin(esp_log_level_t level, const char* tags) {
 	default_changed = tags == NULL;
 	if (default_changed) {
 		saved_default = esp_log_get_default_level();
-		esp_log_set_default_level(level > saved_default ? level : saved_default);
+		esp_log_set_default_level(level > saved_default ? level
+														: saved_default);
 	}
 	portEXIT_CRITICAL(&lock);
 }
@@ -23,14 +26,17 @@ void log_session_begin(esp_log_level_t level, const char* tags) {
 void log_session_end(void) {
 	portENTER_CRITICAL(&lock);
 	selected_tags = NULL;
-	if (default_changed) esp_log_set_default_level(saved_default);
+	if (default_changed) {
+		esp_log_set_default_level(saved_default);
+	}
 	default_changed = false;
 	portEXIT_CRITICAL(&lock);
 }
 
 esp_log_level_t __real_esp_log_level_get_timeout(const char* tag);
 
-// Temporary overrides leave SDK tag entries and default-level inheritance intact.
+// Temporary overrides leave SDK tag entries and default-level inheritance
+// intact.
 esp_log_level_t __wrap_esp_log_level_get_timeout(const char* tag) {
 	esp_log_level_t level = __real_esp_log_level_get_timeout(tag);
 	portENTER_CRITICAL(&lock);
@@ -38,11 +44,15 @@ esp_log_level_t __wrap_esp_log_level_get_timeout(const char* tag) {
 	while (tag && next && *next) {
 		size_t length = strcspn(next, ",");
 		if (strlen(tag) == length && !strncmp(tag, next, length)) {
-			if (selected_level > level) level = selected_level;
+			if (selected_level > level) {
+				level = selected_level;
+			}
 			break;
 		}
 		next += length;
-		if (*next) ++next;
+		if (*next) {
+			++next;
+		}
 	}
 	portEXIT_CRITICAL(&lock);
 	return level;

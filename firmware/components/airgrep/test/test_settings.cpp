@@ -1,6 +1,7 @@
+#include <cstring>
+
 #include "settings/settings_model.hpp"
 #include "unity.h"
-#include <cstring>
 
 #ifdef ESP_PLATFORM
 #define CASE(name, description) TEST_CASE(description, "[settings]")
@@ -29,13 +30,17 @@ CASE(number, "Number fields take decimal 0 to 65535 and nothing else") {
 	TEST_ASSERT_FALSE(settings::assign(s, "battery_mah", ""));
 	TEST_ASSERT_EQUAL_UINT16(65535, s.battery_mah);
 	char text[8];
-	TEST_ASSERT_EQUAL_UINT(5, settings::format(s, *settings::find("battery_mah"), text, sizeof text));
+	TEST_ASSERT_EQUAL_UINT(
+		5,
+		settings::format(s, *settings::find("battery_mah"), text, sizeof text));
 	TEST_ASSERT_EQUAL_STRING("65535", text);
-	TEST_ASSERT_EQUAL_UINT(2, settings::format(s, *settings::find("battery_mah"), text, 3));
+	TEST_ASSERT_EQUAL_UINT(
+		2, settings::format(s, *settings::find("battery_mah"), text, 3));
 	TEST_ASSERT_EQUAL_STRING("65", text);
 }
 
-CASE(migrate_v1, "A version 1 blob keeps its zone fields and gains the default capacity") {
+CASE(migrate_v1,
+	 "A version 1 blob keeps its zone fields and gains the default capacity") {
 	settings::SettingsV1 v1{1, "CET-1CEST,M3.5.0,M10.5.0/3", 0, 0};
 	settings::Settings out{};
 	TEST_ASSERT_TRUE(settings::migrate(&v1, sizeof v1, out));
@@ -46,7 +51,8 @@ CASE(migrate_v1, "A version 1 blob keeps its zone fields and gains the default c
 	TEST_ASSERT_FALSE(settings::migrate(&v1, sizeof v1 + 1, out));
 }
 
-CASE(boolean, "Boolean fields accept on, off, true, false, 1, 0 and nothing else") {
+CASE(boolean,
+	 "Boolean fields accept on, off, true, false, 1, 0 and nothing else") {
 	settings::Settings s = settings::defaults();
 	TEST_ASSERT_TRUE(settings::assign(s, "tz_detect", " off "));
 	TEST_ASSERT_EQUAL_UINT8(0, s.tz_detect);
@@ -56,11 +62,14 @@ CASE(boolean, "Boolean fields accept on, off, true, false, 1, 0 and nothing else
 	TEST_ASSERT_FALSE(settings::assign(s, "tz_detect", "yes"));
 	TEST_ASSERT_FALSE(settings::assign(s, "tz_detect", ""));
 	char text[4];
-	TEST_ASSERT_EQUAL_UINT(3, settings::format(s, *settings::find("tz_detect"), text, sizeof text));
+	TEST_ASSERT_EQUAL_UINT(3, settings::format(s, *settings::find("tz_detect"),
+											   text, sizeof text));
 	TEST_ASSERT_EQUAL_STRING("OFF", text);
 }
 
-CASE(migrate, "Migrate accepts the current layout and rejects unknown versions and sizes") {
+CASE(migrate,
+	 "Migrate accepts the current layout and rejects unknown versions "
+	 "and sizes") {
 	settings::Settings stored = settings::defaults();
 	std::strcpy(stored.tz_rule, "CET-1CEST,M3.5.0,M10.5.0/3");
 	settings::Settings out{};
@@ -76,9 +85,11 @@ CASE(migrate, "Migrate accepts the current layout and rejects unknown versions a
 	TEST_ASSERT_FALSE(settings::migrate(&stored, 1, out));
 }
 
-CASE(assign, "Assign trims text, enforces the field size and rejects unknown fields") {
+CASE(assign,
+	 "Assign trims text, enforces the field size and rejects unknown fields") {
 	settings::Settings s = settings::defaults();
-	TEST_ASSERT_TRUE(settings::assign(s, "tz_rule", "  CET-1CEST,M3.5.0,M10.5.0/3 \n"));
+	TEST_ASSERT_TRUE(
+		settings::assign(s, "tz_rule", "  CET-1CEST,M3.5.0,M10.5.0/3 \n"));
 	TEST_ASSERT_EQUAL_STRING("CET-1CEST,M3.5.0,M10.5.0/3", s.tz_rule);
 	TEST_ASSERT_TRUE(settings::assign(s, "tz_rule", ""));
 	TEST_ASSERT_EQUAL_STRING("", s.tz_rule);
@@ -103,7 +114,8 @@ CASE(table, "The field table lists every field once and formats it") {
 	TEST_ASSERT_NULL(settings::find("TZ_RULE"));
 	settings::Settings s = settings::defaults();
 	char text[8];
-	TEST_ASSERT_EQUAL_UINT(4, settings::format(s, fields[0], text, sizeof text));
+	TEST_ASSERT_EQUAL_UINT(4,
+						   settings::format(s, fields[0], text, sizeof text));
 	TEST_ASSERT_EQUAL_STRING("UTC0", text);
 	TEST_ASSERT_EQUAL_UINT(2, settings::format(s, fields[0], text, 3));
 	TEST_ASSERT_EQUAL_STRING("UT", text);

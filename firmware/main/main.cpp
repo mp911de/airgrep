@@ -1,3 +1,5 @@
+#include <cstdio>
+
 #include "adsbee/adsbee_clock.hpp"
 #include "adsbee/adsbee_link.hpp"
 #include "baro/barometer.hpp"
@@ -5,19 +7,18 @@
 #include "buzzer/buzzer.h"
 #include "charger/bq25798.hpp"
 #include "console.h"
+#include "device_info.h"
 #include "esp_log.h"
 #include "esp_timer.h"
-#include "i2c_expander/tca9534.hpp"
-#include "usb/fusb303.hpp"
-#include <cstdio>
 #include "i2c_bus.h"
+#include "i2c_expander/tca9534.hpp"
 #include "loop.hpp"
 #include "sdkconfig.h"
 #include "settings/settings.hpp"
 #include "traffic/traffic.hpp"
 #include "tz/tz.hpp"
+#include "usb/fusb303.hpp"
 #include "wifi/wifi_ap.hpp"
-#include "device_info.h"
 #if CONFIG_AIRGREP_HWTEST
 #include "hwtest.hpp"
 #endif
@@ -43,26 +44,35 @@ static void feed_traffic(const adsbee::Message& m, void*) {
 // The traffic table has no boot row of its own, it is the ADSbee's consumer.
 static void start_adsbee(Completion complete) {
 	esp_err_t result = traffic::start();
-	if (result == ESP_OK && !adsbee::subscribe(is_csbee, feed_traffic, nullptr)) result =
-		ESP_ERR_NO_MEM;
-	if (result == ESP_OK) result = adsbee::start();
+	if (result == ESP_OK &&
+		!adsbee::subscribe(is_csbee, feed_traffic, nullptr)) {
+		result = ESP_ERR_NO_MEM;
+	}
+	if (result == ESP_OK) {
+		result = adsbee::start();
+	}
 	complete(result);
 }
 
-// Boot order is the table order. The loop and the I/O ports come first, the expander last
-// because buzzer, adsbee and wifi subscribe to its pins during their init.
+// Boot order is the table order. The loop and the I/O ports come first, the
+// expander last because buzzer, adsbee and wifi subscribe to its pins during
+// their init.
 static const Component components[] = {
-	{"Event loop", [](Completion complete) { loop::start(); complete(ESP_OK); }},
+	{"Event loop",
+	 [](Completion complete) {
+		 loop::start();
+		 complete(ESP_OK);
+	 }},
 	{"Settings", [](Completion complete) { complete(settings::init()); }},
 	{"Time zones", [](Completion complete) { complete(tz::init()); }},
 	{"I2C", [](Completion complete) { complete(i2c_bus_init()); }},
 	{"UART", [](Completion complete) { complete(adsbee::uart_init()); }},
 	{"ADSbee", start_adsbee},
 	{"Clock", [](Completion complete) { complete(adsbee::timesync::start()); }},
-	{
-		"Wi-Fi",
-		[](Completion complete) { complete(wifi::start(device_info()->device_id)); }
-	},
+	{"Wi-Fi",
+	 [](Completion complete) {
+		 complete(wifi::start(device_info()->device_id));
+	 }},
 	{"Charger", charger::init},
 	{"Battery", battery::init},
 	{"Baro", barometer::init},
@@ -74,21 +84,21 @@ static const Component components[] = {
 // Same label column as the banner rows above it.
 #define BOOT_LABEL_WIDTH 16
 
-// A row whose init blocked the boot for longer than this shows its time. Rows that complete
-// later from the loop did not block and show none.
+// A row whose init blocked the boot for longer than this shows its time. Rows
+// that complete later from the loop did not block and show none.
 #define BOOT_SLOW_MS 50
 
 static bool in_init;
 
-static void report(const Component& component, esp_err_t result, int64_t started_us) {
+static void report(const Component& component, esp_err_t result,
+				   int64_t started_us) {
 	if (result == ESP_OK) {
 		std::printf("%-*s OK", BOOT_LABEL_WIDTH, component.name);
-	}
-	else if (result == ESP_ERR_NOT_FOUND) {
+	} else if (result == ESP_ERR_NOT_FOUND) {
 		std::printf("%-*s OFF", BOOT_LABEL_WIDTH, component.name);
-	}
-	else {
-		std::printf("%-*s FAIL %s", BOOT_LABEL_WIDTH, component.name, esp_err_to_name(result));
+	} else {
+		std::printf("%-*s FAIL %s", BOOT_LABEL_WIDTH, component.name,
+					esp_err_to_name(result));
 	}
 	int64_t blocked_us = esp_timer_get_time() - started_us;
 	if (in_init && blocked_us >= BOOT_SLOW_MS * 1000) {

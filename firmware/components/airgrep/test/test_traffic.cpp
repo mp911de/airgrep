@@ -1,33 +1,37 @@
+#include <cstring>
+
 #include "traffic/traffic_protocol.hpp"
 #include "traffic/traffic_table.hpp"
 #include "unity.h"
-#include <cstring>
 
 #ifdef ESP_PLATFORM
 #define CASE(name, description) TEST_CASE(description, "[traffic]")
 #else
 #define CASE(name, description) static void name()
 
-void setUp() {
-}
+void setUp() {}
 
-void tearDown() {
-}
+void tearDown() {}
 #endif
 
 // Lines captured on the bench, 8 November 2026 near 53.4 N 7.2 E.
 static const char* kAircraft =
-	"#A:45C86C,1F80107F,FLI7127 ,2277,3,53.41461,7.28040,37000,37000,45,467,-128,0,E938,7F0003,2,-77,13,1,5,3388";
+	"#A:45C86C,1F80107F,FLI7127 "
+	",2277,3,53.41461,7.28040,37000,37000,45,467,-"
+	"128,0,E938,7F0003,2,-77,13,1,5,3388";
 static const char* kNoPosition =
-	"#A:4070E9,800003,?,?,0,0.00000,0.00000,36000,0,0,0,0,0,0,7F0000,0,-83,7,0,0,6908";
+	"#A:4070E9,800003,?,?,0,0.00000,0.00000,36000,"
+	"0,0,0,0,0,0,7F0000,0,-83,7,0,0,6908";
 static const char* kFlarm =
-	"#F:1,F09000,1,0,1,53.8548400,7.2998004,500,0.0,0.0,0.0,0.00,2,0,191.2,223.00,11.2,0,0,0,1794158940,113,3,15,-65,1,AEC9";
+	"#F:1,F09000,1,0,1,53.8548400,7.2998004,500,0.0,0."
+	"0,0.0,0.00,2,0,191.2,223."
+	"00,11.2,0,0,0,1794158940,113,3,15,-65,1,AEC9";
 static const char* kStats = "#S:2,16,6,2,9,7,0,0,4,0,4234,9102";
 
 static bool decode(const char* line, traffic::Target& out) {
 	return traffic::classify(line, std::strlen(line)) == traffic::Line::flarm
-				? traffic::decode_flarm(line, std::strlen(line), out)
-				: traffic::decode_aircraft(line, std::strlen(line), out);
+			   ? traffic::decode_flarm(line, std::strlen(line), out)
+			   : traffic::decode_aircraft(line, std::strlen(line), out);
 }
 
 CASE(aircraft, "Mode S line decodes identity, position, motion and signal") {
@@ -100,20 +104,23 @@ CASE(no_position, "A squitter-only target keeps its unknowns") {
 CASE(qualifiers, "Address qualifiers in the ICAO field select the source") {
 	traffic::Target t;
 	const char* tisb =
-		"#A:7ABCDEF,8,?,?,0,0.00000,0.00000,0,0,0,0,0,0,0,0,0,-90,0,0,0,0000";
+		"#A:7ABCDEF,8,?,?,0,0.00000,0.00000,0,0,0,0,0,0,0,0,0,-"
+		"90,0,0,0,0000";
 	TEST_ASSERT_TRUE(decode(tisb, t));
 	TEST_ASSERT_EQUAL_HEX32(0xABCDEF, t.address);
 	TEST_ASSERT_EQUAL(int(traffic::Source::tisb), int(t.source));
 	const char* adsr =
-		"#A:6ABCDEF,0,?,?,0,0.00000,0.00000,0,0,0,0,0,0,0,0,0,-90,0,0,0,0000";
+		"#A:6ABCDEF,0,?,?,0,0.00000,0.00000,0,0,0,0,0,0,0,0,0,-"
+		"90,0,0,0,0000";
 	TEST_ASSERT_TRUE(decode(adsr, t));
 	TEST_ASSERT_EQUAL(int(traffic::Source::adsr), int(t.source));
 	const char* unknown =
-		"#A:9ABCDEF,0,?,?,0,0.00000,0.00000,0,0,0,0,0,0,0,0,0,-90,0,0,0,0000";
+		"#A:9ABCDEF,0,?,?,0,0.00000,0.00000,0,0,0,0,0,0,0,0,"
+		"0,-90,0,0,0,0000";
 	TEST_ASSERT_TRUE(decode(unknown, t));
 	TEST_ASSERT_EQUAL(int(traffic::Source::other), int(t.source));
-	TEST_ASSERT_FALSE(
-		decode("#A:45C86C,1F80107F,FLI7127 ,2277,3,53.41461,7.28040,37000,3388", t));
+	TEST_ASSERT_FALSE(decode(
+		"#A:45C86C,1F80107F,FLI7127 ,2277,3,53.41461,7.28040,37000,3388", t));
 }
 
 CASE(flarm, "FLARM line decodes and normalizes to feet and knots") {
@@ -121,20 +128,23 @@ CASE(flarm, "FLARM line decodes and normalizes to feet and knots") {
 	TEST_ASSERT_TRUE(decode(kFlarm, t));
 	TEST_ASSERT_EQUAL(int(traffic::Source::flarm), int(t.source));
 	TEST_ASSERT_EQUAL_HEX32(0xF09000, t.address);
-	TEST_ASSERT_EQUAL(int(traffic::FlarmAddressType::synthetic), int(t.id_type));
+	TEST_ASSERT_EQUAL(int(traffic::FlarmAddressType::synthetic),
+					  int(t.id_type));
 	TEST_ASSERT_FALSE(t.stealth);
 	TEST_ASSERT_FALSE(t.no_track);
 	TEST_ASSERT_EQUAL_UINT8(1, t.aircraft_type);
-	TEST_ASSERT_EQUAL_STRING("GLIDER", traffic::flarm_aircraft_name(t.aircraft_type));
+	TEST_ASSERT_EQUAL_STRING("GLIDER",
+							 traffic::flarm_aircraft_name(t.aircraft_type));
 	TEST_ASSERT_TRUE(t.position_valid);
 	TEST_ASSERT_FLOAT_WITHIN(1e-6f, 53.85484f, t.latitude);
 	TEST_ASSERT_TRUE(t.gnss_alt_valid);
-	TEST_ASSERT_EQUAL_INT32(1640, t.gnss_alt_ft); // 500 m
+	TEST_ASSERT_EQUAL_INT32(1640, t.gnss_alt_ft);  // 500 m
 	TEST_ASSERT_FALSE(t.baro_alt_valid);
 	TEST_ASSERT_EQUAL_INT16(0, t.speed_kt);
 	TEST_ASSERT_EQUAL_UINT8(2, t.movement);
 	TEST_ASSERT_TRUE(t.airborne);
-	TEST_ASSERT_EQUAL_STRING("FLYING", traffic::flarm_movement_name(t.movement));
+	TEST_ASSERT_EQUAL_STRING("FLYING",
+							 traffic::flarm_movement_name(t.movement));
 	TEST_ASSERT_EQUAL_STRING("NORMAL", traffic::flarm_urgency_name(t.urgency));
 	TEST_ASSERT_FLOAT_WITHIN(0.01f, 191.2f, t.acc_pos_hor_m);
 	TEST_ASSERT_FLOAT_WITHIN(0.01f, 223.0f, t.acc_pos_ver_m);
@@ -146,7 +156,8 @@ CASE(flarm, "FLARM line decodes and normalizes to feet and knots") {
 	TEST_ASSERT_EQUAL_INT8(-65, t.rssi_dbm);
 	TEST_ASSERT_EQUAL_UINT16(1, t.frames);
 	const char* no_fix =
-		"#F:1,F09001,0,3,9,,,500,0.0,0.0,0.0,0.00,0,3,1.0,1.00,1.0,0,0,0,0,0,3,15,-65,1,0000";
+		"#F:1,F09001,0,3,9,,,500,0.0,0.0,0.0,0.00,0,3,1.0,1."
+		"00,1.0,0,0,0,0,0,3,15,-65,1,0000";
 	TEST_ASSERT_TRUE(decode(no_fix, t));
 	TEST_ASSERT_FALSE(t.position_valid);
 	TEST_ASSERT_TRUE(t.stealth);
@@ -167,8 +178,9 @@ CASE(stats, "Statistics footer decodes") {
 	TEST_ASSERT_EQUAL_UINT16(4, s.aircraft);
 	TEST_ASSERT_EQUAL_UINT32(4234, s.uptime_s);
 	TEST_ASSERT_EQUAL(int(traffic::Line::stats),
-					int(traffic::classify(kStats, std::strlen(kStats))));
-	TEST_ASSERT_EQUAL(int(traffic::Line::other), int(traffic::classify("#GNSS:1,2", 9)));
+					  int(traffic::classify(kStats, std::strlen(kStats))));
+	TEST_ASSERT_EQUAL(int(traffic::Line::other),
+					  int(traffic::classify("#GNSS:1,2", 9)));
 }
 
 CASE(bearing, "Distance and bearing from 53.1 N 7.0 E") {
@@ -190,7 +202,8 @@ CASE(bearing, "Distance and bearing from 53.1 N 7.0 E") {
 }
 
 CASE(table,
-	"Table keeps one entry per address and source, evicts by age, drops the oldest when full") {
+	 "Table keeps one entry per address and source, evicts by age, "
+	 "drops the oldest when full") {
 	traffic::Target slots[3];
 	traffic::Table table(slots, 3);
 	traffic::Target a, f;
@@ -214,7 +227,8 @@ CASE(table,
 	TEST_ASSERT_TRUE(decode(kNoPosition, n));
 	table.upsert(n, 4000);
 	TEST_ASSERT_EQUAL_UINT(3, table.size());
-	// Full: a fourth target replaces the least recently seen one, the Mode S entry from 3000.
+	// Full: a fourth target replaces the least recently seen one, the Mode S
+	// entry from 3000.
 	traffic::Target x = n;
 	x.address = 0x111111;
 	table.upsert(x, 5000);

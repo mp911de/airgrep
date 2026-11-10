@@ -1,20 +1,6 @@
-// Copyright 2026 the original author or authors.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-#include "buzzer_pwm.h"
 #include "board.h"
 #include "buzzer_pattern.h"
+#include "buzzer_pwm.h"
 #include "driver/ledc.h"
 
 #define MODE LEDC_LOW_SPEED_MODE
@@ -49,12 +35,14 @@ esp_err_t buzzer_pwm_init(void) {
 
 esp_err_t buzzer_pwm_tone(uint32_t hz, uint8_t volume) {
 	esp_err_t result = ledc_set_freq(MODE, TIMER, hz);
-	if (result == ESP_OK)
-		result = ledc_set_duty(MODE, CHANNEL, buzzer_volume_duty(volume, DUTY_50));
-	if (result == ESP_OK) result = ledc_update_duty(MODE, CHANNEL);
+	if (result == ESP_OK) {
+		result =
+			ledc_set_duty(MODE, CHANNEL, buzzer_volume_duty(volume, DUTY_50));
+	}
+	if (result == ESP_OK) {
+		result = ledc_update_duty(MODE, CHANNEL);
+	}
 	return result;
 }
 
-void buzzer_pwm_off(void) {
-	ledc_stop(MODE, CHANNEL, 0);
-}
+void buzzer_pwm_off(void) { ledc_stop(MODE, CHANNEL, 0); }

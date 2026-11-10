@@ -11,7 +11,8 @@ void tearDown() {}
 
 CASE(vcell, "Battery VCELL decodes whole words in volts") {
 	TEST_ASSERT_FLOAT_WITHIN(0.00001f, 4.0f, battery::decode_vcell(0xc800));
-	TEST_ASSERT_FLOAT_WITHIN(0.0000001f, 0.000078125f, battery::decode_vcell(1));
+	TEST_ASSERT_FLOAT_WITHIN(0.0000001f, 0.000078125f,
+							 battery::decode_vcell(1));
 }
 
 CASE(soc, "Battery SOC retains fractional percentage") {
@@ -44,7 +45,9 @@ CASE(status, "Battery STATUS decodes alerts in the high byte including RI") {
 	TEST_ASSERT_TRUE(second.soc_change);
 }
 
-CASE(remaining, "Remaining time estimates charge and discharge, only a zero rate has none") {
+CASE(remaining,
+	 "Remaining time estimates charge and discharge, only a zero "
+	 "rate has none") {
 	const auto discharge = battery::remaining_time(40, -20);
 	TEST_ASSERT_TRUE(discharge.valid);
 	TEST_ASSERT_EQUAL_FLOAT(2, discharge.hours);

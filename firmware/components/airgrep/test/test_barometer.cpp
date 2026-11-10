@@ -1,5 +1,6 @@
-#include "baro/bmp580_i2c.hpp"
 #include <cmath>
+
+#include "baro/bmp580_i2c.hpp"
 #include "unity.h"
 
 #ifdef ESP_PLATFORM
@@ -10,14 +11,20 @@ void setUp() {}
 void tearDown() {}
 #endif
 
-CASE(pressure, "Barometer pressure decodes signed 24-bit little endian data in hPa") {
-	TEST_ASSERT_FLOAT_WITHIN(0.001f, 1013.25f, barometer::decode_pressure(0x40, 0xf3, 0x62));
-	TEST_ASSERT_FLOAT_WITHIN(0.00001f, -1.0f, barometer::decode_pressure(0x00, 0xe7, 0xff));
+CASE(pressure,
+	 "Barometer pressure decodes signed 24-bit little endian data in hPa") {
+	TEST_ASSERT_FLOAT_WITHIN(0.001f, 1013.25f,
+							 barometer::decode_pressure(0x40, 0xf3, 0x62));
+	TEST_ASSERT_FLOAT_WITHIN(0.00001f, -1.0f,
+							 barometer::decode_pressure(0x00, 0xe7, 0xff));
 }
 
-CASE(temperature, "Barometer temperature retains fractions and negative values") {
-	TEST_ASSERT_EQUAL_FLOAT(25.5f, barometer::decode_temperature(0, 0x80, 0x19));
-	TEST_ASSERT_EQUAL_FLOAT(-10.25f, barometer::decode_temperature(0, 0xc0, 0xf5));
+CASE(temperature,
+	 "Barometer temperature retains fractions and negative values") {
+	TEST_ASSERT_EQUAL_FLOAT(25.5f,
+							barometer::decode_temperature(0, 0x80, 0x19));
+	TEST_ASSERT_EQUAL_FLOAT(-10.25f,
+							barometer::decode_temperature(0, 0xc0, 0xf5));
 }
 
 CASE(status, "Barometer STATUS separates NVM readiness and errors") {
@@ -42,7 +49,8 @@ CASE(odr, "Barometer ODR_CONFIG separates power mode, rate and deep standby") {
 	TEST_ASSERT_FALSE(forced.deep_disabled);
 }
 
-CASE(osr, "Barometer OSR_CONFIG decodes independent ratios and pressure enable") {
+CASE(osr,
+	 "Barometer OSR_CONFIG decodes independent ratios and pressure enable") {
 	const auto selected = barometer::decode_osr(0x5a);
 	TEST_ASSERT_EQUAL_UINT(4, selected.temperature);
 	TEST_ASSERT_EQUAL_UINT(8, selected.pressure);
@@ -61,9 +69,12 @@ CASE(iir, "Barometer DSP_IIR decodes filter coefficients including bypass") {
 	TEST_ASSERT_EQUAL_UINT(127, barometer::decode_iir(0x38).pressure);
 }
 
-CASE(altitude, "Pressure altitude uses standard sea level pressure and rejects invalid pressure") {
+CASE(altitude,
+	 "Pressure altitude uses standard sea level pressure and rejects "
+	 "invalid pressure") {
 	TEST_ASSERT_FLOAT_WITHIN(0.01f, 0, barometer::pressure_altitude(1013.25f));
-	TEST_ASSERT_FLOAT_WITHIN(1.0f, 1000, barometer::pressure_altitude(898.746f));
+	TEST_ASSERT_FLOAT_WITHIN(1.0f, 1000,
+							 barometer::pressure_altitude(898.746f));
 	TEST_ASSERT_TRUE(std::isnan(barometer::pressure_altitude(0)));
 	TEST_ASSERT_TRUE(std::isnan(barometer::pressure_altitude(-1)));
 }

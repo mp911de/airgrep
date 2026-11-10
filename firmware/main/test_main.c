@@ -1,4 +1,5 @@
 #include <string.h>
+
 #include "board.h"
 #include "esp_log.h"
 #include "sdkconfig.h"
@@ -7,7 +8,7 @@
 
 void app_main(void) {
 	ESP_LOGI("test", "airgrep tests on %s, tags \"%s\"", BOARD_NAME,
-	         CONFIG_AIRGREP_TEST_TAGS);
+			 CONFIG_AIRGREP_TEST_TAGS);
 
 	char tags[] = CONFIG_AIRGREP_TEST_TAGS;
 	for (char* tag = strtok(tags, " "); tag; tag = strtok(NULL, " ")) {

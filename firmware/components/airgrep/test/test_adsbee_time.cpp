@@ -1,6 +1,7 @@
+#include <cstring>
+
 #include "adsbee/adsbee_time.hpp"
 #include "unity.h"
-#include <cstring>
 
 #ifdef ESP_PLATFORM
 #define CASE(name, description) TEST_CASE(description, "[adsbee]")
@@ -19,7 +20,8 @@ CASE(ping, "Time ping reply decodes echo, epoch and PPS count") {
 	TEST_ASSERT_EQUAL_UINT64(1762588800123ULL, ping.epoch_ms);
 	TEST_ASSERT_EQUAL_UINT32(1417, ping.pps);
 	const char* no_epoch = "TIME_PING=7,,0";
-	TEST_ASSERT_TRUE(adsbee::decode_time_ping(no_epoch, std::strlen(no_epoch), ping));
+	TEST_ASSERT_TRUE(
+		adsbee::decode_time_ping(no_epoch, std::strlen(no_epoch), ping));
 	TEST_ASSERT_FALSE(ping.epoch_known);
 	TEST_ASSERT_EQUAL_UINT32(0, ping.pps);
 	TEST_ASSERT_FALSE(adsbee::decode_time_ping("TIME_PING=7,1", 13, ping));
@@ -28,9 +30,9 @@ CASE(ping, "Time ping reply decodes echo, epoch and PPS count") {
 
 CASE(estimate, "Estimate takes the shortest answered round trip with PPS") {
 	adsbee::TimeSample samples[4] = {
-		{true, 1000, 9000, 1000000, 5}, // 8 ms
-		{true, 2000, 5000, 1000001, 5}, // 3 ms, best
-		{true, 3000, 4000, 1000002, 0}, // 1 ms but no PPS
+		{true, 1000, 9000, 1000000, 5},  // 8 ms
+		{true, 2000, 5000, 1000001, 5},  // 3 ms, best
+		{true, 3000, 4000, 1000002, 0},  // 1 ms but no PPS
 		{false, 4000, 0, 0, 0},
 	};
 	adsbee::TimeEstimate e = adsbee::estimate_time(samples, 4);

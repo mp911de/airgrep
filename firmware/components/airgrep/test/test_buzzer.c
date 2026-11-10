@@ -45,13 +45,17 @@ CASE(patterns, "Long double alarm and sweep have the specified tone patterns") {
 	TEST_ASSERT_FALSE(scheme->repeat);
 }
 
-CASE(frequency, "Tone frequency defaults to 4 kHz and sweep ignores overrides") {
+CASE(frequency,
+	 "Tone frequency defaults to 4 kHz and sweep ignores overrides") {
 	const buzzer_scheme_t* scheme = buzzer_scheme_find("short");
 	TEST_ASSERT_EQUAL_UINT(4000, buzzer_step_frequency(&scheme->steps[0], 0));
-	TEST_ASSERT_EQUAL_UINT(4200, buzzer_step_frequency(&scheme->steps[0], 4200));
+	TEST_ASSERT_EQUAL_UINT(4200,
+						   buzzer_step_frequency(&scheme->steps[0], 4200));
 	scheme = buzzer_scheme_find("sweep");
-	TEST_ASSERT_EQUAL_UINT(3500, buzzer_step_frequency(&scheme->steps[0], 4200));
-	TEST_ASSERT_EQUAL_UINT(4500, buzzer_step_frequency(&scheme->steps[10], 4200));
+	TEST_ASSERT_EQUAL_UINT(3500,
+						   buzzer_step_frequency(&scheme->steps[0], 4200));
+	TEST_ASSERT_EQUAL_UINT(4500,
+						   buzzer_step_frequency(&scheme->steps[10], 4200));
 	TEST_ASSERT_EQUAL_STRING("short", buzzer_scheme_at(0)->name);
 	TEST_ASSERT_EQUAL_STRING("sweep", buzzer_scheme_at(4)->name);
 	TEST_ASSERT_EQUAL_STRING("startup", buzzer_scheme_at(5)->name);
@@ -59,7 +63,8 @@ CASE(frequency, "Tone frequency defaults to 4 kHz and sweep ignores overrides") 
 	TEST_ASSERT_NULL(buzzer_scheme_at(7));
 }
 
-CASE(startup, "Startup chime rises to resonance at reduced volume, others play full") {
+CASE(startup,
+	 "Startup chime rises to resonance at reduced volume, others play full") {
 	const buzzer_scheme_t* scheme = buzzer_scheme_find("startup");
 	TEST_ASSERT_NOT_NULL(scheme);
 	TEST_ASSERT_EQUAL_UINT(5, scheme->count);

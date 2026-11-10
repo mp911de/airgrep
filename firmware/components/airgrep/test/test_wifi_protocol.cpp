@@ -1,6 +1,7 @@
-#include "wifi/wifi_protocol.hpp"
-#include "unity.h"
 #include <cstring>
+
+#include "unity.h"
+#include "wifi/wifi_protocol.hpp"
 
 #ifdef ESP_PLATFORM
 #define CASE(name, description) TEST_CASE(description, "[wifi]")
@@ -34,7 +35,8 @@ CASE(compare_and_format, "Config equality and the set command round trip") {
 	wanted.channel = 11;
 	char command[128];
 	TEST_ASSERT_TRUE(wifi::format_set(wanted, command, sizeof command));
-	TEST_ASSERT_EQUAL_STRING("AT+WIFI_AP=1,airgrep-7cdfa1b2c3d4,airgrep-wifi,11", command);
+	TEST_ASSERT_EQUAL_STRING(
+		"AT+WIFI_AP=1,airgrep-7cdfa1b2c3d4,airgrep-wifi,11", command);
 	wifi::Config reported;
 	const char* reply = "WIFI_AP=1,airgrep-7cdfa1b2c3d4,airgrep-wifi,11";
 	TEST_ASSERT_TRUE(wifi::decode_config(reply, std::strlen(reply), reported));

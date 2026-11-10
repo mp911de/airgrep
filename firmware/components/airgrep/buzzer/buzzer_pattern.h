@@ -8,14 +8,22 @@
 extern "C" {
 #endif
 
-typedef enum { BUZZER_MUTE_UNKNOWN, BUZZER_MUTE_ON, BUZZER_MUTE_OFF } buzzer_mute_t;
-typedef struct { bool on; uint32_t ms, hz; } buzzer_step_t;
+typedef enum {
+	BUZZER_MUTE_UNKNOWN,
+	BUZZER_MUTE_ON,
+	BUZZER_MUTE_OFF
+} buzzer_mute_t;
+typedef struct {
+	bool on;
+	uint32_t ms, hz;
+} buzzer_step_t;
 typedef struct {
 	const char* name;
 	const buzzer_step_t* steps;
 	size_t count;
 	bool repeat;
-	// Percent of the 50 % duty. Amplitude follows sin(pi x duty), so 10 is about 16 dB down.
+	// Percent of the 50 % duty. Amplitude follows sin(pi x duty), so 10 is
+	// about 16 dB down.
 	uint8_t volume;
 } buzzer_scheme_t;
 
@@ -23,7 +31,8 @@ typedef struct {
 
 const buzzer_scheme_t* buzzer_scheme_find(const char* name);
 const buzzer_scheme_t* buzzer_scheme_at(size_t index);
-uint32_t buzzer_step_frequency(const buzzer_step_t* step, uint32_t requested_hz);
+uint32_t buzzer_step_frequency(const buzzer_step_t* step,
+							   uint32_t requested_hz);
 // Duty ticks for a volume, full is the 50 % duty tick count.
 uint32_t buzzer_volume_duty(uint8_t volume, uint32_t full);
 bool buzzer_gate(buzzer_mute_t mute, bool on);

@@ -25,7 +25,8 @@ CASE(input, "Expander input decodes pin levels and active low controls") {
 	TEST_ASSERT_FALSE(opposite.power);
 }
 
-CASE(output, "Expander output decodes the output latch independently of inputs") {
+CASE(output,
+	 "Expander output decodes the output latch independently of inputs") {
 	const auto value = expander::decode_output(0x30);
 	TEST_ASSERT_FALSE(value.high[2]);
 	TEST_ASSERT_FALSE(value.high[3]);
@@ -42,7 +43,8 @@ CASE(polarity, "Expander polarity bits identify inverted input pins") {
 	TEST_ASSERT_TRUE(value.inverted[7]);
 }
 
-CASE(configuration, "Expander configuration one means input and zero means output") {
+CASE(configuration,
+	 "Expander configuration one means input and zero means output") {
 	const auto value = expander::decode_configuration(0xf3);
 	TEST_ASSERT_TRUE(value.input[0]);
 	TEST_ASSERT_TRUE(value.input[1]);

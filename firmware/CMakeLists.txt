@@ -20,6 +20,22 @@ idf_build_set_property(MINIMAL_BUILD ON)
 idf_build_set_property(AIRGREP_TEST "${AIRGREP_TEST}")
 project(airgrep)
 
+find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format REQUIRED)
+file(GLOB_RECURSE AIRGREP_FORMAT_SOURCES CONFIGURE_DEPENDS
+        "${CMAKE_SOURCE_DIR}/main/*.c"
+        "${CMAKE_SOURCE_DIR}/main/*.cpp"
+        "${CMAKE_SOURCE_DIR}/main/*.h"
+        "${CMAKE_SOURCE_DIR}/main/*.hpp"
+        "${CMAKE_SOURCE_DIR}/components/*.c"
+        "${CMAKE_SOURCE_DIR}/components/*.cpp"
+        "${CMAKE_SOURCE_DIR}/components/*.h"
+        "${CMAKE_SOURCE_DIR}/components/*.hpp")
+add_custom_target(format-check
+        COMMAND "${CLANG_FORMAT_EXECUTABLE}" --style=file --dry-run --Werror ${AIRGREP_FORMAT_SOURCES}
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        COMMENT "Checking C/C++ formatting"
+        VERBATIM)
+
 # Project components only. IDF compiles with -Werror and its own sources shadow.
 idf_build_get_property(components BUILD_COMPONENTS)
 foreach(component ${components})
@@ -27,6 +43,7 @@ foreach(component ${components})
     idf_component_get_property(lib ${component} COMPONENT_LIB)
     get_target_property(type ${lib} TYPE)
     if(dir MATCHES "^${CMAKE_SOURCE_DIR}/" AND NOT type STREQUAL "INTERFACE_LIBRARY")
+        add_dependencies(${lib} format-check)
         target_compile_options(${lib} PRIVATE -Wshadow)
     endif()
 endforeach()

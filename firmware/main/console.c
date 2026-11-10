@@ -1,7 +1,9 @@
 #include "console.h"
+
+#include <stdio.h>
+
 #include "commands/cmd_logs.h"
 #include "esp_console.h"
-#include <stdio.h>
 
 #define CONSOLE_MAX_COMMANDS 24
 
@@ -12,13 +14,12 @@ static struct {
 
 static size_t command_count;
 
-// Replaces linenoiseProbe() of the IDF console through the linker. The probe asks the terminal
-// for a status report and waits up to 500 ms. idf.py monitor answers too late, which leaves the
-// console in dumb mode without history or completion. Every terminal on this port handles
-// escape sequences, so the probe reports success at once.
-int __wrap_linenoiseProbe(void) {
-	return 0;
-}
+// Replaces linenoiseProbe() of the IDF console through the linker. The probe
+// asks the terminal for a status report and waits up to 500 ms. idf.py monitor
+// answers too late, which leaves the console in dumb mode without history or
+// completion. Every terminal on this port handles escape sequences, so the
+// probe reports success at once.
+int __wrap_linenoiseProbe(void) { return 0; }
 
 esp_err_t console_register(const esp_console_cmd_t* command) {
 	if (command_count == CONSOLE_MAX_COMMANDS) {
@@ -34,7 +35,8 @@ esp_err_t console_register(const esp_console_cmd_t* command) {
 	return err;
 }
 
-// One line per command: name and synopsis padded to a column, then one sentence.
+// One line per command: name and synopsis padded to a column, then one
+// sentence.
 static int help(int argc, char** argv) {
 	(void)argv;
 	if (argc != 1) {
@@ -42,17 +44,21 @@ static int help(int argc, char** argv) {
 		return 1;
 	}
 	for (size_t i = 0; i < command_count; i++) {
-		printf("%s%s%s\n  %s\n", commands[i].command, *commands[i].hint ? " " : "",
-				commands[i].hint,
-				commands[i].help);
-		if (i + 1 < command_count) printf("\n");
+		printf("%s%s%s\n  %s\n", commands[i].command,
+			   *commands[i].hint ? " " : "", commands[i].hint,
+			   commands[i].help);
+		if (i + 1 < command_count) {
+			printf("\n");
+		}
 	}
 	return 0;
 }
 
 static esp_err_t register_help(void) {
 	static const esp_console_cmd_t command = {
-		.command = "help", .hint = "", .help = "List the commands with their synopsis.",
+		.command = "help",
+		.hint = "",
+		.help = "List the commands with their synopsis.",
 		.func = help,
 	};
 	return console_register(&command);
@@ -123,7 +129,9 @@ esp_err_t console_start(void) {
 	}
 	if (err == ESP_OK) {
 		err = esp_console_start_repl(repl);
-		if (err != ESP_OK) logs_stop();
+		if (err != ESP_OK) {
+			logs_stop();
+		}
 	}
 	return err;
 }

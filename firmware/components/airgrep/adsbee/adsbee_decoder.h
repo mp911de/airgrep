@@ -7,10 +7,10 @@
 extern "C" {
 #endif
 
-// Turns the ADSBee byte stream into LF-terminated messages, drops CR, skips
-// empty lines and resynchronises after a UART error or an overlong line by
-// discarding through the next LF. Lines starting with '#' are CSBEE reports,
-// everything else is an AT reply.
+// Turns the ADSBee byte stream into LF-terminated messages, drops CR,
+// skips empty lines and resynchronises after a UART error or an overlong
+// line by discarding through the next LF. Lines starting with '#' are
+// CSBEE reports, everything else is an AT reply.
 
 #define ADSBEE_DECODER_SIZE 512
 
@@ -19,7 +19,8 @@ typedef enum {
 	DECODER_CSBEE,
 } decoder_kind_t;
 
-typedef void (*decoder_cb)(const char* text, size_t len, decoder_kind_t kind, void* ctx);
+typedef void (*decoder_cb)(const char* text, size_t len, decoder_kind_t kind,
+						   void* ctx);
 
 typedef struct {
 	char buf[ADSBEE_DECODER_SIZE];

@@ -1,8 +1,9 @@
-#include "console.h"
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+
+#include "console.h"
 #include "esp_console.h"
 #include "esp_system.h"
 

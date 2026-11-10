@@ -1,126 +1,173 @@
 #include "settings_model.hpp"
+
 #include <cstdio>
 #include <cstring>
 
 namespace settings {
-	Settings defaults() {
-		Settings result{};
-		result.version = SETTINGS_VERSION;
-		std::strncpy(result.tz_rule, SETTINGS_DEFAULT_TZ_RULE, sizeof result.tz_rule - 1);
-		result.tz_detect = SETTINGS_DEFAULT_TZ_DETECT;
-		result.battery_mah = SETTINGS_DEFAULT_BATTERY_MAH;
-		return result;
-	}
+Settings defaults() {
+	Settings result{};
+	result.version = SETTINGS_VERSION;
+	std::strncpy(result.tz_rule, SETTINGS_DEFAULT_TZ_RULE,
+				 sizeof result.tz_rule - 1);
+	result.tz_detect = SETTINGS_DEFAULT_TZ_DETECT;
+	result.battery_mah = SETTINGS_DEFAULT_BATTERY_MAH;
+	return result;
+}
 
-	bool migrate(const void* blob, size_t size, Settings& out) {
-		if (!blob || size < sizeof(uint16_t)) return false;
-		uint16_t version;
-		std::memcpy(&version, blob, sizeof version);
-		// Each version adds a case that converts the previous struct, oldest first, so a blob
-		// walks forward step by step. New fields take their defaults.
-		Settings result = defaults();
-		if (version == 1 && size == sizeof(SettingsV1)) {
-			SettingsV1 v1;
-			std::memcpy(&v1, blob, sizeof v1);
-			std::memcpy(result.tz_rule, v1.tz_rule, sizeof result.tz_rule);
-			result.tz_detect = v1.tz_detect;
-			version = 2;
+bool migrate(const void* blob, size_t size, Settings& out) {
+	if (!blob || size < sizeof(uint16_t)) {
+		return false;
+	}
+	uint16_t version;
+	std::memcpy(&version, blob, sizeof version);
+	// Each version adds a case that converts the previous struct, oldest
+	// first, so a blob walks forward step by step. New fields take their
+	// defaults.
+	Settings result = defaults();
+	if (version == 1 && size == sizeof(SettingsV1)) {
+		SettingsV1 v1;
+		std::memcpy(&v1, blob, sizeof v1);
+		std::memcpy(result.tz_rule, v1.tz_rule, sizeof result.tz_rule);
+		result.tz_detect = v1.tz_detect;
+		version = 2;
+	} else if (version == 2 && size == sizeof(Settings)) {
+		std::memcpy(&result, blob, sizeof result);
+	} else {
+		return false;
+	}
+	result.version = version;
+	result.tz_rule[sizeof result.tz_rule - 1] = 0;
+	out = result;
+	return true;
+}
+
+namespace {
+const Field table[] = {
+	{"tz_rule", Type::text, offsetof(Settings, tz_rule), SETTINGS_TZ_RULE_SIZE},
+	{"tz_detect", Type::boolean, offsetof(Settings, tz_detect), 1},
+	{"battery_mah", Type::number, offsetof(Settings, battery_mah), 2},
+};
+
+bool equals(const char* text, size_t length, const char* word) {
+	return std::strlen(word) == length && std::strncmp(text, word, length) == 0;
+}
+
+bool blank(char c) { return c == ' ' || c == '\t' || c == '\r' || c == '\n'; }
+}  // namespace
+
+const Field* fields(size_t& count) {
+	count = sizeof table / sizeof table[0];
+	return table;
+}
+
+const Field* find(const char* name) {
+	for (const Field& field : table) {
+		if (std::strcmp(field.name, name) == 0) {
+			return &field;
 		}
-		else if (version == 2 && size == sizeof(Settings)) std::memcpy(&result, blob, sizeof result);
-		else return false;
-		result.version = version;
-		result.tz_rule[sizeof result.tz_rule - 1] = 0;
-		out = result;
-		return true;
 	}
+	return nullptr;
+}
 
-	namespace {
-		const Field table[] = {
-			{"tz_rule", Type::text, offsetof(Settings, tz_rule), SETTINGS_TZ_RULE_SIZE},
-			{"tz_detect", Type::boolean, offsetof(Settings, tz_detect), 1},
-			{"battery_mah", Type::number, offsetof(Settings, battery_mah), 2},
-		};
-
-		bool equals(const char* text, size_t length, const char* word) {
-			return std::strlen(word) == length && std::strncmp(text, word, length) == 0;
-		}
-
-		bool blank(char c) { return c == ' ' || c == '\t' || c == '\r' || c == '\n'; }
+bool assign(Settings& settings, const char* name, const char* value) {
+	const Field* field = find(name);
+	if (!field || !value) {
+		return false;
 	}
-
-	const Field* fields(size_t& count) {
-		count = sizeof table / sizeof table[0];
-		return table;
+	while (blank(*value)) {
+		value++;
 	}
-
-	const Field* find(const char* name) {
-		for (const Field& field : table)
-			if (std::strcmp(field.name, name) == 0) return &field;
-		return nullptr;
+	size_t length = std::strlen(value);
+	while (length && blank(value[length - 1])) {
+		length--;
 	}
-
-	bool assign(Settings& settings, const char* name, const char* value) {
-		const Field* field = find(name);
-		if (!field || !value) return false;
-		while (blank(*value)) value++;
-		size_t length = std::strlen(value);
-		while (length && blank(value[length - 1])) length--;
-		switch (field->type) {
+	switch (field->type) {
 		case Type::text:
-			if (length >= field->size) return false;
-			std::memcpy(reinterpret_cast<char*>(&settings) + field->offset, value, length);
+			if (length >= field->size) {
+				return false;
+			}
+			std::memcpy(reinterpret_cast<char*>(&settings) + field->offset,
+						value, length);
 			reinterpret_cast<char*>(&settings)[field->offset + length] = 0;
 			return true;
 		case Type::boolean: {
-			bool on = equals(value, length, "on") || equals(value, length, "true") || equals(value, length, "1");
-			bool off = equals(value, length, "off") || equals(value, length, "false") || equals(value, length, "0");
-			if (!on && !off) return false;
+			bool on = equals(value, length, "on") ||
+					  equals(value, length, "true") ||
+					  equals(value, length, "1");
+			bool off = equals(value, length, "off") ||
+					   equals(value, length, "false") ||
+					   equals(value, length, "0");
+			if (!on && !off) {
+				return false;
+			}
 			reinterpret_cast<uint8_t*>(&settings)[field->offset] = on ? 1 : 0;
 			return true;
 		}
 		case Type::number: {
-			if (!length || length > 5) return false;
+			if (!length || length > 5) {
+				return false;
+			}
 			unsigned parsed = 0;
 			for (size_t i = 0; i < length; i++) {
-				if (value[i] < '0' || value[i] > '9') return false;
+				if (value[i] < '0' || value[i] > '9') {
+					return false;
+				}
 				parsed = parsed * 10 + unsigned(value[i] - '0');
 			}
-			if (parsed > UINT16_MAX) return false;
+			if (parsed > UINT16_MAX) {
+				return false;
+			}
 			uint16_t number = uint16_t(parsed);
-			std::memcpy(reinterpret_cast<char*>(&settings) + field->offset, &number, sizeof number);
+			std::memcpy(reinterpret_cast<char*>(&settings) + field->offset,
+						&number, sizeof number);
 			return true;
 		}
-		}
-		return false;
 	}
+	return false;
+}
 
-	size_t format(const Settings& settings, const Field& field, char* out, size_t capacity) {
-		if (!capacity) return 0;
-		switch (field.type) {
+size_t format(const Settings& settings, const Field& field, char* out,
+			  size_t capacity) {
+	if (!capacity) {
+		return 0;
+	}
+	switch (field.type) {
 		case Type::text: {
-			const char* text = reinterpret_cast<const char*>(&settings) + field.offset;
+			const char* text =
+				reinterpret_cast<const char*>(&settings) + field.offset;
 			size_t length = std::strlen(text);
-			if (length >= capacity) length = capacity - 1;
+			if (length >= capacity) {
+				length = capacity - 1;
+			}
 			std::memcpy(out, text, length);
 			out[length] = 0;
 			return length;
 		}
 		case Type::boolean: {
-			const char* word = reinterpret_cast<const uint8_t*>(&settings)[field.offset] ? "ON" : "OFF";
+			const char* word =
+				reinterpret_cast<const uint8_t*>(&settings)[field.offset]
+					? "ON"
+					: "OFF";
 			size_t length = std::strlen(word);
-			if (length >= capacity) length = capacity - 1;
+			if (length >= capacity) {
+				length = capacity - 1;
+			}
 			std::memcpy(out, word, length);
 			out[length] = 0;
 			return length;
 		}
 		case Type::number: {
 			uint16_t number;
-			std::memcpy(&number, reinterpret_cast<const char*>(&settings) + field.offset, sizeof number);
+			std::memcpy(&number,
+						reinterpret_cast<const char*>(&settings) + field.offset,
+						sizeof number);
 			int length = std::snprintf(out, capacity, "%u", unsigned(number));
-			return length < 0 ? 0 : size_t(length) >= capacity ? capacity - 1 : size_t(length);
+			return length < 0                   ? 0
+				   : size_t(length) >= capacity ? capacity - 1
+												: size_t(length);
 		}
-		}
-		out[0] = 0;
-		return 0;
 	}
+	out[0] = 0;
+	return 0;
 }
+}  // namespace settings

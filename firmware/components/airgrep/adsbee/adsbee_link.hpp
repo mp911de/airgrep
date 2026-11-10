@@ -2,12 +2,12 @@
 
 #include <cstddef>
 #include <cstdint>
+
 #include "adsbee_decoder.h"
 #include "adsbee_protocol.hpp"
 #include "esp_err.h"
 #include "freertos/FreeRTOS.h"
 #include "loop.hpp"
-
 
 namespace adsbee {
 #define ADSBEE_UART_BAUD 921600
@@ -17,8 +17,9 @@ namespace adsbee {
 #define ADSBEE_UART_TX_BUFFER 512
 #define ADSBEE_UART_QUEUE 20
 #define ADSBEE_POLL_MS 100
-// Sent after every TX attach. The first copy also flushes noise the floating line left in the
-// ADSBee's line assembler, the second one is the one that counts.
+// Sent after every TX attach. The first copy also flushes noise the floating
+// line left in the ADSBee's line assembler, the second one is the one that
+// counts.
 #define ADSBEE_INIT_COMMAND "AT+PROTOCOL_OUT=COMMS_UART,AIRGREP"
 #define ADSBEE_INIT_REPEATS 2
 #define ADSBEE_INIT_REPEAT_MS 100
@@ -27,48 +28,49 @@ namespace adsbee {
 struct State {
 	bool known = false, tx_attached = false, initialized = false;
 	int64_t updated_us = 0, reply_us = 0, error_us = 0;
-		esp_err_t last_error = ESP_OK;
-		uint32_t telemetry_lines = 0, crc_failures = 0, parity_errors = 0, framing_errors
-					= 0, overruns = 0;
+	esp_err_t last_error = ESP_OK;
+	uint32_t telemetry_lines = 0, crc_failures = 0, parity_errors = 0,
+			 framing_errors = 0, overruns = 0;
 	Gnss gnss;
-	int64_t gnss_us = 0; // last #GNSS frame, 0 until the first one
+	int64_t gnss_us = 0;  // last #GNSS frame, 0 until the first one
 
 	template <typename F>
-		static void update(F f) {
-			portENTER_CRITICAL(&mutex_);
-			f(storage());
-			portEXIT_CRITICAL(&mutex_);
-		}
+	static void update(F f) {
+		portENTER_CRITICAL(&mutex_);
+		f(storage());
+		portEXIT_CRITICAL(&mutex_);
+	}
 
-		static State copy();
+	static State copy();
 
-	private:
-		static State& storage();
-		static portMUX_TYPE mutex_;
-	};
+   private:
+	static State& storage();
+	static portMUX_TYPE mutex_;
+};
 
-	struct Message {
-		decoder_kind_t kind;
-		uint16_t len;
-		int64_t received_us;
-		char text[]; // NUL-terminated
-	};
+struct Message {
+	decoder_kind_t kind;
+	uint16_t len;
+	int64_t received_us;
+	char text[];  // NUL-terminated
+};
 
-	using Predicate = bool (*)(const Message&);
-	using Handler = void (*)(const Message&, void* ctx);
+using Predicate = bool (*)(const Message&);
+using Handler = void (*)(const Message&, void* ctx);
 
-	bool subscribe(Predicate predicate, Handler handler, void* ctx);
-	// Every decoded #GNSS frame, after State carries it. Runs on the loop task.
-	using GnssHandler = void (*)(const Gnss&, int64_t received_us, void* ctx);
-	bool subscribe_gnss(GnssHandler handler, void* ctx);
-	esp_err_t uart_init();
-	esp_err_t start();
-	loop::Handle poll_handle();
+bool subscribe(Predicate predicate, Handler handler, void* ctx);
+// Every decoded #GNSS frame, after State carries it. Runs on the loop task.
+using GnssHandler = void (*)(const Gnss&, int64_t received_us, void* ctx);
+bool subscribe_gnss(GnssHandler handler, void* ctx);
+esp_err_t uart_init();
+esp_err_t start();
+loop::Handle poll_handle();
 
-	loop::Handle request(const char* command, loop::SuccessListener on_reply,
-						loop::ErrorListener on_error, uint32_t timeout_ms = ADSBEE_REQUEST_TIMEOUT_MS);
-	bool busy();
-	// TX attached and the init sequence done, so the link takes requests.
-	bool ready();
-	size_t device_info(char* out, size_t capacity);
-} // namespace adsbee
+loop::Handle request(const char* command, loop::SuccessListener on_reply,
+					 loop::ErrorListener on_error,
+					 uint32_t timeout_ms = ADSBEE_REQUEST_TIMEOUT_MS);
+bool busy();
+// TX attached and the init sequence done, so the link takes requests.
+bool ready();
+size_t device_info(char* out, size_t capacity);
+}  // namespace adsbee

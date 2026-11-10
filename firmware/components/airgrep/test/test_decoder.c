@@ -1,4 +1,5 @@
 #include <string.h>
+
 #include "adsbee/adsbee_decoder.h"
 #include "unity.h"
 
@@ -8,112 +9,84 @@ typedef struct {
 	decoder_kind_t last_kind;
 } capture_t;
 
-static void capture(const char* text, size_t len, decoder_kind_t kind, void* ctx) {
+static void capture(const char* text, size_t len, decoder_kind_t kind,
+					void* ctx) {
 	capture_t* c = ctx;
 	c->count++;
 	strlcpy(c->last, text, sizeof c->last);
 	c->last_kind = kind;
 }
 
-TEST_CASE (
+TEST_CASE(
 
-
-"Complete line is delivered as an AT reply"
-,
-"[adsbee]"
-)
-{
-    capture_t c = {0};
-    decoder_t d;
-    adsbee_decoder_init(&d, capture, &c);
-    adsbee_decoder_feed(&d, "OK\n", 3);
-    TEST_ASSERT_EQUAL(1, c.count);
-    TEST_ASSERT_EQUAL_STRING("OK", c.last);
-    TEST_ASSERT_EQUAL(DECODER_AT_REPLY, c.last_kind);
+	"Complete line is delivered as an AT reply", "[adsbee]") {
+	capture_t c = {0};
+	decoder_t d;
+	adsbee_decoder_init(&d, capture, &c);
+	adsbee_decoder_feed(&d, "OK\n", 3);
+	TEST_ASSERT_EQUAL(1, c.count);
+	TEST_ASSERT_EQUAL_STRING("OK", c.last);
+	TEST_ASSERT_EQUAL(DECODER_AT_REPLY, c.last_kind);
 }
 
-TEST_CASE (
+TEST_CASE(
 
-
-"CRLF line is delivered without CR"
-,
-"[adsbee]"
-)
-{
-    capture_t c = {0};
-    decoder_t d;
-    adsbee_decoder_init(&d, capture, &c);
-    adsbee_decoder_feed(&d, "OK\r\n", 4);
-    TEST_ASSERT_EQUAL(1, c.count);
-    TEST_ASSERT_EQUAL_STRING("OK", c.last);
+	"CRLF line is delivered without CR", "[adsbee]") {
+	capture_t c = {0};
+	decoder_t d;
+	adsbee_decoder_init(&d, capture, &c);
+	adsbee_decoder_feed(&d, "OK\r\n", 4);
+	TEST_ASSERT_EQUAL(1, c.count);
+	TEST_ASSERT_EQUAL_STRING("OK", c.last);
 }
 
-TEST_CASE (
+TEST_CASE(
 
-
-"Hash prefix classifies a CSBEE line"
-,
-"[adsbee]"
-)
-{
-    capture_t c = {0};
-    decoder_t d;
-    adsbee_decoder_init(&d, capture, &c);
-    adsbee_decoder_feed(&d, "#A:ABC\n", 7);
-    TEST_ASSERT_EQUAL(DECODER_CSBEE, c.last_kind);
-    TEST_ASSERT_EQUAL_STRING("#A:ABC", c.last);
+	"Hash prefix classifies a CSBEE line", "[adsbee]") {
+	capture_t c = {0};
+	decoder_t d;
+	adsbee_decoder_init(&d, capture, &c);
+	adsbee_decoder_feed(&d, "#A:ABC\n", 7);
+	TEST_ASSERT_EQUAL(DECODER_CSBEE, c.last_kind);
+	TEST_ASSERT_EQUAL_STRING("#A:ABC", c.last);
 }
 
-TEST_CASE (
+TEST_CASE(
 
-
-"Lines split across chunks and empty lines are skipped"
-,
-"[adsbee]"
-)
-{
-    capture_t c = {0};
-    decoder_t d;
-    adsbee_decoder_init(&d, capture, &c);
-    adsbee_decoder_feed(&d, "AT+", 3);
-    adsbee_decoder_feed(&d, "X\n\n\r\n", 5);
-    TEST_ASSERT_EQUAL(1, c.count);
-    TEST_ASSERT_EQUAL_STRING("AT+X", c.last);
+	"Lines split across chunks and empty lines are skipped", "[adsbee]") {
+	capture_t c = {0};
+	decoder_t d;
+	adsbee_decoder_init(&d, capture, &c);
+	adsbee_decoder_feed(&d, "AT+", 3);
+	adsbee_decoder_feed(&d, "X\n\n\r\n", 5);
+	TEST_ASSERT_EQUAL(1, c.count);
+	TEST_ASSERT_EQUAL_STRING("AT+X", c.last);
 }
 
-TEST_CASE (
+TEST_CASE(
 
-
-"After an error the partial line is dropped through the next LF"
-,
-"[adsbee]"
-)
-{
-    capture_t c = {0};
-    decoder_t d;
-    adsbee_decoder_init(&d, capture, &c);
-    adsbee_decoder_feed(&d, "garb", 4);
-    adsbee_decoder_error(&d);
-    adsbee_decoder_feed(&d, "age\nOK\n", 7);
-    TEST_ASSERT_EQUAL(1, c.count);
-    TEST_ASSERT_EQUAL_STRING("OK", c.last);
+	"After an error the partial line is dropped through the next LF",
+	"[adsbee]") {
+	capture_t c = {0};
+	decoder_t d;
+	adsbee_decoder_init(&d, capture, &c);
+	adsbee_decoder_feed(&d, "garb", 4);
+	adsbee_decoder_error(&d);
+	adsbee_decoder_feed(&d, "age\nOK\n", 7);
+	TEST_ASSERT_EQUAL(1, c.count);
+	TEST_ASSERT_EQUAL_STRING("OK", c.last);
 }
 
-TEST_CASE (
+TEST_CASE(
 
-
-"Overlong line is discarded"
-,
-"[adsbee]"
-)
-{
-    capture_t c = {0};
-    decoder_t d;
-    adsbee_decoder_init(&d, capture, &c);
-    char big[ADSBEE_DECODER_SIZE + 10];
-    memset(big, 'x', sizeof big);
-    adsbee_decoder_feed(&d, big, sizeof big);
-    adsbee_decoder_feed(&d, "\nOK\n", 4);
-    TEST_ASSERT_EQUAL(1, c.count);
-    TEST_ASSERT_EQUAL_STRING("OK", c.last);
+	"Overlong line is discarded", "[adsbee]") {
+	capture_t c = {0};
+	decoder_t d;
+	adsbee_decoder_init(&d, capture, &c);
+	char big[ADSBEE_DECODER_SIZE + 10];
+	memset(big, 'x', sizeof big);
+	adsbee_decoder_feed(&d, big, sizeof big);
+	adsbee_decoder_feed(&d, "\nOK\n", 4);
+	TEST_ASSERT_EQUAL(1, c.count);
+	TEST_ASSERT_EQUAL_STRING("OK", c.last);
 }

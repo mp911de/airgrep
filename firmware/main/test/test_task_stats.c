@@ -19,7 +19,8 @@ CASE(load, "Core load is the non-idle share of the window, clamped") {
 	TEST_ASSERT_EQUAL_UINT(25, core_load_percent(750, 1000));
 }
 
-CASE(pairing, "Tasks pair by handle, sort by CPU and report created and deleted ones") {
+CASE(pairing,
+	 "Tasks pair by handle, sort by CPU and report created and deleted ones") {
 	task_sample_t before[] = {
 		{&handles[0], "loop", 100, 0, 10, 2, 2816},
 		{&handles[1], "IDLE0", 900, 0, 0, 1, 1024},
@@ -46,9 +47,11 @@ CASE(pairing, "Tasks pair by handle, sort by CPU and report created and deleted 
 
 CASE(capacity, "Rows stop at the capacity") {
 	task_sample_t before[] = {{&handles[0], "a", 0, 0, 1, 1, 0}};
-	task_sample_t after[] = {{&handles[0], "a", 10, 0, 1, 1, 0}, {&handles[1], "b", 10, 0, 1, 1, 0}};
+	task_sample_t after[] = {{&handles[0], "a", 10, 0, 1, 1, 0},
+							 {&handles[1], "b", 10, 0, 1, 1, 0}};
 	task_row_t rows[1];
-	TEST_ASSERT_EQUAL_UINT(1, task_stats_rows(before, 1, after, 2, 100, rows, 1));
+	TEST_ASSERT_EQUAL_UINT(1,
+						   task_stats_rows(before, 1, after, 2, 100, rows, 1));
 }
 
 #ifndef ESP_PLATFORM
