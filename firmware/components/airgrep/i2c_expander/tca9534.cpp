@@ -15,6 +15,11 @@ State& State::storage() {
 	return state;
 }
 
+bool State::is_valid() {
+	const State state = storage();
+	return state.updated_us && state.updated_us >= state.error_us;
+}
+
 State State::copy() {
 	State result;
 	update([&](State& state) { result = state; });

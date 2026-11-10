@@ -40,6 +40,8 @@ struct State {
 		portEXIT_CRITICAL(&mutex_);
 	}
 
+	static bool is_valid();
+
 	static State copy();
 
    private:
