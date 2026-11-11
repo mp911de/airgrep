@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bq25798_i2c.hpp"
+#include "charge_target.hpp"
 #include "device.h"
 #include "esp_err.h"
 #include "freertos/FreeRTOS.h"
@@ -9,8 +10,9 @@
 
 namespace charger {
 #define CHARGER_I2C_ADDR 0x6b
-#define CHARGER_POLL_PERIOD_MS 2000
+#define CHARGER_POLL_PERIOD_MS 250
 #define CHARGER_WATCHDOG_MS 20000
+#define CHARGER_MAX_SUBSCRIBERS 2
 
 const i2c_device_config_t i2c_config = {
 	.dev_addr_length = I2C_ADDR_BIT_LEN_7,
@@ -49,6 +51,7 @@ struct State {
 	int64_t updated_us = 0, error_us = 0, adc_ready_us = 0;
 	esp_err_t last_error = ESP_OK;
 	bool identity_known = false, configured = false, adc_valid = false;
+	TargetState target{};
 
 	// The battery test result when one ran. Otherwise, without VBUS the system
 	// runs from the pack, so a valid VBAT reading proves it. With VBUS the BAT
@@ -64,7 +67,16 @@ struct State {
 		return BatteryDetected::unknown;
 	}
 
-	bool is_valid();
+	bool usable(int64_t now_us) const {
+		return state_usable(updated_us, now_us);
+	}
+	bool detecting() const { return charger::detecting(status0.vbus, status1); }
+	unsigned detected_ma() const {
+		return charger::detected_ma(status1, status0.vbus);
+	}
+	float pack_celsius() const {
+		return charger::pack_celsius(adc_valid, ts_percent);
+	}
 
 	template <typename F>
 	static void update(F f) {
@@ -92,6 +104,18 @@ using ChargeCompletion = loop::Callable<void(ChargeResult)>;
 esp_err_t set_charge_enabled(bool enabled, ChargeCompletion complete);
 esp_err_t battery_test(ChargeCompletion complete);
 esp_err_t verify_battery(ChargeCompletion complete);
+bool battery_test_running();
+// Writes ICHG or IINDPM in mA with a read-back.
+esp_err_t set_charge_limit(unsigned ma, ChargeCompletion complete);
+esp_err_t set_input_limit(unsigned ma, ChargeCompletion complete);
+// Called on the loop after every complete Poll.
+using Handler = void (*)(const State&, void*);
+bool subscribe(Handler handler, void* context = nullptr);
+// On the loop: writes the registers the last Poll read back differently from
+// target. The hardware input limit is set before IINDPM is lowered and
+// cleared only after IINDPM was raised. A failed write waits for the next
+// call.
+void set_charger_state(const TargetState& target);
 void init(Completion complete);
 loop::Handle poll_handle();
 }  // namespace charger

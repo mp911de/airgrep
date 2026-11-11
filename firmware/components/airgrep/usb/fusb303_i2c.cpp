@@ -14,6 +14,7 @@ constexpr uint8_t kStatusBcLvlMask = 0x03;
 constexpr uint8_t kStatusVbusOk = 1 << 3;
 constexpr unsigned kStatusOrientShift = 4;
 constexpr uint8_t kStatusOrientMask = 0x03;
+constexpr uint8_t kStatus1Remedy = 1 << 0;  // STATUS1 REMEDY, Table 22
 constexpr unsigned kBcLvlDefault = 1, kBcLvl1500mA = 2, kBcLvl3000mA = 3;
 constexpr unsigned kOrientCc1 = 1, kOrientCc2 = 2;
 constexpr uint8_t kTypeMask = 0x7f;  // TYPE bit 7 reserved
@@ -32,6 +33,12 @@ unsigned cc_limit(const PortStatus& status, Role role) {
 					status.orientation == kOrientCc2)
 			   ? status.advertised_ma
 			   : 0;
+}
+
+bool decode_remedy(uint8_t status1) { return status1 & kStatus1Remedy; }
+
+bool negotiating(const PortStatus& status, bool remedy) {
+	return (status.vbus && !status.attached) || remedy;
 }
 
 Control decode_control1(uint8_t raw) {

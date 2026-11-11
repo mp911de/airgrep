@@ -3,9 +3,11 @@
 #include <atomic>
 
 #include "buzzer/buzzer.h"
+#include "charge_control.hpp"
 #include "charger/bq25798.hpp"
 #include "esp_log.h"
 #include "esp_pm.h"
+#include "esp_timer.h"
 #include "i2c_expander/tca9534.hpp"
 #include "sdkconfig.h"
 
@@ -44,9 +46,9 @@ void apply_system_controls(const expander::State& controls, uint8_t, void*) {
 	}
 	charger::State charger = charger::State::copy();
 	power_mode_t from = mode;
-	power_mode_t to =
-		power_mode_decode({valid, controls.input.power},
-						  {charger.is_valid(), charger.status0.vbus});
+	power_mode_t to = power_mode_decode(
+		{valid, controls.input.power},
+		{charger.usable(esp_timer_get_time()), charger.status0.vbus});
 	if (to != from) {
 		mode = to;
 		transition(from, to);
@@ -55,7 +57,10 @@ void apply_system_controls(const expander::State& controls, uint8_t, void*) {
 }  // namespace
 
 esp_err_t system_init() {
-	return expander::subscribe(apply_system_controls) ? ESP_OK : ESP_ERR_NO_MEM;
+	if (!expander::subscribe(apply_system_controls)) {
+		return ESP_ERR_NO_MEM;
+	}
+	return charge_control::init();
 }
 
 power_mode_t system_mode() { return mode; }

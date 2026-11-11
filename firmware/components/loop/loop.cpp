@@ -3,6 +3,7 @@
 #include <atomic>
 
 #include "esp_log.h"
+#include "esp_task_wdt.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
@@ -302,12 +303,26 @@ TickType_t wait_ticks(int64_t next_wake) {
 	return (TickType_t)((wait * configTICK_RATE_HZ + 999999) / 1000000);
 }
 
+// The task watchdog turns an action that never returns into a restart. The
+// tick bounds every wait, so a healthy loop resets it well inside the timeout.
+// The test build runs without it, the Unity menu busy-waits.
+void watchdog_reset() {
+#if CONFIG_ESP_TASK_WDT_EN
+	esp_task_wdt_reset();
+#endif
+}
+
 void loop_task(void*) {
+#if CONFIG_ESP_TASK_WDT_EN
+	ESP_ERROR_CHECK(esp_task_wdt_add(nullptr));
+#endif
 	for (;;) {
+		watchdog_reset();
 		int64_t next_wake = sweep();
 		QueuedEvent event;
 		while (xQueueReceive(s_queue, &event, wait_ticks(next_wake)) ==
 			   pdTRUE) {
+			watchdog_reset();
 			run_once(event);
 			next_wake = sweep();
 		}

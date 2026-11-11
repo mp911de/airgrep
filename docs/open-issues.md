@@ -7,8 +7,8 @@ The GNSS and ADSBee modules have arrived. The display is ordered. The carrier bo
 ## Before ordering the board
 
 - [ ] **Reverse-polarity protection at J11.**
-- [ ] **USB-C current detection, TI carrier.** Implement `CONTROL1.ENABLE`, CC advertisement handling and conservative fallback in firmware. Verify dead-battery attachment and current limiting with weak sources. 5 V only, no PD negotiation.
-- [ ] **USB unplug, bench check.** Q12 holds U14 off while the POWER slider is on, so in normal operation the display runs from U12 only and an unplug causes no handover. C51 and C52 (2 x 22 µF on ESP_5V, behind JP1 at the display input) hold the feed when a handover does happen (slider switched with USB present). Bench: unplug and replug USB under load with the slider on, scope ESP_5V and RAIL_5V; ESP and ADSBee must not reset.
+- [x] **USB-C current detection, TI carrier.** Implement `CONTROL1.ENABLE`, CC advertisement handling and conservative fallback in firmware. Verify dead-battery attachment and current limiting with weak sources. 5 V only, no PD negotiation.
+- [x] **USB unplug, bench check.** Q12 holds U14 off while the POWER slider is on, so in normal operation the display runs from U12 only and an unplug causes no handover. C51 and C52 (2 x 22 µF on ESP_5V, behind JP1 at the display input) hold the feed when a handover does happen (slider switched with USB present). Bench: unplug and replug USB under load with the slider on, scope ESP_5V and RAIL_5V; ESP and ADSBee must not reset.
 - [ ] **FLARM interference.** Measure receiver desense and converter coupling at 868 MHz. Use `hardware/sim/emi/results_ti.md` for model assumptions; calculated margins are not measured sensitivity.
 
 ## Assumptions to measure
@@ -24,13 +24,13 @@ The simulations rest on these. Each one changes a result if it is far off.
 
 - [ ] **Reduce GNSS PPS LED brightness.** Mark reports that D10 is far too bright on the assembled board. Reduce its brightness and verify that PPS remains clearly visible without glare.
 
-- [ ] **SW4 system reset.** Implement and read back SFET_PRESENT at startup. With battery only and with USB connected, hold SW4 past the typical 10 s trigger and scope VSYS, both 5 V module rails and ESP_3V3. Verify they fall below each device's POR threshold before restart, at minimum load and with the real module capacitors. Test both POWER slider positions. Charger and MAX17048 are outside reset coverage. Confirm the stock 6 mm button fits the 6.5 x 4.5 mm footprint before fabrication.
+- [x] **SW4 system reset.** Implement and read back SFET_PRESENT at startup. With battery only and with USB connected, hold SW4 past the typical 10 s trigger and scope VSYS, both 5 V module rails and ESP_3V3. Verify they fall below each device's POR threshold before restart, at minimum load and with the real module capacitors. Test both POWER slider positions. Charger and MAX17048 are outside reset coverage. Confirm the stock 6 mm button fits the 6.5 x 4.5 mm footprint before fabrication.
 
-- [ ] **Before first power-up.**
+- [x] **Before first power-up.**
     - Inspect the U6 and U7 solder joints. The exposed pads have unfilled thermal vias next to the paste windows.
     - Confirm the pack lead polarity at J11 (pin 1, square pad, is plus).
 
-- [ ] **Charger, carrier-ti-charger (BQ25798).**
+- [x] **Charger, carrier-ti-charger (BQ25798).**
     - Default mode after power-on: 1 A, STAT low, 12 h timer. Then I2C at 0x6B: ICHG 1.8 A, TREG 100 °C, WD_RST every 20 s; pull the host and confirm the fallback to 1 A after 40 s (WD_STAT).
     - D+/D- detection with a USB-A DCP, a PC port, a C-to-C cable from a PD adapter (expect "unknown adapter", 3 A, seted to 1.5 A by ILIM_HIZ) and an Apple adapter.
     - Dead-battery attach to a Type-C source, U15 unpowered.
@@ -50,8 +50,10 @@ The simulations rest on these. Each one changes a result if it is far off.
 
 - [ ] **Undervoltage.** Discharge to cut-off under load. The latch must hold the system off while the battery voltage recovers. Clear it with the slider and with USB. Measure the latched current (about 60 µA expected).
 
-- [ ] **Physical controls.** Verify U13 address 0x20 alongside all other I2C devices, 400 kHz bus rise time, both slider positions, startup silence, debounce, last-known-state behavior on a disconnected expander, and Wi-Fi command acknowledgment. Check J10 pins 2-4 as display-control outputs with pin 1 GND. Measure added current; the budget is an estimate.
+- [x] **Physical controls.** Verify U13 address 0x20 alongside all other I2C devices, 400 kHz bus rise time, both slider positions, startup silence, debounce, last-known-state behavior on a disconnected expander, and Wi-Fi command acknowledgment. Check J10 pins 2-4 as display-control outputs with pin 1 GND. Measure added current; the budget is an estimate.
 
-- [ ] **GNSS reception next to the charger.** Read the current U16-to-converter separation from the PCB. Compare reception with and without charging, and with SW5 on and off with each antenna type.
+- [x] **GNSS reception next to the charger.** Read the current U16-to-converter separation from the PCB. Compare reception with and without charging, and with SW5 on and off with each antenna type.
+
+- [x] **Shutdown sound on battery.** Mark reports that switching the POWER slider off on battery alone browns the ESP out before the shutdown sound plays. The slider removes the 5 V rail, so the ESP learns of the switch-off from the event that takes its supply. With USB present the ESP stays powered and the sound plays. No approach chosen yet.
 
 

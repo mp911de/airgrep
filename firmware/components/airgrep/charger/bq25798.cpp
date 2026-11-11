@@ -1,5 +1,6 @@
 #include "bq25798.hpp"
 
+#include <atomic>
 #include <new>
 
 #include "esp_log.h"
@@ -64,11 +65,6 @@ State& State::storage() {
 	return state;
 }
 
-bool State::is_valid() {
-	const State state = storage();
-	return state.updated_us && state.updated_us >= state.error_us;
-}
-
 State State::copy() {
 	State result;
 	update([&](State& state) { result = state; });
@@ -81,6 +77,21 @@ Completion completion;
 State state;
 bool busy;
 unsigned step;
+std::atomic<bool> testing;
+
+struct Subscriber {
+	Handler handler;
+	void* context;
+} subscribers[CHARGER_MAX_SUBSCRIBERS];
+
+size_t subscriber_count;
+
+void notify() {
+	const State current = State::copy();
+	for (size_t i = 0; i < subscriber_count; i++) {
+		subscribers[i].handler(current, subscribers[i].context);
+	}
+}
 
 void record_error(esp_err_t result) {
 	int64_t now = esp_timer_get_time();
@@ -105,6 +116,7 @@ void publish_state() {
 			current.battery_detection_vbat_valid;
 		state.last_error = current.last_error;
 		state.error_us = current.error_us;
+		state.target = current.target;
 		current = state;
 	});
 }
@@ -132,6 +144,9 @@ esp_err_t write(uint8_t reg, uint8_t value) {
 							   CONFIG_AIRGREP_I2C_TIMEOUT_MS);
 }
 
+void decode_configuration();
+void next(const char* name, loop::Action action);
+
 // Charge operations. One runs at a time on the loop, guarded by busy like the
 // poll.
 namespace {
@@ -158,7 +173,7 @@ esp_err_t read_enabled(bool& enabled) {
 	return result;
 }
 
-// The only writer of EN_CHG: read, modify, write, read back.
+// EN_CHG for Commands and battery tests: read, modify, write, read back.
 esp_err_t set_charge_enabled(bool enabled) {
 	bool current;
 	esp_err_t result = read_enabled(current);
@@ -183,9 +198,48 @@ esp_err_t set_charge_enabled(bool enabled) {
 	return result;
 }
 
+esp_err_t write_pair(uint8_t reg, uint16_t value) {
+	const uint8_t bytes[] = {reg, uint8_t(value >> 8), uint8_t(value)};
+	return i2c_master_transmit(device, bytes, sizeof bytes,
+							   CONFIG_AIRGREP_I2C_TIMEOUT_MS);
+}
+
+uint16_t pair(uint8_t reg) {
+	return uint16_t(state.raw[reg] << 8 | state.raw[reg + 1]);
+}
+
+unsigned requested_ma;
+
+// ICHG or IINDPM: read, modify, write, read back.
+esp_err_t set_limit(uint8_t reg) {
+	esp_err_t result = read({reg, 2});
+	if (result == ESP_OK) {
+		result = write_pair(reg, encode_current(pair(reg), requested_ma));
+	}
+	if (result == ESP_OK) {
+		result = read({reg, 2});
+	}
+	if (result == ESP_OK &&
+		decode_charge_current(state.raw[reg], state.raw[reg + 1]) !=
+			requested_ma / 10 * 10) {
+		result = ESP_ERR_INVALID_RESPONSE;
+	}
+	if (result == ESP_OK) {
+		decode_configuration();
+		State::update([reg](State& shared) {
+			shared.raw[reg] = state.raw[reg];
+			shared.raw[reg + 1] = state.raw[reg + 1];
+			shared.charge_current_ma = state.charge_current_ma;
+			shared.input_current_ma = state.input_current_ma;
+		});
+	}
+	return result;
+}
+
 void complete_operation() {
 	const auto finished = operation;
 	busy = false;
+	testing = false;
 	if (finished.result.error != ESP_OK) {
 		record_error(finished.result.error);
 	}
@@ -214,6 +268,11 @@ void fail(esp_err_t error) {
 
 void apply_charge_enabled(bool enabled) {
 	operation.result.error = set_charge_enabled(enabled);
+	complete_operation();
+}
+
+void apply_limit(uint8_t reg) {
+	operation.result.error = set_limit(reg);
 	complete_operation();
 }
 
@@ -321,7 +380,7 @@ void start_verify_battery() {
 // Admission: hop onto the loop, run start when the driver is idle and the
 // device known. A battery test also needs the configured continuous ADC.
 esp_err_t submit(const char* name, bool needs_adc, ChargeCompletion complete,
-				 void (*start)()) {
+				 void (*start)(), unsigned ma = 0) {
 	if (!complete) {
 		return ESP_ERR_INVALID_ARG;
 	}
@@ -329,8 +388,9 @@ esp_err_t submit(const char* name, bool needs_adc, ChargeCompletion complete,
 		ChargeCompletion complete;
 		bool needs_adc;
 		void (*start)();
+		unsigned ma;
 	};
-	auto* pending = new (std::nothrow) Pending{complete, needs_adc, start};
+	auto* pending = new (std::nothrow) Pending{complete, needs_adc, start, ma};
 	if (!pending) {
 		return ESP_ERR_NO_MEM;
 	}
@@ -348,9 +408,11 @@ esp_err_t submit(const char* name, bool needs_adc, ChargeCompletion complete,
 			return loop::Result::done;
 		}
 		busy = true;
+		testing = admitted.needs_adc;
 		state = current;
 		operation = {};
 		operation.complete = admitted.complete;
+		requested_ma = admitted.ma;
 		admitted.start();
 		return loop::Result::done;
 	});
@@ -367,6 +429,20 @@ esp_err_t set_charge_enabled(bool enabled, ChargeCompletion complete) {
 		enabled ? +[] { apply_charge_enabled(true); }
 				: +[] { apply_charge_enabled(false); });
 }
+
+esp_err_t set_charge_limit(unsigned ma, ChargeCompletion complete) {
+	return submit(
+		"charger ichg", false, complete,
+		+[] { apply_limit(kRegChargeCurrentLimit); }, ma);
+}
+
+esp_err_t set_input_limit(unsigned ma, ChargeCompletion complete) {
+	return submit(
+		"charger iindpm", false, complete,
+		+[] { apply_limit(kRegInputCurrentLimit); }, ma);
+}
+
+bool battery_test_running() { return testing; }
 
 esp_err_t battery_test(ChargeCompletion complete) {
 	return submit("charger battery test", true, complete, start_battery_test);
@@ -385,6 +461,82 @@ esp_err_t verify_battery(ChargeCompletion complete) {
 esp_err_t kick_watchdog() {
 	uint8_t control1 = state.raw[kRegChargerControl1] & ~kWatchdogMask;
 	return write(kRegChargerControl1, control1 | kWatchdogReset | kWatchdog20s);
+}
+
+namespace {
+struct Write {
+	uint8_t reg;
+	uint16_t value;
+	bool pair;
+} writes[6];
+size_t write_count, write_next;
+
+void add(uint8_t reg, uint16_t value, bool is_pair = false) {
+	writes[write_count++] = {reg, value, is_pair};
+}
+
+loop::Result write_step(loop::Handle, loop::Value&) {
+	const Write& w = writes[write_next++];
+	esp_err_t result =
+		w.pair ? write_pair(w.reg, w.value) : write(w.reg, uint8_t(w.value));
+	if (result != ESP_OK) {
+		error(result);
+		return loop::Result::done;
+	}
+	if (w.pair) {
+		state.raw[w.reg] = uint8_t(w.value >> 8);
+	}
+	state.raw[w.reg + w.pair] = uint8_t(w.value);
+	if (write_next < write_count) {
+		next("charger reconcile", write_step);
+	} else {
+		decode_configuration();
+		busy = false;
+	}
+	return loop::Result::done;
+}
+}  // namespace
+
+void set_charger_state(const TargetState& target) {
+	State::update([&](State& shared) { shared.target = target; });
+
+	if (!target.decided || busy || !device || !state.configured) {
+		return;
+	}
+	const auto* raw = state.raw;
+	const uint8_t control5 = raw[kRegChargerControl5];
+	const bool external_limit = control5 & kExternalLimit;
+	write_count = write_next = 0;
+
+	if (target.hardware_limit && !external_limit) {
+		add(kRegChargerControl5, control5 | kExternalLimit);
+	}
+	if (state.thermal_limit_c != target.thermal_limit_c) {
+		add(kRegTemperatureControl,
+			encode_temperature_control(raw[kRegTemperatureControl],
+									   target.thermal_limit_c));
+	}
+	if (state.charge_current_ma != target.charge_ma) {
+		add(kRegChargeCurrentLimit,
+			encode_current(pair(kRegChargeCurrentLimit), target.charge_ma),
+			true);
+	}
+	if (state.control0.charge_enabled != target.charge_enabled) {
+		add(kRegChargerControl0,
+			target.charge_enabled ? raw[kRegChargerControl0] | kChargeEnable
+								  : raw[kRegChargerControl0] & ~kChargeEnable);
+	}
+	if (target.input_ma && state.input_current_ma != target.input_ma) {
+		add(kRegInputCurrentLimit,
+			encode_current(pair(kRegInputCurrentLimit), target.input_ma), true);
+	}
+	if (!target.hardware_limit && external_limit) {
+		add(kRegChargerControl5, control5 & ~kExternalLimit);
+	}
+	if (write_count) {
+		busy = true;
+		next("charger reconcile", write_step);
+	}
 }
 
 int64_t conversion_cycle_us() {
@@ -467,13 +619,16 @@ loop::Result poll_configured(loop::Handle, loop::Value&) {
 			}
 			break;
 		case 1:
-			result = kick_watchdog();
-			break;
-		case 2:
 			result = read(kBlockFaultFlags);
 			break;
-		default:
+		case 2:
 			result = read(kBlockAdc);
+			break;
+		case 3:
+			result = read(kBlockLimits);
+			break;
+		default:
+			result = kick_watchdog();
 			break;
 	}
 	if (result != ESP_OK) {
@@ -484,12 +639,14 @@ loop::Result poll_configured(loop::Handle, loop::Value&) {
 		}
 		return loop::Result::done;
 	}
-	if (step < 4) {
+	if (step < 5) {
 		next("charger sample", poll_configured);
 		return loop::Result::done;
 	}
+	decode_configuration();
 	decode_status();
 	publish();
+	notify();
 	return loop::Result::done;
 }
 
@@ -609,6 +766,14 @@ loop::Result probe(loop::Handle, loop::Value&) {
 }
 
 loop::Handle poll_handle() { return periodic; }
+
+bool subscribe(Handler handler, void* context) {
+	if (!handler || subscriber_count == CHARGER_MAX_SUBSCRIBERS) {
+		return false;
+	}
+	subscribers[subscriber_count++] = {handler, context};
+	return true;
+}
 
 void init(Completion complete) {
 	completion = complete;

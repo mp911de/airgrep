@@ -1,5 +1,6 @@
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 
 #include "argtable.hpp"
 #include "battery/max17048.hpp"
@@ -9,15 +10,23 @@
 #include "esp_console.h"
 #include "freertos/semphr.h"
 #include "settings/settings.hpp"
+#include "system/charge_control.hpp"
 
 namespace {
+// REG06 and REG03 ranges, BQ25798 datasheet 7.5.1.
+constexpr unsigned kInputLimitMinMa = 100, kInputLimitMaxMa = 3300;
+constexpr unsigned kChargeLimitMinMa = 50, kChargeLimitMaxMa = 5000;
+
 struct {
 	struct arg_lit *battery_test, *verify_battery, *enable_charge,
 		*disable_charge;
+	struct arg_str* mode;
+	struct arg_int *iindpm, *ichg;
 	struct arg_end* end;
 } args;
 
-int charge_command(bool test, bool enabled) {
+template <typename Queue>
+int charge_command(bool test, Queue queue) {
 	struct Reply {
 		StaticSemaphore_t storage;
 		SemaphoreHandle_t done;
@@ -28,8 +37,7 @@ int charge_command(bool test, bool enabled) {
 		reply.result = result;
 		xSemaphoreGive(reply.done);
 	};
-	esp_err_t queued = test ? charger::battery_test(complete)
-							: charger::set_charge_enabled(enabled, complete);
+	esp_err_t queued = queue(complete);
 	if (queued != ESP_OK) {
 		vSemaphoreDelete(reply.done);
 		return command_status::ack(queued);
@@ -121,27 +129,131 @@ void adc(const charger::State& state, const char* name, const char* reg,
 	}
 }
 
+const char* pending(bool differs) { return differs ? " (pending)" : ""; }
+
+// What charge control decided, next to the registers the chip reports.
+void control(const charger::State& state, const char* const* vbus_names) {
+	const auto& target = state.target;
+	std::printf("%-20s %s\n", "Control",
+				charge_control::get_charger_mode_name(
+					charge_control::get_charger_mode()));
+	if (!target.decided) {
+		return;
+	}
+	std::printf("%-20s ", "Source");
+	switch (target.supply) {
+		case charger::Supply::none:
+			std::puts("NO INPUT");
+			break;
+		case charger::Supply::waiting:
+			std::printf("WAITING %.1f s\n", target.waiting_us / 1e6);
+			break;
+		case charger::Supply::usb_c:
+			std::printf("USB-C %u mA (CC)\n", target.input_ma);
+			break;
+		case charger::Supply::detection:
+			std::printf("BC1.2 %s %u mA\n", vbus_names[target.vbus_type & 0x0f],
+						target.input_ma);
+			break;
+	}
+	const bool input_differs =
+		state.control5.external_limit != target.hardware_limit ||
+		(target.input_ma && state.input_current_ma != target.input_ma);
+	std::printf("%-20s ", "Input target");
+	if (target.input_ma) {
+		std::printf("%u mA, ", target.input_ma);
+	}
+	std::printf("hardware limit %s%s\n", target.hardware_limit ? "ON" : "OFF",
+				pending(input_differs));
+	std::printf("%-20s %u mA%s\n", "Charge target", target.charge_ma,
+				pending(state.charge_current_ma != target.charge_ma));
+	static const char* reasons[] = {
+		"",
+		" (battery cold)",
+		" (battery hot)",
+		" (battery overvoltage)",
+		" (no battery)",
+		" (battery overvoltage, locked until restart)"};
+	std::printf(
+		"%-20s %s%s%s\n", "Charging", target.charge_enabled ? "ON" : "OFF",
+		reasons[uint8_t(target.stop)],
+		pending(state.control0.charge_enabled != target.charge_enabled));
+}
+
 int command(int argc, char** argv) {
 	if (arg_parse(argc, argv, reinterpret_cast<void**>(&args))) {
 		arg_print_errors(stderr, args.end, argv[0]);
 		return 1;
 	}
-	if (args.battery_test->count + args.verify_battery->count +
-			args.enable_charge->count + args.disable_charge->count >
-		1) {
+	const int setters = args.battery_test->count + args.verify_battery->count +
+						args.enable_charge->count + args.disable_charge->count +
+						args.iindpm->count + args.ichg->count;
+	if (setters + args.mode->count > 1) {
 		std::puts(
-			"Choose one of --battery-test, --verify-battery, "
-			"--enable-charge, --disable-charge");
+			"Choose one of --mode, --iindpm, --ichg, --battery-test, "
+			"--verify-battery, --enable-charge, --disable-charge");
 		return 1;
+	}
+	if (args.mode->count) {
+		const char* name = args.mode->sval[0];
+		if (std::strcmp(name, "AUTO") && std::strcmp(name, "MANUAL")) {
+			std::puts("Mode is AUTO or MANUAL");
+			return 1;
+		}
+		esp_err_t result = charge_control::set_charger_mode(
+			std::strcmp(name, "MANUAL") ? charger::ControlMode::automatic
+										: charger::ControlMode::manual);
+		if (result == ESP_ERR_INVALID_STATE) {
+			std::puts("Rejected while a battery test runs");
+		}
+		return command_status::ack(result);
+	}
+	if (setters &&
+		charge_control::get_charger_mode() == charger::ControlMode::automatic) {
+		std::puts("Rejected in AUTO, switch with --mode MANUAL");
+		return 1;
+	}
+	if (args.iindpm->count) {
+		const int ma = args.iindpm->ival[0];
+		const unsigned ceiling = charger::State::copy().control5.external_limit
+									 ? CHARGER_HARDWARE_INPUT_LIMIT_MA
+									 : kInputLimitMaxMa;
+		if (ma < int(kInputLimitMinMa) || ma > int(ceiling)) {
+			std::printf("IINDPM is %u to %u mA%s\n", kInputLimitMinMa, ceiling,
+						ceiling == CHARGER_HARDWARE_INPUT_LIMIT_MA
+							? " while the hardware input limit is on"
+							: "");
+			return 1;
+		}
+		return charge_command(false, [ma](charger::ChargeCompletion done) {
+			return charger::set_input_limit(ma, done);
+		});
+	}
+	if (args.ichg->count) {
+		const int ma = args.ichg->ival[0];
+		if (ma < int(kChargeLimitMinMa) || ma > int(kChargeLimitMaxMa)) {
+			std::printf("ICHG is %u to %u mA\n", kChargeLimitMinMa,
+						kChargeLimitMaxMa);
+			return 1;
+		}
+		return charge_command(false, [ma](charger::ChargeCompletion done) {
+			return charger::set_charge_limit(ma, done);
+		});
 	}
 	if (args.verify_battery->count) {
 		return command_status::ack(
 			charger::verify_battery([](charger::ChargeResult) {}));
 	}
-	if (args.battery_test->count || args.enable_charge->count ||
-		args.disable_charge->count) {
-		return charge_command(args.battery_test->count,
-							  args.enable_charge->count);
+	if (args.battery_test->count) {
+		return charge_command(true, [](charger::ChargeCompletion done) {
+			return charger::battery_test(done);
+		});
+	}
+	if (args.enable_charge->count || args.disable_charge->count) {
+		const bool enabled = args.enable_charge->count;
+		return charge_command(false, [enabled](charger::ChargeCompletion done) {
+			return charger::set_charge_enabled(enabled, done);
+		});
 	}
 	const auto state = charger::State::copy();
 	std::printf("%-20s %s\n", "Battery",
@@ -191,6 +303,7 @@ int command(int argc, char** argv) {
 								 "RESERVED",
 								 "RESERVED",
 								 "RESERVED"};
+	control(state, vbus);
 	std::printf("%-20s %s (0x%02X)\n", "VBUS (REG1B)",
 				state.status0.vbus ? "PRESENT" : "ABSENT", raw[0x1b]);
 	std::printf("%-20s %s (0x%02X)\n", "VBUS type (REG1C)",
@@ -250,6 +363,15 @@ extern "C" esp_err_t console_register_charger(void) {
 	args.disable_charge =
 		arg_lit0(nullptr, "disable-charge",
 				 "Clear EN_CHG without changing other configuration");
+	args.mode = arg_str0(nullptr, "mode", "AUTO|MANUAL",
+						 "AUTO applies charge control, MANUAL leaves the "
+						 "charger to these options until restart");
+	args.iindpm =
+		arg_int0(nullptr, "iindpm", "MA",
+				 "Set the input limit in MANUAL, at most the hardware "
+				 "input limit while it is on");
+	args.ichg =
+		arg_int0(nullptr, "ichg", "MA", "Set the charge current in MANUAL");
 	args.end = arg_end(2);
 	if (arg_nullcheck(reinterpret_cast<void**>(&args))) {
 		return ESP_ERR_NO_MEM;
@@ -260,8 +382,8 @@ extern "C" esp_err_t console_register_charger(void) {
 			"Show charger status, control charging or measure battery "
 			"voltage decay.",
 		.hint =
-			"[--battery-test | --verify-battery | --enable-charge | "
-			"--disable-charge]",
+			"[--mode AUTO|MANUAL | --iindpm MA | --ichg MA | --battery-test | "
+			"--verify-battery | --enable-charge | --disable-charge]",
 		.func = command,
 		.argtable = &args,
 		.func_w_context = nullptr,

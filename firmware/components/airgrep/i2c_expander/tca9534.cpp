@@ -16,8 +16,7 @@ State& State::storage() {
 }
 
 bool State::is_valid() {
-	const State state = storage();
-	return state.updated_us && state.updated_us >= state.error_us;
+	return state_usable(copy().updated_us, esp_timer_get_time());
 }
 
 State State::copy() {

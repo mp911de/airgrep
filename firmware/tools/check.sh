@@ -60,44 +60,8 @@ else
   done
 fi
 
-# Host Unity run. A test file carries a host main() behind #ifndef ESP_PLATFORM. The source
-# under test is the .c or .cpp beside each header the test includes. Files that reach for IDF
-# headers have no host build and are skipped.
-UNITY="${IDF_PATH:-$HOME/.espressif/v6.1/esp-idf}/components/unity/unity/src"
-idf_only() { grep -lE '#include [<"](esp_|freertos/|driver/|sdkconfig\.h|hal/|soc/)' "$@" > /dev/null 2>&1; }
-# Unity itself is C. A C++ driver refuses -std=c++23 for a .c input, so it is compiled once here.
-"$HOST_CC" -std=c11 -c -I"$UNITY" "$UNITY/unity.c" -o "$TMP/unity.o"
-for test in "$ROOT"/components/*/test/test_*.c "$ROOT"/components/*/test/test_*.cpp "$ROOT"/main/test/test_*; do
-  [ -f "$test" ] || continue
-  name="${test#"$ROOT"/}"
-  grep -q '#ifndef ESP_PLATFORM' "$test" || { skip host "$name  no host main()"; continue; }
-  testdir="$(dirname "$test")"
-  comp="$(dirname "$testdir")"
-  sources=""; headers=""; incs="-I$comp -I$testdir"
-  for header in $(grep -o '#include "[^"]*\.h\(pp\)\?"' "$test" | sed 's/#include "\(.*\)"/\1/'); do
-    for dir in "$testdir" "$comp" "$comp"/*/; do
-      [ -f "$dir/$header" ] || continue
-      path="$(cd "$(dirname "$dir/$header")" && pwd -P)/$(basename "$header")"
-      headers="$headers $path"; incs="$incs -I$(dirname "$path")"
-      for src in "${path%.*}.c" "${path%.*}.cpp"; do [ -f "$src" ] && sources="$sources $src"; done
-      break
-    done
-  done
-  # shellcheck disable=SC2086
-  if idf_only "$test" $headers $sources; then skip host "$name  needs IDF headers"; continue; fi
-  bin="$TMP/$(basename "${test%.*}")"
-  case "$test" in
-    *.cpp) compile=("$HOST_CXX" -std=c++23 -Wall -Wshadow $incs -I"$UNITY" "$test" $sources "$TMP/unity.o") ;;
-    *)     compile=("$HOST_CC" -std=c11 -Wall -Wshadow $incs -I"$UNITY" "$test" $sources "$UNITY/unity.c") ;;
-  esac
-  if ! "${compile[@]}" -o "$bin" > "$bin.log" 2>&1; then
-    fail host "$name  $(grep -m1 'error:' "$bin.log" | sed "s|$ROOT/||" | cut -c1-160)"
-  elif "$bin" > "$bin.out" 2>&1; then
-    ok host "$name  $(grep -E '^[0-9]+ Tests' "$bin.out")"
-  else
-    fail host "$name  $(grep -m1 ':FAIL' "$bin.out" | sed "s|$ROOT/||")"
-  fi
-done
+# Host Unity run.
+HOST_CC="$HOST_CC" HOST_CXX="$HOST_CXX" "$HERE/host-test.sh" || rc=1
 
 # Tag coverage: every tag the test build runs at boot must name at least one TEST_CASE.
 tags="$(sed -n 's/^CONFIG_AIRGREP_TEST_TAGS="\(.*\)"$/\1/p' "$ROOT/sdkconfig.test")"

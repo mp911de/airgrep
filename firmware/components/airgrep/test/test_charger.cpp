@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include "charger/bq25798_i2c.hpp"
+#include "device.h"
 #include "unity.h"
 
 #ifdef ESP_PLATFORM
@@ -114,6 +115,59 @@ CASE(fault_flag1, "Charger fault flag1 register decodes datasheet values") {
 CASE(control0, "Charger control0 register decodes datasheet values") {
 	TEST_ASSERT_TRUE(charger::decode_control0(0x04).high_impedance);
 	TEST_ASSERT_FALSE(charger::decode_control0(0xa2).high_impedance);
+	TEST_ASSERT_TRUE(charger::decode_control0(0xa2).charge_enabled);
+	TEST_ASSERT_FALSE(charger::decode_control0(0x04).charge_enabled);
+}
+
+CASE(encode_limits,
+	 "Charger limit encoders keep reserved bits and round down") {
+	TEST_ASSERT_EQUAL_HEX16(0x00b4, charger::encode_current(0x0000, 1800));
+	TEST_ASSERT_EQUAL_HEX16(0xfe32, charger::encode_current(0xfe00, 505));
+	TEST_ASSERT_EQUAL_UINT32(
+		3000, charger::decode_input_current(
+				  0x01, charger::encode_current(0x0000, 3000) & 0xff));
+	TEST_ASSERT_EQUAL_HEX8(0xab,
+						   charger::encode_temperature_control(0xeb, 100));
+	TEST_ASSERT_EQUAL_UINT32(100, charger::decode_temperature_control(0xab));
+}
+
+CASE(detected_current,
+	 "Charger detection result follows table 7-4, unknown as 500 mA") {
+	const auto sdp = charger::decode_status1(0x03);
+	TEST_ASSERT_EQUAL_UINT32(500, charger::detected_ma(sdp, true));
+	TEST_ASSERT_EQUAL_UINT32(
+		1500, charger::detected_ma(charger::decode_status1(0x05), true));
+	TEST_ASSERT_EQUAL_UINT32(
+		1500, charger::detected_ma(charger::decode_status1(0x07), true));
+	TEST_ASSERT_EQUAL_UINT32(
+		1500, charger::detected_ma(charger::decode_status1(0x09), true));
+	TEST_ASSERT_EQUAL_UINT32(
+		500, charger::detected_ma(charger::decode_status1(0x0b), true));
+	TEST_ASSERT_EQUAL_UINT32(
+		1000, charger::detected_ma(charger::decode_status1(0x0d), true));
+	TEST_ASSERT_EQUAL_UINT32(
+		500, charger::detected_ma(charger::decode_status1(0x11), true));
+	TEST_ASSERT_EQUAL_UINT32(0, charger::detected_ma(sdp, false));
+}
+
+CASE(detecting, "Charger detects while VBUS is present and BC1.2 is not done") {
+	TEST_ASSERT_TRUE(charger::detecting(true, charger::decode_status1(0x00)));
+	TEST_ASSERT_FALSE(charger::detecting(true, charger::decode_status1(0x07)));
+	TEST_ASSERT_FALSE(charger::detecting(false, charger::decode_status1(0x00)));
+}
+
+CASE(pack_celsius,
+	 "Pack temperature needs a valid ADC and an estimate in range") {
+	TEST_ASSERT_FLOAT_WITHIN(0.5f, charger::estimate_ntc_c(50),
+							 charger::pack_celsius(true, 50));
+	TEST_ASSERT_TRUE(std::isnan(charger::pack_celsius(false, 50)));
+	TEST_ASSERT_TRUE(std::isnan(charger::pack_celsius(true, 0)));
+}
+
+CASE(usable, "A State is usable up to 5 s after its last successful Poll") {
+	TEST_ASSERT_FALSE(state_usable(0, 1000));
+	TEST_ASSERT_TRUE(state_usable(1000, 1000 + 5000000));
+	TEST_ASSERT_FALSE(state_usable(1000, 1001 + 5000000));
 }
 
 CASE(control1, "Charger control1 register decodes datasheet values") {
@@ -237,6 +291,11 @@ CASE(tdie, "Charger tdie register decodes datasheet values") {
 #ifndef ESP_PLATFORM
 int main() {
 	UNITY_BEGIN();
+	RUN_TEST(encode_limits);
+	RUN_TEST(detected_current);
+	RUN_TEST(detecting);
+	RUN_TEST(pack_celsius);
+	RUN_TEST(usable);
 	RUN_TEST(detect_battery);
 	RUN_TEST(tdie);
 	RUN_TEST(ts);

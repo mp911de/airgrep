@@ -61,11 +61,29 @@ The display gets 5 V from two ideal diodes: U12 from the 5 V rail (POWER slider 
 
 - Without a host the charger runs its defaults: 1 A, TREG 120 °C, watchdog 40 s. The hardware TS window is 3 to 43 °C.
 - The host may raise ICHG to 1.8 A and set TREG to 100 °C (or 80 °C). Every register marked "reset by WATCHDOG" falls back when the watchdog expires: reset the watchdog well inside 40 s, and re-apply the whole profile whenever WD_STAT is set.
-- INT is not wired to the ESP (TP8 only). Poll STAT, faults and the ADC (VBUS, IBUS, IBAT, VBAT, VSYS, TS, TDIE) every 1 to 2 s while awake.
+- INT is not wired to the ESP (TP8 only). Poll STAT, faults, the ADC (VBUS, IBUS, IBAT, VBAT, VSYS, TS, TDIE) and the limits and controls REG03 to REG16 every 250 ms while awake, the watchdog write last. The status read stays before the watchdog write, because the write clears WD_STAT. Flag registers clear on read (WD_FLAG, data sheet 7.4.1), so the Poll reads no further flag registers.
 - Input current: the display load on PMID counts inside IINDPM. Keep IINDPM at the detected source limit (500 mA on a standard USB port).
 - USB-C initialization: wait 100 ms after U15 (FUSB303B, 0x21) has VDD valid and EN_N low before its first I2C access (`tEN`, datasheet page 9), then set `CONTROL1.ENABLE` (register 0x05 bit 3). Poll `STATUS.ATTACH`, `STATUS.BC_LVL` and `STATUS.VBUSOK`; require attached, VBUS valid and `TYPE.SINK` before using the advertised current.
 - USB source current: explicit CC advertisements of 1.5 A or 3 A take precedence over BC1.2; set IINDPM accordingly. With default CC current, use the completed BQ25798 D+/D- detection result instead: 500 mA for SDP or unknown sources, 1.5 A for CDP/DCP, and the detected non-standard adapter limit capped at 1.5 A. Default CC on an A-to-C cable does not cap a detected charger at 500 mA. Clear EN_EXTILIM only for a valid 3 A CC advertisement; otherwise retain the ILIM_HIZ 1.5 A set. On detach, invalid status/type or a lower advertisement, set EN_EXTILIM = 1 first, then update IINDPM. A replug reruns BC1.2 and overwrites IINDPM; reapply this policy after detection completes. EN_EXTILIM survives the watchdog, only REG_RST resets it. Current precedence follows [USB-IF section 4.6](https://usb.org/sites/default/files/USB%20Type%20C%20Functional%20Test%20Specification%202019%2004%2030.pdf); D+/D- results are in BQ25798 table 7-4.
-- Adaptive current: lower ICHG when TDIE approaches TREG or the pack approaches the 43 °C stop; charger mode with the modules off allows the full 1.8 A in the closed case (heat model, device-off case).
+- Adaptive current: lower ICHG when TDIE approaches TREG or the pack approaches the 43 °C stop; charger mode with the modules off allows the full 1.8 A in the closed case (heat model, device-off case). Charge control below replaces the TDIE rule with TREG 100 °C.
+
+### Charge control
+
+Charge control in the system component sets IINDPM, ICHG, EN_CHG, TREG and EN_EXTILIM from the USB source, the pack capacity and the pack temperature. It runs after every complete charger Poll and USB-C controller Poll (both 250 ms) and on a 2 s safety run. The operating mode is not an input, ON and CHARGER mode follow the same rules.
+
+- A driver State is usable while its last successful Poll is at most 5 s old. One failed Poll does not make it unusable. The ADSBee TX gate keeps its own 500 ms limit.
+- Wait: while the USB-C controller negotiates (VBUS but not attached, or REMEDY) or the charger detects (VBUS and BC1.2_DONE_STAT clear), EN_EXTILIM is set and nothing else on the input side is written. The wait ends on completion or 5 s after VBUS appeared.
+- Input target: a 1.5 A or 3 A CC advertisement wins. Otherwise the charger's detection result: SDP 500 mA, CDP, DCP and HVDCP 1500 mA, non-standard adapter 1000 mA (the register does not say which divider), anything else 500 mA. A missing or stale USB-C State counts as default CC. No reserve is subtracted, the charger feeds the system first.
+- EN_EXTILIM is cleared only for a valid 3 A advertisement. On detach or VBUS loss it is set at once. It is always set before IINDPM is lowered and cleared only after IINDPM was raised.
+- Charge target: 0.5 C of the configured pack capacity, 500 to 2000 mA. At or above 33 °C pack temperature at most 1000 mA, released at 31 °C. At or above 36 °C at most 500 mA, released at 34 °C.
+- Charge enable: off at or below 4 °C, released at 6 °C. Off at or above 40 °C, released at 38 °C.
+- A lost pack temperature keeps the last decision of every threshold. Without any valid reading since start, charging runs at 500 mA.
+- Order for charge enable: temperature, then battery overvoltage, then the rest.
+- Battery overvoltage: VBAT_OVP (live or latched) switches charging off. It counts as one failure only when charging was on. After 5 min off with VBAT_OVP gone, VBAT decides: below 2.6 V is no pack, because without a pack and with charging off the charger holds BAT close to 2.5 V (data sheet 7.3.5). A pack is found later when VBAT rises to 2.6 V. The failure count resets once the last failure is more than 10 min old. At 10 failures charging is locked out until a restart, RAM only. A VBAT drop does not clear the lockout, an opened pack protection reads like a removed pack.
+- TREG is 100 °C. No firmware rule acts on TDIE, the chip regulates it.
+- Reconciliation: the target is compared with the registers the last Poll read back, only differing registers are written. A failed write is retried on the next run.
+- Control mode AUTO or MANUAL lives in RAM, AUTO after every start. In MANUAL charge control writes nothing and `charger --iindpm`, `--ichg`, `--enable-charge`, `--disable-charge` and the battery tests are allowed. `--iindpm` above the hardware input limit is rejected while EN_EXTILIM is set. No Command clears EN_EXTILIM. `--mode` is rejected while a battery test runs.
+- The event loop task is guarded by the 5 s task watchdog, which restarts the device.
 
 ## I2C bus
 

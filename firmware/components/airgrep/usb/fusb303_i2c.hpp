@@ -34,4 +34,6 @@ struct Control {
 };
 Control decode_control1(uint8_t raw);
 unsigned cc_limit(const PortStatus& status, Role role);
+bool decode_remedy(uint8_t status1);
+bool negotiating(const PortStatus& status, bool remedy);
 }  // namespace fusb

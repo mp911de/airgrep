@@ -14,14 +14,15 @@ Software progress across the ADSBee, rtl_433 and DAIDALUS workspaces. Checked it
 - [x] Add FLARM support (and define messages for ESP comms)
 - [x] Add GDL90 support
 - [x] show FLARM on Map
-- [ ] Integrate Wi-Fi slider control over the custom UART AT interface
-- [ ] Disable any bluetooth
+- [x] Integrate Wi-Fi slider control over the custom UART AT interface
+- [x] Disable any bluetooth
 
 ## ESP32
 
-- [ ] Setup project
-- [ ] Charge mode (adaptive temps, UI behavior, faults)
-- [ ] On mode
+- [x] Setup project
+- [x] Charge mode (adaptive temps, UI behavior, faults)
+- [x] On mode
+- [ ] BMP configure for charger mode, 1hz reading, oversampling, deep sleep
 - [ ] Define gui and functionality (buzzer, wifi, how to compute wifi and password from e.g. a serial number, show wifi credentials/QR code)
 - [ ] Obtain GPS position from ADSbee
 - [ ] BMP integration, calculate pressure altitude for ADS-B relations

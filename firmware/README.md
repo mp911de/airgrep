@@ -23,6 +23,7 @@ source ~/.espressif/tools/activate_idf_v6.1.sh
 |------------------|--------------------------------------------------------------|--------------------|
 | `display`        | Seeed 1.47 inch touch display, UART GPIO39/40, buzzer GPIO38 | application        |
 | `s3`             | bare XIAO ESP32-S3 Plus, UART GPIO7/44, buzzer GPIO8         | application        |
+| `s3-uart0`       | as `s3`, `sdkconfig.uart0`, console on UART0 GPIO1/2         | application        |
 | `display-test`   | as `display`                                                 | Unity test runner  |
 | `s3-test`        | as `s3`                                                      | Unity test runner  |
 | `display-hwtest` | as `display`, `sdkconfig.hwtest`                             | hardware test mode |
@@ -42,6 +43,11 @@ the same port: `help` lists command synopses, `help <cmd>` describes a command,
 `uptime` shows reset reason and heap statistics, and `reboot` flushes the output
 before restarting. Tags: `airgrep`, `loop`, `adsbee`, `i2c`.
 
+The `s3-uart0` preset is for work without USB, on battery or charger power. The prompt,
+the boot log and panic output use UART0 at 115200 baud 8N1: RX GPIO1 (D0, J3.1), TX GPIO2
+(D1, J3.2). USB Serial/JTAG mirrors the output and takes no input. Connect only GND, RX
+and TX of the adapter.
+
 Once the prompt opens, logs go to a 16 KB PSRAM ring, with internal RAM fallback.
 `logs` replays and tails until a key, `logs debug` temporarily raises the default
 level, `logs debug i2c,loop` temporarily raises and
@@ -58,13 +64,16 @@ A fresh build directory configured through a preset needs the toolchain file onc
 
 ## Tests
 
-Tests live in `components/<name>/test/` as Unity `TEST_CASE`s. Tags: `[adsbee]` decoder,
+Tests live in `components/<name>/test/` as Unity `TEST_CASE`s. `tools/host-test.sh` runs
+the ones with a host `main()` on the Mac, `tools/host-test.sh charge` only matching files. Tags: `[adsbee]` decoder,
 pure logic. `[logs]` exercises log ring replay, wrap and filtering in RAM.
 `[expander]` checks each TCA9534 register decoder in RAM.
 `[charger]` checks BQ25798 register decoding against datasheet values.
 `[battery]` checks MAX17048 registers and remaining-time calculations.
 `[barometer]` checks BMP580 registers and standard pressure altitude.
 `[fusb]` checks FUSB303B registers and validity of CC current advertisements.
+`[threshold]` checks the limit and release behaviour of a threshold.
+`[charge]` checks the charge control rules: sources, wait, 0.5 C and temperature steps.
 `[buzzer]` checks beep schemes, frequency selection and mute gating.
 `[loop]` runs the real loop task with a 10 ms tick (`sdkconfig.test`) and
 asserts through the public API only. Hardware paths have no Unity tests, hardware test
@@ -97,8 +106,30 @@ firmware/
     hwtest/        hardware test mode checks and HWTEST report line
 ```
 
-Boot order in `main.cpp`: version and build banner, loop, I2C, charger, battery, barometer, USB-C controller, expander, buzzer, ADSBee link, console. Every
+Boot order in `main.cpp`: version and build banner, loop, settings, time zones, I2C, ADSBee link, clock, Wi-Fi, charger, battery, barometer, USB-C controller, buzzer, system, expander, console. Every
 request goes through the loop, so a silent or unpowered part costs one timeout.
+The loop task is watched by the 5 s task watchdog with panic, so a hung action
+restarts the device. A build directory configured before that needs
+`CONFIG_ESP_TASK_WDT_PANIC=y` through menuconfig or a fresh configure.
+
+`system/` in the airgrep component owns the device lifecycle and the device identity
+(`device_info`). It subscribes to the expander, applies the MUTE slider to the buzzer and
+derives the operating mode on every sample: POWER slider on is ON, slider off with charger
+VBUS is CHARGER, slider off without VBUS is OFF, and UNKNOWN while an input is unread.
+`uptime` shows it. Each mode transition is acted on in one place, `transition()` in
+`system/system.cpp`: entering ON plays the startup chime, leaving ON the shutdown chime,
+so a boot with the slider off stays silent. The ADSBee link and Wi-Fi still read their
+sliders themselves.
+
+Power management is compiled in. From the first mode transition on the CPU runs fixed at
+80 MHz (`kCpuMhz` in `system/system.cpp`), before that at 160 MHz. At 40 MHz the ADSBee
+UART reported overruns. Automatic light sleep
+is off, `kChargerLightSleep` turns it on for charger mode. The ADSBee UART runs on the
+crystal clock, so its baud rate does not depend on the CPU clock. Measured on battery in ON mode: about 45 mA flat
+at 160 MHz, about 33 mA with scaling, and 15 to 26 mA with light sleep added.
+
+A UART loses input during light sleep, so the `s3-uart0` console is output only while
+sleep is on.
 
 `exp` prints the last expander sample and its age. `exp --trigger N` pulses P2
 through P5 for 10 ms. P2/P3 are driven low only, then released to input. P4/P5
@@ -106,15 +137,26 @@ need an extra latch preparation and restoration around those two direction
 writes, because their idle preload is high. Each write is a separate loop action.
 The TCA9534 has no identity register, so its boot check reads INPUT_PORT.
 
-`charger` prints the latest 2 s sample, faults, ADC readings and configuration.
-Only the ADC, ship-FET presence and 20 s watchdog are configured. Polls read
-WD_STAT before resetting the watchdog, and reapply configuration after expiry.
+`charger` prints the latest 250 ms sample, faults, ADC readings and configuration.
+The driver configures the ADC, ship-FET presence and 20 s watchdog. Polls read
+status, fault flags, ADC and REG03 to REG16, then reset the watchdog, and
+reapply configuration after expiry.
 ADC values remain pending until a full conversion cycle has elapsed. IBAT
 discharge sensing is left unchanged and reported unavailable when disabled.
 The TS line includes an approximate NTC temperature using R59 = 82 kΩ,
 R60 = 768 kΩ and the 100 kΩ, B4262 nominal beta curve. Constants live in
 `bq25798_i2c.cpp`. Invalid ratios and estimates outside -40 to 150 °C show
 NTC UNAVAILABLE. The estimate does not include component tolerances or thermal lag.
+Charge control (`system/charge_control.cpp`, rules in `system/charge_rules.cpp`,
+specified in [docs/firmware.md](../docs/firmware.md#charge-control)) sets IINDPM,
+ICHG, EN_CHG, TREG and EN_EXTILIM after every complete charger and USB-C Poll and on
+a 2 s safety run. `charger` shows its Control mode, Source, Input target, Charge
+target and Charging rows before the registers, `(pending)` until the read-back
+registers match. `charger --mode MANUAL` stops it until `--mode AUTO` or a restart.
+In AUTO, `--iindpm`, `--ichg`, `--enable-charge`, `--disable-charge` and both
+battery tests are rejected. A driver State is usable while its last successful Poll
+is at most 5 s old.
+`charger --iindpm MA` and `--ichg MA` write IINDPM and ICHG with a read-back.
 `charger --enable-charge` and `charger --disable-charge` change only EN_CHG.
 `charger --battery-test` enables charging for 1 s if initially disabled, then
 measures VBAT before and after 1 s with charging disabled and restores EN_CHG.

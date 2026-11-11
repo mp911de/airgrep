@@ -16,6 +16,7 @@ constexpr uint8_t kRegDeviceId = 0x01;
 constexpr uint8_t kRegControl1 = 0x05;
 constexpr uint8_t kRegReset = 0x0a;
 constexpr uint8_t kRegStatus = 0x11;
+constexpr uint8_t kRegStatus1 = 0x12;
 constexpr uint8_t kRegType = 0x13;
 constexpr unsigned kVersionFusb303b = 1;  // DEVICE_ID VER_ID
 constexpr uint8_t kSwReset = 1 << 0;      // RESET SW_RES
@@ -27,6 +28,13 @@ bool busy;    // a chain is running
 unsigned generation;  // bumped by reset, orphans the steps of the running chain
 int64_t ready_us;     // tEN after SW_RES
 Completion init_complete;
+
+struct Subscriber {
+	Handler handler;
+	void* context;
+} subscribers[FUSB_MAX_SUBSCRIBERS];
+
+size_t subscriber_count;
 
 void publish() {
 	State::update([](State& shared) { shared = state; });
@@ -85,13 +93,18 @@ loop::Result live(loop::Handle, loop::Value&) {
 		return loop::Result::done;
 	}
 	state.raw_status = data[0];
+	state.raw_status1 = data[kRegStatus1 - kRegStatus];
 	state.raw_type = data[kRegType - kRegStatus];
 	state.port = decode_status(state.raw_status);
+	state.remedy = decode_remedy(state.raw_status1);
 	state.role = decode_type(state.raw_type);
 	state.cc_limit_ma = cc_limit(state.port, state.role);
 	state.updated_us = esp_timer_get_time();
 	publish();
 	busy = false;
+	for (size_t i = 0; i < subscriber_count; i++) {
+		subscribers[i].handler(state, subscribers[i].context);
+	}
 	return loop::Result::done;
 }
 
@@ -169,6 +182,14 @@ State State::copy() {
 }
 
 loop::Handle poll_handle() { return periodic; }
+
+bool subscribe(Handler handler, void* context) {
+	if (!handler || subscriber_count == FUSB_MAX_SUBSCRIBERS) {
+		return false;
+	}
+	subscribers[subscriber_count++] = {handler, context};
+	return true;
+}
 
 // EN_N is tied to GND on the carrier, so tEN ran out while the chip booted.
 // The first access can follow at once.

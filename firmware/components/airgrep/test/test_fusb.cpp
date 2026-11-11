@@ -81,6 +81,16 @@ CASE(limit,
 		0, fusb::cc_limit(fusb::decode_status(0x1d), fusb::Role::source));
 }
 
+CASE(negotiating,
+	 "FUSB negotiates with VBUS but no attach, or while REMEDY is set") {
+	TEST_ASSERT_TRUE(fusb::negotiating(fusb::decode_status(0x08), false));
+	TEST_ASSERT_FALSE(fusb::negotiating(fusb::decode_status(0x1d), false));
+	TEST_ASSERT_TRUE(fusb::negotiating(fusb::decode_status(0x1d),
+									   fusb::decode_remedy(0x01)));
+	TEST_ASSERT_FALSE(fusb::negotiating(fusb::decode_status(0x00), false));
+	TEST_ASSERT_FALSE(fusb::decode_remedy(0x02));
+}
+
 #ifndef ESP_PLATFORM
 int main() {
 	UNITY_BEGIN();
@@ -89,6 +99,7 @@ int main() {
 	RUN_TEST(type);
 	RUN_TEST(control);
 	RUN_TEST(limit);
+	RUN_TEST(negotiating);
 	return UNITY_END();
 }
 #endif

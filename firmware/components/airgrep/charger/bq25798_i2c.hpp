@@ -11,6 +11,7 @@ static constexpr uint8_t kWatchdogReset = 1 << 3;     // REG10 WD_RST
 static constexpr uint8_t kWatchdogFieldMask = 0x07;   // REG10 WATCHDOG_2:0
 static constexpr uint8_t kSfetPresent = 1 << 7;       // REG14 SFET_PRESENT
 static constexpr uint8_t kDischargeSensing = 1 << 5;  // REG14 EN_IBAT
+static constexpr uint8_t kExternalLimit = 1 << 1;     // REG14 EN_EXTILIM
 static constexpr uint8_t kAdcEnable = 1 << 7;         // REG2E ADC_EN
 static constexpr uint8_t kAdcOneShot = 1
 									   << 6;  // REG2E ADC_RATE, 0 is continuous
@@ -38,7 +39,7 @@ struct Control1 {
 };
 
 struct Control0 {
-	bool high_impedance;
+	bool high_impedance, charge_enabled;
 };
 
 struct Flag0 {
@@ -81,6 +82,18 @@ struct Status1 {
 // reading means no battery.
 BatteryDetected detect_battery(unsigned vbat_charging_mv,
 							   unsigned vbat_disabled_mv);
+
+// Input current of the D+/D- detection result, BQ25798 table 7-4 with DCP at
+// the BC1.2 1.5 A and a non-standard adapter at its lowest divider, 1 A,
+// because VBUS_STAT does not name the divider. Unknown sources count as
+// 500 mA, no VBUS as 0.
+unsigned detected_ma(Status1 status1, bool vbus);
+bool detecting(bool vbus, Status1 status1);
+// The NTC estimate, NaN while the ADC is pending or out of range.
+float pack_celsius(bool adc_valid, float ts_percent);
+// ICHG and IINDPM share the 10 mA, 9 bit field of a big-endian register pair.
+uint16_t encode_current(uint16_t raw, unsigned ma);
+uint8_t encode_temperature_control(uint8_t raw, unsigned celsius);
 
 Status0 decode_status0(uint8_t raw);
 float decode_tdie(uint8_t high, uint8_t low);

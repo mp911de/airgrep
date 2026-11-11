@@ -32,10 +32,12 @@ constexpr unsigned kAdcSample15BitMs = 24;
 constexpr unsigned kTregShift = 6;
 constexpr unsigned kTregBaseC = 60;
 constexpr unsigned kTregStepC = 20;
-// REG14
-constexpr uint8_t kExternalLimit = 1 << 1;  // EN_EXTILIM
 // REG0F
+constexpr uint8_t kChargeEnabled = 1 << 5;  // EN_CHG
 constexpr uint8_t kHighImpedance = 1 << 2;  // EN_HIZ
+// REG1C VBUS_STAT_3:0
+constexpr uint8_t kVbusSdp = 1, kVbusCdp = 2, kVbusDcp = 3, kVbusHvdcp = 4,
+				  kVbusNonStandard = 6;
 // REG22 and REG1B share the bit layout except POORSRC_FLAG at bit 4
 constexpr uint8_t kInputLimit = 1 << 7;
 constexpr uint8_t kVoltageLimit = 1 << 6;
@@ -192,7 +194,44 @@ Control1 decode_control1(uint8_t raw) {
 			bool(raw & kWatchdogReset)};
 }
 
-Control0 decode_control0(uint8_t raw) { return {bool(raw & kHighImpedance)}; }
+Control0 decode_control0(uint8_t raw) {
+	return {bool(raw & kHighImpedance), bool(raw & kChargeEnabled)};
+}
+
+unsigned detected_ma(Status1 status1, bool vbus) {
+	if (!vbus) {
+		return 0;
+	}
+	switch (status1.vbus) {
+		case kVbusCdp:
+		case kVbusDcp:
+		case kVbusHvdcp:
+			return 1500;
+		case kVbusNonStandard:
+			return 1000;
+		case kVbusSdp:
+		default:
+			return 500;
+	}
+}
+
+bool detecting(bool vbus, Status1 status1) {
+	return vbus && !status1.detection_done;
+}
+
+float pack_celsius(bool adc_valid, float ts_percent) {
+	return adc_valid ? estimate_ntc_c(ts_percent) : NAN;
+}
+
+uint16_t encode_current(uint16_t raw, unsigned ma) {
+	return (raw & ~kLimitFieldMask) | ((ma / kIchgMaPerLsb) & kLimitFieldMask);
+}
+
+uint8_t encode_temperature_control(uint8_t raw, unsigned celsius) {
+	constexpr uint8_t field = 0x03 << kTregShift;
+	return (raw & ~field) |
+		   (((celsius - kTregBaseC) / kTregStepC) << kTregShift & field);
+}
 
 Fault1 decode_fault_flag1(uint8_t raw) { return decode_fault1(raw); }
 

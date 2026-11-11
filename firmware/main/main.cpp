@@ -86,10 +86,6 @@ static const Component components[] = {
 // Same label column as the banner rows above it.
 #define BOOT_LABEL_WIDTH 16
 
-// A row whose init blocked the boot for longer than this shows its time. Rows
-// that complete later from the loop did not block and show none.
-#define BOOT_SLOW_MS 50
-
 static bool in_init;
 
 static void report(const Component& component, esp_err_t result,
@@ -103,9 +99,7 @@ static void report(const Component& component, esp_err_t result,
 					esp_err_to_name(result));
 	}
 	int64_t blocked_us = esp_timer_get_time() - started_us;
-	if (in_init && blocked_us >= BOOT_SLOW_MS * 1000) {
-		std::printf(" (%lld ms)", (long long)(blocked_us / 1000));
-	}
+	std::printf(" (%lld ms)", (long long)(blocked_us / 1000));
 	std::puts("");
 }
 
