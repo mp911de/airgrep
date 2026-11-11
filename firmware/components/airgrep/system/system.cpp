@@ -2,6 +2,7 @@
 
 #include <atomic>
 
+#include "baro/barometer.hpp"
 #include "buzzer/buzzer.h"
 #include "charge_control.hpp"
 #include "charger/bq25798.hpp"
@@ -34,6 +35,7 @@ void transition(const power_mode_t from, const power_mode_t to) {
 	ESP_LOGI("system", "mode %s to %s", power_mode_name(from),
 			 power_mode_name(to));
 	scale_clock(to == POWER_MODE_CHARGER);
+	barometer::set_enabled(to == POWER_MODE_ON);
 	if (const char* chime = power_mode_chime(from, to)) {
 		buzzer_play(chime, 0);
 	}

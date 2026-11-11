@@ -27,6 +27,7 @@ i2c_master_dev_handle_t device;
 loop::Handle periodic;
 State state;
 bool busy;
+bool enabled;
 unsigned step, generation;
 int64_t ready_us;
 
@@ -35,6 +36,7 @@ void error(esp_err_t result) {
 	State::update([&](State& shared) {
 		shared.last_error = result;
 		shared.error_us = now;
+		shared.configured = false;
 	});
 	busy = false;
 }
@@ -95,7 +97,7 @@ loop::Result configure(loop::Handle, loop::Value&) {
 		// Deep standby powers the NVM down, so leave it before checking
 		// nvm_rdy.
 		case 0:
-			result = write(kRegOdrConfig, kOdrConfigStandby1Hz);
+			result = write(kRegOdrConfig, kOdrConfigStandby | kOdrDeepDisable);
 			break;
 		case 1:
 			result = read(kRegStatus, &state.raw_status);
@@ -113,55 +115,91 @@ loop::Result configure(loop::Handle, loop::Value&) {
 			result = read(kRegIntConfig, &state.raw_int);
 			break;
 		case 3:
-			result = read(kRegOsrConfig, &state.raw_osr);
+			result = write(kRegFifoSel, 0);
 			break;
 		case 4:
-			result = read(kRegDspIir, &state.raw_iir);
+			result = write(kRegDspIir, 0);
 			break;
 		case 5:
 			result = write(kRegIntConfig,
 						   (state.raw_int | kIntEnable) & ~kIntOpenDrain);
 			break;
-		case 6:
-			result = write(kRegOsrConfig, state.raw_osr | kOsrPressureEnable);
+		case 6: {
+			const uint8_t bytes[] = {
+				kRegOsrConfig,
+				uint8_t(kOsrConfig | (enabled ? kOsrPressureEnable : 0)),
+				enabled ? kOdrConfigNormal : kOdrConfigStandby};
+			result = i2c_master_transmit(device, bytes, sizeof bytes,
+										 CONFIG_AIRGREP_I2C_TIMEOUT_MS);
 			break;
-		case 7:
-			result = write(kRegOdrConfig, kOdrConfigNormal1Hz);
+		}
+		case 7: {
+			uint8_t config[kRegFifoSel - kRegIntConfig + 1];
+			result = read(kRegIntConfig, config, sizeof config);
+			if (result == ESP_OK) {
+				state.raw_int = config[0];
+				state.raw_fifo = config[kRegFifoSel - kRegIntConfig];
+			}
 			break;
-		case 8:
-			result = read(kRegIntConfig, &state.raw_int);
+		}
+		case 8: {
+			uint8_t config[kRegOsrEff - kRegOsrConfig + 1];
+			result = read(kRegOsrConfig, config, sizeof config);
+			if (result == ESP_OK) {
+				state.raw_osr = config[0];
+				state.raw_odr = config[kRegOdrConfig - kRegOsrConfig];
+				state.raw_osr_eff = config[kRegOsrEff - kRegOsrConfig];
+			}
 			break;
-		case 9:
-			result = read(kRegOsrConfig, &state.raw_osr);
-			break;
+		}
 		default:
-			result = read(kRegOdrConfig, &state.raw_odr);
+			result = read(kRegDspIir, &state.raw_iir);
 			break;
 	}
 	if (result != ESP_OK) {
 		error(result);
 		return loop::Result::done;
 	}
-	if (step < 11) {
+	if (step < 10) {
 		// Mode changes need tstandby before configuration writes.
-		next("baro configure", configure, step == 1 ? BMP_STANDBY_MS : 0);
+		next("baro configure", configure,
+			 step == 1 || step == 7 ? BMP_STARTUP_MS : 0);
 		return loop::Result::done;
 	}
 	state.osr = decode_osr(state.raw_osr);
 	state.odr = decode_odr(state.raw_odr);
 	state.iir = decode_iir(state.raw_iir);
-	if (!state.osr.pressure_enabled || state.raw_odr != kOdrConfigNormal1Hz ||
+	const uint8_t wanted_odr = enabled ? kOdrConfigNormal : kOdrConfigStandby;
+	const uint8_t wanted_osr = kOsrConfig | (enabled ? kOsrPressureEnable : 0);
+	if (state.raw_osr != wanted_osr || state.raw_odr != wanted_odr ||
+		state.raw_iir != 0 || state.raw_fifo != 0 ||
+		(enabled && state.raw_osr_eff != (kOsrEffectiveValid | kOsrConfig)) ||
 		(state.raw_int & (kIntEnable | kIntOpenDrain)) != kIntEnable) {
-		ESP_LOGW(
-			tag, "readback INT 0x%02X OSR 0x%02X ODR 0x%02X, wanted ODR 0x%02X",
-			state.raw_int, state.raw_osr, state.raw_odr, kOdrConfigNormal1Hz);
+		ESP_LOGW(tag,
+				 "readback INT 0x%02X OSR 0x%02X ODR 0x%02X, wanted ODR 0x%02X",
+				 state.raw_int, state.raw_osr, state.raw_odr, wanted_odr);
 		error(ESP_ERR_INVALID_RESPONSE);
 		return loop::Result::done;
 	}
 	state.configured = true;
+	state.status = enabled ? Status::ok : Status::off;
+	state.last_error = ESP_OK;
 	State::update([](State& shared) { shared = state; });
-	// The next 1 s poll reads a completed conversion, not POR data.
+	// Do not publish old data while the first conversion is pending.
+	ready_us = esp_timer_get_time() + BMP_POLL_PERIOD_MS * 1000;
 	busy = false;
+	return loop::Result::done;
+}
+
+loop::Result standby(loop::Handle, loop::Value&) {
+	esp_err_t result = write(kRegOdrConfig, kOdrConfigStandby);
+	if (result != ESP_OK) {
+		error(result);
+	} else {
+		// Stop conversions before changing standby-only fields such as
+		// deep_dis.
+		next("baro standby", configure, BMP_STANDBY_MS);
+	}
 	return loop::Result::done;
 }
 
@@ -186,7 +224,7 @@ loop::Result identity(loop::Handle, loop::Value&) {
 		return loop::Result::done;
 	}
 	State::update([](State& shared) { shared = state; });
-	next("baro configure", configure);
+	next("baro configure", standby);
 	return loop::Result::done;
 }
 
@@ -194,17 +232,40 @@ loop::Result poll(loop::Handle, loop::Value&) {
 	if (busy || esp_timer_get_time() < ready_us) {
 		return loop::Result::done;
 	}
+	state = State::copy();
+	if (state.configured && !enabled) {
+		return loop::Result::done;
+	}
 	busy = true;
 	step = 0;
-	state = State::copy();
 	next("baro poll", !state.identity_known ? identity
 					  : state.configured    ? live
-											: configure);
+											: standby);
 	return loop::Result::done;
 }
 }  // namespace
 
 loop::Handle poll_handle() { return periodic; }
+
+void set_enabled(bool value) {
+	if (enabled == value) {
+		return;
+	}
+	enabled = value;
+	++generation;
+	busy = false;
+	State::update([](State& shared) {
+		shared.configured = false;
+		shared.updated_us = 0;
+	});
+	if (device && periodic.valid()) {
+		step = 0;
+		state = State::copy();
+		busy = true;
+		next("baro mode", standby,
+			 esp_timer_get_time() < ready_us ? BMP_STARTUP_MS : 0);
+	}
+}
 
 Completion init_complete;
 
@@ -226,6 +287,11 @@ loop::Result identify(loop::Handle, loop::Value&) {
 	}
 	State::update([](State& shared) { shared = state; });
 	periodic = loop::schedule_periodic(BMP_POLL_PERIOD_MS, {"baro poll", poll});
+	if (periodic.valid()) {
+		busy = true;
+		step = 0;
+		next("baro configure", standby);
+	}
 	finish_init(periodic.valid() ? ESP_OK : ESP_ERR_NO_MEM);
 	return loop::Result::done;
 }

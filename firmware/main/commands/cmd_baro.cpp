@@ -42,6 +42,11 @@ int command(int argc, char** argv) {
 	static const char* modes[] = {"STANDBY", "NORMAL", "FORCED", "CONTINUOUS"};
 	std::printf("%-20s %s (0x%02X)\n", "Power mode (ODR)",
 				modes[state.odr.mode], state.raw_odr);
+	std::printf(
+		"%-20s %s\n", "Measurement rate",
+		state.odr.rate == barometer::kOdrRateHalfHz ? "0.5 Hz" : "UNKNOWN");
+	std::printf("%-20s %s\n", "Deep standby",
+				state.odr.deep_disabled ? "disabled" : "enabled");
 	std::printf("%-20s %ux pressure, %ux temperature (0x%02X)\n",
 				"Oversampling (OSR)", state.osr.pressure, state.osr.temperature,
 				state.raw_osr);

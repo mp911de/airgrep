@@ -14,16 +14,18 @@ namespace barometer {
 #define BMP_STARTUP_MS 4
 // tstandby is 2.5 ms, rounded up to whole loop milliseconds.
 #define BMP_STANDBY_MS 3
-#define BMP_POLL_PERIOD_MS 1000
+#define BMP_POLL_PERIOD_MS 2000
 // BMP580 datasheet: register map section 7, soft reset 4.3.10, timings
 // table 4.
 constexpr uint8_t kRegChipId = 0x01;
 constexpr uint8_t kRegIntConfig = 0x14;
+constexpr uint8_t kRegFifoSel = 0x18;
 constexpr uint8_t kRegTempDataXlsb = 0x1d;
 constexpr uint8_t kRegStatus = 0x28;
 constexpr uint8_t kRegDspIir = 0x31;
 constexpr uint8_t kRegOsrConfig = 0x36;
 constexpr uint8_t kRegOdrConfig = 0x37;
+constexpr uint8_t kRegOsrEff = 0x38;
 constexpr uint8_t kRegCmd = 0x7e;
 constexpr uint8_t kChipIdBmp580 = 0x50;
 constexpr uint8_t kCmdSoftReset = 0xb6;
@@ -31,11 +33,13 @@ constexpr uint8_t kIntOpenDrain = 1 << 2;
 constexpr uint8_t kIntEnable = 1 << 3;
 constexpr uint8_t kPowerModeStandby = 0;
 constexpr uint8_t kPowerModeNormal = 1;
-constexpr uint8_t kOdrRate1Hz = 0x1c;
-constexpr uint8_t kOdrConfigStandby1Hz =
-	kOdrDeepDisable | kOdrRate1Hz << kOdrRateShift | kPowerModeStandby;
-constexpr uint8_t kOdrConfigNormal1Hz =
-	kOdrDeepDisable | kOdrRate1Hz << kOdrRateShift | kPowerModeNormal;
+constexpr uint8_t kOdrRateHalfHz = 0x1d;
+constexpr uint8_t kOdrConfigStandby =
+	kOdrRateHalfHz << kOdrRateShift | kPowerModeStandby;
+constexpr uint8_t kOdrConfigNormal =
+	kOdrRateHalfHz << kOdrRateShift | kPowerModeNormal;
+constexpr uint8_t kOsrConfig = 3 << kOsrPressureShift | 1;
+constexpr uint8_t kOsrEffectiveValid = 1 << 7;
 
 const i2c_device_config_t i2c_config = {
 	.dev_addr_length = I2C_ADDR_BIT_LEN_7,
@@ -53,7 +57,7 @@ static constexpr size_t kDataLength = 6;
 struct State {
 	Status status = Status::unknown;
 	uint8_t chip_id = 0, raw_status = 0, raw_odr = 0, raw_osr = 0, raw_iir = 0,
-			raw_int = 0;
+			raw_int = 0, raw_fifo = 0, raw_osr_eff = 0;
 	uint8_t data[kDataLength]{};
 	NvmStatus nvm{};
 	Odr odr{};
@@ -80,6 +84,8 @@ struct State {
 
 using Completion = loop::Callable<void(esp_err_t)>;
 void init(Completion complete);
+// Called on the loop task by system mode transitions.
+void set_enabled(bool enabled);
 loop::Handle poll_handle();
 // Posts the soft reset. The outcome shows in State on the next poll.
 esp_err_t reset();
