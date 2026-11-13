@@ -32,7 +32,7 @@ unsigned sent, attempted;
 bool running, had_gps_fix;
 loop::Handle scheduled;
 
-void error(esp_err_t result) {
+void record_error(esp_err_t result) {
 	int64_t now = esp_timer_get_time();
 	State::update([&](State& state) {
 		state.last_error = result;
@@ -64,7 +64,7 @@ void on_time_ping(const Message& message, void*) {
 
 // Applies the best sample to the system clock: step when far off or never set,
 // slew otherwise.
-void finish() {
+void finish_time_sync() {
 	running = false;
 	TimeEstimate estimate = estimate_time(samples, sent);
 	unsigned answered = 0;
@@ -76,7 +76,7 @@ void finish() {
 		state.answered = uint8_t(answered);
 	});
 	if (!estimate.valid) {
-		error(answered ? ESP_ERR_NOT_SUPPORTED : ESP_ERR_TIMEOUT);
+		record_error(answered ? ESP_ERR_NOT_SUPPORTED : ESP_ERR_TIMEOUT);
 		return;
 	}
 	// The system clock at the reply's arrival, then how far it was from the
@@ -104,7 +104,7 @@ void finish() {
 		}
 	}
 	if (result != ESP_OK) {
-		error(result);
+		record_error(result);
 		return;
 	}
 	ESP_LOGI(tag, "clock %s by %lld us, rtt %lld us, pps %lu",
@@ -119,11 +119,11 @@ void finish() {
 	});
 }
 
-loop::Result ping(loop::Handle, loop::Value&) {
+loop::Result send_time_ping(loop::Handle, loop::Value&) {
 	if (!ready()) {
 		running = false;
 		State::update([](State& state) { state.running = false; });
-		error(ESP_ERR_INVALID_STATE);
+		record_error(ESP_ERR_INVALID_STATE);
 		return loop::Result::done;
 	}
 	if (attempted < ADSBEE_TIME_PING_COUNT) {
@@ -133,10 +133,10 @@ loop::Result ping(loop::Handle, loop::Value&) {
 		// and fails loudly.
 		if (busy() && State::copy().set) {
 			if (!loop::schedule(ADSBEE_TIME_PING_SPACING_MS,
-								{"timesync ping", ping})
+								{"timesync ping", send_time_ping})
 					 .valid()) {
-				finish();
-				error(ESP_ERR_NO_MEM);
+				finish_time_sync();
+				record_error(ESP_ERR_NO_MEM);
 			}
 			return loop::Result::done;
 		}
@@ -148,42 +148,42 @@ loop::Result ping(loop::Handle, loop::Value&) {
 		samples[sent].t1_us = t1;
 		sent++;
 		if (!request(command, {}, {}, ADSBEE_TIME_PING_WINDOW_MS).valid()) {
-			error(ESP_ERR_INVALID_STATE);
+			record_error(ESP_ERR_INVALID_STATE);
 		}
 		if (!loop::schedule(ADSBEE_TIME_PING_SPACING_MS,
-							{"timesync ping", ping})
+							{"timesync ping", send_time_ping})
 				 .valid()) {
-			finish();
-			error(ESP_ERR_NO_MEM);
+			finish_time_sync();
+			record_error(ESP_ERR_NO_MEM);
 		}
 		return loop::Result::done;
 	}
-	finish();
+	finish_time_sync();
 	return loop::Result::done;
 }
 
 loop::Result periodic(loop::Handle, loop::Value&) {
 	if (had_gps_fix) {
-		schedule_nss_time_sync();
+		schedule_gnss_time_sync();
 	}
 	return loop::Result::done;
 }
 
-// The burst itself. The delay in schedule_nss_time_sync() keeps it clear of
+// The burst itself. The delay in schedule_gnss_time_sync() keeps it clear of
 // the init sequence and spreads the load across devices.
-loop::Result begin(loop::Handle, loop::Value&) {
+loop::Result begin_time_sync(loop::Handle, loop::Value&) {
 	scheduled = {};
 	sent = attempted = 0;
-	if (!loop::hsubmit("timesync burst", ping)) {
+	if (!loop::try_submit("timesync burst", send_time_ping)) {
 		running = false;
 		State::update([](State& state) { state.running = false; });
-		error(ESP_ERR_NO_MEM);
+		record_error(ESP_ERR_NO_MEM);
 	}
 	return loop::Result::done;
 }
 }  // namespace
 
-esp_err_t schedule_nss_time_sync() {
+esp_err_t schedule_gnss_time_sync() {
 	if (running) {
 		return ESP_ERR_INVALID_STATE;
 	}
@@ -192,7 +192,7 @@ esp_err_t schedule_nss_time_sync() {
 	}
 	uint32_t delay =
 		ADSBEE_TIME_SYNC_DELAY_MS + esp_random() % ADSBEE_TIME_SYNC_JITTER_MS;
-	scheduled = loop::schedule(delay, {"timesync delay", begin});
+	scheduled = loop::schedule(delay, {"timesync delay", begin_time_sync});
 	if (!scheduled.valid()) {
 		return ESP_ERR_NO_MEM;
 	}
@@ -204,7 +204,7 @@ esp_err_t schedule_nss_time_sync() {
 namespace {
 void on_gnss(const Gnss& gnss, int64_t, void*) {
 	if (gnss.fix && !had_gps_fix) {
-		had_gps_fix = schedule_nss_time_sync() == ESP_OK;
+		had_gps_fix = schedule_gnss_time_sync() == ESP_OK;
 	} else if (!gnss.fix) {
 		had_gps_fix = false;
 	}

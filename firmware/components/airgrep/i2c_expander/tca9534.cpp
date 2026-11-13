@@ -6,6 +6,7 @@
 #include "esp_timer.h"
 #include "i2c_bus.h"
 #include "sdkconfig.h"
+#include "subscribers.hpp"
 
 namespace expander {
 portMUX_TYPE State::mutex_ = portMUX_INITIALIZER_UNLOCKED;
@@ -31,21 +32,11 @@ loop::Handle periodic;
 unsigned configuration_step;
 bool pulse_active;
 
-struct Subscriber {
-	Handler handler;
-	void* context;
-} subscribers[EXPANDER_MAX_SUBSCRIBERS];
+Subscribers<Handler, EXPANDER_MAX_SUBSCRIBERS> subscribers;
 
-size_t subscriber_count;
+void notify(uint8_t changed) { subscribers.notify(State::copy(), changed); }
 
-void notify(uint8_t changed) {
-	const State state = State::copy();
-	for (size_t i = 0; i < subscriber_count; i++) {
-		subscribers[i].handler(state, changed, subscribers[i].context);
-	}
-}
-
-void error(esp_err_t result) {
+void record_error(esp_err_t result) {
 	int64_t now = esp_timer_get_time();
 	State::update([&](State& state) {
 		state.last_error = result;
@@ -80,28 +71,33 @@ esp_err_t write(uint8_t reg, uint8_t value) {
 	return result;
 }
 
-loop::Result poll(loop::Handle, loop::Value&) {
+loop::Result poll_expander(loop::Handle, loop::Value&) {
 	if (!State::copy().configured) {
 		static constexpr uint8_t registers[] = {1, 2, 3};
 		static constexpr uint8_t values[] = {0x30, 0x00, 0xff};
 		esp_err_t result =
 			write(registers[configuration_step], values[configuration_step]);
 		if (result != ESP_OK) {
-			error(result);
+			// A driver that cannot configure stops polling. The system
+			// watchdog starts it again.
+			loop::cancel(periodic);
+			periodic = {};
+			configuration_step = 0;
+			record_error(result);
 			return loop::Result::done;
 		}
 		if (++configuration_step == 3) {
 			State::update([](State& state) { state.configured = true; });
 		}
-		if (!loop::hsubmit("exp configure", poll)) {
-			error(ESP_ERR_NO_MEM);
+		if (!loop::try_submit("exp configure", poll_expander)) {
+			record_error(ESP_ERR_NO_MEM);
 		}
 		return loop::Result::done;
 	}
 	uint8_t raw;
 	esp_err_t result = read(0, raw);
 	if (result != ESP_OK) {
-		error(result);
+		record_error(result);
 		return loop::Result::done;
 	}
 	uint8_t changed;
@@ -127,7 +123,7 @@ void finish(Pulse* pulse, esp_err_t result) {
 		result = pulse->first_error;
 	}
 	if (result != ESP_OK) {
-		error(result);
+		record_error(result);
 		ESP_LOGE("exp", "P%u trigger failed: %s", pulse->pin,
 				 esp_err_to_name(result));
 	}
@@ -140,7 +136,7 @@ void restore(Pulse* pulse) {
 		finish(pulse, ESP_OK);
 		return;
 	}
-	if (!loop::hsubmit(
+	if (!loop::try_submit(
 			"exp restore latch", [pulse](loop::Handle, loop::Value&) {
 				esp_err_t result =
 					write(1, State::copy().raw_output | (1u << pulse->pin));
@@ -163,11 +159,11 @@ void release(Pulse* pulse) {
 	}
 	if (!pulse->retried) {
 		pulse->retried = true;
-		if (loop::hsubmit("exp release retry",
-						  [pulse](loop::Handle, loop::Value&) {
-							  release(pulse);
-							  return loop::Result::done;
-						  })) {
+		if (loop::try_submit("exp release retry",
+							 [pulse](loop::Handle, loop::Value&) {
+								 release(pulse);
+								 return loop::Result::done;
+							 })) {
 			return;
 		}
 	}
@@ -189,7 +185,7 @@ void assert_pin(Pulse* pulse) {
 		if (pulse->first_error == ESP_OK) {
 			pulse->first_error = ESP_ERR_NO_MEM;
 		}
-		if (!loop::hsubmit("exp emergency release", event.action)) {
+		if (!loop::try_submit("exp emergency release", event.action)) {
 			finish(pulse, ESP_ERR_NO_MEM);
 		}
 	}
@@ -197,27 +193,21 @@ void assert_pin(Pulse* pulse) {
 }  // namespace
 
 bool subscribe(Handler handler, void* context) {
-	if (!handler || subscriber_count == EXPANDER_MAX_SUBSCRIBERS) {
-		return false;
-	}
-	subscribers[subscriber_count++] = {handler, context};
-	return true;
+	return subscribers.add(handler, context);
 }
-
-loop::Handle poll_handle() { return periodic; }
 
 Completion init_complete;
 
 void finish_init(esp_err_t result) {
 	if (result != ESP_OK && result != ESP_ERR_NOT_FOUND) {
-		error(result);
+		record_error(result);
 	}
 	if (init_complete) {
 		init_complete(result);
 	}
 }
 
-loop::Result identify(loop::Handle, loop::Value&) {
+loop::Result identify_at_init(loop::Handle, loop::Value&) {
 	uint8_t raw;
 	esp_err_t result = read(0, raw);
 	if (result != ESP_OK) {
@@ -229,8 +219,8 @@ loop::Result identify(loop::Handle, loop::Value&) {
 		state.identity_known = true;
 		state.raw_input = raw;
 	});
-	periodic =
-		loop::schedule_periodic(EXPANDER_POLL_PERIOD_MS, {"exp poll", poll});
+	periodic = loop::schedule_periodic(EXPANDER_POLL_PERIOD_MS,
+									   {"exp poll", poll_expander});
 	finish_init(periodic.valid() ? ESP_OK : ESP_ERR_NO_MEM);
 	return loop::Result::done;
 }
@@ -240,7 +230,8 @@ loop::Result probe(loop::Handle, loop::Value&) {
 	if (result == ESP_ERR_NOT_FOUND) {
 		State::update([](State& shared) { shared.status = Status::off; });
 	}
-	if (result == ESP_OK && !loop::hsubmit("exp identity", identify)) {
+	if (result == ESP_OK &&
+		!loop::try_submit("exp identity", identify_at_init)) {
 		result = ESP_ERR_NO_MEM;
 	}
 	if (result != ESP_OK) {
@@ -250,8 +241,11 @@ loop::Result probe(loop::Handle, loop::Value&) {
 }
 
 void init(Completion complete) {
+	if (periodic.valid()) {
+		return;
+	}
 	init_complete = complete;
-	if (!loop::hsubmit("exp probe", probe)) {
+	if (!loop::try_submit("exp probe", probe)) {
 		finish_init(ESP_ERR_NO_MEM);
 	}
 }
@@ -264,10 +258,10 @@ esp_err_t trigger(unsigned pin) {
 	if (!pulse) {
 		return ESP_ERR_NO_MEM;
 	}
-	if (!loop::hsubmit("exp trigger", [pulse](loop::Handle, loop::Value&) {
+	if (!loop::try_submit("exp trigger", [pulse](loop::Handle, loop::Value&) {
 			const State current = State::copy();
 			if (pulse_active || !current.configured) {
-				error(ESP_ERR_INVALID_STATE);
+				record_error(ESP_ERR_INVALID_STATE);
 				delete pulse;
 				return loop::Result::done;
 			}
@@ -282,11 +276,11 @@ esp_err_t trigger(unsigned pin) {
 				finish(pulse, result);
 				return loop::Result::done;
 			}
-			if (!loop::hsubmit("exp assert",
-							   [pulse](loop::Handle, loop::Value&) {
-								   assert_pin(pulse);
-								   return loop::Result::done;
-							   })) {
+			if (!loop::try_submit("exp assert",
+								  [pulse](loop::Handle, loop::Value&) {
+									  assert_pin(pulse);
+									  return loop::Result::done;
+								  })) {
 				pulse->first_error = ESP_ERR_NO_MEM;
 				restore(pulse);
 			}

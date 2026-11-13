@@ -7,6 +7,7 @@
 #include "charger/bq25798.hpp"
 #include "command_status.hpp"
 #include "console.h"
+#include "duration.hpp"
 #include "esp_console.h"
 #include "freertos/semphr.h"
 #include "settings/settings.hpp"
@@ -273,10 +274,12 @@ int command(int argc, char** argv) {
 		const unsigned capacity_mah = settings::copy().battery_mah;
 		if (state.ibat_ma < 0 && gauge.status == Status::ok && gauge.soc >= 0 &&
 			gauge.soc <= 100) {
-			std::printf("%-20s %.1f h to EMPTY (%u mAh, SOC %.0f %%)\n",
-						"Remaining",
-						gauge.soc / 100 * capacity_mah / -state.ibat_ma,
-						capacity_mah, gauge.soc);
+			char remaining[16];
+			format_hours_minutes(
+				gauge.soc / 100 * capacity_mah / -state.ibat_ma, remaining,
+				sizeof remaining);
+			std::printf("%-20s %s to EMPTY (%u mAh, SOC %.0f %%)\n",
+						"Remaining", remaining, capacity_mah, gauge.soc);
 		}
 	}
 	if (!command_status::header(state.status, state.updated_us,

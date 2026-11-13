@@ -52,8 +52,9 @@ struct State {
 using Completion = loop::Callable<void(esp_err_t)>;
 using Handler = void (*)(const State&, uint8_t changed, void*);
 bool subscribe(Handler handler, void* context = nullptr);
+// Starts the driver unless it polls already. The system watchdog calls it
+// again on the loop for a driver that stopped or never showed up.
 void init(Completion complete);
-loop::Handle poll_handle();
 // Posts a 10 ms pulse on P2 to P5. Failures land in State and the log.
 esp_err_t trigger(unsigned pin);
 }  // namespace expander

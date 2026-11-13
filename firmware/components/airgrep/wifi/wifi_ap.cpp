@@ -34,7 +34,7 @@ void mark_dirty(bool value) {
 	State::update([&](State& state) { state.pending_apply = value; });
 }
 
-void error(esp_err_t result) {
+void record_error(esp_err_t result) {
 	int64_t now = esp_timer_get_time();
 	State::update([&](State& state) {
 		state.last_error = result;
@@ -67,7 +67,7 @@ void on_reply(const adsbee::Message& message, void*) {
 				 reported.enabled ? "on" : "off", reported.ssid);
 	}
 	if (mismatch || dirty) {
-		apply();
+		apply_wifi_state();
 	}
 }
 
@@ -85,7 +85,7 @@ void switch_sample(const expander::State& state, uint8_t changed, void*) {
 	// Before the link is up the attach hook sends the position, no error to
 	// record.
 	if ((first || (changed & kSwitchMask)) && adsbee::ready()) {
-		apply();
+		apply_wifi_state();
 	}
 }
 
@@ -94,31 +94,31 @@ loop::Result periodic(loop::Handle, loop::Value&) {
 		return loop::Result::done;
 	}
 	if (dirty) {
-		apply();
+		apply_wifi_state();
 	} else {
-		poll();
+		query_access_point();
 	}
 	return loop::Result::done;
 }
 }  // namespace
 
-esp_err_t apply() {
+esp_err_t apply_wifi_state() {
 	if (!switch_known || !adsbee::ready()) {
 		if (switch_known) {
 			mark_dirty(true);
 		}
-		error(ESP_ERR_INVALID_STATE);
+		record_error(ESP_ERR_INVALID_STATE);
 		return ESP_ERR_INVALID_STATE;
 	}
 	char command[sizeof WIFI_AP_SET_COMMAND + 8 + WIFI_AP_SSID_SIZE +
 				 WIFI_AP_PASSWORD_SIZE];
 	if (!format_set(wanted, command, sizeof command)) {
-		error(ESP_ERR_INVALID_SIZE);
+		record_error(ESP_ERR_INVALID_SIZE);
 		return ESP_ERR_INVALID_SIZE;
 	}
 	if (!adsbee::request(command, {}, {}).valid()) {
 		mark_dirty(true);
-		error(ESP_ERR_INVALID_STATE);
+		record_error(ESP_ERR_INVALID_STATE);
 		return ESP_ERR_INVALID_STATE;
 	}
 	mark_dirty(false);
@@ -132,37 +132,37 @@ esp_err_t apply() {
 	if (!loop::schedule(WIFI_AP_VERIFY_DELAY_MS,
 						{"wifi verify",
 						 [](loop::Handle, loop::Value&) {
-							 poll();
+							 query_access_point();
 							 return loop::Result::done;
 						 }})
 			 .valid()) {
-		error(ESP_ERR_NO_MEM);
+		record_error(ESP_ERR_NO_MEM);
 	}
 	return ESP_OK;
 }
 
-esp_err_t poll() {
+esp_err_t query_access_point() {
 	if (!adsbee::ready()) {
 		return ESP_ERR_INVALID_STATE;
 	}
 	if (!adsbee::request(WIFI_AP_QUERY_COMMAND, {}, {}).valid()) {
-		error(ESP_ERR_INVALID_STATE);
+		record_error(ESP_ERR_INVALID_STATE);
 		return ESP_ERR_INVALID_STATE;
 	}
 	return ESP_OK;
 }
 
-void attached() {
+void on_link_attached() {
 	loop::cancel(attach_step);
 	attach_step =
 		loop::schedule(WIFI_AP_ATTACH_DELAY_MS,
 					   {"wifi attach", [](loop::Handle, loop::Value&) {
 							attach_step = {};
-							apply();
+							apply_wifi_state();
 							return loop::Result::done;
 						}});
 	if (!attach_step.valid()) {
-		error(ESP_ERR_NO_MEM);
+		record_error(ESP_ERR_NO_MEM);
 	}
 }
 
@@ -170,9 +170,6 @@ esp_err_t start(const char* ssid) {
 	std::strncpy(wanted.ssid, ssid, sizeof wanted.ssid - 1);
 	std::strncpy(wanted.password, WIFI_AP_PASSWORD, sizeof wanted.password - 1);
 	wanted.channel = WIFI_AP_CHANNEL;
-	if (!expander::subscribe(switch_sample)) {
-		return ESP_ERR_NO_MEM;
-	}
 	if (!adsbee::subscribe(is_reply, on_reply, nullptr)) {
 		return ESP_ERR_NO_MEM;
 	}
@@ -182,6 +179,7 @@ esp_err_t start(const char* ssid) {
 		return ESP_ERR_NO_MEM;
 	}
 	State::update([](State& state) { state.status = Status::ok; });
-	return ESP_OK;
+	// The expander polls already, so its handler runs from here on.
+	return expander::subscribe(switch_sample) ? ESP_OK : ESP_ERR_NO_MEM;
 }
 }  // namespace wifi

@@ -18,10 +18,10 @@ constexpr uint32_t kPeriodicRunMs = 2000;
 std::atomic control{charger::ControlMode::automatic};
 Rules rules;  // loop task only
 
-Inputs get_inputs(const charger::State& charger_state,
-				  const fusb::State& usb_c) {
+ChargeInputs read_charge_inputs(const charger::State& charger_state,
+								const fusb::State& usb_c) {
 	const int64_t now = esp_timer_get_time();
-	Inputs in;
+	ChargeInputs in;
 	in.now_us = now;
 	in.mode = control;
 	in.charger_usable = charger_state.usable(now);
@@ -40,20 +40,21 @@ Inputs get_inputs(const charger::State& charger_state,
 	return in;
 }
 
-void run(const charger::State& charger_state, const fusb::State& usb_c) {
-	Inputs in = get_inputs(charger_state, usb_c);
+void run_charge_control(const charger::State& charger_state,
+						const fusb::State& usb_c) {
+	ChargeInputs in = read_charge_inputs(charger_state, usb_c);
 	if (in.mode == charger::ControlMode::automatic) {
 		const charger::TargetState target = rules.apply_rules(in);
-		charger::set_charger_state(target);
+		charger::set_charger_target(target);
 	}
 }
 
 void charger_polled(const charger::State& state, void*) {
-	run(state, fusb::State::copy());
+	run_charge_control(state, fusb::State::copy());
 }
 
 void usb_c_polled(const fusb::State& state, void*) {
-	run(charger::State::copy(), state);
+	run_charge_control(charger::State::copy(), state);
 }
 
 esp_err_t init() {
@@ -62,7 +63,8 @@ esp_err_t init() {
 	}
 	auto periodic = loop::schedule_periodic(
 		kPeriodicRunMs, {"charge control", [](loop::Handle, loop::Value&) {
-							 run(charger::State::copy(), fusb::State::copy());
+							 run_charge_control(charger::State::copy(),
+												fusb::State::copy());
 							 return loop::Result::done;
 						 }});
 	return periodic.valid() ? ESP_OK : ESP_ERR_NO_MEM;

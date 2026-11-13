@@ -4,7 +4,7 @@ if (test)
             "log/log_session.c" "test/test_log_session.c" "system/task_stats.c" "test/test_task_stats.c"
             INCLUDE_DIRS "." "log" "commands" "system" PRIV_REQUIRES unity airgrep WHOLE_ARCHIVE)
 else ()
-    idf_component_register(SRCS "main.cpp" "console.c" "banner.c" "commands/cmd_uptime.c"
+    idf_component_register(SRCS "main.cpp" "console.c" "banner.c" "commands/cmd_uptime.cpp"
             "commands/cmd_reboot.c" "commands/cmd_logs.c" "log/log_ring.c" "log/log_session.c" "commands/cmd_exp.cpp"
             "commands/cmd_charger.cpp" "commands/cmd_battery_level.cpp" "commands/cmd_baro.cpp"
             "commands/cmd_fusb.cpp" "commands/cmd_beep.cpp" "commands/cmd_adsbee.cpp" "commands/cmd_gnss.cpp" "commands/cmd_clock.cpp" "commands/cmd_settings.cpp" "commands/cmd_wifi.cpp" "commands/cmd_traffic.cpp"

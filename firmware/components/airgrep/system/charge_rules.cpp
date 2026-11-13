@@ -26,17 +26,18 @@ constexpr unsigned kFailureLatchThreshold = 10;
 constexpr unsigned kNoBatteryVBATThreshold = 2600;
 }  // namespace
 
-charger::TargetState Rules::apply_rules(const Inputs& in) {
+charger::TargetState Rules::apply_rules(const ChargeInputs& in) {
 	charger::TargetState target;
 	target.mode = in.mode;
 	target.decided = true;
 	target.thermal_limit_c = kThermalLimitC;
-	input(in, target);
-	charge(in, target);
+	decide_input_limit(in, target);
+	decide_charge_current(in, target);
 	return target;
 }
 
-void Rules::input(const Inputs& in, charger::TargetState& target) {
+void Rules::decide_input_limit(const ChargeInputs& in,
+							   charger::TargetState& target) {
 	const bool vbus = in.charger_usable && in.vbus;
 	if (vbus && !vbus_) {
 		vbus_since_us_ = in.now_us;
@@ -64,7 +65,8 @@ void Rules::input(const Inputs& in, charger::TargetState& target) {
 	target.input_ma = std::max(in.detected_ma, kMinimumChargeMa);
 }
 
-void Rules::charge(const Inputs& in, charger::TargetState& target) {
+void Rules::decide_charge_current(const ChargeInputs& in,
+								  charger::TargetState& target) {
 	target.charge_ma =
 		std::clamp(in.capacity_mah / 2 / kChargeStepMa * kChargeStepMa,
 				   kMinimumChargeMa, kMaximumChargeMa);
@@ -75,7 +77,7 @@ void Rules::charge(const Inputs& in, charger::TargetState& target) {
 		hot_.update(in.pack_c);
 		cold_.update(in.pack_c);
 	}
-	const charger::ChargeStop battery_stop = battery(in);
+	const charger::ChargeStop battery_stop = decide_charge_stop(in);
 	if (!temperature_seen_) {
 		target.charge_ma = kMinimumChargeMa;
 		target.stop = battery_stop;
@@ -95,7 +97,7 @@ void Rules::charge(const Inputs& in, charger::TargetState& target) {
 // Every VBAT_OVP that ends the ok state counts as one failure.
 // Only a restart clears the lockout, because an opened
 // pack protection reads like a removed pack.
-charger::ChargeStop Rules::battery(const Inputs& in) {
+charger::ChargeStop Rules::decide_charge_stop(const ChargeInputs& in) {
 	const int64_t now = in.now_us;
 	// TODO: encapsulate timeout in method instead of spreading timeout checks
 	// across the entire code base

@@ -31,6 +31,9 @@ esp_err_t i2c_bus_add_if_present(const i2c_device_config_t* config,
 	if (!s_bus) {
 		return ESP_ERR_INVALID_STATE;
 	}
+	if (*device) {
+		return ESP_OK;
+	}
 	if (!i2c_bus_present(config->device_address)) {
 		return ESP_ERR_NOT_FOUND;
 	}

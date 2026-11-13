@@ -26,7 +26,7 @@ struct State {
 	float volts = 0, soc = 0, rate = 0;
 	uint16_t version = 0;
 	Alerts alerts{};
-	Remaining remaining{};
+	std::optional<float> charge_duration_hours;
 	int64_t updated_us = 0, error_us = 0;
 	esp_err_t last_error = ESP_OK;
 	bool identity_known = false, configured = false;
@@ -58,6 +58,7 @@ struct State {
 };
 
 using Completion = loop::Callable<void(esp_err_t)>;
+// Starts the driver unless it polls already. The system watchdog calls it
+// again on the loop for a driver that stopped or never showed up.
 void init(Completion complete);
-loop::Handle poll_handle();
 }  // namespace battery

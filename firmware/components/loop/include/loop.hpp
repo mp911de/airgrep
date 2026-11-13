@@ -82,9 +82,9 @@ void start();
 
 // All return an invalid handle when the queue, the slots or the scheduled
 // array are full. The submitter then frees its own payload.
-bool hsubmit(const Event& event, SuccessListener on_success = {},
-			 ErrorListener on_error = {});
-bool hsubmit(const char* name, Action action);
+bool try_submit(const Event& event, SuccessListener on_success = {},
+				ErrorListener on_error = {});
+bool try_submit(const char* name, Action action);
 
 Handle submit(const Event& event, SuccessListener on_success = {},
 			  ErrorListener on_error = {});

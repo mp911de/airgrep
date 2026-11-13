@@ -115,7 +115,8 @@ bool subscribe(Handler handler, void* context = nullptr);
 // target. The hardware input limit is set before IINDPM is lowered and
 // cleared only after IINDPM was raised. A failed write waits for the next
 // call.
-void set_charger_state(const TargetState& target);
+void set_charger_target(const TargetState& target);
+// Starts the driver unless it polls already. The system watchdog calls it
+// again on the loop for a driver that stopped or never showed up.
 void init(Completion complete);
-loop::Handle poll_handle();
 }  // namespace charger

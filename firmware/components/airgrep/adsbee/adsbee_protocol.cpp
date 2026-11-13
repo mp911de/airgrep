@@ -67,9 +67,9 @@ namespace {
 constexpr char kGnssPrefix[] = "#GNSS:";
 constexpr size_t kGnssFields = 34;
 using csbee::copy;
-using csbee::decimal;
 using csbee::Field;
-using csbee::integer;
+using csbee::parse_decimal;
+using csbee::parse_integer;
 using csbee::split;
 }  // namespace
 
@@ -83,17 +83,17 @@ bool decode_gnss(const char* text, size_t length, Gnss& out) {
 		return false;
 	}
 	out = Gnss{};
-	out.fix = integer(f[0], 0) == 1;
-	out.quality = int8_t(integer(f[1], -1));
-	out.satellites = int8_t(integer(f[2], -1));
+	out.fix = parse_integer(f[0], 0) == 1;
+	out.quality = int8_t(parse_integer(f[1], -1));
+	out.satellites = int8_t(parse_integer(f[2], -1));
 	if (out.fix) {
-		out.latitude = decimal(f[3], 0);
-		out.longitude = decimal(f[4], 0);
-		out.altitude_ft = int32_t(integer(f[5], 0));
-		out.speed_kt = decimal(f[6], 0);
-		out.track_deg = decimal(f[7], 0);
+		out.latitude = parse_decimal(f[3], 0);
+		out.longitude = parse_decimal(f[4], 0);
+		out.altitude_ft = int32_t(parse_integer(f[5], 0));
+		out.speed_kt = parse_decimal(f[6], 0);
+		out.track_deg = parse_decimal(f[7], 0);
 	}
-	out.hdop = decimal(f[8], -1);
+	out.hdop = parse_decimal(f[8], -1);
 	if (f[9].length == 6) {
 		out.utc_known = true;
 		out.utc_hour =
@@ -108,22 +108,22 @@ bool decode_gnss(const char* text, size_t length, Gnss& out) {
 		copy(f[10], buffer, sizeof buffer);
 		out.epoch_ms = std::strtoull(buffer, nullptr, 10);
 	}
-	out.antenna = int8_t(integer(f[11], -1));
-	out.antenna_power = int8_t(integer(f[12], -1));
-	out.jamming = int8_t(integer(f[13], -1));
+	out.antenna = int8_t(parse_integer(f[11], -1));
+	out.antenna_power = int8_t(parse_integer(f[12], -1));
+	out.jamming = int8_t(parse_integer(f[13], -1));
 	int16_t* counts[] = {&out.max_cno,   &out.seen,      &out.no_signal,
 						 &out.searching, &out.acquired,  &out.unusable,
 						 &out.locked,    &out.ephemeris, &out.used,
 						 &out.healthy,   &out.unhealthy};
 	for (size_t i = 0; i < 11; i++) {
-		*counts[i] = int16_t(integer(f[14 + i], -1));
+		*counts[i] = int16_t(parse_integer(f[14 + i], -1));
 	}
 	copy(f[25], out.sbas_mode, sizeof out.sbas_mode);
 	copy(f[26], out.sbas_system, sizeof out.sbas_system);
-	out.sbas_satellites = int16_t(integer(f[27], -1));
+	out.sbas_satellites = int16_t(parse_integer(f[27], -1));
 	out.sbas_corrections = !f[28].empty() && !f[29].empty();
-	out.prc_cm = int32_t(integer(f[28], 0));
-	out.ic_cm = int32_t(integer(f[29], 0));
+	out.prc_cm = int32_t(parse_integer(f[28], 0));
+	out.ic_cm = int32_t(parse_integer(f[29], 0));
 	copy(f[30], out.module, sizeof out.module);
 	copy(f[31], out.software, sizeof out.software);
 	copy(f[32], out.hardware, sizeof out.hardware);

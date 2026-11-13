@@ -43,7 +43,7 @@ inline void copy(const Field& field, char* out, size_t capacity) {
 	out[n] = 0;
 }
 
-inline long integer(const Field& field, long fallback = 0) {
+inline long parse_integer(const Field& field, long fallback = 0) {
 	if (field.empty()) {
 		return fallback;
 	}
@@ -52,7 +52,7 @@ inline long integer(const Field& field, long fallback = 0) {
 	return std::strtol(buffer, nullptr, 10);
 }
 
-inline unsigned long hex(const Field& field) {
+inline unsigned long parse_hex(const Field& field) {
 	if (field.empty()) {
 		return 0;
 	}
@@ -61,7 +61,7 @@ inline unsigned long hex(const Field& field) {
 	return std::strtoul(buffer, nullptr, 16);
 }
 
-inline float decimal(const Field& field, float fallback = 0) {
+inline float parse_decimal(const Field& field, float fallback = 0) {
 	if (field.empty()) {
 		return fallback;
 	}

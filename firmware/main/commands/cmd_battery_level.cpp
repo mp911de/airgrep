@@ -4,6 +4,7 @@
 #include "charger/bq25798.hpp"
 #include "command_status.hpp"
 #include "console.h"
+#include "duration.hpp"
 #include "esp_console.h"
 
 namespace {
@@ -31,8 +32,11 @@ int command(int argc, char**) {
 				state.raw_vcell);
 	std::printf("%-20s %+.3f %%/h (0x%04X)\n", "Rate (CRATE)", state.rate,
 				state.raw_crate);
-	if (state.remaining.valid) {
-		std::printf("%-20s %.2f h to %s\n", "Remaining", state.remaining.hours,
+	if (state.charge_duration_hours) {
+		char remaining[16];
+		format_hours_minutes(*state.charge_duration_hours, remaining,
+							 sizeof remaining);
+		std::printf("%-20s %s to %s\n", "Remaining", remaining,
 					state.rate < 0 ? "EMPTY" : "FULL");
 	}
 	const struct {

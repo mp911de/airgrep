@@ -31,7 +31,7 @@ bool enabled;
 unsigned step, generation;
 int64_t ready_us;
 
-void error(esp_err_t result) {
+void fail_poll(esp_err_t result) {
 	int64_t now = esp_timer_get_time();
 	State::update([&](State& shared) {
 		shared.last_error = result;
@@ -39,6 +39,14 @@ void error(esp_err_t result) {
 		shared.configured = false;
 	});
 	busy = false;
+}
+
+// A driver that cannot identify or configure the sensor stops polling. The
+// system watchdog starts it again.
+void stop(esp_err_t result) {
+	fail_poll(result);
+	loop::cancel(periodic);
+	periodic = {};
 }
 
 esp_err_t read(uint8_t reg, uint8_t* bytes, size_t length = 1) {
@@ -52,8 +60,9 @@ esp_err_t write(uint8_t reg, uint8_t value) {
 							   CONFIG_AIRGREP_I2C_TIMEOUT_MS);
 }
 
-void next(const char* name, loop::Result (*action)(loop::Handle, loop::Value&),
-		  uint32_t delay = 0) {
+void submit_step(const char* name,
+				 loop::Result (*action)(loop::Handle, loop::Value&),
+				 uint32_t delay = 0) {
 	unsigned current = generation;
 	loop::Event event{
 		name, [current, action](loop::Handle handle, loop::Value& value) {
@@ -65,16 +74,16 @@ void next(const char* name, loop::Result (*action)(loop::Handle, loop::Value&),
 	loop::Handle handle =
 		delay ? loop::schedule(delay, event) : loop::submit(event);
 	if (!handle.valid()) {
-		error(ESP_ERR_NO_MEM);
+		fail_poll(ESP_ERR_NO_MEM);
 	}
 }
 
 // NVM status only means something in standby, so the live poll reads data
 // alone.
-loop::Result live(loop::Handle, loop::Value&) {
+loop::Result read_measurement(loop::Handle, loop::Value&) {
 	esp_err_t result = read(kRegTempDataXlsb, state.data, sizeof state.data);
 	if (result != ESP_OK) {
-		error(result);
+		fail_poll(result);
 		return loop::Result::done;
 	}
 	state.temperature_c =
@@ -157,13 +166,13 @@ loop::Result configure(loop::Handle, loop::Value&) {
 			break;
 	}
 	if (result != ESP_OK) {
-		error(result);
+		stop(result);
 		return loop::Result::done;
 	}
 	if (step < 10) {
 		// Mode changes need tstandby before configuration writes.
-		next("baro configure", configure,
-			 step == 1 || step == 7 ? BMP_STARTUP_MS : 0);
+		submit_step("baro configure", configure,
+					step == 1 || step == 7 ? BMP_STARTUP_MS : 0);
 		return loop::Result::done;
 	}
 	state.osr = decode_osr(state.raw_osr);
@@ -178,27 +187,29 @@ loop::Result configure(loop::Handle, loop::Value&) {
 		ESP_LOGW(tag,
 				 "readback INT 0x%02X OSR 0x%02X ODR 0x%02X, wanted ODR 0x%02X",
 				 state.raw_int, state.raw_osr, state.raw_odr, wanted_odr);
-		error(ESP_ERR_INVALID_RESPONSE);
+		stop(ESP_ERR_INVALID_RESPONSE);
 		return loop::Result::done;
 	}
 	state.configured = true;
 	state.status = enabled ? Status::ok : Status::off;
 	state.last_error = ESP_OK;
 	State::update([](State& shared) { shared = state; });
-	// Do not publish old data while the first conversion is pending.
-	ready_us = esp_timer_get_time() + BMP_POLL_PERIOD_MS * 1000;
-	busy = false;
+	if (enabled) {
+		submit_step("baro sample", read_measurement, BMP_FIRST_SAMPLE_MS);
+	} else {
+		busy = false;
+	}
 	return loop::Result::done;
 }
 
 loop::Result standby(loop::Handle, loop::Value&) {
 	esp_err_t result = write(kRegOdrConfig, kOdrConfigStandby);
 	if (result != ESP_OK) {
-		error(result);
+		stop(result);
 	} else {
 		// Stop conversions before changing standby-only fields such as
 		// deep_dis.
-		next("baro standby", configure, BMP_STANDBY_MS);
+		submit_step("baro standby", configure, BMP_STANDBY_MS);
 	}
 	return loop::Result::done;
 }
@@ -217,18 +228,18 @@ esp_err_t read_identity() {
 	return ESP_OK;
 }
 
-loop::Result identity(loop::Handle, loop::Value&) {
+loop::Result read_identity_step(loop::Handle, loop::Value&) {
 	esp_err_t result = read_identity();
 	if (result != ESP_OK) {
-		error(result);
+		stop(result);
 		return loop::Result::done;
 	}
 	State::update([](State& shared) { shared = state; });
-	next("baro configure", standby);
+	submit_step("baro configure", standby);
 	return loop::Result::done;
 }
 
-loop::Result poll(loop::Handle, loop::Value&) {
+loop::Result poll_barometer(loop::Handle, loop::Value&) {
 	if (busy || esp_timer_get_time() < ready_us) {
 		return loop::Result::done;
 	}
@@ -238,14 +249,12 @@ loop::Result poll(loop::Handle, loop::Value&) {
 	}
 	busy = true;
 	step = 0;
-	next("baro poll", !state.identity_known ? identity
-					  : state.configured    ? live
-											: standby);
+	submit_step("baro poll", !state.identity_known ? read_identity_step
+							 : state.configured    ? read_measurement
+												   : standby);
 	return loop::Result::done;
 }
 }  // namespace
-
-loop::Handle poll_handle() { return periodic; }
 
 void set_enabled(bool value) {
 	if (enabled == value) {
@@ -262,8 +271,8 @@ void set_enabled(bool value) {
 		step = 0;
 		state = State::copy();
 		busy = true;
-		next("baro mode", standby,
-			 esp_timer_get_time() < ready_us ? BMP_STARTUP_MS : 0);
+		submit_step("baro mode", standby,
+					esp_timer_get_time() < ready_us ? BMP_STARTUP_MS : 0);
 	}
 }
 
@@ -271,14 +280,14 @@ Completion init_complete;
 
 void finish_init(esp_err_t result) {
 	if (result != ESP_OK && result != ESP_ERR_NOT_FOUND) {
-		error(result);
+		fail_poll(result);
 	}
 	if (init_complete) {
 		init_complete(result);
 	}
 }
 
-loop::Result identify(loop::Handle, loop::Value&) {
+loop::Result identify_at_init(loop::Handle, loop::Value&) {
 	state = State::copy();
 	esp_err_t result = read_identity();
 	if (result != ESP_OK) {
@@ -286,11 +295,12 @@ loop::Result identify(loop::Handle, loop::Value&) {
 		return loop::Result::done;
 	}
 	State::update([](State& shared) { shared = state; });
-	periodic = loop::schedule_periodic(BMP_POLL_PERIOD_MS, {"baro poll", poll});
+	periodic = loop::schedule_periodic(BMP_POLL_PERIOD_MS,
+									   {"baro poll", poll_barometer});
 	if (periodic.valid()) {
 		busy = true;
 		step = 0;
-		next("baro configure", standby);
+		submit_step("baro configure", standby);
 	}
 	finish_init(periodic.valid() ? ESP_OK : ESP_ERR_NO_MEM);
 	return loop::Result::done;
@@ -301,7 +311,8 @@ loop::Result probe(loop::Handle, loop::Value&) {
 	if (result == ESP_ERR_NOT_FOUND) {
 		State::update([](State& shared) { shared.status = Status::off; });
 	}
-	if (result == ESP_OK && !loop::hsubmit("baro identity", identify)) {
+	if (result == ESP_OK &&
+		!loop::try_submit("baro identity", identify_at_init)) {
 		result = ESP_ERR_NO_MEM;
 	}
 	if (result != ESP_OK) {
@@ -311,6 +322,9 @@ loop::Result probe(loop::Handle, loop::Value&) {
 }
 
 void init(Completion complete) {
+	if (periodic.valid()) {
+		return;
+	}
 	init_complete = complete;
 	// The sensor needs its start-up time after power before the first access.
 	if (!loop::schedule(BMP_STARTUP_MS, {"baro probe", probe}).valid()) {
@@ -319,34 +333,35 @@ void init(Completion complete) {
 }
 
 esp_err_t reset() {
-	bool queued = loop::hsubmit("baro reset", [](loop::Handle, loop::Value&) {
-		esp_err_t result =
-			device ? write(kRegCmd, kCmdSoftReset) : ESP_ERR_INVALID_STATE;
-		if (result == ESP_ERR_INVALID_RESPONSE) {
-			result = ESP_OK;
-		}
-		++generation;
-		busy = false;
-		ready_us = esp_timer_get_time() + BMP_STARTUP_MS * 1000;
-		if (result == ESP_OK) {
-			State::update([](State& state) { state = State{}; });
-			if (!periodic.valid()) {
-				periodic = loop::schedule_periodic(BMP_POLL_PERIOD_MS,
-												   {"baro poll", poll});
-				if (!periodic.valid()) {
-					result = ESP_ERR_NO_MEM;
-					error(result);
-				}
+	bool queued =
+		loop::try_submit("baro reset", [](loop::Handle, loop::Value&) {
+			esp_err_t result =
+				device ? write(kRegCmd, kCmdSoftReset) : ESP_ERR_INVALID_STATE;
+			if (result == ESP_ERR_INVALID_RESPONSE) {
+				result = ESP_OK;
 			}
-		} else {
-			State::update([](State& state) {
-				state.identity_known = false;
-				state.configured = false;
-			});
-			error(result);
-		}
-		return loop::Result::done;
-	});
+			++generation;
+			busy = false;
+			ready_us = esp_timer_get_time() + BMP_STARTUP_MS * 1000;
+			if (result == ESP_OK) {
+				State::update([](State& state) { state = State{}; });
+				if (!periodic.valid()) {
+					periodic = loop::schedule_periodic(
+						BMP_POLL_PERIOD_MS, {"baro poll", poll_barometer});
+					if (!periodic.valid()) {
+						result = ESP_ERR_NO_MEM;
+						fail_poll(result);
+					}
+				}
+			} else {
+				State::update([](State& state) {
+					state.identity_known = false;
+					state.configured = false;
+				});
+				fail_poll(result);
+			}
+			return loop::Result::done;
+		});
 	return queued ? ESP_OK : ESP_ERR_NO_MEM;
 }
 }  // namespace barometer

@@ -19,9 +19,9 @@ extern "C" {
 esp_err_t i2c_bus_init(void);
 i2c_master_bus_handle_t i2c_bus_handle(void);
 bool i2c_bus_present(uint8_t address);
-// Adds the device when it acknowledges its address. ESP_ERR_INVALID_STATE
-// without a bus, ESP_ERR_NOT_FOUND when nothing answers, otherwise the add
-// result.
+// Adds the device when it acknowledges its address. A device that is already
+// added stays. ESP_ERR_INVALID_STATE without a bus, ESP_ERR_NOT_FOUND when
+// nothing answers, otherwise the add result.
 esp_err_t i2c_bus_add_if_present(const i2c_device_config_t* config,
 								 i2c_master_dev_handle_t* device);
 

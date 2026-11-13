@@ -64,7 +64,6 @@ using GnssHandler = void (*)(const Gnss&, int64_t received_us, void* ctx);
 bool subscribe_gnss(GnssHandler handler, void* ctx);
 esp_err_t uart_init();
 esp_err_t start();
-loop::Handle poll_handle();
 
 loop::Handle request(const char* command, loop::SuccessListener on_reply,
 					 loop::ErrorListener on_error,

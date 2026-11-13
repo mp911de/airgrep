@@ -38,5 +38,5 @@ struct State {
 esp_err_t start();
 // Schedules a ping burst. ESP_ERR_INVALID_STATE while one is due or the link
 // is down.
-esp_err_t schedule_nss_time_sync();
+esp_err_t schedule_gnss_time_sync();
 }  // namespace adsbee::timesync

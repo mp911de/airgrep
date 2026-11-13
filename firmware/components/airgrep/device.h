@@ -11,6 +11,13 @@ inline bool state_usable(int64_t updated_us, int64_t now_us) {
 	return updated_us && now_us - updated_us <= kStateMaxAgeUs;
 }
 
+// Ready: detected, configured and read at least once. A driver that fails to
+// get there stops, the system watchdog starts it again.
+template <typename State>
+bool is_ready(const State& state) {
+	return state.identity_known && state.configured && state.updated_us;
+}
+
 // Battery presence as seen by one source. yes and no come from the battery
 // test, vbat from a live cell voltage without a test.
 enum class BatteryDetected : uint8_t { unknown, yes, no, vbat };

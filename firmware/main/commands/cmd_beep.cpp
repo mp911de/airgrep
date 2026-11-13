@@ -61,8 +61,8 @@ int command(int argc, char** argv) {
 			"shutdown] [hz] | off");
 		return 1;
 	}
-	bool queued = loop::hsubmit("beep command", [name, hz](loop::Handle,
-														   loop::Value&) {
+	bool queued = loop::try_submit("beep command", [name, hz](loop::Handle,
+															  loop::Value&) {
 		if (!name) {
 			buzzer_off();
 		} else if (esp_err_t result = buzzer_play(name, hz); result != ESP_OK) {

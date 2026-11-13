@@ -94,10 +94,12 @@ bool decode_stats(const char* text, size_t length, Stats& out);
 
 // Great circle distance in nautical miles and initial bearing in degrees true
 // from the reference to the target. False when the target has no position.
-bool relative(const Target& target, float ref_latitude, float ref_longitude,
-			  float& distance_nm, float& bearing_deg);
-bool relative(float latitude, float longitude, float ref_latitude,
-			  float ref_longitude, float& distance_nm, float& bearing_deg);
+bool relative_position(const Target& target, float ref_latitude,
+					   float ref_longitude, float& distance_nm,
+					   float& bearing_deg);
+bool relative_position(float latitude, float longitude, float ref_latitude,
+					   float ref_longitude, float& distance_nm,
+					   float& bearing_deg);
 
 // Names for the console, upper case.
 const char* source_name(Source source);

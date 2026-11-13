@@ -15,6 +15,9 @@ namespace barometer {
 // tstandby is 2.5 ms, rounded up to whole loop milliseconds.
 #define BMP_STANDBY_MS 3
 #define BMP_POLL_PERIOD_MS 2000
+// The switch to NORMAL starts the first measurement: tstartup_deep 4 ms, then
+// tconv_p 5.4 ms at x8 and tconv_t 1.1 ms at x2, each +5 %.
+#define BMP_FIRST_SAMPLE_MS 12
 // BMP580 datasheet: register map section 7, soft reset 4.3.10, timings
 // table 4.
 constexpr uint8_t kRegChipId = 0x01;
@@ -83,10 +86,11 @@ struct State {
 };
 
 using Completion = loop::Callable<void(esp_err_t)>;
+// Starts the driver unless it polls already. The system watchdog calls it
+// again on the loop for a driver that stopped or never showed up.
 void init(Completion complete);
 // Called on the loop task by system mode transitions.
 void set_enabled(bool enabled);
-loop::Handle poll_handle();
 // Posts the soft reset. The outcome shows in State on the next poll.
 esp_err_t reset();
 }  // namespace barometer

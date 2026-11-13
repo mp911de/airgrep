@@ -7,7 +7,7 @@
 
 // The computation of charge control, without hardware access.
 namespace charge_control {
-struct Inputs {
+struct ChargeInputs {
 	int64_t now_us = 0;
 	charger::ControlMode mode = charger::ControlMode::automatic;
 	bool charger_usable = false, vbus = false, detecting = false;
@@ -23,12 +23,14 @@ struct Inputs {
 
 class Rules {
    public:
-	charger::TargetState apply_rules(const Inputs& in);
+	charger::TargetState apply_rules(const ChargeInputs& in);
 
    private:
-	void input(const Inputs& in, charger::TargetState& target);
-	void charge(const Inputs& in, charger::TargetState& target);
-	charger::ChargeStop battery(const Inputs& in);
+	void decide_input_limit(const ChargeInputs& in,
+							charger::TargetState& target);
+	void decide_charge_current(const ChargeInputs& in,
+							   charger::TargetState& target);
+	charger::ChargeStop decide_charge_stop(const ChargeInputs& in);
 
 	enum class Battery : uint8_t { ok, overvoltage, absent };
 

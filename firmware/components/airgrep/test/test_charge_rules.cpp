@@ -11,7 +11,7 @@ void setUp() {}
 void tearDown() {}
 #endif
 
-using charge_control::Inputs;
+using charge_control::ChargeInputs;
 using charge_control::Rules;
 using charger::ChargeStop;
 using charger::Supply;
@@ -20,8 +20,8 @@ namespace {
 constexpr int64_t kSecond = 1000000;
 
 // A settled SDP port with a 2000 mAh pack at room temperature.
-Inputs plugged(int64_t now_us) {
-	Inputs in{};
+ChargeInputs plugged(int64_t now_us) {
+	ChargeInputs in{};
 	in.now_us = now_us;
 	in.charger_usable = true;
 	in.vbus = true;
@@ -33,14 +33,14 @@ Inputs plugged(int64_t now_us) {
 	return in;
 }
 
-Inputs advertising(int64_t now_us, unsigned ma) {
-	Inputs in = plugged(now_us);
+ChargeInputs advertising(int64_t now_us, unsigned ma) {
+	ChargeInputs in = plugged(now_us);
 	in.advertised_ma = ma;
 	return in;
 }
 
-Inputs at(int64_t now_us, float celsius) {
-	Inputs in = plugged(now_us);
+ChargeInputs at(int64_t now_us, float celsius) {
+	ChargeInputs in = plugged(now_us);
 	in.pack_c = celsius;
 	return in;
 }
@@ -74,7 +74,7 @@ CASE(any_advertisement,
 
 CASE(detection, "Default CC leaves the input target to the detection result") {
 	Rules rules;
-	Inputs in = plugged(0);
+	ChargeInputs in = plugged(0);
 	in.detected_ma = 1500;
 	in.vbus_type = 3;
 	const auto target = rules.apply_rules(in);
@@ -86,7 +86,7 @@ CASE(detection, "Default CC leaves the input target to the detection result") {
 
 CASE(stale_usb_c, "A stale USB-C State counts as default CC") {
 	Rules rules;
-	Inputs in = advertising(0, 3000);
+	ChargeInputs in = advertising(0, 3000);
 	in.usb_c_usable = false;
 	const auto target = rules.apply_rules(in);
 	TEST_ASSERT_TRUE(target.supply == Supply::detection);
@@ -97,7 +97,7 @@ CASE(stale_usb_c, "A stale USB-C State counts as default CC") {
 CASE(no_vbus,
 	 "Without VBUS the hardware limit is on and IINDPM is left alone") {
 	Rules rules;
-	Inputs in = advertising(0, 3000);
+	ChargeInputs in = advertising(0, 3000);
 	in.vbus = false;
 	const auto target = rules.apply_rules(in);
 	TEST_ASSERT_TRUE(target.supply == Supply::none);
@@ -108,7 +108,7 @@ CASE(no_vbus,
 CASE(wait,
 	 "While a chip negotiates or detects only the hardware limit is set") {
 	Rules rules;
-	Inputs in = advertising(0, 3000);
+	ChargeInputs in = advertising(0, 3000);
 	in.detecting = true;
 	auto target = rules.apply_rules(in);
 	TEST_ASSERT_TRUE(target.supply == Supply::waiting);
@@ -126,7 +126,7 @@ CASE(wait,
 
 CASE(wait_ends, "The wait ends 5 s after VBUS appeared") {
 	Rules rules;
-	Inputs in = plugged(0);
+	ChargeInputs in = plugged(0);
 	in.detecting = true;
 	TEST_ASSERT_TRUE(rules.apply_rules(in).supply == Supply::waiting);
 	in.now_us = 5 * kSecond - 1;
@@ -140,7 +140,7 @@ CASE(wait_ends, "The wait ends 5 s after VBUS appeared") {
 CASE(stale_negotiation,
 	 "A negotiating but stale USB-C State does not hold the wait") {
 	Rules rules;
-	Inputs in = plugged(0);
+	ChargeInputs in = plugged(0);
 	in.usb_c_usable = false;
 	in.usb_c_negotiating = true;
 	TEST_ASSERT_TRUE(rules.apply_rules(in).supply == Supply::detection);
@@ -152,10 +152,10 @@ CASE(detach, "Detach from a 3 A source sets the hardware limit at once") {
 	auto target = rules.apply_rules(plugged(kSecond / 4));
 	TEST_ASSERT_TRUE(target.hardware_limit);
 	TEST_ASSERT_EQUAL_UINT(500, target.input_ma);
-	Inputs gone = plugged(kSecond / 2);
+	ChargeInputs gone = plugged(kSecond / 2);
 	gone.vbus = false;
 	TEST_ASSERT_TRUE(rules.apply_rules(gone).hardware_limit);
-	Inputs back = advertising(10 * kSecond, 3000);
+	ChargeInputs back = advertising(10 * kSecond, 3000);
 	back.detecting = true;
 	target = rules.apply_rules(back);
 	TEST_ASSERT_TRUE(target.supply == Supply::waiting);
@@ -165,7 +165,7 @@ CASE(detach, "Detach from a 3 A source sets the hardware limit at once") {
 
 CASE(capacity, "Charge target is 0.5 C between 500 and 2000 mA") {
 	Rules rules;
-	Inputs in = plugged(0);
+	ChargeInputs in = plugged(0);
 	TEST_ASSERT_EQUAL_UINT(1000, rules.apply_rules(in).charge_ma);
 	in.capacity_mah = 600;
 	TEST_ASSERT_EQUAL_UINT(500, rules.apply_rules(in).charge_ma);
@@ -241,8 +241,9 @@ CASE(treg, "Every AUTO target sets TREG to 100 C") {
 namespace {
 constexpr int64_t kMinute = 60 * kSecond;
 
-Inputs battery(int64_t now_us, unsigned vbat_mv, bool overvoltage = false) {
-	Inputs in = plugged(now_us);
+ChargeInputs battery(int64_t now_us, unsigned vbat_mv,
+					 bool overvoltage = false) {
+	ChargeInputs in = plugged(now_us);
 	in.vbat_mv = vbat_mv;
 	in.battery_overvoltage = overvoltage;
 	return in;
@@ -340,7 +341,7 @@ CASE(counts_while_off, "A VBAT_OVP during a temperature stop counts too") {
 	Rules rules;
 	int64_t now = 0;
 	for (int i = 0; i < 10; ++i) {
-		Inputs in = battery(now, 4300, true);
+		ChargeInputs in = battery(now, 4300, true);
 		in.pack_c = 41;
 		rules.apply_rules(in);
 		now += 6 * kMinute;
@@ -356,7 +357,7 @@ CASE(temperature_first, "A temperature stop is named before an overvoltage") {
 	Rules rules;
 	rules.apply_rules(battery(0, 4200));
 	rules.apply_rules(battery(kSecond, 4300, true));
-	Inputs in = battery(2 * kSecond, 4300, true);
+	ChargeInputs in = battery(2 * kSecond, 4300, true);
 	in.pack_c = 41;
 	TEST_ASSERT_TRUE(rules.apply_rules(in).stop == ChargeStop::hot);
 }
@@ -366,7 +367,7 @@ CASE(stale_charger_keeps_overvoltage,
 	Rules rules;
 	rules.apply_rules(battery(0, 4200));
 	rules.apply_rules(battery(kSecond, 4300, true));
-	Inputs in = battery(6 * kMinute, 4150);
+	ChargeInputs in = battery(6 * kMinute, 4150);
 	in.charger_usable = false;
 	TEST_ASSERT_FALSE(rules.apply_rules(in).charge_enabled);
 }

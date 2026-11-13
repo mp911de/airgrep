@@ -33,10 +33,10 @@ uint16_t acknowledge_reset(uint16_t raw_status) {
 	return raw_status & ~kStatusRi;
 }
 
-Remaining remaining_time(float soc, float rate) {
+std::optional<float> calculate_charge_duration(float soc, float rate) {
 	if (!(soc >= 0 && soc <= 100) || rate == 0) {
 		return {};
 	}
-	return {true, rate < 0 ? soc / -rate : (100 - soc) / rate};
+	return rate < 0 ? soc / -rate : (100 - soc) / rate;
 }
 }  // namespace battery

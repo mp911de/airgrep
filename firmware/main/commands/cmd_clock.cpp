@@ -24,7 +24,7 @@ int command(int argc, char** argv) {
 		return 1;
 	}
 	if (args.sync->count) {
-		return command_status::ack(adsbee::timesync::schedule_nss_time_sync());
+		return command_status::ack(adsbee::timesync::schedule_gnss_time_sync());
 	}
 	const auto state = adsbee::timesync::State::copy();
 	int64_t now = esp_timer_get_time();
@@ -58,7 +58,7 @@ int command(int argc, char** argv) {
 		std::printf("%-20s OFF\n", "Table");
 	}
 	// The RTC keeps the time across resets, so without a
-	// schedule_nss_time_sync this boot the time is still the last one it was
+	// sync this boot the time is still the last one it was
 	// set to.
 	if (state.set) {
 		time_t synced_at =
@@ -83,8 +83,7 @@ int command(int argc, char** argv) {
 }  // namespace
 
 extern "C" esp_err_t console_register_clock(void) {
-	args.sync = arg_lit0(nullptr, "schedule_nss_time_sync",
-						 "Start a time ping burst now");
+	args.sync = arg_lit0(nullptr, "sync", "Start a time ping burst now");
 	args.end = arg_end(2);
 	if (arg_nullcheck(reinterpret_cast<void**>(&args))) {
 		return ESP_ERR_NO_MEM;

@@ -7,6 +7,7 @@
 #include "esp_timer.h"
 #include "i2c_bus.h"
 #include "sdkconfig.h"
+#include "subscribers.hpp"
 
 namespace charger {
 constexpr const char* tag = "charger";
@@ -79,19 +80,9 @@ bool busy;
 unsigned step;
 std::atomic<bool> testing;
 
-struct Subscriber {
-	Handler handler;
-	void* context;
-} subscribers[CHARGER_MAX_SUBSCRIBERS];
+Subscribers<Handler, CHARGER_MAX_SUBSCRIBERS> subscribers;
 
-size_t subscriber_count;
-
-void notify() {
-	const State current = State::copy();
-	for (size_t i = 0; i < subscriber_count; i++) {
-		subscribers[i].handler(current, subscribers[i].context);
-	}
-}
+void notify() { subscribers.notify(State::copy()); }
 
 void record_error(esp_err_t result) {
 	int64_t now = esp_timer_get_time();
@@ -101,7 +92,7 @@ void record_error(esp_err_t result) {
 	});
 }
 
-void error(esp_err_t result) {
+void fail_poll(esp_err_t result) {
 	record_error(result);
 	busy = false;
 }
@@ -121,7 +112,7 @@ void publish_state() {
 	});
 }
 
-void publish() {
+void publish_poll() {
 	publish_state();
 	busy = false;
 }
@@ -145,7 +136,7 @@ esp_err_t write(uint8_t reg, uint8_t value) {
 }
 
 void decode_configuration();
-void next(const char* name, loop::Action action);
+void submit_step(const char* name, loop::Action action);
 
 // Charge operations. One runs at a time on the loop, guarded by busy like the
 // poll.
@@ -204,7 +195,7 @@ esp_err_t write_pair(uint8_t reg, uint16_t value) {
 							   CONFIG_AIRGREP_I2C_TIMEOUT_MS);
 }
 
-uint16_t pair(uint8_t reg) {
+uint16_t raw_pair(uint8_t reg) {
 	return uint16_t(state.raw[reg] << 8 | state.raw[reg + 1]);
 }
 
@@ -214,7 +205,7 @@ unsigned requested_ma;
 esp_err_t set_limit(uint8_t reg) {
 	esp_err_t result = read({reg, 2});
 	if (result == ESP_OK) {
-		result = write_pair(reg, encode_current(pair(reg), requested_ma));
+		result = write_pair(reg, encode_current(raw_pair(reg), requested_ma));
 	}
 	if (result == ESP_OK) {
 		result = read({reg, 2});
@@ -299,7 +290,7 @@ esp_err_t adc_continuous() {
 
 // A failed write may still have reached the device, so changed is set
 // regardless.
-esp_err_t switch_and_settle(bool enabled, void (*then)()) {
+esp_err_t set_charge_enabled_then(bool enabled, void (*then)()) {
 	esp_err_t result = set_charge_enabled(enabled);
 	operation.changed = true;
 	if (result != ESP_OK) {
@@ -334,7 +325,7 @@ void measure_charging() {
 	auto& result = operation.result;
 	esp_err_t error = read_vbat(result.vbat_before, result.before_valid);
 	if (error == ESP_OK) {
-		error = switch_and_settle(false, measure_disabled);
+		error = set_charge_enabled_then(false, measure_disabled);
 	}
 	if (error != ESP_OK) {
 		fail(error);
@@ -350,7 +341,7 @@ void start_battery_test() {
 	// Charging off needs one settle period with it on to get the charging
 	// reading.
 	if (error == ESP_OK && !result.initial_enabled) {
-		error = switch_and_settle(true, measure_charging);
+		error = set_charge_enabled_then(true, measure_charging);
 	} else if (error == ESP_OK) {
 		measure_charging();
 	}
@@ -394,7 +385,7 @@ esp_err_t submit(const char* name, bool needs_adc, ChargeCompletion complete,
 	if (!pending) {
 		return ESP_ERR_NO_MEM;
 	}
-	bool queued = loop::hsubmit(name, [pending](loop::Handle, loop::Value&) {
+	bool queued = loop::try_submit(name, [pending](loop::Handle, loop::Value&) {
 		const auto admitted = *pending;
 		delete pending;
 		const auto current = State::copy();
@@ -471,7 +462,7 @@ struct Write {
 } writes[6];
 size_t write_count, write_next;
 
-void add(uint8_t reg, uint16_t value, bool is_pair = false) {
+void queue_write(uint8_t reg, uint16_t value, bool is_pair = false) {
 	writes[write_count++] = {reg, value, is_pair};
 }
 
@@ -480,7 +471,7 @@ loop::Result write_step(loop::Handle, loop::Value&) {
 	esp_err_t result =
 		w.pair ? write_pair(w.reg, w.value) : write(w.reg, uint8_t(w.value));
 	if (result != ESP_OK) {
-		error(result);
+		fail_poll(result);
 		return loop::Result::done;
 	}
 	if (w.pair) {
@@ -488,7 +479,7 @@ loop::Result write_step(loop::Handle, loop::Value&) {
 	}
 	state.raw[w.reg + w.pair] = uint8_t(w.value);
 	if (write_next < write_count) {
-		next("charger reconcile", write_step);
+		submit_step("charger reconcile", write_step);
 	} else {
 		decode_configuration();
 		busy = false;
@@ -497,7 +488,7 @@ loop::Result write_step(loop::Handle, loop::Value&) {
 }
 }  // namespace
 
-void set_charger_state(const TargetState& target) {
+void set_charger_target(const TargetState& target) {
 	State::update([&](State& shared) { shared.target = target; });
 
 	if (!target.decided || busy || !device || !state.configured) {
@@ -509,33 +500,37 @@ void set_charger_state(const TargetState& target) {
 	write_count = write_next = 0;
 
 	if (target.hardware_limit && !external_limit) {
-		add(kRegChargerControl5, control5 | kExternalLimit);
+		queue_write(kRegChargerControl5, control5 | kExternalLimit);
 	}
 	if (state.thermal_limit_c != target.thermal_limit_c) {
-		add(kRegTemperatureControl,
-			encode_temperature_control(raw[kRegTemperatureControl],
-									   target.thermal_limit_c));
+		queue_write(kRegTemperatureControl,
+					encode_temperature_control(raw[kRegTemperatureControl],
+											   target.thermal_limit_c));
 	}
 	if (state.charge_current_ma != target.charge_ma) {
-		add(kRegChargeCurrentLimit,
-			encode_current(pair(kRegChargeCurrentLimit), target.charge_ma),
+		queue_write(
+			kRegChargeCurrentLimit,
+			encode_current(raw_pair(kRegChargeCurrentLimit), target.charge_ma),
 			true);
 	}
 	if (state.control0.charge_enabled != target.charge_enabled) {
-		add(kRegChargerControl0,
-			target.charge_enabled ? raw[kRegChargerControl0] | kChargeEnable
-								  : raw[kRegChargerControl0] & ~kChargeEnable);
+		queue_write(kRegChargerControl0,
+					target.charge_enabled
+						? raw[kRegChargerControl0] | kChargeEnable
+						: raw[kRegChargerControl0] & ~kChargeEnable);
 	}
 	if (target.input_ma && state.input_current_ma != target.input_ma) {
-		add(kRegInputCurrentLimit,
-			encode_current(pair(kRegInputCurrentLimit), target.input_ma), true);
+		queue_write(
+			kRegInputCurrentLimit,
+			encode_current(raw_pair(kRegInputCurrentLimit), target.input_ma),
+			true);
 	}
 	if (!target.hardware_limit && external_limit) {
-		add(kRegChargerControl5, control5 & ~kExternalLimit);
+		queue_write(kRegChargerControl5, control5 & ~kExternalLimit);
 	}
 	if (write_count) {
 		busy = true;
-		next("charger reconcile", write_step);
+		submit_step("charger reconcile", write_step);
 	}
 }
 
@@ -546,9 +541,9 @@ int64_t conversion_cycle_us() {
 	return int64_t(channels) * decode_adc_control(kAdcProfile).sample_ms * 1000;
 }
 
-void next(const char* name, loop::Action action) {
-	if (!loop::hsubmit(name, action)) {
-		error(ESP_ERR_NO_MEM);
+void submit_step(const char* name, loop::Action action) {
+	if (!loop::try_submit(name, action)) {
+		fail_poll(ESP_ERR_NO_MEM);
 	}
 }
 
@@ -591,10 +586,10 @@ void decode_status() {
 }
 
 // A failed status read may hide an expiry that the kick would then clear.
-void recover(esp_err_t result) {
+void recover_poll(esp_err_t result) {
 	record_error(result);
 	invalidate();
-	next("charger watchdog", [](loop::Handle, loop::Value&) {
+	submit_step("charger watchdog", [](loop::Handle, loop::Value&) {
 		esp_err_t kick = kick_watchdog();
 		if (kick != ESP_OK) {
 			record_error(kick);
@@ -633,21 +628,29 @@ loop::Result poll_configured(loop::Handle, loop::Value&) {
 	}
 	if (result != ESP_OK) {
 		if (step == 1) {
-			recover(result);
+			recover_poll(result);
 		} else {
-			error(result);
+			fail_poll(result);
 		}
 		return loop::Result::done;
 	}
 	if (step < 5) {
-		next("charger sample", poll_configured);
+		submit_step("charger sample", poll_configured);
 		return loop::Result::done;
 	}
 	decode_configuration();
 	decode_status();
-	publish();
+	publish_poll();
 	notify();
 	return loop::Result::done;
+}
+
+// A driver that cannot configure stops polling. The system watchdog starts it
+// again.
+void stop(esp_err_t result) {
+	fail_poll(result);
+	loop::cancel(periodic);
+	periodic = {};
 }
 
 loop::Result configure(loop::Handle, loop::Value&) {
@@ -685,29 +688,29 @@ loop::Result configure(loop::Handle, loop::Value&) {
 			break;
 	}
 	if (result != ESP_OK) {
-		error(result);
+		stop(result);
 		return loop::Result::done;
 	}
 	if (step < 7) {
-		next("charger configure", configure);
+		submit_step("charger configure", configure);
 		return loop::Result::done;
 	}
 	decode_configuration();
 	if (!state.control5.ship_fet || !state.control5.discharge_sensing ||
 		state.control1.watchdog_ms != CHARGER_WATCHDOG_MS ||
 		state.raw[kRegAdcControl] != kAdcProfile) {
-		error(ESP_ERR_INVALID_RESPONSE);
+		stop(ESP_ERR_INVALID_RESPONSE);
 		return loop::Result::done;
 	}
 	state.configured = true;
 	state.adc_valid = false;
 	publish_state();
 	step = 0;
-	next("charger polling", poll_configured);
+	submit_step("charger polling", poll_configured);
 	return loop::Result::done;
 }
 
-loop::Result poll(loop::Handle handle, loop::Value& value) {
+loop::Result poll_charger(loop::Handle handle, loop::Value& value) {
 	if (busy) {
 		return loop::Result::done;
 	}
@@ -720,14 +723,14 @@ loop::Result poll(loop::Handle handle, loop::Value& value) {
 
 void finish(esp_err_t result) {
 	if (result != ESP_OK) {
-		error(result);
+		fail_poll(result);
 	}
 	if (completion) {
 		completion(result);
 	}
 }
 
-loop::Result identify(loop::Handle, loop::Value&) {
+loop::Result identify_at_init(loop::Handle, loop::Value&) {
 	esp_err_t result = read(kBlockPartInformation);
 	uint8_t raw = state.raw[kRegPartInformation];
 	Identity identity = decode_identity(raw);
@@ -742,7 +745,7 @@ loop::Result identify(loop::Handle, loop::Value&) {
 			shared.identity = identity;
 		});
 		periodic = loop::schedule_periodic(CHARGER_POLL_PERIOD_MS,
-										   {"charger poll", poll});
+										   {"charger poll", poll_charger});
 		if (!periodic.valid()) {
 			result = ESP_ERR_NO_MEM;
 		}
@@ -756,7 +759,8 @@ loop::Result probe(loop::Handle, loop::Value&) {
 	if (result == ESP_ERR_NOT_FOUND) {
 		State::update([](State& shared) { shared.status = Status::off; });
 	}
-	if (result == ESP_OK && !loop::hsubmit("charger identity", identify)) {
+	if (result == ESP_OK &&
+		!loop::try_submit("charger identity", identify_at_init)) {
 		result = ESP_ERR_NO_MEM;
 	}
 	if (result != ESP_OK) {
@@ -765,19 +769,16 @@ loop::Result probe(loop::Handle, loop::Value&) {
 	return loop::Result::done;
 }
 
-loop::Handle poll_handle() { return periodic; }
-
 bool subscribe(Handler handler, void* context) {
-	if (!handler || subscriber_count == CHARGER_MAX_SUBSCRIBERS) {
-		return false;
-	}
-	subscribers[subscriber_count++] = {handler, context};
-	return true;
+	return subscribers.add(handler, context);
 }
 
 void init(Completion complete) {
+	if (periodic.valid()) {
+		return;
+	}
 	completion = complete;
-	if (!loop::hsubmit("charger probe", probe)) {
+	if (!loop::try_submit("charger probe", probe)) {
 		finish(ESP_ERR_NO_MEM);
 	}
 }

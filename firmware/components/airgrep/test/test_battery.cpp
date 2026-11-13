@@ -45,20 +45,22 @@ CASE(status, "Battery STATUS decodes alerts in the high byte including RI") {
 	TEST_ASSERT_TRUE(second.soc_change);
 }
 
-CASE(remaining,
-	 "Remaining time estimates charge and discharge, only a zero "
+CASE(charge_duration,
+	 "Charge duration estimates charge and discharge, only a zero "
 	 "rate has none") {
-	const auto discharge = battery::remaining_time(40, -20);
-	TEST_ASSERT_TRUE(discharge.valid);
-	TEST_ASSERT_EQUAL_FLOAT(2, discharge.hours);
-	const auto charge = battery::remaining_time(40, 20);
-	TEST_ASSERT_TRUE(charge.valid);
-	TEST_ASSERT_EQUAL_FLOAT(3, charge.hours);
-	TEST_ASSERT_FALSE(battery::remaining_time(40, 0).valid);
-	TEST_ASSERT_TRUE(battery::remaining_time(40, 0.208f).valid);
-	TEST_ASSERT_TRUE(battery::remaining_time(40, -0.208f).valid);
-	TEST_ASSERT_FALSE(battery::remaining_time(101, 20).valid);
-	TEST_ASSERT_EQUAL_FLOAT(0, battery::remaining_time(100, 20).hours);
+	const auto discharge = battery::calculate_charge_duration(40, -20);
+	TEST_ASSERT_TRUE(discharge.has_value());
+	TEST_ASSERT_EQUAL_FLOAT(2, *discharge);
+	const auto charge = battery::calculate_charge_duration(40, 20);
+	TEST_ASSERT_TRUE(charge.has_value());
+	TEST_ASSERT_EQUAL_FLOAT(3, *charge);
+	TEST_ASSERT_FALSE(battery::calculate_charge_duration(40, 0).has_value());
+	TEST_ASSERT_TRUE(
+		battery::calculate_charge_duration(40, 0.208f).has_value());
+	TEST_ASSERT_TRUE(
+		battery::calculate_charge_duration(40, -0.208f).has_value());
+	TEST_ASSERT_FALSE(battery::calculate_charge_duration(101, 20).has_value());
+	TEST_ASSERT_EQUAL_FLOAT(0, *battery::calculate_charge_duration(100, 20));
 }
 
 #ifndef ESP_PLATFORM
@@ -68,7 +70,7 @@ int main() {
 	RUN_TEST(soc);
 	RUN_TEST(crate);
 	RUN_TEST(status);
-	RUN_TEST(remaining);
+	RUN_TEST(charge_duration);
 	return UNITY_END();
 }
 #endif

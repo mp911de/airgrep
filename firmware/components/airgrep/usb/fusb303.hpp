@@ -60,8 +60,9 @@ using Completion = loop::Callable<void(esp_err_t)>;
 // Called on the loop after every complete Poll.
 using Handler = void (*)(const State&, void*);
 bool subscribe(Handler handler, void* context = nullptr);
+// Starts the driver unless it polls already. The system watchdog calls it
+// again on the loop for a driver that stopped or never showed up.
 void init(Completion complete);
-loop::Handle poll_handle();
 // Posts the soft reset. The outcome shows in State on the next poll.
 esp_err_t reset();
 }  // namespace fusb

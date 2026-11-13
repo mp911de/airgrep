@@ -16,7 +16,7 @@ namespace wifi {
 #define WIFI_AP_PASSWORD "airgrep-wifi"
 #define WIFI_AP_CHANNEL 11
 #define WIFI_AP_POLL_PERIOD_MS 60000
-// After TX attach the time schedule_nss_time_sync burst owns the link for
+// After TX attach the time sync burst owns the link for
 // about a second.
 #define WIFI_AP_ATTACH_DELAY_MS 2000
 // Query after a set, once its reply window has closed.
@@ -49,14 +49,13 @@ struct State {
 	static portMUX_TYPE mutex_;
 };
 
-// ssid is the Device ID. Subscribes to the expander, so call before expander
-// init.
+// ssid is the Device ID. Subscribes to the expander.
 esp_err_t start(const char* ssid);
-// Sends the slider position to the ADSBee now. ESP_ERR_INVALID_STATE before
-// the first slider read or while the link is down.
-esp_err_t apply();
+// Sends the wanted Wi-Fi state to the ADSBee now. ESP_ERR_INVALID_STATE
+// before the first slider read or while the link is down.
+esp_err_t apply_wifi_state();
 // Sends the query the periodic poll sends.
-esp_err_t poll();
+esp_err_t query_access_point();
 // Link hook after the init sequence, runs on the loop.
-void attached();
+void on_link_attached();
 }  // namespace wifi

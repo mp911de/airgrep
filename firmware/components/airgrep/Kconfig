@@ -25,6 +25,13 @@ menu "airgrep hardware"
         default 38 if AIRGREP_BOARD_DISPLAY
         default 8 if AIRGREP_BOARD_PLUS
 
+    config AIRGREP_PIN_USR_LED
+        int
+        default -1 if AIRGREP_BOARD_DISPLAY
+        default 21 if AIRGREP_BOARD_PLUS
+        help
+            Active-low user LED lit by the health check, -1 for none.
+
     config AIRGREP_PIN_SDA
         int
         default 5

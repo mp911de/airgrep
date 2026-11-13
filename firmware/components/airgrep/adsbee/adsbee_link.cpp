@@ -14,6 +14,7 @@
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "i2c_expander/tca9534.hpp"
+#include "subscribers.hpp"
 #include "wifi/wifi_ap.hpp"
 
 namespace adsbee {
@@ -46,20 +47,21 @@ constexpr uart_config_t uart_config = {
 };
 constexpr gpio_num_t tx = static_cast<gpio_num_t>(BOARD_PIN_UART_TX);
 
-struct Subscriber {
+// A handler that only sees the messages its predicate accepts.
+struct Filtered {
 	Predicate predicate;
 	Handler handler;
-	void* context;
-} subscribers[4];
 
-size_t subscriber_count;
+	explicit operator bool() const { return predicate && handler; }
+	void operator()(const Message& message, void* context) const {
+		if (predicate(message)) {
+			handler(message, context);
+		}
+	}
+};
 
-struct GnssSubscriber {
-	GnssHandler handler;
-	void* context;
-} gnss_subscribers[4];
-
-size_t gnss_subscriber_count;
+Subscribers<Filtered, 4> subscribers;
+Subscribers<GnssHandler, 4> gnss_subscribers;
 decoder_t decoder;
 QueueHandle_t events;
 bool started, tx_attached;
@@ -174,10 +176,7 @@ void receive(const Message& message) {
 				state.gnss = gnss;
 				state.gnss_us = message.received_us;
 			});
-			for (size_t i = 0; i < gnss_subscriber_count; i++) {
-				gnss_subscribers[i].handler(gnss, message.received_us,
-											gnss_subscribers[i].context);
-			}
+			gnss_subscribers.notify(gnss, message.received_us);
 		}
 	}
 	if (message.kind == DECODER_AT_REPLY) {
@@ -188,11 +187,7 @@ void receive(const Message& message) {
 		record_error(ESP_ERR_INVALID_SIZE);
 		loop::fail(pending->handle, loop::Outcome::error);
 	}
-	for (size_t i = 0; i < subscriber_count; i++) {
-		if (subscribers[i].predicate(message)) {
-			subscribers[i].handler(message, subscribers[i].context);
-		}
-	}
+	subscribers.notify(message);
 }
 
 void on_message(const char* text, size_t length, decoder_kind_t kind, void*) {
@@ -225,14 +220,14 @@ void on_message(const char* text, size_t length, decoder_kind_t kind, void*) {
 	message->received_us = now;
 	std::memcpy(message->text, text, length + 1);
 	auto submit =
-		loop::hsubmit({"adsbee rx",
-					   [message](loop::Handle, loop::Value&) {
-						   receive(*message);
-						   std::free(message);
-						   return loop::Result::done;
-					   },
-					   1000},
-					  {}, [message](loop::Outcome) { std::free(message); });
+		loop::try_submit({"adsbee rx",
+						  [message](loop::Handle, loop::Value&) {
+							  receive(*message);
+							  std::free(message);
+							  return loop::Result::done;
+						  },
+						  1000},
+						 {}, [message](loop::Outcome) { std::free(message); });
 	if (!submit) {
 		std::free(message);
 		record_error(ESP_ERR_NO_MEM);
@@ -314,7 +309,7 @@ loop::Result init(loop::Handle, loop::Value&) {
 	}
 	State::update([](State& state) { state.initialized = true; });
 	submit_request(ADSBEE_DEVICE_INFO_COMMAND, ADSBEE_REPLY_WINDOW_MS, {}, {});
-	wifi::attached();
+	wifi::on_link_attached();
 	return loop::Result::done;
 }
 
@@ -346,7 +341,7 @@ void update_tx() {
 	tx_attached = true;
 	State::update([](State& state) { state.tx_attached = true; });
 	init_sent = 0;
-	if (!loop::hsubmit("adsbee init", init)) {
+	if (!loop::try_submit("adsbee init", init)) {
 		record_error(ESP_ERR_NO_MEM);
 	}
 }
@@ -439,22 +434,12 @@ void power_sample(const expander::State& state, uint8_t, void*) {
 }  // namespace
 
 bool subscribe(Predicate predicate, Handler handler, void* context) {
-	if (!predicate || !handler || subscriber_count == 4) {
-		return false;
-	}
-	subscribers[subscriber_count++] = {predicate, handler, context};
-	return true;
+	return subscribers.add({predicate, handler}, context);
 }
 
 bool subscribe_gnss(GnssHandler handler, void* context) {
-	if (!handler || gnss_subscriber_count == 4) {
-		return false;
-	}
-	gnss_subscribers[gnss_subscriber_count++] = {handler, context};
-	return true;
+	return gnss_subscribers.add(handler, context);
 }
-
-loop::Handle poll_handle() { return periodic; }
 
 bool ready() {
 	const auto link = State::copy();
@@ -483,9 +468,6 @@ esp_err_t start() {
 	if (!events) {
 		return ESP_ERR_INVALID_STATE;
 	}
-	if (!expander::subscribe(power_sample)) {
-		return ESP_ERR_NO_MEM;
-	}
 	esp_err_t result = detach();
 	if (result != ESP_OK) {
 		return result;
@@ -510,7 +492,8 @@ esp_err_t start() {
 		return result;
 	}
 	started = true;
-	return ESP_OK;
+	// The expander polls already, so its handler runs from here on.
+	return expander::subscribe(power_sample) ? ESP_OK : ESP_ERR_NO_MEM;
 }
 
 loop::Handle request(const char* command, loop::SuccessListener success,

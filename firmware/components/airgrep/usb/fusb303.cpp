@@ -3,12 +3,13 @@
 #include "esp_timer.h"
 #include "i2c_bus.h"
 #include "sdkconfig.h"
+#include "subscribers.hpp"
 
 // The device runs a chain of I2C steps on the loop: identity, then configure,
 // then the live sample. The periodic poll starts the chain where State left
-// off, so a step that failed is retried on the next poll and a soft reset
-// simply starts over. After SW_RES the chip wants tEN before the next access,
-// ready_us holds that moment.
+// off, so a soft reset simply starts over. A failed identity or configure
+// step stops the poll, the system watchdog starts the driver again. After
+// SW_RES the chip wants tEN before the next access, ready_us holds that moment.
 namespace fusb {
 namespace {
 // FUSB303B datasheet Table 11 register map, Tables 12 and 18.
@@ -29,24 +30,25 @@ unsigned generation;  // bumped by reset, orphans the steps of the running chain
 int64_t ready_us;     // tEN after SW_RES
 Completion init_complete;
 
-struct Subscriber {
-	Handler handler;
-	void* context;
-} subscribers[FUSB_MAX_SUBSCRIBERS];
-
-size_t subscriber_count;
+Subscribers<Handler, FUSB_MAX_SUBSCRIBERS> subscribers;
 
 void publish() {
 	State::update([](State& shared) { shared = state; });
 }
 
-void error(esp_err_t result) {
+void fail_poll(esp_err_t result) {
 	int64_t now = esp_timer_get_time();
 	State::update([&](State& shared) {
 		shared.last_error = result;
 		shared.error_us = now;
 	});
 	busy = false;
+}
+
+void stop(esp_err_t result) {
+	fail_poll(result);
+	loop::cancel(periodic);
+	periodic = {};
 }
 
 esp_err_t read(uint8_t reg, uint8_t* bytes, size_t length = 1) {
@@ -62,22 +64,22 @@ esp_err_t write(uint8_t reg, uint8_t value) {
 
 using Step = loop::Result (*)(loop::Handle, loop::Value&);
 
-void next(const char* name, Step step) {
+void submit_step(const char* name, Step step) {
 	unsigned current = generation;
-	if (!loop::hsubmit(
+	if (!loop::try_submit(
 			name, [current, step](loop::Handle handle, loop::Value& value) {
 				if (current != generation) {
 					return loop::Result::done;
 				}
 				return step(handle, value);
 			})) {
-		error(ESP_ERR_NO_MEM);
+		fail_poll(ESP_ERR_NO_MEM);
 	}
 }
 
 void finish_init(esp_err_t result) {
 	if (result != ESP_OK && result != ESP_ERR_NOT_FOUND) {
-		error(result);
+		fail_poll(result);
 	}
 	if (init_complete) {
 		init_complete(result);
@@ -85,11 +87,11 @@ void finish_init(esp_err_t result) {
 	init_complete = {};
 }
 
-loop::Result live(loop::Handle, loop::Value&) {
+loop::Result read_live_status(loop::Handle, loop::Value&) {
 	uint8_t data[kRegType - kRegStatus + 1];
 	esp_err_t result = read(kRegStatus, data, sizeof data);
 	if (result != ESP_OK) {
-		error(result);
+		fail_poll(result);
 		return loop::Result::done;
 	}
 	state.raw_status = data[0];
@@ -102,9 +104,7 @@ loop::Result live(loop::Handle, loop::Value&) {
 	state.updated_us = esp_timer_get_time();
 	publish();
 	busy = false;
-	for (size_t i = 0; i < subscriber_count; i++) {
-		subscribers[i].handler(state, subscribers[i].context);
-	}
+	subscribers.notify(state);
 	return loop::Result::done;
 }
 
@@ -124,17 +124,17 @@ loop::Result configure(loop::Handle, loop::Value&) {
 		}
 	}
 	if (result != ESP_OK) {
-		error(result);
+		stop(result);
 		return loop::Result::done;
 	}
 	state.configured = true;
 	publish();
-	next("fusb sample", live);
+	submit_step("fusb sample", read_live_status);
 	return loop::Result::done;
 }
 
 // Accepts only a FUSB303B. The first success completes the boot row.
-loop::Result identity(loop::Handle, loop::Value&) {
+loop::Result read_identity_step(loop::Handle, loop::Value&) {
 	esp_err_t result = read(kRegDeviceId, &state.raw_identity);
 	if (result == ESP_OK) {
 		state.identity = decode_identity(state.raw_identity);
@@ -143,7 +143,7 @@ loop::Result identity(loop::Handle, loop::Value&) {
 		}
 	}
 	if (result != ESP_OK) {
-		error(result);
+		stop(result);
 		finish_init(result);
 		return loop::Result::done;
 	}
@@ -151,19 +151,19 @@ loop::Result identity(loop::Handle, loop::Value&) {
 	state.status = Status::ok;
 	publish();
 	finish_init(ESP_OK);
-	next("fusb configure", configure);
+	submit_step("fusb configure", configure);
 	return loop::Result::done;
 }
 
-loop::Result poll(loop::Handle, loop::Value&) {
+loop::Result poll_usb_c(loop::Handle, loop::Value&) {
 	if (busy || esp_timer_get_time() < ready_us) {
 		return loop::Result::done;
 	}
 	busy = true;
 	state = State::copy();
-	next("fusb poll", !state.identity_known ? identity
-					  : !state.configured   ? configure
-											: live);
+	submit_step("fusb poll", !state.identity_known ? read_identity_step
+							 : !state.configured   ? configure
+												   : read_live_status);
 	return loop::Result::done;
 }
 }  // namespace
@@ -181,32 +181,29 @@ State State::copy() {
 	return result;
 }
 
-loop::Handle poll_handle() { return periodic; }
-
 bool subscribe(Handler handler, void* context) {
-	if (!handler || subscriber_count == FUSB_MAX_SUBSCRIBERS) {
-		return false;
-	}
-	subscribers[subscriber_count++] = {handler, context};
-	return true;
+	return subscribers.add(handler, context);
 }
 
 // EN_N is tied to GND on the carrier, so tEN ran out while the chip booted.
 // The first access can follow at once.
 void init(Completion complete) {
+	if (periodic.valid()) {
+		return;
+	}
 	init_complete = complete;
 	esp_err_t result = i2c_bus_add_if_present(&i2c_config, &device);
 	if (result == ESP_ERR_NOT_FOUND) {
 		State::update([](State& shared) { shared.status = Status::off; });
 	}
 	if (result == ESP_OK) {
-		periodic =
-			loop::schedule_periodic(FUSB_POLL_PERIOD_MS, {"fusb poll", poll});
+		periodic = loop::schedule_periodic(FUSB_POLL_PERIOD_MS,
+										   {"fusb poll", poll_usb_c});
 		if (!periodic.valid()) {
 			result = ESP_ERR_NO_MEM;
 		}
 	}
-	if (result == ESP_OK && !loop::hsubmit("fusb poll", poll)) {
+	if (result == ESP_OK && !loop::try_submit("fusb poll", poll_usb_c)) {
 		result = ESP_ERR_NO_MEM;
 	}
 	if (result != ESP_OK) {
@@ -215,22 +212,23 @@ void init(Completion complete) {
 }
 
 esp_err_t reset() {
-	bool queued = loop::hsubmit("fusb reset", [](loop::Handle, loop::Value&) {
-		if (!device || esp_timer_get_time() < ready_us) {
-			error(ESP_ERR_INVALID_STATE);
+	bool queued =
+		loop::try_submit("fusb reset", [](loop::Handle, loop::Value&) {
+			if (!device || esp_timer_get_time() < ready_us) {
+				fail_poll(ESP_ERR_INVALID_STATE);
+				return loop::Result::done;
+			}
+			esp_err_t result = write(kRegReset, kSwReset);
+			++generation;
+			busy = false;
+			ready_us = esp_timer_get_time() + FUSB_RESET_DELAY_MS * 1000;
+			if (result == ESP_OK) {
+				State::update([](State& shared) { shared = State{}; });
+			} else {
+				fail_poll(result);
+			}
 			return loop::Result::done;
-		}
-		esp_err_t result = write(kRegReset, kSwReset);
-		++generation;
-		busy = false;
-		ready_us = esp_timer_get_time() + FUSB_RESET_DELAY_MS * 1000;
-		if (result == ESP_OK) {
-			State::update([](State& shared) { shared = State{}; });
-		} else {
-			error(result);
-		}
-		return loop::Result::done;
-	});
+		});
 	return queued ? ESP_OK : ESP_ERR_NO_MEM;
 }
 }  // namespace fusb

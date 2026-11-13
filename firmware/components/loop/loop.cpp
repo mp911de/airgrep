@@ -132,7 +132,7 @@ bool succeed(Handle handle, Value value) {
 	return finish(handle, true, value, Outcome::error);
 }
 
-bool settle(Handle handle, Outcome outcome) {
+bool fail_promise(Handle handle, Outcome outcome) {
 	return finish(handle, false, Value{}, outcome);
 }
 
@@ -209,7 +209,7 @@ void run_once(const QueuedEvent& event) {
 			succeed(event.handle, value);
 			break;
 		case Result::error:
-			settle(event.handle, Outcome::error);
+			fail_promise(event.handle, Outcome::error);
 			break;
 		case Result::pending:
 			cas(slot, pack(generation, RUNNING), pack(generation, LIVE));
@@ -227,7 +227,7 @@ void run_periodic(ScheduledEvent item, int64_t now) {
 	ESP_LOGD(TAG, "run %s", item.event.name);
 	Value value{};
 	if (item.event.action(item.event.handle, value) == Result::error) {
-		settle(item.event.handle, Outcome::error);
+		fail_promise(item.event.handle, Outcome::error);
 		return;
 	}
 	if (!is_live(item.event.handle)) {
@@ -236,7 +236,7 @@ void run_periodic(ScheduledEvent item, int64_t now) {
 	item.due_us = now + int64_t{item.period_ms} * 1000;
 	if (!insert_scheduled(item)) {
 		ESP_LOGW(TAG, "scheduled full, %s stops", item.event.name);
-		settle(item.event.handle, Outcome::error);
+		fail_promise(item.event.handle, Outcome::error);
 	}
 }
 
@@ -257,7 +257,7 @@ int64_t sweep_deadlines(int64_t now) {
 		}
 		Handle handle{w >> STATE_BITS, i};
 		const char* name = slot.name;
-		if (settle(handle, Outcome::timeout)) {
+		if (fail_promise(handle, Outcome::timeout)) {
 			ESP_LOGW(TAG, "%s timed out", name);
 		}
 	}
@@ -386,12 +386,12 @@ void start() {
 			 CONFIG_AIRGREP_LOOP_TICK_MS, SLOTS, (int)SCHEDULED);
 }
 
-bool hsubmit(const Event& event, SuccessListener on_success,
-			 ErrorListener on_error) {
+bool try_submit(const Event& event, SuccessListener on_success,
+				ErrorListener on_error) {
 	return enqueue(event, 0, 0, on_success, on_error).valid();
 }
 
-bool hsubmit(const char* name, Action action) {
+bool try_submit(const char* name, Action action) {
 	return enqueue(Event{name, action}, 0, 0, {}, {}).valid();
 }
 
@@ -436,7 +436,8 @@ bool complete(Handle handle, Value value) {
 }
 
 bool fail(Handle handle, Outcome outcome) {
-	return handle.valid() && handle.slot < SLOTS && settle(handle, outcome);
+	return handle.valid() && handle.slot < SLOTS &&
+		   fail_promise(handle, outcome);
 }
 
 bool pending(Handle handle) {

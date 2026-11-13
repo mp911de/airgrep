@@ -20,10 +20,10 @@ int command(int argc, char** argv) {
 		return 1;
 	}
 	if (args.apply->count) {
-		return command_status::ack(wifi::apply());
+		return command_status::ack(wifi::apply_wifi_state());
 	}
 	if (args.poll->count) {
-		return command_status::ack(wifi::poll());
+		return command_status::ack(wifi::query_access_point());
 	}
 	const auto state = wifi::State::copy();
 	int64_t now = esp_timer_get_time();
@@ -63,7 +63,7 @@ int command(int argc, char** argv) {
 
 extern "C" esp_err_t console_register_wifi(void) {
 	args.apply = arg_lit0(nullptr, "apply",
-						  "Send the slider position to the ADSBee now");
+						  "Send the wanted Wi-Fi state to the ADSBee now");
 	args.poll = arg_lit0(nullptr, "poll", "Ask the ADSBee what it runs");
 	args.end = arg_end(2);
 	if (arg_nullcheck(reinterpret_cast<void**>(&args))) {

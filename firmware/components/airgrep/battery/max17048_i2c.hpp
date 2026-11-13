@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 
 namespace battery {
 float decode_vcell(uint16_t raw);
@@ -15,11 +16,7 @@ Alerts decode_status(uint16_t raw);
 // STATUS value that clears RI and keeps every other alert bit.
 uint16_t acknowledge_reset(uint16_t raw_status);
 
-struct Remaining {
-	bool valid;
-	float hours;
-};
-
-// Rates below 1 percent per hour are too small for a useful estimate.
-Remaining remaining_time(float soc, float rate);
+// Hours until the pack is empty at a negative rate, until it is full at a
+// positive one.
+std::optional<float> calculate_charge_duration(float soc, float rate);
 }  // namespace battery

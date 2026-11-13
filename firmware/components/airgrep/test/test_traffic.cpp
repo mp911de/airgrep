@@ -93,7 +93,8 @@ CASE(no_position, "A squitter-only target keeps its unknowns") {
 	TEST_ASSERT_FALSE(t.speed_valid);
 	TEST_ASSERT_FALSE(t.direction_valid);
 	float distance, bearing;
-	TEST_ASSERT_FALSE(traffic::relative(t, 53.1f, 7.0f, distance, bearing));
+	TEST_ASSERT_FALSE(
+		traffic::relative_position(t, 53.1f, 7.0f, distance, bearing));
 	char words[128];
 	traffic::flag_words(t.flags, words, sizeof words);
 	TEST_ASSERT_EQUAL_STRING("AIRBORNE", words);
@@ -187,16 +188,19 @@ CASE(bearing, "Distance and bearing from 53.1 N 7.0 E") {
 	traffic::Target t;
 	float distance, bearing;
 	TEST_ASSERT_TRUE(decode(kAircraft, t));
-	TEST_ASSERT_TRUE(traffic::relative(t, 53.1f, 7.0f, distance, bearing));
+	TEST_ASSERT_TRUE(
+		traffic::relative_position(t, 53.1f, 7.0f, distance, bearing));
 	TEST_ASSERT_FLOAT_WITHIN(0.05f, 21.41f, distance);
 	TEST_ASSERT_FLOAT_WITHIN(0.2f, 27.95f, bearing);
 	TEST_ASSERT_TRUE(decode(kFlarm, t));
-	TEST_ASSERT_TRUE(traffic::relative(t, 53.1f, 7.0f, distance, bearing));
+	TEST_ASSERT_TRUE(
+		traffic::relative_position(t, 53.1f, 7.0f, distance, bearing));
 	TEST_ASSERT_FLOAT_WITHIN(0.05f, 46.57f, distance);
 	TEST_ASSERT_FLOAT_WITHIN(0.2f, 13.18f, bearing);
 	t.latitude = 53.16792f;
 	t.longitude = 7.40039f;
-	TEST_ASSERT_TRUE(traffic::relative(t, 53.1f, 7.0f, distance, bearing));
+	TEST_ASSERT_TRUE(
+		traffic::relative_position(t, 53.1f, 7.0f, distance, bearing));
 	TEST_ASSERT_FLOAT_WITHIN(0.05f, 14.99f, distance);
 	TEST_ASSERT_FLOAT_WITHIN(0.2f, 74.05f, bearing);
 }

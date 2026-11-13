@@ -84,9 +84,9 @@ int overview() {
 		Row& r = c.rows[i];
 		r.relative_valid =
 			own_valid && r.position_valid &&
-			traffic::relative(r.latitude, r.longitude, link.gnss.latitude,
-							  link.gnss.longitude, r.distance_nm,
-							  r.bearing_deg);
+			traffic::relative_position(r.latitude, r.longitude,
+									   link.gnss.latitude, link.gnss.longitude,
+									   r.distance_nm, r.bearing_deg);
 	}
 	std::qsort(c.rows, c.count, sizeof(Row), compare);
 	std::printf("%-8s %-9s %-17s %-5s %7s %5s %4s %6s %4s\n", "ADDRESS",
@@ -151,8 +151,8 @@ void detail(const traffic::Target& t, int64_t now) {
 	const auto link = adsbee::State::copy();
 	float distance, bearing;
 	if (link.gnss_us && link.gnss.fix &&
-		traffic::relative(t, link.gnss.latitude, link.gnss.longitude, distance,
-						  bearing)) {
+		traffic::relative_position(t, link.gnss.latitude, link.gnss.longitude,
+								   distance, bearing)) {
 		std::printf("%-20s %.1f NM, bearing %03d\n", "Relative", distance,
 					int(bearing + 0.5f) % 360);
 	}

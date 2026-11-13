@@ -1,7 +1,7 @@
-#include <inttypes.h>
-#include <stdio.h>
+#include <cinttypes>
+#include <cstdio>
 
-#include "argtable3/argtable3.h"
+#include "argtable.hpp"
 #include "console.h"
 #include "esp_console.h"
 #include "esp_heap_caps.h"
@@ -10,17 +10,19 @@
 #include "freertos/task.h"
 #include "sdkconfig.h"
 #include "system/device_info.h"
+#include "system/health.hpp"
 #include "system/system.h"
 #include "task_stats.h"
 
 #define UPTIME_LABEL_WIDTH 20
 
-static struct {
+namespace {
+struct {
 	struct arg_lit* raw;
 	struct arg_end* end;
 } args;
 
-static void heap(const char* label, uint32_t caps, bool raw) {
+void heap(const char* label, uint32_t caps, bool raw) {
 	size_t free = heap_caps_get_free_size(caps),
 		   minimum = heap_caps_get_minimum_free_size(caps),
 		   total = heap_caps_get_total_size(caps);
@@ -35,7 +37,7 @@ static void heap(const char* label, uint32_t caps, bool raw) {
 
 #if CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
 // Load since the previous uptime call, or since boot on the first one.
-static void load(void) {
+void load() {
 	static uint64_t idle_at[CONFIG_FREERTOS_NUMBER_OF_CORES], time_at;
 	uint64_t now = esp_timer_get_time(), elapsed = now - time_at;
 	unsigned sum = 0;
@@ -51,14 +53,14 @@ static void load(void) {
 	printf(" overall %u %%\n", sum / CONFIG_FREERTOS_NUMBER_OF_CORES);
 }
 #else
-static void load(void) {
+void load() {
 	printf("%-*s UNAVAILABLE, CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS is off\n",
 		   UPTIME_LABEL_WIDTH, "Load");
 }
 #endif
 
-static int uptime(int argc, char** argv) {
-	if (arg_parse(argc, argv, (void**)&args)) {
+int uptime(int argc, char** argv) {
+	if (arg_parse(argc, argv, reinterpret_cast<void**>(&args))) {
 		arg_print_errors(stderr, args.end, argv[0]);
 		return 1;
 	}
@@ -73,25 +75,36 @@ static int uptime(int argc, char** argv) {
 			   (unsigned)(seconds % 60));
 	}
 	printf("%-20s %s\n", "Mode", power_mode_name(system_mode()));
+	uint16_t mask = system_health();
+	if (raw) {
+		printf("%-20s 0x%X\n", "Health", mask);
+	} else {
+		char text[96];
+		health::format(mask, text, sizeof text);
+		printf("%-20s %s\n", "Health", text);
+	}
 	load();
 	heap("Internal RAM", MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT, raw);
 	heap("PSRAM", MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT, raw);
 	return 0;
 }
+}  // namespace
 
-esp_err_t console_register_uptime(void) {
-	args.raw = arg_lit0(NULL, "raw",
+extern "C" esp_err_t console_register_uptime(void) {
+	args.raw = arg_lit0(nullptr, "raw",
 						"Print seconds and bytes instead of d hh:mm:ss and KB");
 	args.end = arg_end(2);
-	if (arg_nullcheck((void**)&args)) {
+	if (arg_nullcheck(reinterpret_cast<void**>(&args))) {
 		return ESP_ERR_NO_MEM;
 	}
 	const esp_console_cmd_t command = {
 		.command = "uptime",
-		.hint = "[--raw]",
 		.help = "Show device identity, uptime, core load and heap.",
+		.hint = "[--raw]",
 		.func = uptime,
 		.argtable = &args,
+		.func_w_context = nullptr,
+		.context = nullptr,
 	};
 	return console_register(&command);
 }

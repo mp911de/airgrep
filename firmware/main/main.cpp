@@ -55,9 +55,9 @@ static void start_adsbee(Completion complete) {
 	complete(result);
 }
 
-// Boot order is the table order. The loop and the I/O ports come first, the
-// expander last because system, adsbee and wifi subscribe to its pins during
-// their init. System plays chimes, so the buzzer comes before it.
+// Boot order is the table order. The loop and the I/O ports come first, then
+// the expander whose pins system, adsbee and wifi subscribe to. System acts on
+// every other component, so it comes last.
 static const Component components[] = {
 	{"Event loop",
 	 [](Completion complete) {
@@ -68,6 +68,7 @@ static const Component components[] = {
 	{"Time zones", [](Completion complete) { complete(tz::init()); }},
 	{"I2C", [](Completion complete) { complete(i2c_bus_init()); }},
 	{"UART", [](Completion complete) { complete(adsbee::uart_init()); }},
+	{"I2CExpander", expander::init},
 	{"ADSbee", start_adsbee},
 	{"Clock", [](Completion complete) { complete(adsbee::timesync::start()); }},
 	{"Wi-Fi",
@@ -80,7 +81,6 @@ static const Component components[] = {
 	{"FUSB", fusb::init},
 	{"Buzzer", [](Completion complete) { complete(buzzer_init()); }},
 	{"System", [](Completion complete) { complete(system_init()); }},
-	{"I2CExpander", expander::init},
 };
 
 // Same label column as the banner rows above it.

@@ -34,10 +34,10 @@ constexpr unsigned kQualifierAdsbOther = 5, kQualifierAdsr = 6;
 constexpr unsigned kQualifierTisbTrackFile = 7, kQualifierTisbOther = 8;
 
 using csbee::copy;
-using csbee::decimal;
 using csbee::Field;
-using csbee::hex;
-using csbee::integer;
+using csbee::parse_decimal;
+using csbee::parse_hex;
+using csbee::parse_integer;
 using csbee::split;
 
 bool starts(const char* text, size_t length, const char* prefix) {
@@ -72,7 +72,7 @@ bool decode_aircraft(const char* text, size_t length, Target& out) {
 		return false;
 	}
 	out = Target{};
-	unsigned long icao = hex(f[0]);
+	unsigned long icao = parse_hex(f[0]);
 	out.address = icao & 0xFFFFFF;
 	switch (icao >> 24) {
 		case 0:
@@ -92,7 +92,7 @@ bool decode_aircraft(const char* text, size_t length, Target& out) {
 			out.source = Source::other;
 			break;
 	}
-	out.flags = uint32_t(hex(f[1]));
+	out.flags = uint32_t(parse_hex(f[1]));
 	if (!(f[2].length == 1 && f[2].text[0] == '?')) {
 		copy(f[2], out.callsign, sizeof out.callsign);
 		for (size_t n = std::strlen(out.callsign);
@@ -100,32 +100,33 @@ bool decode_aircraft(const char* text, size_t length, Target& out) {
 			out.callsign[n - 1] = 0;
 		}
 	}
-	out.squawk =
-		f[3].length == 1 && f[3].text[0] == '?' ? -1 : int16_t(integer(f[3]));
-	out.category = uint8_t(integer(f[4]));
+	out.squawk = f[3].length == 1 && f[3].text[0] == '?'
+					 ? -1
+					 : int16_t(parse_integer(f[3]));
+	out.category = uint8_t(parse_integer(f[4]));
 	out.airborne = out.flags & kFlagAirborne;
 	out.position_valid = out.flags & kFlagPosition;
-	out.latitude = decimal(f[5]);
-	out.longitude = decimal(f[6]);
+	out.latitude = parse_decimal(f[5]);
+	out.longitude = parse_decimal(f[6]);
 	out.baro_alt_valid = out.flags & kFlagBaroAlt;
-	out.baro_alt_ft = int32_t(integer(f[7]));
+	out.baro_alt_ft = int32_t(parse_integer(f[7]));
 	out.gnss_alt_valid = out.flags & kFlagGnssAlt;
-	out.gnss_alt_ft = int32_t(integer(f[8]));
+	out.gnss_alt_ft = int32_t(parse_integer(f[8]));
 	out.direction_valid = out.flags & kFlagDirection;
-	out.track_deg = decimal(f[9]);
+	out.track_deg = parse_decimal(f[9]);
 	out.speed_valid = out.flags & kFlagSpeed;
-	out.speed_kt = int16_t(integer(f[10]));
+	out.speed_kt = int16_t(parse_integer(f[10]));
 	out.baro_rate_valid = out.flags & kFlagBaroRate;
-	out.baro_rate_fpm = int16_t(integer(f[11]));
+	out.baro_rate_fpm = int16_t(parse_integer(f[11]));
 	out.gnss_rate_valid = out.flags & kFlagGnssRate;
-	out.gnss_rate_fpm = int16_t(integer(f[12]));
-	out.nicnac = uint16_t(hex(f[13]));
-	out.acdims = uint32_t(hex(f[14]));
-	out.adsb_version = uint8_t(integer(f[15]));
-	out.rssi_dbm = int8_t(integer(f[16]));
-	out.signal_quality_db = uint8_t(integer(f[17]));
-	out.squitter_fps = uint16_t(integer(f[18]));
-	out.es_fps = uint16_t(integer(f[19]));
+	out.gnss_rate_fpm = int16_t(parse_integer(f[12]));
+	out.nicnac = uint16_t(parse_hex(f[13]));
+	out.acdims = uint32_t(parse_hex(f[14]));
+	out.adsb_version = uint8_t(parse_integer(f[15]));
+	out.rssi_dbm = int8_t(parse_integer(f[16]));
+	out.signal_quality_db = uint8_t(parse_integer(f[17]));
+	out.squitter_fps = uint16_t(parse_integer(f[18]));
+	out.es_fps = uint16_t(parse_integer(f[19]));
 	return true;
 }
 
@@ -138,42 +139,42 @@ bool decode_flarm(const char* text, size_t length, Target& out) {
 	}
 	out = Target{};
 	out.source = Source::flarm;
-	out.address = uint32_t(hex(f[1])) & 0xFFFFFF;
-	out.id_type = FlarmAddressType(integer(f[2]) & 1);
-	unsigned flags = unsigned(hex(f[3]));
+	out.address = uint32_t(parse_hex(f[1])) & 0xFFFFFF;
+	out.id_type = FlarmAddressType(parse_integer(f[2]) & 1);
+	unsigned flags = unsigned(parse_hex(f[3]));
 	out.stealth = flags & 1;
 	out.no_track = flags & 2;
-	out.aircraft_type = uint8_t(integer(f[4]));
+	out.aircraft_type = uint8_t(parse_integer(f[4]));
 	out.position_valid = !f[5].empty() && !f[6].empty();
-	out.latitude = decimal(f[5]);
-	out.longitude = decimal(f[6]);
+	out.latitude = parse_decimal(f[5]);
+	out.longitude = parse_decimal(f[6]);
 	// FLARM altitude is metres above the WGS84 ellipsoid, a geometric
 	// altitude.
 	out.gnss_alt_valid = true;
-	out.gnss_alt_ft = int32_t(std::lround(integer(f[7]) * kFeetPerMetre));
+	out.gnss_alt_ft = int32_t(std::lround(parse_integer(f[7]) * kFeetPerMetre));
 	out.direction_valid = true;
-	out.track_deg = decimal(f[8]);
+	out.track_deg = parse_decimal(f[8]);
 	out.speed_valid = true;
-	out.speed_kt = int16_t(std::lround(decimal(f[9]) * kKnotsPerMps));
+	out.speed_kt = int16_t(std::lround(parse_decimal(f[9]) * kKnotsPerMps));
 	out.gnss_rate_valid = true;
 	out.gnss_rate_fpm =
-		int16_t(std::lround(decimal(f[10]) * kFeetPerMetre * 60));
-	out.turn_rate_dps = decimal(f[11]);
-	out.movement = uint8_t(integer(f[12]));
+		int16_t(std::lround(parse_decimal(f[10]) * kFeetPerMetre * 60));
+	out.turn_rate_dps = parse_decimal(f[11]);
+	out.movement = uint8_t(parse_integer(f[12]));
 	out.airborne = out.movement >= 2;
-	out.urgency = uint8_t(integer(f[13]));
-	out.acc_pos_hor_m = decimal(f[14]);
-	out.acc_pos_ver_m = decimal(f[15]);
-	out.acc_vel_mps = decimal(f[16]);
-	out.sil = uint8_t(integer(f[17]));
-	out.sda = uint8_t(integer(f[18]));
-	out.nic = uint8_t(integer(f[19]));
-	out.fix_secs = uint32_t(integer(f[20]));
-	out.age_ms = uint32_t(integer(f[21]));
-	out.version = uint8_t(integer(f[22]));
-	out.version_max = uint8_t(integer(f[23]));
-	out.rssi_dbm = int8_t(integer(f[24]));
-	out.frames = uint16_t(integer(f[25]));
+	out.urgency = uint8_t(parse_integer(f[13]));
+	out.acc_pos_hor_m = parse_decimal(f[14]);
+	out.acc_pos_ver_m = parse_decimal(f[15]);
+	out.acc_vel_mps = parse_decimal(f[16]);
+	out.sil = uint8_t(parse_integer(f[17]));
+	out.sda = uint8_t(parse_integer(f[18]));
+	out.nic = uint8_t(parse_integer(f[19]));
+	out.fix_secs = uint32_t(parse_integer(f[20]));
+	out.age_ms = uint32_t(parse_integer(f[21]));
+	out.version = uint8_t(parse_integer(f[22]));
+	out.version_max = uint8_t(parse_integer(f[23]));
+	out.rssi_dbm = int8_t(parse_integer(f[24]));
+	out.frames = uint16_t(parse_integer(f[25]));
 	return true;
 }
 
@@ -185,29 +186,31 @@ bool decode_stats(const char* text, size_t length, Stats& out) {
 		return false;
 	}
 	out = Stats{};
-	out.version = uint8_t(integer(f[0]));
-	out.demods_per_second = uint16_t(integer(f[1]));
-	out.raw_squitter_fps = uint16_t(integer(f[2]));
-	out.squitter_fps = uint16_t(integer(f[3]));
-	out.raw_es_fps = uint16_t(integer(f[4]));
-	out.es_fps = uint16_t(integer(f[5]));
-	out.raw_uat_fps = uint16_t(integer(f[6]));
-	out.uat_fps = uint16_t(integer(f[7]));
-	out.aircraft = uint16_t(integer(f[8]));
-	out.tscal = uint32_t(integer(f[9]));
-	out.uptime_s = uint32_t(integer(f[10]));
+	out.version = uint8_t(parse_integer(f[0]));
+	out.demods_per_second = uint16_t(parse_integer(f[1]));
+	out.raw_squitter_fps = uint16_t(parse_integer(f[2]));
+	out.squitter_fps = uint16_t(parse_integer(f[3]));
+	out.raw_es_fps = uint16_t(parse_integer(f[4]));
+	out.es_fps = uint16_t(parse_integer(f[5]));
+	out.raw_uat_fps = uint16_t(parse_integer(f[6]));
+	out.uat_fps = uint16_t(parse_integer(f[7]));
+	out.aircraft = uint16_t(parse_integer(f[8]));
+	out.tscal = uint32_t(parse_integer(f[9]));
+	out.uptime_s = uint32_t(parse_integer(f[10]));
 	return true;
 }
 
-bool relative(const Target& target, float ref_latitude, float ref_longitude,
-			  float& distance_nm, float& bearing_deg) {
+bool relative_position(const Target& target, float ref_latitude,
+					   float ref_longitude, float& distance_nm,
+					   float& bearing_deg) {
 	return target.position_valid &&
-		   relative(target.latitude, target.longitude, ref_latitude,
-					ref_longitude, distance_nm, bearing_deg);
+		   relative_position(target.latitude, target.longitude, ref_latitude,
+							 ref_longitude, distance_nm, bearing_deg);
 }
 
-bool relative(float latitude, float longitude, float ref_latitude,
-			  float ref_longitude, float& distance_nm, float& bearing_deg) {
+bool relative_position(float latitude, float longitude, float ref_latitude,
+					   float ref_longitude, float& distance_nm,
+					   float& bearing_deg) {
 	float lat1 = ref_latitude * kDegToRad, lat2 = latitude * kDegToRad;
 	float dlat = lat2 - lat1, dlon = (longitude - ref_longitude) * kDegToRad;
 	float a = std::sin(dlat / 2) * std::sin(dlat / 2) +

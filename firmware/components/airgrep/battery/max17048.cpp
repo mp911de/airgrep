@@ -35,7 +35,7 @@ State sample;
 bool busy;
 unsigned step;
 
-void error(esp_err_t result) {
+void fail_poll(esp_err_t result) {
 	int64_t now = esp_timer_get_time();
 	State::update([&](State& state) {
 		state.last_error = result;
@@ -66,7 +66,7 @@ loop::Result acknowledge_reset(loop::Handle, loop::Value&) {
 	esp_err_t result =
 		write(kRegStatus, battery::acknowledge_reset(sample.raw_status));
 	if (result != ESP_OK) {
-		error(result);
+		fail_poll(result);
 	}
 	return loop::Result::done;
 }
@@ -90,12 +90,12 @@ loop::Result i2c_read(loop::Handle, loop::Value&) {
 			break;
 	}
 	if (result != ESP_OK) {
-		error(result);
+		fail_poll(result);
 		return loop::Result::done;
 	}
 	if (step < kSampleReads) {
-		if (!loop::hsubmit("battery sample", i2c_read)) {
-			error(ESP_ERR_NO_MEM);
+		if (!loop::try_submit("battery sample", i2c_read)) {
+			fail_poll(ESP_ERR_NO_MEM);
 		}
 		return loop::Result::done;
 	}
@@ -103,18 +103,19 @@ loop::Result i2c_read(loop::Handle, loop::Value&) {
 	sample.soc = decode_soc(sample.raw_soc);
 	sample.rate = decode_crate(sample.raw_crate);
 	sample.alerts = decode_status(sample.raw_status);
-	sample.remaining = remaining_time(sample.soc, sample.rate);
+	sample.charge_duration_hours =
+		calculate_charge_duration(sample.soc, sample.rate);
 	sample.updated_us = esp_timer_get_time();
 	State::update([](State& state) { state = sample; });
 	busy = false;
 	if (sample.alerts.reset &&
-		!loop::hsubmit("battery ack reset", acknowledge_reset)) {
-		error(ESP_ERR_NO_MEM);
+		!loop::try_submit("battery ack reset", acknowledge_reset)) {
+		fail_poll(ESP_ERR_NO_MEM);
 	}
 	return loop::Result::done;
 }
 
-loop::Result poll(loop::Handle handle, loop::Value& value) {
+loop::Result poll_gauge(loop::Handle handle, loop::Value& value) {
 	if (busy) {
 		return loop::Result::done;
 	}
@@ -128,20 +129,18 @@ loop::Result poll(loop::Handle handle, loop::Value& value) {
 }
 }  // namespace
 
-loop::Handle poll_handle() { return periodic; }
-
 Completion init_complete;
 
 void finish_init(esp_err_t result) {
 	if (result != ESP_OK && result != ESP_ERR_NOT_FOUND) {
-		error(result);
+		fail_poll(result);
 	}
 	if (init_complete) {
 		init_complete(result);
 	}
 }
 
-loop::Result identify(loop::Handle, loop::Value&) {
+loop::Result identify_at_init(loop::Handle, loop::Value&) {
 	uint16_t raw;
 	esp_err_t result = read(kRegVersion, raw);
 	if (result != ESP_OK) {
@@ -154,8 +153,8 @@ loop::Result identify(loop::Handle, loop::Value&) {
 		state.raw_version = raw;
 		state.version = raw;
 	});
-	periodic =
-		loop::schedule_periodic(BATTERY_POLL_PERIOD_MS, {"battery poll", poll});
+	periodic = loop::schedule_periodic(BATTERY_POLL_PERIOD_MS,
+									   {"battery poll", poll_gauge});
 	finish_init(periodic.valid() ? ESP_OK : ESP_ERR_NO_MEM);
 	return loop::Result::done;
 }
@@ -165,7 +164,8 @@ loop::Result probe(loop::Handle, loop::Value&) {
 	if (result == ESP_ERR_NOT_FOUND) {
 		State::update([](State& shared) { shared.status = Status::off; });
 	}
-	if (result == ESP_OK && !loop::hsubmit("battery identity", identify)) {
+	if (result == ESP_OK &&
+		!loop::try_submit("battery identity", identify_at_init)) {
 		result = ESP_ERR_NO_MEM;
 	}
 	if (result != ESP_OK) {
@@ -175,8 +175,11 @@ loop::Result probe(loop::Handle, loop::Value&) {
 }
 
 void init(Completion complete) {
+	if (periodic.valid()) {
+		return;
+	}
 	init_complete = complete;
-	if (!loop::hsubmit("battery probe", probe)) {
+	if (!loop::try_submit("battery probe", probe)) {
 		finish_init(ESP_ERR_NO_MEM);
 	}
 }
