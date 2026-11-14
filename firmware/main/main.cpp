@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <iterator>
 
 #include "adsbee/adsbee_clock.hpp"
 #include "adsbee/adsbee_link.hpp"
@@ -28,9 +29,13 @@ static const char* TAG = "airgrep";
 
 using Completion = loop::Callable<void(esp_err_t)>;
 
+// Boot runs two phases over the table. First every prepare: infrastructure
+// starts and components subscribe to events, nothing publishes yet. Then every
+// init: components start, and no subscriber misses an event.
 struct Component {
 	const char* name;
 	void (*init)(Completion complete);
+	esp_err_t (*prepare)() = nullptr;
 };
 
 static bool is_csbee(const adsbee::Message& m) {
@@ -55,32 +60,34 @@ static void start_adsbee(Completion complete) {
 	complete(result);
 }
 
-// Boot order is the table order. The loop and the I/O ports come first. Wi-Fi
-// subscribes to the slider event before the expander publishes its first
-// read. System acts on every other component, so it comes last.
+// Each phase runs in table order. The loop and the I/O ports come first.
+// System acts on every other component, so it comes last.
 static const Component components[] = {
-	{"Event loop",
-	 [](Completion complete) {
+	{"Event loop", [](Completion complete) { complete(ESP_OK); },
+	 [] {
 		 loop::start();
-		 complete(ESP_OK);
+		 return ESP_OK;
 	 }},
 	{"Settings", [](Completion complete) { complete(settings::init()); }},
 	{"Time zones", [](Completion complete) { complete(tz::init()); }},
 	{"I2C", [](Completion complete) { complete(i2c_bus_init()); }},
 	{"UART", [](Completion complete) { complete(adsbee::uart_init()); }},
+	{"I2CExpander", expander::init},
+	{"ADSbee", start_adsbee, adsbee::prepare},
+	{"Clock", [](Completion complete) { complete(adsbee::timesync::start()); }},
 	{"Wi-Fi",
 	 [](Completion complete) {
 		 complete(wifi::start(device_info()->device_id));
-	 }},
-	{"I2CExpander", expander::init},
-	{"ADSbee", start_adsbee},
-	{"Clock", [](Completion complete) { complete(adsbee::timesync::start()); }},
+	 },
+	 wifi::prepare},
 	{"Charger", charger::init},
 	{"Battery", battery::init},
-	{"Baro", barometer::init},
+	{"Baro", barometer::init, barometer::prepare},
 	{"FUSB", fusb::init},
-	{"Buzzer", [](Completion complete) { complete(buzzer_init()); }},
-	{"System", [](Completion complete) { complete(system_init()); }},
+	{"Buzzer", [](Completion complete) { complete(buzzer_init()); },
+	 buzzer_prepare},
+	{"System", [](Completion complete) { complete(system_init()); },
+	 system_prepare},
 };
 
 // Same label column as the banner rows above it.
@@ -105,8 +112,17 @@ static void report(const Component& component, esp_err_t result,
 
 extern "C" void app_main(void) {
 	console_banner();
-	for (const Component& component : components) {
+	esp_err_t prepared[std::size(components)];
+	for (size_t i = 0; i < std::size(components); i++) {
+		prepared[i] = components[i].prepare ? components[i].prepare() : ESP_OK;
+	}
+	for (size_t i = 0; i < std::size(components); i++) {
+		const Component& component = components[i];
 		int64_t started_us = esp_timer_get_time();
+		if (prepared[i] != ESP_OK) {
+			report(component, prepared[i], started_us);
+			continue;
+		}
 		in_init = true;
 		component.init([&component, started_us](esp_err_t outcome) {
 			report(component, outcome, started_us);

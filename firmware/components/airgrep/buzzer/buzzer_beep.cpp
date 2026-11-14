@@ -2,6 +2,7 @@
 #include "buzzer_pwm.h"
 #include "esp_log.h"
 #include "esp_pm.h"
+#include "events/events.hpp"
 #include "freertos/FreeRTOS.h"
 #include "loop.hpp"
 
@@ -89,6 +90,22 @@ buzzer_state_t buzzer_state(void) {
 	buzzer_state_t result = state;
 	portEXIT_CRITICAL(&mutex);
 	return result;
+}
+
+esp_err_t buzzer_prepare(void) {
+	const bool subscribed =
+		events::subscribe(events::of(events::Type::mute_switch_changed),
+						  [](const events::Event& event, void*) {
+							  buzzer_set_mute(event.position.on);
+						  }) &&
+		events::subscribe(events::of(events::Type::mode_changed),
+						  [](const events::Event& event, void*) {
+							  if (const char* chime = power_mode_chime(
+									  event.mode.from, event.mode.to)) {
+								  buzzer_play(chime, 0);
+							  }
+						  });
+	return subscribed ? ESP_OK : ESP_ERR_NO_MEM;
 }
 
 esp_err_t buzzer_init(void) {

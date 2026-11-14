@@ -11,13 +11,13 @@ extern "C" {
 #endif
 
 // Device lifecycle. Derives the operating mode from the POWER slider and the
-// charger's VBUS status and acts on each transition: chimes, clock scaling in
-// charger mode and a mode_changed event. Applies the MUTE slider to the
-// buzzer. Subscribes to the
-// expander and starts charge control and the system watchdog, which every
-// 10 s starts each driver again that stopped or never showed up. Call last,
-// it acts on every other component.
+// charger's VBUS status and publishes each transition as mode_changed.
+// Subscribes to the expander and starts charge control and the system
+// watchdog, which every 10 s starts each driver again that stopped or never
+// showed up. Call last, it acts on every other component.
 esp_err_t system_init(void);
+// Subscribes the clock scaling of charger mode to mode_changed.
+esp_err_t system_prepare(void);
 power_mode_t system_mode(void);
 // The health check for the current mode, one bit per component that is not
 // usable. Every 2 s the loop also runs it, publishes health_changed when the

@@ -174,6 +174,10 @@ esp_err_t start(const char* ssid) {
 		return ESP_ERR_NO_MEM;
 	}
 	State::update([](State& state) { state.status = Status::ok; });
+	return ESP_OK;
+}
+
+esp_err_t prepare() {
 	return events::subscribe(events::of(events::Type::wifi_switch_changed),
 							 on_switch)
 			   ? ESP_OK

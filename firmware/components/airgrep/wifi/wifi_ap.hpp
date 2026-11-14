@@ -49,8 +49,9 @@ struct State {
 	static portMUX_TYPE mutex_;
 };
 
-// ssid is the Device ID. Subscribes to wifi_switch_changed, so it starts
-// before the expander.
+// Subscribes to wifi_switch_changed.
+esp_err_t prepare();
+// ssid is the Device ID.
 esp_err_t start(const char* ssid);
 // Sends the wanted Wi-Fi state to the ADSBee now. ESP_ERR_INVALID_STATE
 // before the first slider read or while the link is down.

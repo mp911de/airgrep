@@ -88,15 +88,20 @@ CASE(full, "A full bus refuses a subscriber and keeps delivering") {
 }
 
 CASE(nested, "A handler may publish and subscribe") {
-	static Bus bus;
-	static int inner;
-	inner = 0;
-	bus.subscribe(of(Type::usb_plugged), [](const Event&, void*) {
-		bus.subscribe(of(Type::clock_set), count, &inner);
-		bus.publish(Type::clock_set);
-	});
-	bus.publish({.type = Type::usb_plugged, .usb = {0}});
-	TEST_ASSERT_EQUAL(1, inner);
+	struct Nested {
+		Bus bus;
+		int inner = 0;
+	} nested;
+	nested.bus.subscribe(
+		of(Type::usb_plugged),
+		[](const Event&, void* context) {
+			auto* outer = static_cast<Nested*>(context);
+			outer->bus.subscribe(of(Type::clock_set), count, &outer->inner);
+			outer->bus.publish(Type::clock_set);
+		},
+		&nested);
+	nested.bus.publish({.type = Type::usb_plugged, .usb = {0}});
+	TEST_ASSERT_EQUAL(1, nested.inner);
 }
 
 CASE(change, "Only a change is reported") {

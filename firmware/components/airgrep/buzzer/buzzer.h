@@ -19,6 +19,9 @@ typedef struct {
 	bool playing;
 } buzzer_state_t;
 buzzer_state_t buzzer_state(void);
+// Subscribes to mute_switch_changed for the MUTE slider and to mode_changed
+// for the startup and shutdown chimes.
+esp_err_t buzzer_prepare(void);
 esp_err_t buzzer_init(void);
 esp_err_t buzzer_play(const char* scheme, uint32_t hz);
 void buzzer_set_mute(bool mute);

@@ -64,6 +64,8 @@ bool subscribe(Predicate predicate, Handler handler, void* ctx);
 // fix_lost.
 using GnssHandler = void (*)(const Gnss&, int64_t received_us, void* ctx);
 bool subscribe_gnss(GnssHandler handler, void* ctx);
+// Subscribes the TX gate to mode_changed: the ADSBee is powered in ON only.
+esp_err_t prepare();
 esp_err_t uart_init();
 esp_err_t start();
 

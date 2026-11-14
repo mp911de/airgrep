@@ -14,7 +14,6 @@
 #include "events/events.hpp"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
-#include "i2c_expander/tca9534.hpp"
 #include "subscribers.hpp"
 #include "wifi/wifi_ap.hpp"
 
@@ -169,7 +168,6 @@ void finish_request(loop::Handle handle) {
 
 void receive(const Message& message) {
 	if (message.kind == DECODER_CSBEE) {
-		liveness.poll(esp_timer_get_time());
 		liveness.received(message.received_us);
 		update_tx();
 		Gnss gnss;
@@ -322,7 +320,6 @@ loop::Result init(loop::Handle, loop::Value&) {
 
 void update_tx() {
 	int64_t now = esp_timer_get_time();
-	liveness.poll(now);
 	bool alive = liveness.permits_tx(now);
 	State::update([&](State& state) { state.known = alive; });
 	if (!started || !alive) {
@@ -433,12 +430,17 @@ loop::Handle submit_request(const char* command, uint32_t window_ms,
 	return handle;
 }
 
-void power_sample(const expander::State& state, uint8_t, void*) {
-	liveness.update_power({state.input.power, state.updated_us, state.error_us},
-						  esp_timer_get_time());
+void on_mode(const events::Event& event, void*) {
+	liveness.set_powered(event.mode.to == POWER_MODE_ON, esp_timer_get_time());
 	update_tx();
 }
 }  // namespace
+
+esp_err_t prepare() {
+	return events::subscribe(events::of(events::Type::mode_changed), on_mode)
+			   ? ESP_OK
+			   : ESP_ERR_NO_MEM;
+}
 
 bool subscribe(Predicate predicate, Handler handler, void* context) {
 	return subscribers.add({predicate, handler}, context);
@@ -499,8 +501,7 @@ esp_err_t start() {
 		return result;
 	}
 	started = true;
-	// The expander polls already, so its handler runs from here on.
-	return expander::subscribe(power_sample) ? ESP_OK : ESP_ERR_NO_MEM;
+	return ESP_OK;
 }
 
 loop::Handle request(const char* command, loop::SuccessListener success,

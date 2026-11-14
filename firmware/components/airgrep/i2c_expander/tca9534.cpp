@@ -109,7 +109,8 @@ loop::Result poll_expander(loop::Handle, loop::Value&) {
 		state.input = decode_input(raw);
 		state.updated_us = now;
 	});
-	notify(changed);
+	// The switches go first, so the mode that system derives from this read
+	// is published last.
 	const Input input = decode_input(raw);
 	if (changed & kMutePin) {
 		events::publish({.type = events::Type::mute_switch_changed,
@@ -119,6 +120,7 @@ loop::Result poll_expander(loop::Handle, loop::Value&) {
 		events::publish({.type = events::Type::wifi_switch_changed,
 						 .position = {input.wifi}});
 	}
+	notify(changed);
 	return loop::Result::done;
 }
 

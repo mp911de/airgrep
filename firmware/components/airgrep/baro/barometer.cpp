@@ -328,16 +328,19 @@ loop::Result probe(loop::Handle, loop::Value&) {
 	return loop::Result::done;
 }
 
+esp_err_t prepare() {
+	return events::subscribe(events::of(events::Type::mode_changed), on_mode)
+			   ? ESP_OK
+			   : ESP_ERR_NO_MEM;
+}
+
 void init(Completion complete) {
 	if (periodic.valid()) {
 		return;
 	}
 	init_complete = complete;
-	static const bool subscribed =
-		events::subscribe(events::of(events::Type::mode_changed), on_mode);
 	// The sensor needs its start-up time after power before the first access.
-	if (!subscribed ||
-		!loop::schedule(BMP_STARTUP_MS, {"baro probe", probe}).valid()) {
+	if (!loop::schedule(BMP_STARTUP_MS, {"baro probe", probe}).valid()) {
 		finish_init(ESP_ERR_NO_MEM);
 	}
 }

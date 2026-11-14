@@ -131,19 +131,8 @@ bool decode_gnss(const char* text, size_t length, Gnss& out) {
 	return true;
 }
 
-bool Power::permits_tx(int64_t now_us) const {
-	return on && updated_us > 0 && error_us < updated_us &&
-		   now_us >= updated_us && now_us - updated_us <= Link::kStaleTimeoutUs;
-}
-
-void Link::update_power(Power power, int64_t now_us) {
-	poll(now_us);
-	power_ = power;
-	poll(now_us);
-}
-
-void Link::poll(int64_t now_us) {
-	if (!power_.permits_tx(now_us)) {
+void Link::set_powered(bool powered, int64_t now_us) {
+	if (!powered) {
 		powered_since_us_ = received_us_ = 0;
 	} else if (!powered_since_us_) {
 		powered_since_us_ = now_us;
@@ -158,7 +147,7 @@ void Link::received(int64_t received_us) {
 }
 
 bool Link::permits_tx(int64_t now_us) const {
-	return power_.permits_tx(now_us) && received_us_ > 0 &&
+	return powered_since_us_ > 0 && received_us_ > 0 &&
 		   now_us >= received_us_ && now_us - received_us_ <= kRxTimeoutUs;
 }
 }  // namespace adsbee

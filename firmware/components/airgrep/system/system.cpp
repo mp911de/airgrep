@@ -6,7 +6,6 @@
 #include "baro/barometer.hpp"
 #include "battery/max17048.hpp"
 #include "board.h"
-#include "buzzer/buzzer.h"
 #include "charge_control.hpp"
 #include "charger/bq25798.hpp"
 #include "driver/gpio.h"
@@ -164,21 +163,14 @@ void scale_clock(const bool charger) {
 void transition(const power_mode_t from, const power_mode_t to) {
 	ESP_LOGI("system", "mode %s to %s", power_mode_name(from),
 			 power_mode_name(to));
-	scale_clock(to == POWER_MODE_CHARGER);
 	events::publish({.type = events::Type::mode_changed, .mode = {from, to}});
 	if (from == POWER_MODE_ON) {
 		adsbee::drop_fix();
-	}
-	if (const char* chime = power_mode_chime(from, to)) {
-		buzzer_play(chime, 0);
 	}
 }
 
 void apply_system_controls(const expander::State& controls, uint8_t, void*) {
 	bool valid = controls.is_valid();
-	if (valid) {
-		buzzer_set_mute(controls.input.mute);
-	}
 	charger::State charger = charger::State::copy();
 	power_mode_t from = mode;
 	power_mode_t to = power_mode_decode(
@@ -195,6 +187,16 @@ void apply_system_controls(const expander::State& controls, uint8_t, void*) {
 	}
 }
 }  // namespace
+
+esp_err_t system_prepare() {
+	return events::subscribe(
+			   events::of(events::Type::mode_changed),
+			   [](const events::Event& event, void*) {
+				   scale_clock(event.mode.to == POWER_MODE_CHARGER);
+			   })
+			   ? ESP_OK
+			   : ESP_ERR_NO_MEM;
+}
 
 esp_err_t system_init() {
 	esp_err_t err = charge_control::init();

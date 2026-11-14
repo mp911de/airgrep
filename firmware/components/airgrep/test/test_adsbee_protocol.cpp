@@ -125,35 +125,20 @@ CASE(gnss_empty,
 	TEST_ASSERT_FALSE(adsbee::decode_gnss("#M10:1:WARN:00:01/01:5,72B", 26, g));
 }
 
-CASE(power, "ADSBee TX requires fresh successful power on and fails closed") {
-	TEST_ASSERT_FALSE(adsbee::Power{}.permits_tx(1000000));
-	TEST_ASSERT_TRUE((adsbee::Power{true, 1000000, 0}).permits_tx(1500000));
-	TEST_ASSERT_FALSE((adsbee::Power{true, 1000000, 0}).permits_tx(1500001));
-	TEST_ASSERT_FALSE((adsbee::Power{false, 1000000, 0}).permits_tx(1000000));
-	TEST_ASSERT_FALSE(
-		(adsbee::Power{true, 1000000, 1000001}).permits_tx(1000001));
-	TEST_ASSERT_FALSE(
-		(adsbee::Power{true, 1000000, 1000000}).permits_tx(1000000));
-	TEST_ASSERT_TRUE(
-		(adsbee::Power{true, 1250000, 1000001}).permits_tx(1250000));
-	TEST_ASSERT_FALSE((adsbee::Power{true, 1000000, 0}).permits_tx(999999));
-}
-
 CASE(lifecycle,
 	 "ADSBee waits for new RX after charger mode and every power cycle") {
 	adsbee::Link link;
-	link.update_power({false, 1000000, 0}, 1000000);
 	link.received(1100000);
 	TEST_ASSERT_FALSE(link.permits_tx(1100000));
-	link.update_power({true, 2000000, 0}, 2000000);
+	link.set_powered(true, 2000000);
 	TEST_ASSERT_FALSE(link.permits_tx(2000000));
 	link.received(1900000);
 	TEST_ASSERT_FALSE(link.permits_tx(2000000));
 	link.received(2100000);
 	TEST_ASSERT_TRUE(link.permits_tx(2100000));
-	link.update_power({false, 2200000, 0}, 2200000);
+	link.set_powered(false, 2200000);
 	TEST_ASSERT_FALSE(link.permits_tx(2200000));
-	link.update_power({true, 2300000, 0}, 2300000);
+	link.set_powered(true, 2300000);
 	TEST_ASSERT_FALSE(link.permits_tx(2300000));
 	link.received(2100000);
 	TEST_ASSERT_FALSE(link.permits_tx(2300000));
@@ -164,36 +149,20 @@ CASE(lifecycle,
 CASE(rx_timeout,
 	 "ADSBee RX liveness expires and recovers without active probes") {
 	adsbee::Link link;
-	link.update_power({true, 1000000, 0}, 1000000);
+	link.set_powered(true, 1000000);
 	link.received(1100000);
-	for (int64_t now = 1250000; now <= 4000000; now += 250000) {
-		link.update_power({true, now, 0}, now);
-	}
 	TEST_ASSERT_TRUE(link.permits_tx(4100000));
 	TEST_ASSERT_FALSE(link.permits_tx(4100001));
 	link.received(4200000);
 	TEST_ASSERT_TRUE(link.permits_tx(4200000));
 }
 
-CASE(power_loss,
-	 "Power errors and missed samples require new RX before TX resumes") {
+CASE(repeated_power, "A repeated power-on keeps the RX already seen") {
 	adsbee::Link link;
-	link.update_power({true, 1000000, 0}, 1000000);
+	link.set_powered(true, 1000000);
 	link.received(1100000);
-	link.poll(1500001);
-	TEST_ASSERT_FALSE(link.permits_tx(1500001));
-	link.update_power({true, 1600000, 0}, 1600000);
-	TEST_ASSERT_FALSE(link.permits_tx(1600000));
-	link.received(1700000);
-	TEST_ASSERT_TRUE(link.permits_tx(1700000));
-	link.update_power({true, 1600000, 1800000}, 1800000);
-	TEST_ASSERT_FALSE(link.permits_tx(1800000));
-	link.update_power({true, 1900000, 1800000}, 1900000);
-	TEST_ASSERT_FALSE(link.permits_tx(1900000));
-	link.received(2000000);
-	TEST_ASSERT_TRUE(link.permits_tx(2000000));
-	link.update_power({true, 2600000, 1800000}, 2600000);
-	TEST_ASSERT_FALSE(link.permits_tx(2600000));
+	link.set_powered(true, 1200000);
+	TEST_ASSERT_TRUE(link.permits_tx(1200000));
 }
 
 #ifndef ESP_PLATFORM
@@ -202,14 +171,13 @@ int main() {
 	RUN_TEST(command);
 	RUN_TEST(gnss_full);
 	RUN_TEST(gnss_empty);
-	RUN_TEST(power);
 	RUN_TEST(crc);
 	RUN_TEST(m10_crc);
 	RUN_TEST(reply);
 	RUN_TEST(full_reply);
 	RUN_TEST(lifecycle);
 	RUN_TEST(rx_timeout);
-	RUN_TEST(power_loss);
+	RUN_TEST(repeated_power);
 	return UNITY_END();
 }
 #endif
