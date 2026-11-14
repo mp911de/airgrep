@@ -1,4 +1,11 @@
 menu "airgrep"
+	config AIRGREP_USB_SERVICE_COMMANDS
+		bool "USB State access and data injection commands"
+		default n
+		help
+			Enables READ, WRITE, UPDATE_TRAFFIC and UPDATE_GNSS over USB.
+			WRITE can replace arbitrary bytes within exposed component States.
+			HELLO, REBOOT and ENTER_BOOTLOADER remain available when disabled.
 
 	config AIRGREP_TEST_TAGS
 		string "Unity tags to run at boot, space separated"
@@ -13,5 +20,14 @@ menu "airgrep"
 		help
 			Boots the normal loop, then runs the hardware checks and prints
 			one "HWTEST <name> PASS|FAIL <detail>" line per check.
+
+	config AIRGREP_DISPLAY
+		string "Display variant"
+		default ""
+		help
+			Directory in components/display/variants, set by the sdkconfig
+			fragment in that directory. Empty builds no display and no LVGL.
+			Defined here because the LVGL dependency is resolved from it in
+			every build, also in those without the display component.
 
 endmenu

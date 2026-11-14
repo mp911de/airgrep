@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <cstdio>
 
-#include "adsbee/adsbee_link.hpp"
+#include "board.h"
 #include "esp_app_desc.h"
 #include "esp_heap_caps.h"
 #include "esp_pm.h"
@@ -21,7 +21,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
-#include "loop.hpp"
 #include "soc/rtc_cntl_reg.h"
 #include "soc/soc.h"
 #include "system/device_info.h"
@@ -30,9 +29,13 @@
 #include "tinyusb.h"
 #include "tinyusb_cdc_acm.h"
 #include "tinyusb_default_config.h"
-#include "usb_components.hpp"
 #include "usb_console.hpp"
 #include "usb_protocol.hpp"
+#if CONFIG_AIRGREP_USB_SERVICE_COMMANDS
+#include "adsbee/adsbee_link.hpp"
+#include "loop.hpp"
+#include "usb_components.hpp"
+#endif
 
 namespace usb {
 namespace {
@@ -59,7 +62,11 @@ int64_t sent_at;
 uint32_t generation;
 uint8_t *input, *response;
 size_t input_size, response_size, response_offset;
+#if CONFIG_AIRGREP_USB_SERVICE_COMMANDS
+protocol::Decoder decoder{true};
+#else
 protocol::Decoder decoder;
+#endif
 
 struct Guard {
 	Guard() { xSemaphoreTake(mutex, portMAX_DELAY); }
@@ -75,7 +82,9 @@ void reset_session() {
 	work_pending = false;
 	pending_action = Command::status;
 	sent_at = 0;
+#if CONFIG_AIRGREP_USB_SERVICE_COMMANDS
 	adsbee::reset_ingestion();
+#endif
 	clear_input();
 	tud_vendor_n_write_clear(kData);
 	// An endpoint already handed to the controller must drain before reuse.
@@ -97,6 +106,10 @@ protocol::Hello hello() {
 	result.uptime_seconds = now / 1000000;
 	std::snprintf(result.firmware_version, sizeof result.firmware_version, "%s",
 				  esp_app_get_description()->version);
+	device_firmware_format(result.firmware_description,
+						   sizeof result.firmware_description);
+	std::snprintf(result.board, sizeof result.board, "%s", BOARD_NAME);
+	device_chip_format(result.chip, sizeof result.chip);
 	constexpr uint32_t internal = MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT;
 	constexpr uint32_t psram = MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT;
 	result.internal_free = heap_caps_get_free_size(internal);
@@ -170,6 +183,7 @@ void send_response(size_t length) {
 	}
 }
 
+#if CONFIG_AIRGREP_USB_SERVICE_COMMANDS
 void execute_request(uint32_t ticket, Command command, size_t payload_size) {
 	int64_t received_at;
 	{
@@ -198,12 +212,15 @@ void execute_request(uint32_t ticket, Command command, size_t payload_size) {
 	}
 	send_response(length);
 }
+#endif
 
 void reply() {
 	const auto command = decoder.command();
 	const auto status = decoder.status();
+#if CONFIG_AIRGREP_USB_SERVICE_COMMANDS
 	const size_t payload_size =
 		decoder.frame_length() >= 6 ? decoder.frame_length() - 6 : 0;
+#endif
 	decoder.reset();
 	input_size = 0;
 	sent_at = esp_timer_get_time();
@@ -223,6 +240,7 @@ void reply() {
 		default:
 			break;
 	}
+#if CONFIG_AIRGREP_USB_SERVICE_COMMANDS
 	const uint32_t ticket = generation;
 	work_pending = true;
 	// GNSS subscribers and Events run on the same loop as the live UART feed.
@@ -234,6 +252,9 @@ void reply() {
 		send_response(
 			protocol::encode_status(Status::internal_error, response));
 	}
+#else
+	send_response(protocol::encode_status(Status::unknown_command, response));
+#endif
 }
 
 void receive() {

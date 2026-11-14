@@ -22,7 +22,7 @@ struct State {
 };
 
 State state;
-size_t visits, updates, target_count;
+size_t lookups, visits, updates, target_count;
 int64_t received_us;
 bool accessible;
 const uint8_t* supplied;
@@ -37,6 +37,7 @@ bool visit(StateVisitor visitor, void* context) {
 }
 
 StateAccess find(uint8_t component) {
+	lookups++;
 	if (component == 1) {
 		return {sizeof state, visit};
 	}
@@ -65,7 +66,7 @@ const Services services{find, 120, 64, traffic, gnss};
 
 void reset() {
 	std::memset(&state, 0x55, sizeof state);
-	visits = updates = target_count = 0;
+	lookups = visits = updates = target_count = 0;
 	received_us = 0;
 	accessible = true;
 	supplied = nullptr;
@@ -264,6 +265,7 @@ bool visit_traffic(StateVisitor visitor, void* context) {
 }
 
 StateAccess find_traffic(uint8_t component) {
+	lookups++;
 	return component == 2 ? StateAccess{sizeof traffic_state, visit_traffic}
 						  : StateAccess{};
 }
@@ -311,7 +313,7 @@ size_t receive(Decoder& decoder, uint8_t* frame, size_t index) {
 CASE(full_traffic_write,
 	 "USB full Traffic WRITE waits for complete validation before copying") {
 	prepare_traffic_write();
-	Decoder decoder;
+	Decoder decoder{true};
 	for (size_t i = 0; i < sizeof traffic_write - 1; i++) {
 		TEST_ASSERT_EQUAL_UINT(0, receive(decoder, traffic_write, i));
 		if (i % 257 == 0 || i + 2 == sizeof traffic_write) {
@@ -342,7 +344,7 @@ CASE(rejected_traffic_write,
 			traffic_write[0] = kVersion + 1;
 			crc_frame(traffic_write, sizeof traffic_write);
 		}
-		Decoder decoder;
+		Decoder decoder{true};
 		for (size_t i = 0; i < sizeof traffic_write; i++) {
 			TEST_ASSERT_EQUAL_UINT(
 				i + 1 == sizeof traffic_write ? kStatusSize : 0,
@@ -363,7 +365,7 @@ CASE(full_traffic_read,
 	uint8_t request[] = {kVersion, 7, 0, static_cast<uint8_t>(Command::read),
 						 0,        0, 2};
 	crc_frame(request, sizeof request);
-	Decoder decoder;
+	Decoder decoder{true};
 	for (size_t i = 0; i < sizeof request - 1; i++) {
 		TEST_ASSERT_EQUAL_UINT(0, receive(decoder, request, i));
 		TEST_ASSERT_EQUAL_UINT(0, visits);
@@ -381,6 +383,42 @@ CASE(full_traffic_read,
 	TEST_ASSERT_EQUAL_UINT8(2, large_response[61446]);
 }
 
+CASE(closed_service_gate,
+	 "USB disabled service frames never look up, visit or update component "
+	 "State") {
+	prepare_traffic_write();
+	Decoder decoder;
+	for (size_t i = 0; i < sizeof traffic_write; i++) {
+		TEST_ASSERT_EQUAL_UINT(i + 1 == sizeof traffic_write ? kStatusSize : 0,
+							   receive(decoder, traffic_write, i));
+	}
+	assert_frame(large_response, kStatusSize, Command::status,
+				 Status::unknown_command);
+	TEST_ASSERT_EACH_EQUAL_UINT8(0x55, traffic_state, sizeof traffic_state);
+	for (auto command :
+		 {Command::read, Command::update_traffic, Command::update_gnss}) {
+		decoder.reset();
+		uint8_t request[126]{};
+		const size_t size = command == Command::read          ? 7
+							: command == Command::update_gnss ? 70
+															  : 126;
+		request[0] = kVersion;
+		request[1] = static_cast<uint8_t>(size);
+		request[3] = static_cast<uint8_t>(command);
+		request[6] = 2;
+		crc_frame(request, size);
+		for (size_t i = 0; i < size; i++) {
+			TEST_ASSERT_EQUAL_UINT(i + 1 == size ? kStatusSize : 0,
+								   receive(decoder, request, i));
+		}
+		assert_frame(large_response, kStatusSize, Command::status,
+					 Status::unknown_command);
+	}
+	TEST_ASSERT_EQUAL_UINT(0, lookups);
+	TEST_ASSERT_EQUAL_UINT(0, visits);
+	TEST_ASSERT_EQUAL_UINT(0, updates);
+}
+
 int main() {
 	UNITY_BEGIN();
 	RUN_TEST(read);
@@ -395,6 +433,7 @@ int main() {
 	RUN_TEST(full_traffic_write);
 	RUN_TEST(rejected_traffic_write);
 	RUN_TEST(full_traffic_read);
+	RUN_TEST(closed_service_gate);
 	return UNITY_END();
 }
 #endif

@@ -18,13 +18,23 @@ from types import SimpleNamespace
 
 VERSION = 1
 TIMEOUT = 3.0
+TIMEOUT_MS = int(TIMEOUT * 1000)
+APP_USB = (0xFA00, 0xFA01)
+LEGACY_USB = (0x303A, 0x4002)
+conversation_ns = 0
 COMMANDS = {"hello": 0x01, "reboot": 0x06, "dfu": 0x07}
 STATUS = 0x80
+GREEN = "\033[32m"
+ORANGE = "\033[38;5;208m"
+BLUE = "\033[38;2;146;179;244m"
+RESET = "\033[0m"
 STATUS_NAMES = (
     "OK", "CRC_MISMATCH", "VERSION_MISMATCH", "UNKNOWN_COMMAND",
     "UNKNOWN_COMPONENT", "INVALID_LENGTH", "INVALID_RANGE", "INTERNAL_ERROR",
 )
-HELLO = struct.Struct("<Q32s6IH4B2x")
+HELLO = struct.Struct("<Q32s6IH4B2x128s128s128s")
+# Firmware that predates the board and chip fields stops after the description.
+HELLO_WITHOUT_BOARD = 200
 HEALTH_NAMES = (
     "expander", "charger", "gauge", "usb_c", "barometer", "adsbee",
     "gnss", "battery", "memory", "cpu",
@@ -50,40 +60,44 @@ def decode_response(frame, command):
         raise ProtocolError("Invalid response length")
     if crc(frame) != struct.unpack_from("<H", frame, 4)[0]:
         raise ProtocolError("Response CRC mismatch")
-    version, response, status = frame[0], frame[3], frame[6]
+    device_version, response, status = frame[0], frame[3], frame[6]
     if response == STATUS:
         if len(frame) != 7:
             raise ProtocolError("STATUS response contains unexpected payload")
         if status:
             name = STATUS_NAMES[status] if status < len(STATUS_NAMES) else f"status {status}"
-            raise ProtocolError(f"Device replied {name}, device protocol {version}, client {VERSION}")
+            raise ProtocolError(f"Device replied {name}, device protocol {device_version}, client {VERSION}")
     elif response != command or status:
         raise ProtocolError("Unexpected response command or status")
-    if version != VERSION:
-        raise ProtocolError(f"Protocol version mismatch: device {version}, client {VERSION}")
+    if device_version != VERSION:
+        raise ProtocolError(f"Protocol version mismatch: device {device_version}, client {VERSION}")
     if command == COMMANDS["hello"]:
-        if response != command or len(frame) != 7 + HELLO.size:
-            raise ProtocolError("HELLO response is missing its 72-byte payload")
+        if response != command or len(frame) - 7 not in (HELLO_WITHOUT_BOARD, HELLO.size):
+            raise ProtocolError(f"HELLO response is missing its {HELLO.size}-byte payload")
     elif response != STATUS:
         raise ProtocolError("Expected STATUS acknowledgement")
     return frame[7:]
 
 
-def read_response(port, command, deadline):
+def read_response(port, command, deadline, started_ns=None):
+    global conversation_ns
+    timed_out = ProtocolError(f"Response timed out after {TIMEOUT:g} seconds, command outcome unknown")
     frame = bytearray()
     expected = 7
     while len(frame) < expected:
         remaining = deadline - time.monotonic()
         if remaining <= 0:
-            raise ProtocolError("Response timed out after 3 seconds, command outcome unknown")
+            raise timed_out
         port.timeout = remaining
         frame.extend(port.read(expected - len(frame)))
         if time.monotonic() >= deadline:
-            raise ProtocolError("Response timed out after 3 seconds, command outcome unknown")
+            raise timed_out
         if len(frame) >= 3:
             expected = struct.unpack_from("<H", frame, 1)[0]
             if expected < 7:
                 raise ProtocolError("Response frame length is smaller than its header")
+    if started_ns is not None:
+        conversation_ns += time.perf_counter_ns() - started_ns
     return decode_response(frame, command)
 
 
@@ -97,7 +111,7 @@ class UsbChannel:
 
     def reset(self):
         self.buffer.clear()
-        self.device.ctrl_transfer(0x41, 1, 0, self.interface, b"", timeout=3000)
+        self.device.ctrl_transfer(0x41, 1, 0, self.interface, b"", timeout=TIMEOUT_MS)
 
     def read(self, size):
         deadline = time.monotonic() + self.timeout
@@ -117,7 +131,7 @@ class UsbChannel:
         return chunk
 
     def write(self, frame):
-        return self.device.write(self.output.bEndpointAddress, frame, timeout=3000)
+        return self.device.write(self.output.bEndpointAddress, frame, timeout=TIMEOUT_MS)
 
 
 def drain_stale(port):
@@ -132,6 +146,16 @@ def drain_stale(port):
             return
 
 
+def transact(port, command, reset):
+    reset()
+    drain_stale(port)
+    frame = request(command)
+    started_ns = time.perf_counter_ns()
+    if port.write(frame) != len(frame):
+        raise ProtocolError("Incomplete request write, command outcome unknown")
+    return read_response(port, command, time.monotonic() + TIMEOUT, started_ns)
+
+
 def exchange(core, util, record, command):
     if record.vendor is None:
         raise ProtocolError(f"Vendor bulk data interface unavailable: {record.error}. Upgrade the firmware")
@@ -141,12 +165,7 @@ def exchange(core, util, record, command):
     try:
         util.claim_interface(device, channel.interface)
         claimed = True
-        channel.reset()
-        drain_stale(channel)
-        frame = request(command)
-        if channel.write(frame) != len(frame):
-            raise ProtocolError("Incomplete request write, command outcome unknown")
-        payload = read_response(channel, command, time.monotonic() + TIMEOUT)
+        payload = transact(channel, command, channel.reset)
         if channel.buffer:
             raise ProtocolError("Unexpected bytes after the response frame")
         return payload
@@ -185,6 +204,20 @@ def is_airgrep(product):
     return re.fullmatch(r"airgrep(?:-[0-9a-fA-F]{12})?", product or "") is not None
 
 
+def identity(value):
+    """Factory MAC as twelve lowercase hex digits, from a serial number, Device ID or colon form."""
+    value = (value or "").lower().removeprefix("airgrep-")
+    if re.fullmatch(r"(?:[0-9a-f]{2}:){5}[0-9a-f]{2}", value):
+        value = value.replace(":", "")
+    return value if re.fullmatch(r"[0-9a-f]{12}", value) else None
+
+
+def selects(selector, serial_number):
+    if selector is None or selector == serial_number:
+        return True
+    return identity(selector) is not None and identity(selector) == identity(serial_number)
+
+
 def load_backend(libusb1):
     backend = libusb1.get_backend()
     if backend is None and sys.platform == "darwin":
@@ -203,6 +236,9 @@ def usb_devices(core, backend=None):
     try:
         devices = core.find(find_all=True, backend=backend)
         for device in devices:
+            # Reading strings opens the device. Leave unrelated USB devices untouched.
+            if (device.idVendor, device.idProduct) not in (APP_USB, LEGACY_USB):
+                continue
             try:
                 product = device.product
             except (OSError, ValueError):
@@ -218,7 +254,7 @@ def usb_devices(core, backend=None):
                 vendor = vendor_interface(device.get_active_configuration())
             except (ProtocolError, OSError, ValueError) as exception:
                 error = str(exception)
-                if device.idVendor == 0x303A and device.idProduct == 0x4002:
+                if (device.idVendor, device.idProduct) == LEGACY_USB:
                     error = "legacy dual-CDC firmware, USB PID 0x4002"
             records.append(SimpleNamespace(device=device, product=product,
                                            serial_number=serial_number, vendor=vendor, error=error))
@@ -228,7 +264,7 @@ def usb_devices(core, backend=None):
 
 
 def select_usb(records, serial_number=None):
-    matches = [record for record in records if serial_number is None or record.serial_number == serial_number]
+    matches = [record for record in records if selects(serial_number, record.serial_number)]
     if len(matches) == 1:
         return matches[0]
     if len(matches) > 1:
@@ -239,14 +275,14 @@ def select_usb(records, serial_number=None):
 
 def is_legacy_cdc(record):
     return (record.vendor is None and is_airgrep(record.product)
-            and record.device.idVendor == 0x303A and record.device.idProduct == 0x4002)
+            and (record.device.idVendor, record.device.idProduct) == LEGACY_USB)
 
 
 def legacy_data_port(record, ports, interfaces):
     if not is_legacy_cdc(record) or not record.serial_number:
         raise ProtocolError("Cannot identify the legacy AIRGREP data port without its USB serial number")
     matches = [port.device for port in airgrep_ports(ports, record.serial_number)
-               if port.vid == 0x303A and port.pid == 0x4002
+               if (port.vid, port.pid) == LEGACY_USB
                and interfaces.get(port.device) in (2, 3)]
     if len(matches) != 1:
         raise ProtocolError("Cannot uniquely identify the selected AIRGREP legacy CDC data port")
@@ -272,15 +308,13 @@ def legacy_dfu(record):
         port.reset_input_buffer()
         port.reset_output_buffer()
 
-    try:
-        port.open()
+    def start():
         reset()
         port.dtr = True
-        drain_stale(port)
-        frame = request(COMMANDS["dfu"])
-        if port.write(frame) != len(frame):
-            raise ProtocolError("Incomplete bootloader request write, command outcome unknown")
-        return read_response(port, COMMANDS["dfu"], time.monotonic() + TIMEOUT)
+
+    try:
+        port.open()
+        return transact(port, COMMANDS["dfu"], start)
     except (ProtocolError, OSError, KeyboardInterrupt):
         if port.is_open:
             try:
@@ -337,7 +371,7 @@ def interface_numbers(ports):
 
 def airgrep_ports(ports, serial_number=None):
     return [port for port in ports if is_airgrep(port.product)
-            and (serial_number is None or port.serial_number == serial_number)]
+            and selects(serial_number, port.serial_number)]
 
 
 def port_role(interface):
@@ -346,26 +380,30 @@ def port_role(interface):
 
 
 def print_devices(records, ports, interfaces, serial_number=None):
-    records = [record for record in records if serial_number is None or record.serial_number == serial_number]
+    records = [record for record in records if selects(serial_number, record.serial_number)]
     if not records:
         print("No AIRGREP USB devices found.")
     for record in sorted(records, key=lambda r: r.serial_number or r.product):
-        selector = f"--serial {record.serial_number}" if record.serial_number else "serial unavailable"
-        print(f"{record.product}  {selector}")
-        console_ports = [port for port in airgrep_ports(ports) if record.serial_number
-                         and port.serial_number == record.serial_number]
-        if not console_ports:
-            print("  console: path unavailable")
-        for port in sorted(console_ports, key=lambda p: p.device):
-            interface = interfaces.get(port.device)
-            role = port_role(interface)
-            detail = f"interface {interface}" if interface is not None else "interface unavailable"
-            print(f"  {role}: {port.device} ({detail})")
-        if record.vendor:
-            interface, input_ep, output_ep = record.vendor
-            print(f"  data: vendor interface {interface}, bulk OUT 0x{output_ep.bEndpointAddress:02x}, IN 0x{input_ep.bEndpointAddress:02x}")
-        else:
-            print(f"  data: vendor interface unavailable ({record.error})")
+        selector = f"--serial {record.serial_number}" if record.serial_number else "Serial unavailable"
+        print_device(record, ports, interfaces, selector)
+
+
+def print_device(record, ports, interfaces, selector=None):
+    print(f"Device    {record.product}" + (f"  {selector}" if selector else ""))
+    console_ports = [port for port in airgrep_ports(ports) if record.serial_number
+                     and port.serial_number == record.serial_number]
+    if not console_ports:
+        print("  Console Path unavailable")
+    for port in sorted(console_ports, key=lambda p: p.device):
+        interface = interfaces.get(port.device)
+        role = port_role(interface).capitalize()
+        detail = f"Interface {interface}" if interface is not None else "Interface unavailable"
+        print(f"  {role:7} {port.device} ({detail})")
+    if record.vendor:
+        interface, input_ep, output_ep = record.vendor
+        print(f"  {'Data':7} Vendor interface {interface}, bulk OUT 0x{output_ep.bEndpointAddress:02x}, IN 0x{input_ep.bEndpointAddress:02x}")
+    else:
+        print(f"  {'Data':7} Vendor interface unavailable ({record.error})")
 
 
 def select_port(ports, interfaces, serial_number=None):
@@ -382,28 +420,58 @@ def select_port(ports, interfaces, serial_number=None):
     raise ProtocolError("No AIRGREP USB device found. Connect the device or select --port")
 
 
-def print_hello(payload):
-    uptime, firmware, *values = HELLO.unpack(payload)
-    internal = values[:3]
-    psram = values[3:6]
-    health, mode, core0, core1, overall = values[6:]
-    firmware = firmware.split(b"\0", 1)[0].decode("utf-8", errors="replace")
+def decode_hello(payload):
+    """Board and chip are empty for firmware that predates them."""
+    uptime, _firmware_version, *values = HELLO.unpack(bytes(payload).ljust(HELLO.size, b"\0"))
+    firmware, board, chip = (value.split(b"\0", 1)[0].decode("utf-8", errors="replace")
+                             for value in values[11:14])
+    health, mode, core0, core1, overall = values[6:11]
+    return SimpleNamespace(uptime=uptime, internal=values[:3], psram=values[3:6], health=health,
+                           mode=mode, load=(core0, core1, overall), firmware=firmware,
+                           board=board, chip=chip)
+
+
+def require_picocom():
+    if not shutil.which("picocom"):
+        raise ProtocolError("picocom is required. Install it with brew install picocom or your package manager")
+
+
+def open_console(device):
+    """Replace this process with picocom. Ctrl+A then Ctrl+X exits."""
+    os.execvp("picocom", ["picocom", "--baud", "115200", device])
+
+
+def print_hello(payload, serial_number=None):
+    hello = decode_hello(payload)
+    uptime, health, mode = hello.uptime, hello.health, hello.mode
+    core0, core1, overall = hello.load
     modes = ("UNKNOWN", "ON", "CHARGER", "OFF")
     mode_name = modes[mode] if mode < len(modes) else "UNKNOWN"
     percent = lambda n: "UNAVAILABLE" if n == 0xFF else f"{n} %"
     failures = [name for bit, name in enumerate(HEALTH_NAMES) if health & (1 << bit)]
-    print(f"{'Firmware':20} {firmware}, protocol {VERSION}")
+    print(f"{'Firmware':20} {hello.firmware}")
+    if hello.board:
+        print(f"{'Board':20} {hello.board}")
+        print(f"{'Chip':20} {hello.chip}")
+    print(f"{'Protocol':20} {VERSION}")
+    mac = identity(serial_number)
+    if mac:
+        print(f"{'MAC':20} {':'.join(mac[i:i + 2].upper() for i in range(0, 12, 2))}")
+        print(f"{'Device ID':20} airgrep-{mac}")
     print(f"{'Uptime':20} {uptime // 86400}d {uptime // 3600 % 24:02}:{uptime // 60 % 60:02}:{uptime % 60:02}")
-    print(f"{'Mode':20} {mode_name}")
-    color = "\033[38;5;208m" if health else "\033[32m"
+    color = {"ON": GREEN, "CHARGER": BLUE, "UNKNOWN": ORANGE}.get(mode_name, "")
+    print(f"{'Mode':20} {color}{mode_name}{RESET if color else ''}")
+    color = ORANGE if health else GREEN
     status = f"ALERT (0x{health:X}{' ' + ', '.join(failures) if failures else ''})" if health else "OK (0x0)"
-    print(f"{'Health':20} {color}{status}\033[0m")
+    print(f"{'Health':20} {color}{status}{RESET}")
     print(f"{'Load':20} core0 {percent(core0)}, core1 {percent(core1)}, overall {percent(overall)}")
-    for label, memory in (("Internal RAM", internal), ("PSRAM", psram)):
+    for label, memory in (("Internal RAM", hello.internal), ("PSRAM", hello.psram)):
         print(f"{label:20} {memory[0] // 1024} KB free, {memory[1] // 1024} KB minimum, {memory[2] // 1024} KB total")
 
 
 def main(argv=None):
+    global conversation_ns
+    conversation_ns = 0
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", nargs="?", choices=(*COMMANDS, "console"),
                         help="Command to execute, or omit to list connected devices")
@@ -417,18 +485,21 @@ def main(argv=None):
     if args.command is None:
         parser.print_usage()
     try:
-        if args.command == "console" and not shutil.which("picocom"):
-            raise ProtocolError("picocom is required. Install it with brew install picocom or your package manager")
-        if args.command in (None, "console") and not args.port:
+        if args.command == "console":
+            require_picocom()
+        ports, interfaces = [], {}
+        if not args.port:
             try:
                 from serial.tools import list_ports
             except ImportError:
-                raise ProtocolError("pyserial is required. Install it in your Python environment with python3 -m pip install pyserial") from None
-            ports = list(list_ports.comports())
-            interfaces = interface_numbers(ports)
+                if args.command in (None, "console"):
+                    raise ProtocolError("pyserial is required. Install it in your Python environment with python3 -m pip install pyserial") from None
+            else:
+                ports = list(list_ports.comports())
+                interfaces = interface_numbers(ports)
         if args.command == "console":
             device = args.port or select_port(ports, interfaces, args.serial)
-            os.execvp("picocom", ["picocom", "--baud", "115200", device])
+            open_console(device)
         try:
             import usb.core
             import usb.util
@@ -444,13 +515,15 @@ def main(argv=None):
                     usb.util.dispose_resources(record.device)
             return 0
         record = select_usb(records, args.serial)
+        print_device(record, ports, interfaces)
+        print(flush=True)
         if args.command == "dfu" and is_legacy_cdc(record):
             usb.util.dispose_resources(record.device)
             payload = legacy_dfu(record)
         else:
             payload = exchange(usb.core, usb.util, record, COMMANDS[args.command])
         if args.command == "hello":
-            print_hello(payload)
+            print_hello(payload, record.serial_number)
         elif args.command == "dfu":
             print("Bootloader entry acknowledged. The ROM download port may have a different path.")
         else:
@@ -461,6 +534,9 @@ def main(argv=None):
         return 1
     except KeyboardInterrupt:
         return 130
+    finally:
+        if conversation_ns:
+            print(f"\nStats: {conversation_ns / 1_000_000:.0f} ms USB I/O")
 
 
 if __name__ == "__main__":

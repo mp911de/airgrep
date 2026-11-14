@@ -91,40 +91,54 @@ const device_info_t* device_info(void) {
 	return &info;
 }
 
-void device_info_print(int width) {
-	const device_info_t* info = device_info();
+void device_firmware_format(char* out, size_t size) {
 	const esp_app_desc_t* app = esp_app_get_description();
+	snprintf(out, size, "%s %s (%s %s)", app->project_name, app->version,
+			 app->date, app->time);
+}
+
+void device_chip_format(char* out, size_t size) {
+	const device_info_t* info = device_info();
 	// esptool's ESP32-S3 package names by PKG_VERSION.
 	static const char* packages[] = {"QFN56", "PICO-1 LGA56"};
-	// Efuse FLASH_CAP, PSRAM_CAP and PSRAM_VENDOR value tables from
-	// esp_efuse_table.csv.
-	static const char* flash_caps[] = {"none", "8 MB", "4 MB"};
-	static const char* psram_caps[] = {"none", "8 MB", "2 MB", "16 MB", "4 MB"};
-	static const char* psram_vendors[] = {"", "AP 3.3 V", "AP 1.8 V"};
 	const char* package =
 		info->package < 2 ? packages[info->package] : "unknown package";
-	const char* flash_cap =
-		info->flash_cap < 3 ? flash_caps[info->flash_cap] : "?";
-	const char* psram_cap =
-		info->psram_cap < 5 ? psram_caps[info->psram_cap] : "?";
-	const char* psram_vendor =
-		info->psram_vendor < 3 ? psram_vendors[info->psram_vendor] : "?";
-	printf("%-*s %s %s (%s %s)\n", width, "Project", app->project_name,
-		   app->version, app->date, app->time);
-	printf("%-*s %s\n", width, "IDF", app->idf_ver);
-	printf("%-*s %s\n", width, "Board", BOARD_NAME);
 	// Both cores share one clock. The range shows when it scales.
 	esp_pm_config_t clock = {
 		.max_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ,
 		.min_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ,
 	};
 	esp_pm_get_configuration(&clock);
-	printf("%-*s ESP32-S3 (%s) rev v%u.%u, %u cores @ ", width, "Chip", package,
-		   info->revision / 100, info->revision % 100, info->cores);
+	char scaling[16] = "";
 	if (clock.min_freq_mhz != clock.max_freq_mhz) {
-		printf("%d to ", clock.min_freq_mhz);
+		snprintf(scaling, sizeof scaling, "%d to ", clock.min_freq_mhz);
 	}
-	printf("%d MHz\n", clock.max_freq_mhz);
+	snprintf(out, size, "ESP32-S3 (%s) rev v%u.%u, %u cores @ %s%d MHz",
+			 package, info->revision / 100, info->revision % 100, info->cores,
+			 scaling, clock.max_freq_mhz);
+}
+
+void device_info_print(int width) {
+	const device_info_t* info = device_info();
+	const esp_app_desc_t* app = esp_app_get_description();
+	// Efuse FLASH_CAP, PSRAM_CAP and PSRAM_VENDOR value tables from
+	// esp_efuse_table.csv.
+	static const char* flash_caps[] = {"none", "8 MB", "4 MB"};
+	static const char* psram_caps[] = {"none", "8 MB", "2 MB", "16 MB", "4 MB"};
+	static const char* psram_vendors[] = {"", "AP 3.3 V", "AP 1.8 V"};
+	const char* flash_cap =
+		info->flash_cap < 3 ? flash_caps[info->flash_cap] : "?";
+	const char* psram_cap =
+		info->psram_cap < 5 ? psram_caps[info->psram_cap] : "?";
+	const char* psram_vendor =
+		info->psram_vendor < 3 ? psram_vendors[info->psram_vendor] : "?";
+	char row[128];
+	device_firmware_format(row, sizeof row);
+	printf("%-*s %s\n", width, "Firmware", row);
+	printf("%-*s %s\n", width, "IDF", app->idf_ver);
+	printf("%-*s %s\n", width, "Board", BOARD_NAME);
+	device_chip_format(row, sizeof row);
+	printf("%-*s %s\n", width, "Chip", row);
 	printf(
 		"%-*s Flash %lu MB (JEDEC 0x%06lX, embedded %s), PSRAM %u MB "
 		"(embedded %s %s)\n",

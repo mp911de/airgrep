@@ -23,11 +23,9 @@ source ~/.espressif/tools/activate_idf_v6.1.sh
 |------------------|--------------------------------------------------------------|--------------------|
 | `display`        | Seeed 1.47 inch touch display, UART GPIO39/40, buzzer GPIO38 | application        |
 | `s3`             | bare XIAO ESP32-S3 Plus, UART GPIO7/44, buzzer GPIO8         | application        |
-| `s3-uart0`       | as `s3`, `sdkconfig.uart0`, console on UART0 GPIO1/2         | application        |
+| `s3-debug`       | as `s3`, with USB State access and data injection enabled      | development        |
 | `display-test`   | as `display`                                                 | Unity test runner  |
 | `s3-test`        | as `s3`                                                      | Unity test runner  |
-| `display-hwtest` | as `display`, `sdkconfig.hwtest`                             | hardware test mode |
-| `s3-hwtest`      | as `s3`, `sdkconfig.hwtest`                                  | hardware test mode |
 
 Command line, from `firmware/`:
 
@@ -37,38 +35,70 @@ idf.py --preset s3 -p /dev/cu.usbmodem2101 flash        # select the ROM downloa
 idf.py --preset s3-test menuconfig                      # airgrep > tags to run at boot
 ```
 
-For the complete build, flash and monitor workflow, activate ESP-IDF and run:
+For the complete build, flash and console workflow, activate ESP-IDF and run:
 
 ```sh
 ./tools/build-flash.py
 ./tools/build-flash.py --profile s3 --serial 68ee8f4d0c74
+./tools/build-flash.py --profile s3-debug
+./tools/build-flash.py --profile s3 --debug-uart
+./tools/build-flash.py --profile display --hwtest --display seeed-172x320-touch
 ```
 
-The profile defaults to `s3`; `display`, `s3-hwtest` and `display-hwtest` are also
-supported. Without `--serial`, the first discovered device is selected. The tool
-builds before requesting bootloader entry, tracks the same
-factory MAC through ROM and application enumeration, flashes, then launches IDF
-Monitor on the new console port. Exit the monitor with Ctrl+]. A device already
-in ROM download mode is supported. The monitor uses a temporary DTR setting for
-the CDC console. Its upload shortcuts do not perform this USB discovery sequence;
-exit and rerun the tool to flash again.
+The profile is an application preset and defaults to `s3`; `s3-debug` and `display`
+are also supported. Flags vary it without a preset of their own:
+
+| Flag               | Effect                                                              |
+|--------------------|---------------------------------------------------------------------|
+| `--debug-uart`     | adds `sdkconfig.uart0`, console on UART0 GPIO1/2                    |
+| `--hwtest`         | adds `sdkconfig.hwtest`, hardware test mode                         |
+| `--display <name>` | adds `components/display/variants/<name>/sdkconfig`, LVGL and that UI |
+
+A build with flags gets its own directory and `sdkconfig`, named after the profile
+and its flags, such as `build/s3+debug-uart`. Without `--display` the firmware
+contains no display code. With it the user interface is compiled, no panel driver
+shows it yet. Display builds resolve their managed components into
+`dependencies.display.lock`, so `dependencies.lock` is the same with and without
+a display.
+
+Without `--serial`, the first discovered device is selected and the others are
+listed. The tool sends HELLO and prints firmware, board and chip. A board that
+does not fit the profile stops the run before the build. The tool then builds,
+requests bootloader entry, tracks the same factory MAC through ROM and
+application enumeration, flashes, and opens the new console port in `picocom`,
+as `airgrep.py console` does. Exit with Ctrl+A then Ctrl+X.
+
+Flashing starts without a question only for an identified device: a HELLO reply
+that fits the profile, legacy dual-CDC firmware, or a ROM download device named
+by `--serial`. Otherwise the tool builds first and asks before flashing: for a
+ROM download device found without `--serial`, a device that does not answer
+HELLO, or one connected during the build. With no device at all it builds and
+stops. Hold BOOT while connecting to reach ROM download mode on a board that no
+longer enumerates.
 
 ## Simulator
 
-`simulator/` builds the user interface from `components/touch-lcd` as a macOS
-application, a 172 x 320 window driven by LVGL's SDL driver. The mouse acts as
-the finger. It needs CMake, Ninja and `brew install sdl2`, not the IDF. The first
-configure downloads LVGL, pinned in `simulator/CMakeLists.txt`.
+`simulator/` builds each variant in `components/display/variants` as a macOS
+application, an SDL window as the panel (`simulator/sdl_panel.cpp`). The mouse
+acts as the finger. It needs CMake, Ninja and `brew install sdl2`, not the IDF.
+The first configure downloads LVGL, pinned in `simulator/CMakeLists.txt`.
 
 ```sh
-cmake -S simulator -B simulator/build -G Ninja
-cmake --build simulator/build
-simulator/build/airgrep-simulator.app/Contents/MacOS/airgrep-simulator --zoom 2
+./tools/simulator.py --display waveshare-800x480-touch
+./tools/simulator.py --display seeed-172x320-touch --zoom 4
 ```
 
-`--zoom` takes 1, 2 or 4 and defaults to 2. The View menu switches it at runtime,
-Cmd+1, Cmd+2 and Cmd+4. Each panel pixel is drawn as a block of one colour.
-Touches are logged in panel coordinates. Closing the window ends the process.
+The tool builds the variant into `simulator/build/` and runs it. `--zoom` takes
+1, 2 or 4 and defaults to the largest that fits the screen. The View menu
+switches it at runtime, Cmd+1, Cmd+2 and Cmd+4. Zoom counts physical screen
+pixels: at 1 a panel pixel is one screen pixel, also on a Retina screen, at 2
+and 4 a block of one colour. Touches are logged in panel coordinates. Closing the window
+ends the process. The simulator feeds the display a fixed `display::Model`.
+
+A variant is a directory with a `panel.hpp` for the size, a `screen.cpp` that
+implements `display::variant::build` and `display::update`, and an `sdkconfig`
+fragment that sets `CONFIG_AIRGREP_DISPLAY` to the directory name. The simulator
+and `build-flash.py --display` pick it up by that name.
 
 ## USB console and control
 
@@ -89,6 +119,13 @@ From `firmware/`, using Python 3 with `pyusb`, `pyserial` and libusb installed:
 ./tools/airgrep.py dfu
 ./tools/airgrep.py console
 ```
+
+HELLO protocol 1 includes the same formatted Firmware, Board and Chip values as
+the console, while retaining the separate firmware version field. Python
+displays MAC and Device ID from USB discovery. The extended HELLO requires the
+updated client, which still reads firmware without board and chip. `dfu` retains
+its existing wire format. `--serial` accepts the factory MAC with or without
+colons or the `airgrep-` prefix.
 
 Without a command, the tool prints brief usage and found devices with their
 `--serial` values, console paths and USB bulk interfaces. `console` launches `picocom`, exit with
@@ -111,9 +148,16 @@ The first flash from the previous USB Serial/JTAG firmware still uses its
 existing port. If the application cannot run, BOOT plus RESET remains the
 manual route to ROM download mode.
 
-All firmware protocol commands are implemented, including full-State READ,
-partial-byte WRITE from a complete State, Traffic batches of up to 32 targets and
-GNSS injection. Ingestion flags are written through the ADSBee State and return to
+Normal builds expose HELLO, reboot and bootloader entry. READ, WRITE,
+UPDATE_TRAFFIC and UPDATE_GNSS return UNKNOWN_COMMAND unless
+`CONFIG_AIRGREP_USB_SERVICE_COMMANDS=y`. Their handlers and component registry
+are excluded from normal application builds. The `s3-debug` profile inherits
+`s3`, uses its own `build/s3-debug` directory and sdkconfig, and enables these
+commands through `sdkconfig.usb-service`.
+
+Service-enabled firmware supports full-State READ, partial-byte WRITE from a
+complete State, Traffic batches of up to 32 targets and GNSS injection.
+Ingestion flags are written through the ADSBee State and return to
 READ on connection reset or timeout. The Python tool covers only HELLO, reboot,
 bootloader and console access. Reset commands wait for USB endpoint completion
 before restarting. A vendor control request clears the data decoder and software
@@ -121,7 +165,7 @@ queues, pending endpoint transfers must drain before reuse. The client drains st
 sending. Disconnect, full Traffic transfers and bootloader behavior still require
 testing on the board and host USB driver.
 
-The `s3-uart0` preset retains its physical UART console, and Unity presets retain
+A `--debug-uart` build retains its physical UART console, and Unity presets retain
 USB Serial/JTAG. Existing application build directories must select
 `ESP_CONSOLE_NONE` and `ESP_CONSOLE_SECONDARY_NONE` when enabling TinyUSB. These
 disable the built-in console drivers, the application installs its CDC console

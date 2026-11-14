@@ -27,7 +27,10 @@ const device_info_t* device_info(void);
 const char* device_reset_reason(void);
 // Formats airgrep-<mac lower case hex>. Exposed for the host test.
 void device_id_format(const uint8_t mac[6], char out[21]);
-// Prints the identity rows: Project, IDF, Board, Chip, Memory, MAC, Device
+// The console rows and USB HELLO share these formatters.
+void device_firmware_format(char* out, size_t size);
+void device_chip_format(char* out, size_t size);
+// Prints the identity rows: Firmware, IDF, Board, Chip, Memory, MAC, Device
 // ID, Last reset.
 void device_info_print(int label_width);
 

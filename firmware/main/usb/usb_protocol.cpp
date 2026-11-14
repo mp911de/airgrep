@@ -43,7 +43,7 @@ bool Decoder::timed_out(int64_t now_us) const {
 	return received_ && !complete_ && now_us - started_us_ >= kTimeoutUs;
 }
 
-void Decoder::reset() { *this = Decoder{}; }
+void Decoder::reset() { *this = Decoder{service_commands_}; }
 
 bool Decoder::feed(uint8_t byte, int64_t now_us) {
 	if (complete_ || timed_out(now_us)) {
@@ -72,6 +72,9 @@ bool Decoder::feed(uint8_t byte, int64_t now_us) {
 		status_ = Status::crc_mismatch;
 	} else if (header_[0] != kVersion) {
 		status_ = Status::version_mismatch;
+	} else if (!service_commands_ && command() >= Command::read &&
+			   command() <= Command::update_gnss) {
+		status_ = Status::unknown_command;
 	} else {
 		switch (command()) {
 			case Command::hello:
@@ -125,6 +128,9 @@ size_t encode_hello(const Hello& hello, uint8_t* output) {
 	payload[68] = hello.cpu_core1;
 	payload[69] = hello.cpu_overall;
 	payload[70] = payload[71] = 0;
+	std::memcpy(payload + 72, hello.firmware_description, 128);
+	std::memcpy(payload + 200, hello.board, 128);
+	std::memcpy(payload + 328, hello.chip, 128);
 	return finish_response(Command::hello, Status::ok, output, kHelloSize);
 }
 }  // namespace usb::protocol

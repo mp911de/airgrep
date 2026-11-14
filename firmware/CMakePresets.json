@@ -20,13 +20,15 @@
 			}
 		},
 		{
-			"name": "s3-uart0",
-			"displayName": "airgrep on XIAO ESP32-S3 Plus, console on UART0",
-			"inherits": "esp32s3",
-			"binaryDir": "build/s3-uart0",
+			"name": "s3-debug",
+			"displayName": "airgrep on XIAO ESP32-S3 Plus, USB service commands",
+			"inherits": "s3",
+			"generator": "Ninja",
+			"binaryDir": "build/s3-debug",
 			"cacheVariables": {
-				"SDKCONFIG": "build/s3-uart0/sdkconfig",
-				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.s3;sdkconfig.uart0"
+				"IDF_TARGET": "esp32s3",
+				"SDKCONFIG": "build/s3-debug/sdkconfig",
+				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.s3;sdkconfig.usb-service"
 			}
 		},
 		{
@@ -62,26 +64,6 @@
 				"AIRGREP_TEST": "ON",
 				"TEST_COMPONENTS": "airgrep loop"
 			}
-		},
-		{
-			"name": "s3-hwtest",
-			"displayName": "airgrep on ESP32-S3 Plus, hardware test mode",
-			"inherits": "esp32s3",
-			"binaryDir": "build/s3-hwtest",
-			"cacheVariables": {
-				"SDKCONFIG": "build/s3-hwtest/sdkconfig",
-				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.s3;sdkconfig.hwtest"
-			}
-		},
-		{
-			"name": "display-hwtest",
-			"displayName": "Seeed display module, hardware test mode",
-			"inherits": "esp32s3",
-			"binaryDir": "build/display-hwtest",
-			"cacheVariables": {
-				"SDKCONFIG": "build/display-hwtest/sdkconfig",
-				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display;sdkconfig.hwtest"
-			}
 		}
 	],
 	"buildPresets": [
@@ -90,8 +72,8 @@
 			"configurePreset": "s3"
 		},
 		{
-			"name": "s3-uart0",
-			"configurePreset": "s3-uart0"
+			"name": "s3-debug",
+			"configurePreset": "s3-debug"
 		},
 		{
 			"name": "display",
@@ -104,14 +86,6 @@
 		{
 			"name": "display-test",
 			"configurePreset": "display-test"
-		},
-		{
-			"name": "s3-hwtest",
-			"configurePreset": "s3-hwtest"
-		},
-		{
-			"name": "display-hwtest",
-			"configurePreset": "display-hwtest"
 		}
 	]
 }

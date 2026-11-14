@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Build, flash and monitor AIRGREP, tracking one device across USB modes."""
+"""Build and flash AIRGREP, then open its console, tracking one device across USB modes."""
 
 import argparse
 from contextlib import contextmanager
+import json
 import os
 from pathlib import Path
 import re
 import shutil
 import subprocess
 import sys
-import tempfile
 import time
 from types import SimpleNamespace
 
@@ -17,19 +17,16 @@ import airgrep
 
 
 FIRMWARE = Path(__file__).resolve().parents[1]
-PROFILES = ("s3", "display", "s3-hwtest", "display-hwtest")
+# Each profile with a pattern for the board its firmware reports, BOARD_NAME in components/airgrep/board.h.
+PROFILES = {"s3": r"S3 Plus", "s3-debug": r"S3 Plus", "display": r"Seeed Display"}
+FRAGMENTS = {"debug-uart": "sdkconfig.uart0", "hwtest": "sdkconfig.hwtest"}
 ROM_USB = (0x303A, 0x1001)
+identity = airgrep.identity
 
 
-def identity(value):
-    value = (value or "").lower()
-    if value.startswith("airgrep-"):
-        value = value[8:]
-    if re.fullmatch(r"[0-9a-f]{12}", value):
-        return value
-    if re.fullmatch(r"(?:[0-9a-f]{2}:){5}[0-9a-f]{2}", value):
-        return value.replace(":", "")
-    return None
+def displays():
+    variants = FIRMWARE / "components/display/variants"
+    return sorted(path.name for path in variants.iterdir() if path.is_dir()) if variants.is_dir() else []
 
 
 def idf_command():
@@ -49,6 +46,7 @@ def dependencies():
         from serial.tools import list_ports
     except ImportError:
         raise airgrep.ProtocolError("Install pyusb and pyserial in the active ESP-IDF Python environment") from None
+    airgrep.require_picocom()
     return SimpleNamespace(core=usb.core, util=usb.util,
                            backend=airgrep.load_backend(usb.backend.libusb1), ports=list_ports.comports)
 
@@ -67,21 +65,55 @@ def is_rom(port):
     return (port.vid, port.pid) == ROM_USB
 
 
-def choose_device(usb, selector):
+def discover(usb, selector, profile):
+    """Identify the first matching device, or None when nothing enumerates.
+
+    A confirmed device is flashed without asking: an AIRGREP whose HELLO fits the profile,
+    legacy AIRGREP firmware, or a ROM device named by --serial.
+    """
     selected = identity(selector) if selector else None
     if selector and selected is None:
         raise airgrep.ProtocolError("--serial must be a factory MAC, with optional airgrep- prefix or colons")
     with snapshot(usb) as (records, ports):
-        candidates = [record.serial_number for record in records]
-        candidates.extend(port.serial_number for port in ports if is_rom(port))
+        candidates = [(identity(record.serial_number), record) for record in records]
+        candidates.extend((identity(port.serial_number), port) for port in ports if is_rom(port))
         if selector:
-            candidates = [candidate for candidate in candidates if identity(candidate) == selected]
+            candidates = [candidate for candidate in candidates if candidate[0] == selected]
         if not candidates:
-            raise airgrep.ProtocolError("No matching AIRGREP application or ESP32-S3 ROM device found")
-        selected = identity(candidates[0])
-        if selected is None:
+            return None
+        mac, record = candidates[0]
+        if mac is None:
             raise airgrep.ProtocolError("The first device has no recognized factory MAC serial number")
-        return selected
+        others = sorted({other for other, _ in candidates[1:] if other not in (mac, None)})
+        if others:
+            print(f"Using the first of {len(others) + 1} devices. Others: {', '.join(others)}. Select --serial")
+        if record not in records:
+            print(f"Device    ESP32-S3 {mac}\n  {'ROM':7} {record.device} (download mode)\n", flush=True)
+            return SimpleNamespace(mac=mac, confirmed=bool(selector))
+        airgrep.print_device(record, ports, airgrep.interface_numbers(ports))
+        print(flush=True)
+        if airgrep.is_legacy_cdc(record):
+            return SimpleNamespace(mac=mac, confirmed=True)
+        try:
+            payload = airgrep.exchange(usb.core, usb.util, record, airgrep.COMMANDS["hello"])
+        except (airgrep.ProtocolError, OSError) as error:
+            print(f"No HELLO reply: {error}\n", flush=True)
+            return SimpleNamespace(mac=mac, confirmed=False)
+        airgrep.print_hello(payload, record.serial_number)
+        print(flush=True)
+        hello = airgrep.decode_hello(payload)
+        if hello.board and not re.search(PROFILES[profile], hello.board):
+            raise airgrep.ProtocolError(
+                f"Device reports board {hello.board}, profile {profile} builds for {PROFILES[profile]}. "
+                "Select the matching --profile. To flash regardless, hold BOOT while connecting for ROM download mode")
+        return SimpleNamespace(mac=mac, confirmed=True)
+
+
+def confirm(question):
+    if not sys.stdin.isatty():
+        print(f"{question} Not asked without a terminal.")
+        return False
+    return input(f"{question} [y/N] ").strip().lower() in ("y", "yes")
 
 
 def enter_bootloader(usb, selected):
@@ -126,46 +158,71 @@ def wait_port(usb, selected, timeout, rom):
         time.sleep(min(0.2, remaining))
 
 
-def run_idf(command, profile, *arguments, env=None):
-    subprocess.run([*command, "--preset", profile, *arguments], cwd=FIRMWARE, check=True, env=env)
+def variation(profile, fragments):
+    """idf.py options that build the profile's preset plus named sdkconfig fragments in its own directory."""
+    if not fragments:
+        return []
+    presets = json.loads((FIRMWARE / "CMakePresets.json").read_text())["configurePresets"]
+    defaults = next((preset.get("cacheVariables", {}).get("SDKCONFIG_DEFAULTS")
+                     for preset in presets if preset["name"] == profile), None)
+    if not defaults:
+        raise airgrep.ProtocolError(f"CMakePresets.json has no preset {profile} with SDKCONFIG_DEFAULTS")
+    build = "build/" + "+".join([profile, *fragments])
+    return ["-B", build, f"-DSDKCONFIG={build}/sdkconfig",
+            "-DSDKCONFIG_DEFAULTS=" + ";".join([defaults, *fragments.values()])]
 
 
-def monitor(command, profile, port):
-    # D1 asserts CDC DTR without resetting the application or dropping back into ROM.
-    with tempfile.TemporaryDirectory(prefix="airgrep-monitor-") as directory:
-        config = Path(directory) / "monitor.cfg"
-        config.write_text("[esp-idf-monitor]\ncustom_hard_reset_sequence = D1\n")
-        env = os.environ.copy()
-        env["ESP_IDF_MONITOR_CFGFILE"] = str(config)
-        run_idf(command, profile, "-p", port, "monitor", env=env)
+def run_idf(command, profile, *arguments):
+    subprocess.run([*command, "--preset", profile, *arguments], cwd=FIRMWARE, check=True)
 
 
-def build_flash_monitor(command, usb, profile, selector, timeout):
-    selected = choose_device(usb, selector)
-    print(f"AIRGREP {selected}, profile {profile}.", flush=True)
+def build_flash(command, usb, profile, selector, timeout):
+    target = discover(usb, selector, profile)
+    if target is None:
+        print("No matching AIRGREP or ESP32-S3 ROM device found. Building without flashing.", flush=True)
+    print(f"{'Profile':20} {profile}\n", flush=True)
     run_idf(command, profile, "build")
+    if target is None:
+        # A device connected during the build was never identified before it. Always ask.
+        target = discover(usb, selector, profile)
+        if target is None:
+            raise airgrep.ProtocolError(
+                "Built, not flashed. Connect the device, or hold BOOT while connecting for ROM download mode, "
+                "then run again")
+        target.confirmed = False
+    if not target.confirmed and not confirm(f"Flash {target.mac} with profile {profile}?"):
+        print("Built, not flashed.")
+        return
+    selected = target.mac
     enter_bootloader(usb, selected)
     rom_port = wait_port(usb, selected, timeout, rom=True)
     run_idf(command, profile, "-p", rom_port, "flash")
     console_port = wait_port(usb, selected, timeout, rom=False)
-    print(f"Monitoring {console_port}. Ctrl+] exits.", flush=True)
-    monitor(command, profile, console_port)
+    print(f"Console on {console_port}. Ctrl+A then Ctrl+X exits.", flush=True)
+    airgrep.open_console(console_port)
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile", choices=PROFILES, default="s3",
                         help="Application build profile, default s3")
-    parser.add_argument("--serial", help="Factory MAC or USB serial, default first found device")
+    parser.add_argument("--debug-uart", action="store_true", help="Console on UART0 GPIO1/2")
+    parser.add_argument("--hwtest", action="store_true", help="Hardware test mode")
+    parser.add_argument("--display", choices=displays(), help="Display variant, default none")
+    parser.add_argument("--serial", help="Factory MAC or USB serial, default first found device. "
+                        "Without a device the image is built and not flashed")
     parser.add_argument("--timeout", type=float, default=15,
                         help="Seconds to wait for each USB mode change, default 15")
     args = parser.parse_args(argv)
     if not 0 < args.timeout < float("inf"):
         parser.error("--timeout must be finite and positive")
     try:
-        command = idf_command()
+        fragments = {name: path for name, path in FRAGMENTS.items() if getattr(args, name.replace("-", "_"))}
+        if args.display:
+            fragments[args.display] = f"components/display/variants/{args.display}/sdkconfig"
+        command = [*idf_command(), *variation(args.profile, fragments)]
         usb = dependencies()
-        build_flash_monitor(command, usb, args.profile, args.serial, args.timeout)
+        build_flash(command, usb, args.profile, args.serial, args.timeout)
         return 0
     except (airgrep.ProtocolError, OSError) as error:
         print(f"build-flash: {error}", file=sys.stderr)

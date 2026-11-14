@@ -18,6 +18,11 @@ include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 idf_build_set_property(MINIMAL_BUILD ON)
 # Requirements are resolved in a script-mode pass that cannot see cache variables.
 idf_build_set_property(AIRGREP_TEST "${AIRGREP_TEST}")
+# A display variant adds LVGL to the managed components. Its own lock file keeps
+# dependencies.lock the same for builds with and without a display.
+if(SDKCONFIG_DEFAULTS MATCHES "components/display/variants/")
+    idf_build_set_property(DEPENDENCIES_LOCK "${CMAKE_SOURCE_DIR}/dependencies.display.lock")
+endif()
 project(airgrep)
 
 find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format REQUIRED)
