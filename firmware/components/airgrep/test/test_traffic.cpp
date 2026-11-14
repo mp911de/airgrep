@@ -250,6 +250,67 @@ CASE(table,
 	TEST_ASSERT_EQUAL_UINT(1, visited);
 }
 
+CASE(raw_slots,
+	 "Raw slot changes remain visible to size, lookup and eviction") {
+	traffic::Target slots[3];
+	traffic::Table table(slots, 3);
+	traffic::Target target;
+	TEST_ASSERT_TRUE(decode(kAircraft, target));
+	target.seen_us = 1000;
+	std::memcpy(&slots[1], &target, sizeof target);
+	TEST_ASSERT_EQUAL_UINT(1, table.size());
+	traffic::Target found;
+	TEST_ASSERT_EQUAL_UINT(1, table.find(target.address, &found, 1));
+	TEST_ASSERT_EQUAL_INT64(1000, found.seen_us);
+	int64_t empty = 0;
+	std::memcpy(&slots[1].seen_us, &empty, sizeof empty);
+	TEST_ASSERT_EQUAL_UINT(0, table.size());
+	TEST_ASSERT_EQUAL_UINT(0, table.find(target.address, &found, 1));
+	std::memcpy(&slots[2], &target, sizeof target);
+	TEST_ASSERT_EQUAL_UINT(1, table.evict(1000 + 60000000LL, 60000));
+	TEST_ASSERT_EQUAL_UINT(0, table.size());
+	table.upsert(target, 2000);
+	TEST_ASSERT_EQUAL_UINT(1, table.size());
+}
+
+CASE(batch, "Batches keep unrelated targets and replace local freshness time") {
+	static traffic::Target slots[40], reports[33];
+	for (auto& slot : slots) {
+		slot = {};
+	}
+	for (size_t i = 0; i < 33; ++i) {
+		reports[i] = {};
+		reports[i].address = i + 1;
+		reports[i].seen_us = 99999999;
+	}
+	traffic::Table table(slots, 40);
+	traffic::Target unrelated;
+	unrelated.address = 100;
+	table.upsert(unrelated, 1000);
+	TEST_ASSERT_TRUE(table.upsert_batch(reports, 1, 2000));
+	TEST_ASSERT_EQUAL_UINT(2, table.size());
+	reports[0].speed_kt = 123;
+	TEST_ASSERT_TRUE(table.upsert_batch(reports, 32, 3000));
+	TEST_ASSERT_EQUAL_UINT(33, table.size());
+	traffic::Target found;
+	TEST_ASSERT_EQUAL_UINT(1, table.find(100, &found, 1));
+	TEST_ASSERT_EQUAL_INT64(1000, found.seen_us);
+	for (size_t i = 0; i < 32; ++i) {
+		TEST_ASSERT_EQUAL_UINT(1, table.find(reports[i].address, &found, 1));
+		TEST_ASSERT_EQUAL_INT64(3000, found.seen_us);
+	}
+	TEST_ASSERT_EQUAL_UINT(1, table.find(1, &found, 1));
+	TEST_ASSERT_EQUAL_INT16(123, found.speed_kt);
+	reports[0].speed_kt = 456;
+	TEST_ASSERT_FALSE(table.upsert_batch(reports, 0, 4000));
+	TEST_ASSERT_FALSE(table.upsert_batch(reports, 33, 4000));
+	TEST_ASSERT_FALSE(table.upsert_batch(nullptr, 1, 4000));
+	TEST_ASSERT_EQUAL_UINT(33, table.size());
+	TEST_ASSERT_EQUAL_UINT(1, table.find(1, &found, 1));
+	TEST_ASSERT_EQUAL_INT16(123, found.speed_kt);
+	TEST_ASSERT_EQUAL_INT64(3000, found.seen_us);
+}
+
 #ifndef ESP_PLATFORM
 int main() {
 	UNITY_BEGIN();
@@ -260,6 +321,8 @@ int main() {
 	RUN_TEST(stats);
 	RUN_TEST(bearing);
 	RUN_TEST(table);
+	RUN_TEST(raw_slots);
+	RUN_TEST(batch);
 	return UNITY_END();
 }
 #endif

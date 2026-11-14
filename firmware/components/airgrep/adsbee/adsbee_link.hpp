@@ -25,6 +25,8 @@ namespace adsbee {
 #define ADSBEE_INIT_REPEAT_MS 100
 #define ADSBEE_DEVICE_INFO_COMMAND "AT+DEVICE_INFO?"
 
+enum class Ingestion : uint8_t { read = 0, ignore = 1 };
+
 struct State {
 	bool known = false, tx_attached = false, initialized = false;
 	int64_t updated_us = 0, reply_us = 0, error_us = 0;
@@ -33,6 +35,8 @@ struct State {
 			 framing_errors = 0, overruns = 0;
 	Gnss gnss;
 	int64_t gnss_us = 0;  // last #GNSS frame, 0 until the first one
+	Ingestion traffic_ingestion = Ingestion::read;
+	Ingestion gnss_ingestion = Ingestion::read;
 
 	template <typename F>
 	static void update(F f) {
@@ -64,6 +68,10 @@ bool subscribe(Predicate predicate, Handler handler, void* ctx);
 // fix_lost.
 using GnssHandler = void (*)(const Gnss&, int64_t received_us, void* ctx);
 bool subscribe_gnss(GnssHandler handler, void* ctx);
+// Publishes a decoded live or injected report. Call on the event loop.
+void ingest_gnss(const Gnss& gnss, int64_t received_us);
+// A closed or reset data connection restores live input.
+void reset_ingestion();
 // Subscribes the TX gate to mode_changed: the ADSBee is powered in ON only.
 esp_err_t prepare();
 esp_err_t uart_init();

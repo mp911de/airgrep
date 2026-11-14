@@ -20,6 +20,7 @@
 #include "traffic/traffic.hpp"
 #include "tz/tz.hpp"
 #include "usb/fusb303.hpp"
+#include "usb/usb_device.hpp"
 #include "wifi/wifi_ap.hpp"
 #if CONFIG_AIRGREP_HWTEST
 #include "hwtest.hpp"
@@ -44,7 +45,9 @@ static bool is_csbee(const adsbee::Message& m) {
 
 static void feed_traffic(const adsbee::Message& m, void*) {
 	ESP_LOGV(TAG, "csbee %s", m.text);
-	traffic::ingest(m.text, m.len, m.received_us);
+	if (adsbee::State::copy().traffic_ingestion == adsbee::Ingestion::read) {
+		traffic::ingest(m.text, m.len, m.received_us);
+	}
 }
 
 // The traffic table has no boot row of its own, it is the ADSbee's consumer.
@@ -111,6 +114,7 @@ static void report(const Component& component, esp_err_t result,
 }
 
 extern "C" void app_main(void) {
+	ESP_ERROR_CHECK(usb::start());
 	console_banner();
 	esp_err_t prepared[std::size(components)];
 	for (size_t i = 0; i < std::size(components); i++) {

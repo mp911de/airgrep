@@ -171,17 +171,9 @@ void receive(const Message& message) {
 		liveness.received(message.received_us);
 		update_tx();
 		Gnss gnss;
-		if (decode_gnss(message.text, message.len, gnss)) {
-			State::update([&](State& state) {
-				state.gnss = gnss;
-				state.gnss_us = message.received_us;
-			});
-			gnss_subscribers.notify(gnss, message.received_us);
-			if (events::changed(fix_held, gnss.fix)) {
-				events::publish({.type = fix_held ? events::Type::fix_acquired
-												  : events::Type::fix_lost,
-								 .fix = {gnss.antenna}});
-			}
+		if (State::copy().gnss_ingestion == Ingestion::read &&
+			decode_gnss(message.text, message.len, gnss)) {
+			ingest_gnss(gnss, message.received_us);
 		}
 	}
 	if (message.kind == DECODER_AT_REPLY) {
@@ -510,6 +502,26 @@ loop::Handle request(const char* command, loop::SuccessListener success,
 }
 
 bool busy() { return pending != nullptr; }
+
+void ingest_gnss(const Gnss& gnss, int64_t received_us) {
+	State::update([&](State& state) {
+		state.gnss = gnss;
+		state.gnss_us = received_us;
+	});
+	gnss_subscribers.notify(gnss, received_us);
+	if (events::changed(fix_held, gnss.fix)) {
+		events::publish({.type = fix_held ? events::Type::fix_acquired
+										  : events::Type::fix_lost,
+						 .fix = {gnss.antenna}});
+	}
+}
+
+void reset_ingestion() {
+	State::update([](State& state) {
+		state.traffic_ingestion = Ingestion::read;
+		state.gnss_ingestion = Ingestion::read;
+	});
+}
 
 void drop_fix() {
 	if (events::changed(fix_held, false)) {

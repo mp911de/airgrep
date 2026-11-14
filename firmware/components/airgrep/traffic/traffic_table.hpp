@@ -17,12 +17,14 @@ class Table {
 	// Stores the target under its address and source, replacing the previous
 	// report. A full table gives up its least recently seen entry.
 	void upsert(const Target& target, int64_t now_us);
+	// Rejects invalid batch sizes before changing any slot.
+	bool upsert_batch(const Target* targets, size_t count, int64_t now_us);
 	// Removes every target not seen for max_age_ms. Returns how many went.
 	size_t evict(int64_t now_us, uint32_t max_age_ms);
 	// Targets with this address, any source. Returns how many were written, at
 	// most count.
 	size_t find(uint32_t address, Target* out, size_t count) const;
-	size_t size() const { return size_; }
+	size_t size() const;
 	// Visits every present target.
 	template <typename F>
 	void each(F f) const {
@@ -37,6 +39,5 @@ class Table {
 	bool present_(size_t i) const { return slots_[i].seen_us != 0; }
 	Target* slots_;
 	size_t capacity_;
-	size_t size_ = 0;
 };
 }  // namespace traffic

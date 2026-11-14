@@ -22,11 +22,28 @@ void Table::upsert(const Target& target, int64_t now_us) {
 	}
 	if (slot == capacity_) {
 		slot = oldest;  // full, the least recently seen target goes
-	} else if (!present_(slot)) {
-		size_++;
 	}
 	slots_[slot] = target;
 	slots_[slot].seen_us = now_us ? now_us : 1;
+}
+
+bool Table::upsert_batch(const Target* targets, size_t count, int64_t now_us) {
+	if (!targets || !count || count > 32 || !capacity_) {
+		return false;
+	}
+	for (size_t i = 0; i < count; ++i) {
+		upsert(targets[i], now_us);
+	}
+	return true;
+}
+
+size_t Table::size() const {
+	// Raw State writes can change occupancy without going through upsert().
+	size_t count = 0;
+	for (size_t i = 0; i < capacity_; ++i) {
+		count += present_(i);
+	}
+	return count;
 }
 
 size_t Table::evict(int64_t now_us, uint32_t max_age_ms) {
@@ -37,7 +54,6 @@ size_t Table::evict(int64_t now_us, uint32_t max_age_ms) {
 			continue;
 		}
 		slots_[i].seen_us = 0;
-		size_--;
 		gone++;
 	}
 	return gone;

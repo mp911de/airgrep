@@ -114,6 +114,23 @@ void each(void (*visit)(const Target&, void*), void* context) {
 	table->each([&](const Target& target) { visit(target, context); });
 }
 
+bool update(const Target* targets, size_t n, int64_t received_us) {
+	if (!table) {
+		return false;
+	}
+	Guard guard;
+	return table->upsert_batch(targets, n, received_us);
+}
+
+bool access(void (*visit)(Target*, size_t, void*), void* context) {
+	if (!table || !visit) {
+		return false;
+	}
+	Guard guard;
+	visit(slots, TRAFFIC_MAX_TARGETS, context);
+	return true;
+}
+
 size_t find(uint32_t address, Target* out, size_t n) {
 	if (!table) {
 		return 0;

@@ -80,6 +80,8 @@ esp_err_t console_start(void) {
 	if (err == ESP_OK) {
 		err = gpio_sleep_sel_dis(CONFIG_ESP_CONSOLE_UART_TX_GPIO);
 	}
+#elif CONFIG_TINYUSB_CDC_ENABLED
+	esp_err_t err = esp_console_new_repl_stdio(&repl_config, &repl);
 #else
 	esp_console_dev_usb_serial_jtag_config_t dev_config =
 		ESP_CONSOLE_DEV_USB_SERIAL_JTAG_CONFIG_DEFAULT();
