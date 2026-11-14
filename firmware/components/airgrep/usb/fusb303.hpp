@@ -57,7 +57,9 @@ struct State {
 };
 
 using Completion = loop::Callable<void(esp_err_t)>;
-// Called on the loop after every complete Poll.
+// Called on the loop after every complete Poll. An attach, a detach and a
+// changed CC advertisement are also published as usb_plugged, usb_unplugged
+// and usb_power_changed.
 using Handler = void (*)(const State&, void*);
 bool subscribe(Handler handler, void* context = nullptr);
 // Starts the driver unless it polls already. The system watchdog calls it

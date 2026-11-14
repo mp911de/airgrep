@@ -6,8 +6,6 @@
 
 namespace health {
 namespace {
-constexpr float kLowSocPercent = 10;
-
 bool overvoltage(const charger::Fault0& f0, const charger::Fault1& f1) {
 	return f0.vbus_overvoltage || f0.battery_overvoltage ||
 		   f0.ac1_overvoltage || f0.ac2_overvoltage || f1.system_overvoltage ||
@@ -66,7 +64,7 @@ uint16_t evaluate_health(power_mode_t mode, const HealthInputs& s) {
 	const bool unchargeable = s.stop == charger::ChargeStop::no_battery ||
 							  s.stop == charger::ChargeStop::locked;
 	if ((decided && (thermal || (!off && unchargeable))) ||
-		(on && usable(s.gauge_us) && s.soc <= kLowSocPercent)) {
+		(on && usable(s.gauge_us) && s.battery_low)) {
 		mask |= kBattery;
 	}
 	if (crowded(s.internal_free, s.internal_total) ||

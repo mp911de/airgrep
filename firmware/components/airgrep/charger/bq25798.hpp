@@ -108,7 +108,9 @@ bool battery_test_running();
 // Writes ICHG or IINDPM in mA with a read-back.
 esp_err_t set_charge_limit(unsigned ma, ChargeCompletion complete);
 esp_err_t set_input_limit(unsigned ma, ChargeCompletion complete);
-// Called on the loop after every complete Poll.
+// Called on the loop after every complete Poll. A change of charging or of the
+// chip's protection is also published as charging_started, charging_stopped
+// and charger_protection_changed.
 using Handler = void (*)(const State&, void*);
 bool subscribe(Handler handler, void* context = nullptr);
 // On the loop: writes the registers the last Poll read back differently from

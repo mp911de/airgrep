@@ -30,9 +30,9 @@ Input decode_input(uint8_t raw) {
 	for (unsigned pin = 0; pin < 8; pin++) {
 		result.high[pin] = raw & (1u << pin);
 	}
-	result.mute = result.high[0];  // slider up pulls BUZZ_ENABLE high and mutes
-	result.wifi = result.high[1];
-	result.power = !result.high[7];
+	result.mute = raw & kMutePin;  // slider up pulls BUZZ_ENABLE high and mutes
+	result.wifi = raw & kWifiPin;
+	result.power = !(raw & kPowerPin);
 	return result;
 }
 }  // namespace expander

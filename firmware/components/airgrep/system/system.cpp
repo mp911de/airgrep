@@ -14,6 +14,7 @@
 #include "esp_log.h"
 #include "esp_pm.h"
 #include "esp_timer.h"
+#include "events/events.hpp"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "health.hpp"
@@ -36,7 +37,7 @@ bool check_pending;
 
 // Average load of all cores since the previous call.
 unsigned cpu_load_percent() {
-#if CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
+#if CONFIG_AIRGREP_CPU_METRICS
 	static uint64_t idle_at[CONFIG_FREERTOS_NUMBER_OF_CORES], time_at;
 	const uint64_t now = esp_timer_get_time(), elapsed = now - time_at;
 	uint64_t busy = 0;
@@ -70,7 +71,7 @@ health::HealthInputs health_snapshot() {
 	const battery::State gauge = battery::State::copy();
 	s.gauge_us = gauge.updated_us;
 	s.gauge_ready = is_ready(gauge);
-	s.soc = gauge.soc;
+	s.battery_low = gauge.low;
 	const fusb::State usb_c = fusb::State::copy();
 	s.usb_c_us = usb_c.updated_us;
 	s.usb_c_ready = is_ready(usb_c);
@@ -95,11 +96,21 @@ health::HealthInputs health_snapshot() {
 }
 
 void check_health() {
-	const uint16_t mask = system_health();
-	gpio_set_level(gpio_num_t(BOARD_PIN_USR_LED), mask ? 0 : 1);
+	static uint16_t last;
+	const uint16_t before = last, mask = system_health();
+	if (BOARD_PIN_USR_LED >= 0) {
+		gpio_set_level(gpio_num_t(BOARD_PIN_USR_LED), mask ? 0 : 1);
+	}
 	char text[96];
 	health::format(mask, text, sizeof text);
 	ESP_LOGD("system", "health %s", text);
+	if (mask & ~before & health::kAdsbee) {
+		adsbee::drop_fix();
+	}
+	if (events::changed(last, mask)) {
+		events::publish(
+			{.type = events::Type::health_changed, .health = {before, mask}});
+	}
 }
 
 // Starts every driver again that stopped on a failure or never showed up. A
@@ -118,17 +129,16 @@ esp_err_t start_watchdog() {
 }
 
 esp_err_t start_health_task() {
-	if (BOARD_PIN_USR_LED < 0) {
-		return ESP_OK;
-	}
-	const gpio_num_t led = gpio_num_t(BOARD_PIN_USR_LED);
-	gpio_set_level(led, 1);
-	esp_err_t err = gpio_set_direction(led, GPIO_MODE_OUTPUT);
-	if (err == ESP_OK) {
-		err = gpio_sleep_sel_dis(led);
-	}
-	if (err != ESP_OK) {
-		return err;
+	if (BOARD_PIN_USR_LED >= 0) {
+		const gpio_num_t led = gpio_num_t(BOARD_PIN_USR_LED);
+		gpio_set_level(led, 1);
+		esp_err_t err = gpio_set_direction(led, GPIO_MODE_OUTPUT);
+		if (err == ESP_OK) {
+			err = gpio_sleep_sel_dis(led);
+		}
+		if (err != ESP_OK) {
+			return err;
+		}
 	}
 	auto periodic = loop::schedule_periodic(
 		kHealthPeriodMs, {"health", [](loop::Handle, loop::Value&) {
@@ -155,7 +165,10 @@ void transition(const power_mode_t from, const power_mode_t to) {
 	ESP_LOGI("system", "mode %s to %s", power_mode_name(from),
 			 power_mode_name(to));
 	scale_clock(to == POWER_MODE_CHARGER);
-	barometer::set_enabled(to == POWER_MODE_ON);
+	events::publish({.type = events::Type::mode_changed, .mode = {from, to}});
+	if (from == POWER_MODE_ON) {
+		adsbee::drop_fix();
+	}
 	if (const char* chime = power_mode_chime(from, to)) {
 		buzzer_play(chime, 0);
 	}
@@ -174,7 +187,7 @@ void apply_system_controls(const expander::State& controls, uint8_t, void*) {
 	if (to != from) {
 		mode = to;
 		transition(from, to);
-		check_pending = BOARD_PIN_USR_LED >= 0;
+		check_pending = true;
 	}
 	if (check_pending && health::ready(to, health_snapshot())) {
 		check_pending = false;

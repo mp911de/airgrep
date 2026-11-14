@@ -5,6 +5,7 @@
 
 #include "esp_log.h"
 #include "esp_timer.h"
+#include "events/events.hpp"
 #include "i2c_bus.h"
 #include "sdkconfig.h"
 #include "subscribers.hpp"
@@ -296,10 +297,10 @@ esp_err_t set_charge_enabled_then(bool enabled, void (*then)()) {
 	if (result != ESP_OK) {
 		return result;
 	}
-	loop::Event settle{"charger settle", [then](loop::Handle, loop::Value&) {
-						   then();
-						   return loop::Result::done;
-					   }};
+	loop::Task settle{"charger settle", [then](loop::Handle, loop::Value&) {
+						  then();
+						  return loop::Result::done;
+					  }};
 	auto settled = loop::schedule(kSettleMs, settle, {},
 								  [](loop::Outcome) { fail(ESP_ERR_NO_MEM); });
 	return settled.valid() ? ESP_OK : ESP_ERR_NO_MEM;
@@ -599,6 +600,38 @@ void recover_poll(esp_err_t result) {
 	});
 }
 
+void publish_events() {
+	static bool charging;
+	static events::Protection protection;
+	const uint8_t phase = state.status1.charge;
+	if (events::changed(charging,
+						phase != kChargeNone && phase != kChargeDone)) {
+		events::publish({.type = charging ? events::Type::charging_started
+										  : events::Type::charging_stopped,
+						 .charging = {phase}});
+	}
+	const Fault0& f0 = state.fault0;
+	const Fault1& f1 = state.fault1;
+	const events::Protection now{
+		.cold = state.status4.cold,
+		.cool = state.status4.cool,
+		.warm = state.status4.warm,
+		.hot = state.status4.hot,
+		.thermal_regulation = state.status2.thermal,
+		.thermal_shutdown = f1.thermal_shutdown,
+		.fault = f0.vbus_overvoltage || f0.battery_overvoltage ||
+				 f0.bus_overcurrent || f0.battery_overcurrent ||
+				 f0.converter_overcurrent || f0.ac2_overvoltage ||
+				 f0.ac1_overvoltage || f1.system_short ||
+				 f1.system_overvoltage || f1.otg_overvoltage ||
+				 f1.otg_undervoltage,
+	};
+	if (events::changed(protection, now)) {
+		events::publish({.type = events::Type::charger_protection_changed,
+						 .protection = now});
+	}
+}
+
 loop::Result poll_configured(loop::Handle, loop::Value&) {
 	esp_err_t result;
 	switch (step++) {
@@ -642,6 +675,7 @@ loop::Result poll_configured(loop::Handle, loop::Value&) {
 	decode_status();
 	publish_poll();
 	notify();
+	publish_events();
 	return loop::Result::done;
 }
 

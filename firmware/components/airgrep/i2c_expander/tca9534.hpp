@@ -50,6 +50,9 @@ struct State {
 };
 
 using Completion = loop::Callable<void(esp_err_t)>;
+// Called on the loop after every Poll. A flipped MUTE or Wi-Fi slider, and the
+// first read of each, is also published as mute_switch_changed and
+// wifi_switch_changed.
 using Handler = void (*)(const State&, uint8_t changed, void*);
 bool subscribe(Handler handler, void* context = nullptr);
 // Starts the driver unless it polls already. The system watchdog calls it

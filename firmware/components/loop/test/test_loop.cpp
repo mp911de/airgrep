@@ -77,14 +77,14 @@ static void busy_us(int64_t us) {
 
 TEST_CASE(
 
-	"Events run in submission order", "[loop]") {
+	"Tasks run in submission order", "[loop]") {
 	Probe& p = fresh();
 	for (int i = 0; i < 4; i++) {
 		Action a = [&p, i](Handle, Value&) {
 			p.order[p.runs++] = i;
 			return Result::done;
 		};
-		TEST_ASSERT_TRUE(submit(Event{"order", a}).valid());
+		TEST_ASSERT_TRUE(submit(Task{"order", a}).valid());
 	}
 	TEST_ASSERT_TRUE(wait_for(p.runs, 4, 200));
 	for (int i = 0; i < 4; i++) {
@@ -101,7 +101,7 @@ TEST_CASE(
 		return Result::done;
 	};
 	TEST_ASSERT_TRUE(
-		submit(Event{"value", a}, count_success(&p), count_error(&p)).valid());
+		submit(Task{"value", a}, count_success(&p), count_error(&p)).valid());
 	TEST_ASSERT_TRUE(wait_for(p.successes, 1, 200));
 	TEST_ASSERT_EQUAL_HEX32(0xC0FFEE, p.value.load());
 	TEST_ASSERT_EQUAL(0, p.errors.load());
@@ -113,7 +113,7 @@ TEST_CASE(
 	Probe& p = fresh();
 	Action a = [](Handle, Value&) { return Result::error; };
 	TEST_ASSERT_TRUE(
-		submit(Event{"error", a}, count_success(&p), count_error(&p)).valid());
+		submit(Task{"error", a}, count_success(&p), count_error(&p)).valid());
 	TEST_ASSERT_TRUE(wait_for(p.errors, 1, 200));
 	TEST_ASSERT_EQUAL((int)Outcome::error, p.outcome.load());
 	TEST_ASSERT_EQUAL(0, p.successes.load());
@@ -123,7 +123,7 @@ TEST_CASE(
 
 	"Cancel before run skips the action and reports cancelled", "[loop]") {
 	Probe& p = fresh();
-	// The blocker parks the loop so the second event is still queued.
+	// The blocker parks the loop so the second task is still queued.
 	Action blocker = [](Handle, Value&) {
 		vTaskDelay(pdMS_TO_TICKS(30));
 		return Result::done;
@@ -132,9 +132,9 @@ TEST_CASE(
 		p.runs++;
 		return Result::done;
 	};
-	TEST_ASSERT_TRUE(submit(Event{"blocker", blocker}).valid());
+	TEST_ASSERT_TRUE(submit(Task{"blocker", blocker}).valid());
 	Handle h =
-		submit(Event{"cancelled", counted}, count_success(&p), count_error(&p));
+		submit(Task{"cancelled", counted}, count_success(&p), count_error(&p));
 	TEST_ASSERT_TRUE(h.valid());
 	TEST_ASSERT_TRUE(cancel(h));
 	TEST_ASSERT_EQUAL((int)Outcome::cancelled, p.outcome.load());
@@ -149,7 +149,7 @@ TEST_CASE(
 	"Cancel after completion returns false", "[loop]") {
 	Probe& p = fresh();
 	Action a = [](Handle, Value&) { return Result::done; };
-	Handle h = submit(Event{"done", a}, count_success(&p), count_error(&p));
+	Handle h = submit(Task{"done", a}, count_success(&p), count_error(&p));
 	TEST_ASSERT_TRUE(wait_for(p.successes, 1, 200));
 	TEST_ASSERT_FALSE(cancel(h));
 	TEST_ASSERT_EQUAL(0, p.errors.load());
@@ -160,7 +160,7 @@ TEST_CASE(
 	"Cancel while pending reports cancelled and drops the later completion",
 	"[loop]") {
 	Probe& p = fresh();
-	Handle h = submit(Event{"pending", pending_action(&p)}, count_success(&p),
+	Handle h = submit(Task{"pending", pending_action(&p)}, count_success(&p),
 					  count_error(&p));
 	TEST_ASSERT_TRUE(wait_for(p.runs, 1, 200));
 	TEST_ASSERT_TRUE(cancel(h));
@@ -171,13 +171,13 @@ TEST_CASE(
 
 TEST_CASE(
 
-	"Cancelled periodic event stops after its first run", "[loop]") {
+	"Cancelled periodic task stops after its first run", "[loop]") {
 	Probe& p = fresh();
 	Action a = [&p](Handle, Value&) {
 		p.runs++;
 		return Result::done;
 	};
-	Handle h = schedule_periodic(20, Event{"periodic", a}, count_success(&p),
+	Handle h = schedule_periodic(20, Task{"periodic", a}, count_success(&p),
 								 count_error(&p));
 	TEST_ASSERT_TRUE(h.valid());
 	TEST_ASSERT_TRUE(wait_for(p.runs, 1, 200));
@@ -193,7 +193,7 @@ TEST_CASE(
 	"Pending action times out", "[loop]") {
 	Probe& p = fresh();
 	int64_t submitted = esp_timer_get_time();
-	Handle h = submit(Event{"slow", pending_action(&p), 50}, count_success(&p),
+	Handle h = submit(Task{"slow", pending_action(&p), 50}, count_success(&p),
 					  count_error(&p));
 	TEST_ASSERT_TRUE(h.valid());
 	TEST_ASSERT_TRUE(wait_for(p.errors, 1, 300));
@@ -208,7 +208,7 @@ TEST_CASE(
 
 	"No timeout when disabled", "[loop]") {
 	Probe& p = fresh();
-	Handle h = submit(Event{"forever", pending_action(&p)}, count_success(&p),
+	Handle h = submit(Task{"forever", pending_action(&p)}, count_success(&p),
 					  count_error(&p));
 	vTaskDelay(pdMS_TO_TICKS(150));
 	TEST_ASSERT_EQUAL(0, p.errors.load());
@@ -221,18 +221,18 @@ TEST_CASE(
 	Probe& p = fresh();
 	Action filler = [&p](Handle, Value&) {
 		Action noop = [](Handle, Value&) { return Result::done; };
-		while (submit(Event{"fill", noop}).valid()) {
+		while (submit(Task{"fill", noop}).valid()) {
 			p.accepted++;
 		}
 		Action dropped = [&p](Handle, Value&) {
 			p.dropped_ran = true;
 			return Result::done;
 		};
-		p.handle = submit(Event{"dropped", dropped});
+		p.handle = submit(Task{"dropped", dropped});
 		p.runs++;
 		return Result::done;
 	};
-	TEST_ASSERT_TRUE(submit(Event{"filler", filler}).valid());
+	TEST_ASSERT_TRUE(submit(Task{"filler", filler}).valid());
 	TEST_ASSERT_TRUE(wait_for(p.runs, 1, 500));
 	vTaskDelay(pdMS_TO_TICKS(200));
 	TEST_ASSERT_GREATER_THAN(100, p.accepted);
@@ -245,7 +245,7 @@ TEST_CASE(
 	"Stale handle cancel is a no-op", "[loop]") {
 	Probe& p = fresh();
 	Action a = [](Handle, Value&) { return Result::done; };
-	Handle h = submit(Event{"done", a}, count_success(&p), count_error(&p));
+	Handle h = submit(Task{"done", a}, count_success(&p), count_error(&p));
 	TEST_ASSERT_TRUE(wait_for(p.successes, 1, 200));
 	TEST_ASSERT_FALSE(cancel(h));
 	TEST_ASSERT_FALSE(cancel(h));
@@ -258,12 +258,12 @@ TEST_CASE(
 	"Handle from a reused slot does not reach the new promise", "[loop]") {
 	Probe& p = fresh();
 	Action a = [](Handle, Value&) { return Result::done; };
-	Handle old = submit(Event{"first", a}, count_success(&p), count_error(&p));
+	Handle old = submit(Task{"first", a}, count_success(&p), count_error(&p));
 	TEST_ASSERT_TRUE(wait_for(p.successes, 1, 200));
 	Handle reused;
 	for (int i = 0; i < 300 && !reused.valid(); i++) {
 		Handle h =
-			submit(Event{"second", pending_action(&p)}, {}, count_error(&p));
+			submit(Task{"second", pending_action(&p)}, {}, count_error(&p));
 		TEST_ASSERT_TRUE(h.valid());
 		if (h.slot == old.slot) {
 			reused = h;
@@ -292,7 +292,7 @@ TEST_CASE(
 	"Two tasks completing one promise deliver exactly one outcome", "[loop]") {
 	Probe& p = fresh();
 	for (int round = 0; round < 20; round++) {
-		p.handle = submit(Event{"race", pending_action(&p)}, count_success(&p),
+		p.handle = submit(Task{"race", pending_action(&p)}, count_success(&p),
 						  count_error(&p));
 		TEST_ASSERT_TRUE(wait_for(p.runs, round + 1, 200));
 		p.order[0] = 0;
@@ -315,11 +315,11 @@ TEST_CASE(
 	Probe& p = fresh();
 	Action a = [](Handle, Value&) { return Result::done; };
 	TEST_ASSERT_TRUE(
-		submit(Event{"inline", a}, count_success(&p), count_error(&p)).valid());
+		submit(Task{"inline", a}, count_success(&p), count_error(&p)).valid());
 	TEST_ASSERT_TRUE(wait_for(p.successes, 1, 200));
 	TEST_ASSERT_EQUAL_STRING("loop", pcTaskGetName(p.listener_task.load()));
 
-	Handle h = submit(Event{"pending", pending_action(&p)}, count_success(&p),
+	Handle h = submit(Task{"pending", pending_action(&p)}, count_success(&p),
 					  count_error(&p));
 	TEST_ASSERT_TRUE(wait_for(p.runs, 1, 200));
 	TEST_ASSERT_TRUE(complete(h, Value{.u = 7}));
@@ -336,12 +336,12 @@ TEST_CASE(
 			p.order[p.runs++] = 2;
 			return Result::done;
 		};
-		submit(Event{"inner", inner});
+		submit(Task{"inner", inner});
 		busy_us(5000);
 		p.order[p.runs++] = 1;
 		return Result::done;
 	};
-	TEST_ASSERT_TRUE(submit(Event{"outer", outer}).valid());
+	TEST_ASSERT_TRUE(submit(Task{"outer", outer}).valid());
 	TEST_ASSERT_TRUE(wait_for(p.runs, 2, 200));
 	TEST_ASSERT_EQUAL(1, p.order[0].load());
 	TEST_ASSERT_EQUAL(2, p.order[1].load());
@@ -349,7 +349,7 @@ TEST_CASE(
 
 TEST_CASE(
 
-	"Delayed event runs after its delay even while the queue is saturated",
+	"Delayed task runs after its delay even while the queue is saturated",
 	"[loop]") {
 	Probe& p = fresh();
 	int64_t scheduled_at = esp_timer_get_time();
@@ -358,7 +358,7 @@ TEST_CASE(
 		p.successes++;
 		return Result::done;
 	};
-	TEST_ASSERT_TRUE(schedule(100, Event{"delayed", delayed}).valid());
+	TEST_ASSERT_TRUE(schedule(100, Task{"delayed", delayed}).valid());
 	Action filler = [&p](Handle, Value&) {
 		Action slow = [&p](Handle, Value&) {
 			busy_us(2000);
@@ -366,12 +366,12 @@ TEST_CASE(
 			p.runs++;
 			return Result::done;
 		};
-		while (submit(Event{"slow", slow}).valid()) {
+		while (submit(Task{"slow", slow}).valid()) {
 			p.accepted++;
 		}
 		return Result::done;
 	};
-	TEST_ASSERT_TRUE(submit(Event{"filler", filler}).valid());
+	TEST_ASSERT_TRUE(submit(Task{"filler", filler}).valid());
 	TEST_ASSERT_TRUE(wait_for(p.successes, 1, 1000));
 	TEST_ASSERT_TRUE(wait_for(p.runs, p.accepted, 2000));
 	int64_t delay_ms = (p.ran_at.load() - scheduled_at) / 1000;
@@ -383,13 +383,13 @@ TEST_CASE(
 
 TEST_CASE(
 
-	"Periodic event runs repeatedly until cancelled", "[loop]") {
+	"Periodic task runs repeatedly until cancelled", "[loop]") {
 	Probe& p = fresh();
 	Action a = [&p](Handle, Value&) {
 		p.runs++;
 		return Result::done;
 	};
-	Handle h = schedule_periodic(20, Event{"poll", a}, count_success(&p),
+	Handle h = schedule_periodic(20, Task{"poll", a}, count_success(&p),
 								 count_error(&p));
 	TEST_ASSERT_TRUE(wait_for(p.runs, 5, 400));
 	TEST_ASSERT_TRUE(cancel(h));
@@ -401,7 +401,7 @@ TEST_CASE(
 
 	"Listeners run at most once", "[loop]") {
 	Probe& p = fresh();
-	Handle h = submit(Event{"once", pending_action(&p)}, count_success(&p),
+	Handle h = submit(Task{"once", pending_action(&p)}, count_success(&p),
 					  count_error(&p));
 	TEST_ASSERT_TRUE(wait_for(p.runs, 1, 200));
 	TEST_ASSERT_TRUE(complete(h, Value{.u = 1}));

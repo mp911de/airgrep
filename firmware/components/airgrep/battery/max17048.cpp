@@ -1,8 +1,10 @@
 #include "max17048.hpp"
 
 #include "esp_timer.h"
+#include "events/events.hpp"
 #include "i2c_bus.h"
 #include "sdkconfig.h"
+#include "system/threshold.hpp"
 
 namespace battery {
 portMUX_TYPE State::mutex_ = portMUX_INITIALIZER_UNLOCKED;
@@ -34,6 +36,7 @@ loop::Handle periodic;
 State sample;
 bool busy;
 unsigned step;
+Threshold low_soc{10, 10.5f};  // percent
 
 void fail_poll(esp_err_t result) {
 	int64_t now = esp_timer_get_time();
@@ -105,9 +108,16 @@ loop::Result i2c_read(loop::Handle, loop::Value&) {
 	sample.alerts = decode_status(sample.raw_status);
 	sample.charge_duration_hours =
 		calculate_charge_duration(sample.soc, sample.rate);
+	const bool was_low = sample.low;
+	sample.low = low_soc.update(sample.soc);
 	sample.updated_us = esp_timer_get_time();
 	State::update([](State& state) { state = sample; });
 	busy = false;
+	if (sample.low != was_low) {
+		events::publish({.type = sample.low ? events::Type::battery_low
+											: events::Type::battery_normal,
+						 .battery = {sample.soc}});
+	}
 	if (sample.alerts.reset &&
 		!loop::try_submit("battery ack reset", acknowledge_reset)) {
 		fail_poll(ESP_ERR_NO_MEM);

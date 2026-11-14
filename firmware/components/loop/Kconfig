@@ -5,8 +5,8 @@ menu "airgrep loop"
         default 50
         range 1 1000
         help
-            Longest wait of the loop task for a new event. Timeouts and
-            scheduled events are checked at least this often.
+            Longest wait of the loop for a new task. Timeouts and
+            scheduled tasks are checked at least this often.
 
     config AIRGREP_LOOP_QUEUE_DEPTH
         int "Queue depth and number of promise slots"
@@ -24,7 +24,7 @@ menu "airgrep loop"
         range 2048 65536
 
     config AIRGREP_LOOP_SCHEDULED
-        int "Scheduled and periodic events held at once"
+        int "Scheduled and periodic tasks held at once"
         default 32
         range 1 1024
 

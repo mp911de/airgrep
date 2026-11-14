@@ -3,6 +3,9 @@
 #include <cstdint>
 
 namespace expander {
+inline constexpr uint8_t kMutePin = 1 << 0, kWifiPin = 1 << 1,
+						 kPowerPin = 1 << 7;
+
 struct Input {
 	bool high[8];
 	bool mute, wifi, power;

@@ -6,7 +6,7 @@
 #include "freertos/FreeRTOS.h"
 
 // Sets the system clock from the ADSBee's PPS-disciplined time with
-// AT+TIME_PING bursts.
+// AT+TIME_PING bursts. The first time is published as clock_set.
 namespace adsbee::timesync {
 struct State {
 	bool set = false;  // the system clock was set from the ADSBee at least once

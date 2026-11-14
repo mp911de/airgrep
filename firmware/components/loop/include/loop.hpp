@@ -5,7 +5,7 @@
 #include <cstring>
 #include <type_traits>
 
-// Single event loop task on core 0. Events run in submission order, each
+// Single event loop on core 0. Tasks run in submission order, each
 // action completes its promise at once, leaves it pending or reports an error.
 // Listeners run on the task that completes the promise. Nothing here touches
 // the heap: callables hold their capture inline, promises live in fixed slots.
@@ -22,7 +22,7 @@ union Value {
 	bool b;
 };
 
-// The FreeRTOS queue copies events bytewise, so captures must be trivially
+// The FreeRTOS queue copies tasks bytewise, so captures must be trivially
 // copyable and fit the inline storage.
 inline constexpr size_t capture_bytes = 16;
 
@@ -68,33 +68,33 @@ using Action = Callable<Result(Handle, Value&)>;
 using SuccessListener = Callable<void(Value)>;
 using ErrorListener = Callable<void(Outcome)>;
 
-struct Event {
+struct Task {
 	const char* name;  // static string, logged at debug on run, warn on timeout
 	Action action;
 	uint32_t timeout_ms = 0;  // 0 disables the timeout
 };
 
-static_assert(std::is_trivially_copyable_v<Event>);
-static_assert(sizeof(Event) <= 40);
+static_assert(std::is_trivially_copyable_v<Task>);
+static_assert(sizeof(Task) <= 40);
 
-// Creates the loop task. Call before anything submits. Idempotent.
+// Starts the loop. Call before anything submits. Idempotent.
 void start();
 
 // All return an invalid handle when the queue, the slots or the scheduled
 // array are full. The submitter then frees its own payload.
-bool try_submit(const Event& event, SuccessListener on_success = {},
+bool try_submit(const Task& task, SuccessListener on_success = {},
 				ErrorListener on_error = {});
 bool try_submit(const char* name, Action action);
 
-Handle submit(const Event& event, SuccessListener on_success = {},
+Handle submit(const Task& task, SuccessListener on_success = {},
 			  ErrorListener on_error = {});
 Handle submit(const char* name, Action action);
-// The timeout of a scheduled event counts from its due time.
-Handle schedule(uint32_t delay_ms, const Event& event,
+// The timeout of a scheduled task counts from its due time.
+Handle schedule(uint32_t delay_ms, const Task& task,
 				SuccessListener on_success = {}, ErrorListener on_error = {});
 // Runs every period until cancelled or the action returns error. The timeout
-// of the event is ignored.
-Handle schedule_periodic(uint32_t period_ms, const Event& event,
+// of the task is ignored.
+Handle schedule_periodic(uint32_t period_ms, const Task& task,
 						 SuccessListener on_success = {},
 						 ErrorListener on_error = {});
 

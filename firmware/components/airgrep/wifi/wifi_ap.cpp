@@ -5,7 +5,7 @@
 #include "adsbee/adsbee_link.hpp"
 #include "esp_log.h"
 #include "esp_timer.h"
-#include "i2c_expander/tca9534.hpp"
+#include "events/events.hpp"
 #include "loop.hpp"
 
 namespace wifi {
@@ -24,7 +24,6 @@ State State::copy() {
 
 namespace {
 constexpr const char* tag = "wifi";
-constexpr uint8_t kSwitchMask = 1 << 1;  // P1, WIFI_ENABLE
 Config wanted;
 bool switch_known, dirty;
 loop::Handle attach_step;
@@ -71,20 +70,16 @@ void on_reply(const adsbee::Message& message, void*) {
 	}
 }
 
-void switch_sample(const expander::State& state, uint8_t changed, void*) {
-	if (state.status != Status::ok) {
-		return;
-	}
-	bool first = !switch_known;
+void on_switch(const events::Event& event, void*) {
 	switch_known = true;
-	wanted.enabled = state.input.wifi;
+	wanted.enabled = event.position.on;
 	State::update([&](State& s) {
 		s.switch_known = true;
 		s.wanted = wanted.enabled;
 	});
 	// Before the link is up the attach hook sends the position, no error to
 	// record.
-	if ((first || (changed & kSwitchMask)) && adsbee::ready()) {
+	if (adsbee::ready()) {
 		apply_wifi_state();
 	}
 }
@@ -179,7 +174,9 @@ esp_err_t start(const char* ssid) {
 		return ESP_ERR_NO_MEM;
 	}
 	State::update([](State& state) { state.status = Status::ok; });
-	// The expander polls already, so its handler runs from here on.
-	return expander::subscribe(switch_sample) ? ESP_OK : ESP_ERR_NO_MEM;
+	return events::subscribe(events::of(events::Type::wifi_switch_changed),
+							 on_switch)
+			   ? ESP_OK
+			   : ESP_ERR_NO_MEM;
 }
 }  // namespace wifi

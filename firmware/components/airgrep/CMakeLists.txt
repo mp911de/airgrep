@@ -6,6 +6,7 @@ idf_component_register(SRCS "adsbee/adsbee_link.cpp" "adsbee/adsbee_decoder.c" "
         "traffic/traffic.cpp" "traffic/traffic_protocol.cpp" "traffic/traffic_table.cpp"
         "system/system.cpp" "system/power_mode.c" "system/device_info.c"
         "system/charge_control.cpp" "system/charge_rules.cpp" "system/health.cpp"
+        "events/events.cpp"
         INCLUDE_DIRS "."
         REQUIRES loop esp_driver_i2c nvs_flash esp_partition
         PRIV_REQUIRES esp_driver_uart esp_driver_ledc esp_driver_gpio esp_timer esp_pm

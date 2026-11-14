@@ -1,6 +1,7 @@
 #include "fusb303.hpp"
 
 #include "esp_timer.h"
+#include "events/events.hpp"
 #include "i2c_bus.h"
 #include "sdkconfig.h"
 #include "subscribers.hpp"
@@ -87,6 +88,24 @@ void finish_init(esp_err_t result) {
 	init_complete = {};
 }
 
+// A plug carries the advertisement it came with. Later only a change of the
+// advertisement is published.
+void publish_events() {
+	static bool attached;
+	static uint16_t advertised_ma;
+	const bool plug = events::changed(attached, state.port.attached);
+	const bool power =
+		events::changed(advertised_ma, uint16_t(state.cc_limit_ma));
+	if (plug) {
+		events::publish({.type = attached ? events::Type::usb_plugged
+										  : events::Type::usb_unplugged,
+						 .usb = {advertised_ma}});
+	} else if (power) {
+		events::publish(
+			{.type = events::Type::usb_power_changed, .usb = {advertised_ma}});
+	}
+}
+
 loop::Result read_live_status(loop::Handle, loop::Value&) {
 	uint8_t data[kRegType - kRegStatus + 1];
 	esp_err_t result = read(kRegStatus, data, sizeof data);
@@ -105,6 +124,7 @@ loop::Result read_live_status(loop::Handle, loop::Value&) {
 	publish();
 	busy = false;
 	subscribers.notify(state);
+	publish_events();
 	return loop::Result::done;
 }
 

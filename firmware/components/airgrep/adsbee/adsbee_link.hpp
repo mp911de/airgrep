@@ -60,6 +60,8 @@ using Handler = void (*)(const Message&, void* ctx);
 
 bool subscribe(Predicate predicate, Handler handler, void* ctx);
 // Every decoded #GNSS frame, after State carries it. Runs on the loop task.
+// A flip of the frame's fix field is also published as fix_acquired and
+// fix_lost.
 using GnssHandler = void (*)(const Gnss&, int64_t received_us, void* ctx);
 bool subscribe_gnss(GnssHandler handler, void* ctx);
 esp_err_t uart_init();
@@ -69,6 +71,9 @@ loop::Handle request(const char* command, loop::SuccessListener on_reply,
 					 loop::ErrorListener on_error,
 					 uint32_t timeout_ms = ADSBEE_REQUEST_TIMEOUT_MS);
 bool busy();
+// On the loop, when the health check finds the link down or the mode leaves
+// ON: a held fix is published as fix_lost, since no frame will report it.
+void drop_fix();
 // TX attached and the init sequence done, so the link takes requests.
 bool ready();
 size_t device_info(char* out, size_t capacity);

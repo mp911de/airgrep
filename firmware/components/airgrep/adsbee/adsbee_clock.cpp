@@ -10,6 +10,7 @@
 #include "esp_log.h"
 #include "esp_random.h"
 #include "esp_timer.h"
+#include "events/events.hpp"
 
 namespace adsbee::timesync {
 portMUX_TYPE State::mutex_ = portMUX_INITIALIZER_UNLOCKED;
@@ -117,6 +118,9 @@ void finish_time_sync() {
 		state.rtt_us = estimate.rtt_us;
 		state.pps = estimate.pps;
 	});
+	if (!set) {
+		events::publish(events::Type::clock_set);
+	}
 }
 
 loop::Result send_time_ping(loop::Handle, loop::Value&) {

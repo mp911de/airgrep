@@ -4,6 +4,7 @@
 
 #include "esp_log.h"
 #include "esp_timer.h"
+#include "events/events.hpp"
 #include "i2c_bus.h"
 #include "sdkconfig.h"
 #include "subscribers.hpp"
@@ -109,6 +110,15 @@ loop::Result poll_expander(loop::Handle, loop::Value&) {
 		state.updated_us = now;
 	});
 	notify(changed);
+	const Input input = decode_input(raw);
+	if (changed & kMutePin) {
+		events::publish({.type = events::Type::mute_switch_changed,
+						 .position = {input.mute}});
+	}
+	if (changed & kWifiPin) {
+		events::publish({.type = events::Type::wifi_switch_changed,
+						 .position = {input.wifi}});
+	}
 	return loop::Result::done;
 }
 
@@ -177,15 +187,15 @@ void assert_pin(Pulse* pulse) {
 		pulse->first_error = result;
 	}
 	// Even an unacknowledged write may have reached the chip. Always release.
-	loop::Event event{"exp release", [pulse](loop::Handle, loop::Value&) {
-						  release(pulse);
-						  return loop::Result::done;
-					  }};
-	if (!loop::schedule(EXPANDER_PULSE_MS, event).valid()) {
+	loop::Task task{"exp release", [pulse](loop::Handle, loop::Value&) {
+						release(pulse);
+						return loop::Result::done;
+					}};
+	if (!loop::schedule(EXPANDER_PULSE_MS, task).valid()) {
 		if (pulse->first_error == ESP_OK) {
 			pulse->first_error = ESP_ERR_NO_MEM;
 		}
-		if (!loop::try_submit("exp emergency release", event.action)) {
+		if (!loop::try_submit("exp emergency release", task.action)) {
 			finish(pulse, ESP_ERR_NO_MEM);
 		}
 	}

@@ -87,10 +87,10 @@ struct State {
 
 using Completion = loop::Callable<void(esp_err_t)>;
 // Starts the driver unless it polls already. The system watchdog calls it
-// again on the loop for a driver that stopped or never showed up.
+// again on the loop for a driver that stopped or never showed up. Subscribes
+// to mode_changed: the sensor measures in ON only. Every measurement is
+// published as barometer_reading.
 void init(Completion complete);
-// Called on the loop task by system mode transitions.
-void set_enabled(bool enabled);
 // Posts the soft reset. The outcome shows in State on the next poll.
 esp_err_t reset();
 }  // namespace barometer

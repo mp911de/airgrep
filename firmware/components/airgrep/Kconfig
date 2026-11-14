@@ -32,6 +32,13 @@ menu "airgrep hardware"
         help
             Active-low user LED lit by the health check, -1 for none.
 
+    config AIRGREP_CPU_METRICS
+        bool "Measure the CPU load for the health check"
+        default y
+        depends on FREERTOS_GENERATE_RUN_TIME_STATS
+        help
+            Off leaves the CPU health bit at 0.
+
     config AIRGREP_PIN_SDA
         int
         default 5

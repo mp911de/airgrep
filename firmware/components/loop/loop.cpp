@@ -21,7 +21,7 @@ constexpr int64_t TICK_US = int64_t{CONFIG_AIRGREP_LOOP_TICK_MS} * 1000;
 // Every transition is one compare-and-swap that expects the handle's
 // generation, so a stale handle fails the compare and does nothing.
 // RESERVED covers the window between claiming the slot and queuing the
-// event: the sweep ignores it and cancel() returns false in it, although
+// task: the sweep ignores it and cancel() returns false in it, although
 // the submission is about to succeed. Only the submitter holds the handle
 // then, so nobody else can observe the window.
 enum State : uint32_t { FREE, RESERVED, LIVE, RUNNING, DONE };
@@ -41,24 +41,24 @@ struct Slot {
 	ErrorListener on_error;
 };
 
-struct QueuedEvent {
+struct QueuedTask {
 	const char* name;
 	Action action;
 	Handle handle;
 	int64_t deadline_us;
 };
 
-static_assert(std::is_trivially_copyable_v<QueuedEvent>);
+static_assert(std::is_trivially_copyable_v<QueuedTask>);
 
-struct ScheduledEvent {
-	QueuedEvent event;
+struct ScheduledTask {
+	QueuedTask task;
 	int64_t due_us;
 	uint32_t period_ms;  // 0 for a one-shot
 	uint32_t timeout_ms;
 };
 
 Slot s_slots[SLOTS];
-ScheduledEvent s_scheduled[SCHEDULED];
+ScheduledTask s_scheduled[SCHEDULED];
 size_t s_scheduled_count;
 portMUX_TYPE s_scheduled_mux = portMUX_INITIALIZER_UNLOCKED;
 QueueHandle_t s_queue;
@@ -143,8 +143,8 @@ bool is_live(Handle handle) {
 		   w == pack(handle.generation, RESERVED);
 }
 
-// Scheduled events stay sorted by due time, earliest first.
-bool insert_scheduled(const ScheduledEvent& item) {
+// Scheduled tasks stay sorted by due time, earliest first.
+bool insert_scheduled(const ScheduledTask& item) {
 	portENTER_CRITICAL(&s_scheduled_mux);
 	if (s_scheduled_count == SCHEDULED) {
 		portEXIT_CRITICAL(&s_scheduled_mux);
@@ -171,7 +171,7 @@ size_t count_due(int64_t now) {
 	return n;
 }
 
-bool pop_due(int64_t now, ScheduledEvent& out) {
+bool pop_due(int64_t now, ScheduledTask& out) {
 	portENTER_CRITICAL(&s_scheduled_mux);
 	bool due = s_scheduled_count > 0 && s_scheduled[0].due_us <= now;
 	if (due) {
@@ -194,22 +194,22 @@ int64_t next_due() {
 
 // Runs a one-shot action: uncancellable while it executes, cancellable again
 // when it returns pending. Mirrors Netty's PromiseTask.run.
-void run_once(const QueuedEvent& event) {
-	Slot& slot = s_slots[event.handle.slot];
-	uint32_t generation = event.handle.generation;
+void run_once(const QueuedTask& task) {
+	Slot& slot = s_slots[task.handle.slot];
+	uint32_t generation = task.handle.generation;
 	if (!cas(slot, pack(generation, LIVE), pack(generation, RUNNING)) &&
 		!cas(slot, pack(generation, RESERVED), pack(generation, RUNNING))) {
 		return;
 	}
-	ESP_LOGD(TAG, "run %s", event.name);
-	slot.deadline_us = event.deadline_us;
+	ESP_LOGD(TAG, "run %s", task.name);
+	slot.deadline_us = task.deadline_us;
 	Value value{};
-	switch (event.action(event.handle, value)) {
+	switch (task.action(task.handle, value)) {
 		case Result::done:
-			succeed(event.handle, value);
+			succeed(task.handle, value);
 			break;
 		case Result::error:
-			fail_promise(event.handle, Outcome::error);
+			fail_promise(task.handle, Outcome::error);
 			break;
 		case Result::pending:
 			cas(slot, pack(generation, RUNNING), pack(generation, LIVE));
@@ -220,23 +220,23 @@ void run_once(const QueuedEvent& event) {
 // Periodic actions are never uncancellable: the loop checks before and after
 // each run and re-arms only while the promise is still live, as Netty's
 // ScheduledFutureTask does.
-void run_periodic(ScheduledEvent item, int64_t now) {
-	if (!is_live(item.event.handle)) {
+void run_periodic(ScheduledTask item, int64_t now) {
+	if (!is_live(item.task.handle)) {
 		return;
 	}
-	ESP_LOGD(TAG, "run %s", item.event.name);
+	ESP_LOGD(TAG, "run %s", item.task.name);
 	Value value{};
-	if (item.event.action(item.event.handle, value) == Result::error) {
-		fail_promise(item.event.handle, Outcome::error);
+	if (item.task.action(item.task.handle, value) == Result::error) {
+		fail_promise(item.task.handle, Outcome::error);
 		return;
 	}
-	if (!is_live(item.event.handle)) {
+	if (!is_live(item.task.handle)) {
 		return;
 	}
 	item.due_us = now + int64_t{item.period_ms} * 1000;
 	if (!insert_scheduled(item)) {
-		ESP_LOGW(TAG, "scheduled full, %s stops", item.event.name);
-		fail_promise(item.event.handle, Outcome::error);
+		ESP_LOGW(TAG, "scheduled full, %s stops", item.task.name);
+		fail_promise(item.task.handle, Outcome::error);
 	}
 }
 
@@ -264,20 +264,20 @@ int64_t sweep_deadlines(int64_t now) {
 	return next;
 }
 
-// Fails expired promises and runs the scheduled events that were due when
-// the sweep began, no more, so a re-arming event cannot starve the queue.
+// Fails expired promises and runs the scheduled tasks that were due when
+// the sweep began, no more, so a re-arming task cannot starve the queue.
 // Returns the next wake time, 0 when nothing is pending.
 int64_t sweep() {
 	int64_t now = now_us();
 	int64_t next = sweep_deadlines(now);
-	ScheduledEvent item;
+	ScheduledTask item;
 	for (size_t budget = count_due(now); budget > 0 && pop_due(now, item);
 		 budget--) {
 		if (item.period_ms) {
 			run_periodic(item, now);
 		} else {
-			item.event.deadline_us = deadline(now, item.timeout_ms);
-			run_once(item.event);
+			item.task.deadline_us = deadline(now, item.timeout_ms);
+			run_once(item.task);
 		}
 		now = now_us();
 		next = sweep_deadlines(now);
@@ -312,55 +312,54 @@ void watchdog_reset() {
 #endif
 }
 
-void loop_task(void*) {
+void run_loop(void*) {
 #if CONFIG_ESP_TASK_WDT_EN
 	ESP_ERROR_CHECK(esp_task_wdt_add(nullptr));
 #endif
 	for (;;) {
 		watchdog_reset();
 		int64_t next_wake = sweep();
-		QueuedEvent event;
-		while (xQueueReceive(s_queue, &event, wait_ticks(next_wake)) ==
-			   pdTRUE) {
+		QueuedTask task;
+		while (xQueueReceive(s_queue, &task, wait_ticks(next_wake)) == pdTRUE) {
 			watchdog_reset();
-			run_once(event);
+			run_once(task);
 			next_wake = sweep();
 		}
 	}
 }
 
-// delay_ms 0 queues the event now, otherwise it waits in the scheduled
-// array. period_ms 0 is a one-shot, otherwise the event re-arms.
-Handle enqueue(const Event& event, uint32_t delay_ms, uint32_t period_ms,
+// delay_ms 0 queues the task now, otherwise it waits in the scheduled
+// array. period_ms 0 is a one-shot, otherwise the task re-arms.
+Handle enqueue(const Task& task, uint32_t delay_ms, uint32_t period_ms,
 			   SuccessListener on_success, ErrorListener on_error) {
 	if (!s_queue) {
-		ESP_LOGW(TAG, "not started, dropped %s", event.name);
+		ESP_LOGW(TAG, "not started, dropped %s", task.name);
 		return Handle{};
 	}
-	if (!event.action) {
-		ESP_LOGW(TAG, "no action, dropped %s", event.name);
+	if (!task.action) {
+		ESP_LOGW(TAG, "no action, dropped %s", task.name);
 		return Handle{};
 	}
 	Handle handle = reserve(on_success, on_error);
 	if (!handle.valid()) {
-		ESP_LOGW(TAG, "slots full, dropped %s", event.name);
+		ESP_LOGW(TAG, "slots full, dropped %s", task.name);
 		return handle;
 	}
-	s_slots[handle.slot].name = event.name;
+	s_slots[handle.slot].name = task.name;
 	int64_t now = now_us();
-	QueuedEvent queued{event.name, event.action, handle, 0};
+	QueuedTask queued{task.name, task.action, handle, 0};
 	bool accepted;
 	if (delay_ms == 0) {
-		queued.deadline_us = deadline(now, event.timeout_ms);
+		queued.deadline_us = deadline(now, task.timeout_ms);
 		s_slots[handle.slot].deadline_us = queued.deadline_us;
 		accepted = xQueueSend(s_queue, &queued, 0) == pdTRUE;
 	} else {
-		ScheduledEvent item{queued, now + int64_t{delay_ms} * 1000, period_ms,
-							event.timeout_ms};
+		ScheduledTask item{queued, now + int64_t{delay_ms} * 1000, period_ms,
+						   task.timeout_ms};
 		accepted = insert_scheduled(item);
 	}
 	if (!accepted) {
-		ESP_LOGW(TAG, "queue full, dropped %s", event.name);
+		ESP_LOGW(TAG, "queue full, dropped %s", task.name);
 		abandon(handle);
 		return Handle{};
 	}
@@ -374,45 +373,45 @@ void start() {
 		return;
 	}
 	static StaticQueue_t queue_storage;
-	static uint8_t queue_items[SLOTS * sizeof(QueuedEvent)];
+	static uint8_t queue_items[SLOTS * sizeof(QueuedTask)];
 	static StaticTask_t task_storage;
 	static StackType_t stack[CONFIG_AIRGREP_LOOP_STACK / sizeof(StackType_t)];
-	s_queue = xQueueCreateStatic(SLOTS, sizeof(QueuedEvent), queue_items,
+	s_queue = xQueueCreateStatic(SLOTS, sizeof(QueuedTask), queue_items,
 								 &queue_storage);
 	xTaskCreateStaticPinnedToCore(
-		loop_task, "loop", CONFIG_AIRGREP_LOOP_STACK / sizeof(StackType_t),
+		run_loop, "loop", CONFIG_AIRGREP_LOOP_STACK / sizeof(StackType_t),
 		nullptr, CONFIG_AIRGREP_LOOP_PRIORITY, stack, &task_storage, 0);
 	ESP_LOGI(TAG, "tick %d ms, %d slots, %d scheduled",
 			 CONFIG_AIRGREP_LOOP_TICK_MS, SLOTS, (int)SCHEDULED);
 }
 
-bool try_submit(const Event& event, SuccessListener on_success,
+bool try_submit(const Task& task, SuccessListener on_success,
 				ErrorListener on_error) {
-	return enqueue(event, 0, 0, on_success, on_error).valid();
+	return enqueue(task, 0, 0, on_success, on_error).valid();
 }
 
 bool try_submit(const char* name, Action action) {
-	return enqueue(Event{name, action}, 0, 0, {}, {}).valid();
+	return enqueue(Task{name, action}, 0, 0, {}, {}).valid();
 }
 
-Handle submit(const Event& event, SuccessListener on_success,
+Handle submit(const Task& task, SuccessListener on_success,
 			  ErrorListener on_error) {
-	return enqueue(event, 0, 0, on_success, on_error);
+	return enqueue(task, 0, 0, on_success, on_error);
 }
 
 Handle submit(const char* name, Action action) {
-	return enqueue(Event{name, action}, 0, 0, {}, {});
+	return enqueue(Task{name, action}, 0, 0, {}, {});
 }
 
-Handle schedule(uint32_t delay_ms, const Event& event,
-				SuccessListener on_success, ErrorListener on_error) {
-	return enqueue(event, at_least_one_ms(delay_ms), 0, on_success, on_error);
+Handle schedule(uint32_t delay_ms, const Task& task, SuccessListener on_success,
+				ErrorListener on_error) {
+	return enqueue(task, at_least_one_ms(delay_ms), 0, on_success, on_error);
 }
 
-Handle schedule_periodic(uint32_t period_ms, const Event& event,
+Handle schedule_periodic(uint32_t period_ms, const Task& task,
 						 SuccessListener on_success, ErrorListener on_error) {
 	uint32_t period = at_least_one_ms(period_ms);
-	return enqueue(event, period, period, on_success, on_error);
+	return enqueue(task, period, period, on_success, on_error);
 }
 
 bool cancel(Handle handle) {

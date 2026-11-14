@@ -24,6 +24,7 @@ struct State {
 	uint16_t raw_vcell = 0, raw_soc = 0, raw_status = 0, raw_version = 0;
 	uint16_t raw_crate = 0;  // charge/discharge rate
 	float volts = 0, soc = 0, rate = 0;
+	bool low = false;  // SoC at or below 10 %, until it is back at 10.5 %
 	uint16_t version = 0;
 	Alerts alerts{};
 	std::optional<float> charge_duration_hours;

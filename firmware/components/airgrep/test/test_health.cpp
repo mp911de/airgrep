@@ -28,7 +28,6 @@ HealthInputs fine() {
 	s.gnss_fix = s.gnss_utc = s.gnss_bbr = true;
 	s.target_decided = true;
 	s.stop = ChargeStop::none;
-	s.soc = 50;
 	s.internal_total = s.psram_total = 1000;
 	s.internal_free = s.psram_free = 800;
 	return s;
@@ -178,11 +177,10 @@ CASE(manual, "MANUAL skips the charge control battery checks") {
 	}
 }
 
-CASE(soc, "SoC at or below 10 % flags the battery in ON only") {
+CASE(soc, "A low battery flags the battery in ON only") {
 	HealthInputs s = fine();
-	s.soc = 11;
 	TEST_ASSERT_EQUAL_HEX16(0, only(POWER_MODE_ON, s));
-	s.soc = 10;
+	s.battery_low = true;
 	TEST_ASSERT_EQUAL_HEX16(health::kBattery, only(POWER_MODE_ON, s));
 	TEST_ASSERT_EQUAL_HEX16(0, only(POWER_MODE_CHARGER, s));
 	s.gauge_us = 0;

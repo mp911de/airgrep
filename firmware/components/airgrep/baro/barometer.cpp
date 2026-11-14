@@ -4,6 +4,7 @@
 
 #include "esp_log.h"
 #include "esp_timer.h"
+#include "events/events.hpp"
 #include "i2c_bus.h"
 #include "sdkconfig.h"
 
@@ -64,15 +65,15 @@ void submit_step(const char* name,
 				 loop::Result (*action)(loop::Handle, loop::Value&),
 				 uint32_t delay = 0) {
 	unsigned current = generation;
-	loop::Event event{
-		name, [current, action](loop::Handle handle, loop::Value& value) {
-			if (current != generation) {
-				return loop::Result::done;
-			}
-			return action(handle, value);
-		}};
+	loop::Task task{name,
+					[current, action](loop::Handle handle, loop::Value& value) {
+						if (current != generation) {
+							return loop::Result::done;
+						}
+						return action(handle, value);
+					}};
 	loop::Handle handle =
-		delay ? loop::schedule(delay, event) : loop::submit(event);
+		delay ? loop::schedule(delay, task) : loop::submit(task);
 	if (!handle.valid()) {
 		fail_poll(ESP_ERR_NO_MEM);
 	}
@@ -97,6 +98,9 @@ loop::Result read_measurement(loop::Handle, loop::Value&) {
 	state.updated_us = esp_timer_get_time();
 	State::update([](State& shared) { shared = state; });
 	busy = false;
+	events::publish({.type = events::Type::barometer_reading,
+					 .barometer = {state.pressure_hpa, state.temperature_c,
+								   state.altitude_m}});
 	return loop::Result::done;
 }
 
@@ -256,7 +260,9 @@ loop::Result poll_barometer(loop::Handle, loop::Value&) {
 }
 }  // namespace
 
-void set_enabled(bool value) {
+namespace {
+void on_mode(const events::Event& event, void*) {
+	const bool value = event.mode.to == POWER_MODE_ON;
 	if (enabled == value) {
 		return;
 	}
@@ -275,6 +281,7 @@ void set_enabled(bool value) {
 					esp_timer_get_time() < ready_us ? BMP_STARTUP_MS : 0);
 	}
 }
+}  // namespace
 
 Completion init_complete;
 
@@ -326,8 +333,11 @@ void init(Completion complete) {
 		return;
 	}
 	init_complete = complete;
+	static const bool subscribed =
+		events::subscribe(events::of(events::Type::mode_changed), on_mode);
 	// The sensor needs its start-up time after power before the first access.
-	if (!loop::schedule(BMP_STARTUP_MS, {"baro probe", probe}).valid()) {
+	if (!subscribed ||
+		!loop::schedule(BMP_STARTUP_MS, {"baro probe", probe}).valid()) {
 		finish_init(ESP_ERR_NO_MEM);
 	}
 }

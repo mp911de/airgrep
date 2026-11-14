@@ -36,7 +36,7 @@ struct HealthInputs {
 	bool gnss_fix = false, gnss_utc = false, gnss_bbr = false;
 	bool target_decided = false;  // false in MANUAL
 	charger::ChargeStop stop = charger::ChargeStop::none;
-	float soc = 0;  // percent
+	bool battery_low = false;  // the gauge's low state, with its hysteresis
 	size_t internal_free = 0, internal_total = 0, psram_free = 0,
 		   psram_total = 0;
 	bool cpu_high = false;  // stored by the periodic task

@@ -11,6 +11,7 @@
 #include "driver/uart.h"
 #include "esp_log.h"
 #include "esp_timer.h"
+#include "events/events.hpp"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "i2c_expander/tca9534.hpp"
@@ -62,6 +63,7 @@ struct Filtered {
 
 Subscribers<Filtered, 4> subscribers;
 Subscribers<GnssHandler, 4> gnss_subscribers;
+bool fix_held;  // loop task only
 decoder_t decoder;
 QueueHandle_t events;
 bool started, tx_attached;
@@ -177,6 +179,11 @@ void receive(const Message& message) {
 				state.gnss_us = message.received_us;
 			});
 			gnss_subscribers.notify(gnss, message.received_us);
+			if (events::changed(fix_held, gnss.fix)) {
+				events::publish({.type = fix_held ? events::Type::fix_acquired
+												  : events::Type::fix_lost,
+								 .fix = {gnss.antenna}});
+			}
 		}
 	}
 	if (message.kind == DECODER_AT_REPLY) {
@@ -502,6 +509,13 @@ loop::Handle request(const char* command, loop::SuccessListener success,
 }
 
 bool busy() { return pending != nullptr; }
+
+void drop_fix() {
+	if (events::changed(fix_held, false)) {
+		events::publish({.type = events::Type::fix_lost,
+						 .fix = {State::copy().gnss.antenna}});
+	}
+}
 
 size_t device_info(char* out, size_t capacity) {
 	xSemaphoreTake(device_info_lock, portMAX_DELAY);

@@ -72,6 +72,9 @@ struct Status2 {
 	bool thermal, detection, battery;
 };
 
+// CHG_STAT (data sheet 7.3.9): every code between these two charges.
+inline constexpr uint8_t kChargeNone = 0, kChargeDone = 7;
+
 struct Status1 {
 	uint8_t charge, vbus;
 	bool detection_done;

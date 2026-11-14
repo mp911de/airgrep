@@ -6,6 +6,7 @@
 #include "charge_rules.hpp"
 #include "charger/bq25798.hpp"
 #include "esp_timer.h"
+#include "events/events.hpp"
 #include "loop.hpp"
 #include "settings/settings.hpp"
 #include "usb/fusb303.hpp"
@@ -40,12 +41,29 @@ ChargeInputs read_charge_inputs(const charger::State& charger_state,
 	return in;
 }
 
+void publish_events(const charger::TargetState& target) {
+	static events::Supply supply;
+	static events::ChargeLimit limit;
+	const events::Supply supply_now{target.supply, uint16_t(target.input_ma)};
+	if (events::changed(supply, supply_now)) {
+		events::publish(
+			{.type = events::Type::supply_changed, .supply = supply});
+	}
+	const events::ChargeLimit limit_now{target.stop,
+										uint16_t(target.charge_ma)};
+	if (events::changed(limit, limit_now)) {
+		events::publish({.type = events::Type::charge_limit_changed,
+						 .charge_limit = limit});
+	}
+}
+
 void run_charge_control(const charger::State& charger_state,
 						const fusb::State& usb_c) {
 	ChargeInputs in = read_charge_inputs(charger_state, usb_c);
 	if (in.mode == charger::ControlMode::automatic) {
 		const charger::TargetState target = rules.apply_rules(in);
 		charger::set_charger_target(target);
+		publish_events(target);
 	}
 }
 
