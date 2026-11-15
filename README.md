@@ -1,6 +1,11 @@
-# airgrep
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark@2x.png">
+    <img src="assets/logo@2x.png" alt="airgrep" width="305">
+  </picture>
+</h1>
 
-A portable ADS-B / FLARM receiver. Started as carrier board for a removable ESP32-S3 touch display and ADSBee 1090U receiver, with a soldered MAX-M10S GNSS receiver. It adds a single-cell Li-ion charger, a 5 V boost rail, a fuel gauge, a barometer and a buzzer.
+A portable ADS-B / FLARM receiver based on [ADSbee](https://github.com/PantsForBirds/adsbee). Started as carrier board for a removable ESP32-S3 touch display and [ADSBee 1090U](https://pantsforbirds.com/product/adsbee-1090u/) receiver, with a soldered MAX-M10S GNSS receiver. It adds a single-cell Li-ion charger, a 5 V boost rail, a fuel gauge, a barometer and a buzzer.
 
 <img src="hardware/carrier-ti-charger/render/PCBA%20Render%20F.png" alt="PCBA Render" style="width:400px;"/>
 

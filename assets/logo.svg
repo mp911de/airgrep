@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="67.5 40 305 80">
+  <!-- Generator: Adobe Illustrator 31.0.0, SVG Export Plug-In . SVG Version: 2.1.5 Build 84)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #fff;
+      }
+
+      .st0, .st1 {
+        font-family: HelveticaNeue-Medium, 'Helvetica Neue';
+        font-size: 64px;
+        font-weight: 500;
+        isolation: isolate;
+        letter-spacing: -.02em;
+      }
+
+      .st2 {
+        fill: #30d158;
+      }
+
+      .st3 {
+        fill: none;
+        stroke: #30d158;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.7px;
+      }
+
+      .st4 {
+        fill: #aeaeb2;
+      }
+    </style>
+  </defs>
+  <path class="st2" d="M242.85,42h89.63c20.99,0,38,17.01,38,38h0c0,20.99-17.01,38-38,38h-89.63c-20.99,0-38-17.01-38-38h0C204.85,59.01,221.86,42,242.85,42Z"/>
+  <g>
+    <circle class="st4" cx="72.27" cy="53.05" r="2.75"/>
+    <circle class="st4" cx="85.67" cy="53.05" r="2.75"/>
+    <circle class="st4" cx="99.07" cy="53.05" r="2.75"/>
+    <circle class="st4" cx="112.47" cy="53.05" r="2.75"/>
+    <circle class="st4" cx="72.27" cy="66.45" r="2.75"/>
+    <circle class="st4" cx="85.67" cy="66.45" r="2.75"/>
+    <circle class="st4" cx="112.47" cy="66.45" r="2.75"/>
+    <circle class="st4" cx="72.27" cy="79.85" r="2.75"/>
+    <circle class="st4" cx="85.67" cy="79.85" r="2.75"/>
+    <circle class="st4" cx="99.07" cy="79.85" r="2.75"/>
+    <circle class="st4" cx="112.47" cy="79.85" r="2.75"/>
+    <circle class="st4" cx="72.27" cy="93.25" r="2.75"/>
+    <circle class="st4" cx="85.67" cy="93.25" r="2.75"/>
+    <circle class="st4" cx="99.07" cy="93.25" r="2.75"/>
+    <circle class="st4" cx="112.47" cy="93.25" r="2.75"/>
+  </g>
+  <path class="st3" d="M106.81,59l-15.48,6.04,6.8,2.65,2.64,6.79L106.81,59ZM98.13,67.69l8.68-8.69"/>
+  <g>
+    <text class="st1" transform="translate(123.17 96)"><tspan x="0" y="0">air</tspan></text>
+    <text class="st0" transform="translate(222.61 96)"><tspan x="0" y="0">grep</tspan></text>
+  </g>
+</svg>
