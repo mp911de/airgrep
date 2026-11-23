@@ -1,7 +1,7 @@
 #include "adsbee_protocol.hpp"
 
-#include <cstdlib>
 #include <cstring>
+#include <iterator>
 
 #include "csbee_fields.hpp"
 
@@ -22,6 +22,7 @@ bool acceptable_command(const char* command, size_t capacity) {
 		   !std::strpbrk(command, "\r\n");
 }
 
+namespace {
 uint16_t crc16(const char* text, size_t comma) {
 	uint16_t crc = 0xffff;
 	for (size_t i = 0; i < comma; i++) {
@@ -31,6 +32,7 @@ uint16_t crc16(const char* text, size_t comma) {
 		}
 	}
 	return crc;
+}
 }
 
 bool valid_csbee(const char* text, size_t length) {
@@ -46,8 +48,8 @@ bool valid_csbee(const char* text, size_t length) {
 	}
 	uint16_t expected = 0;
 	for (size_t i = comma; i < length; i++) {
-		char c = text[i];
-		unsigned digit;
+		const char c = text[i];
+		unsigned digit = 0;
 		if (c >= '0' && c <= '9') {
 			digit = c - '0';
 		} else if (c >= 'A' && c <= 'F') {
@@ -59,7 +61,7 @@ bool valid_csbee(const char* text, size_t length) {
 		}
 		expected = (expected << 4) | digit;
 	}
-	uint16_t crc = crc16(text, comma);
+	const uint16_t crc = crc16(text, comma);
 	return expected == static_cast<uint16_t>((crc >> 8) | (crc << 8));
 }
 
@@ -67,11 +69,12 @@ namespace {
 constexpr char kGnssPrefix[] = "#GNSS:";
 constexpr size_t kGnssFields = 34;
 using csbee::copy;
+using csbee::decimal;
 using csbee::Field;
-using csbee::parse_decimal;
-using csbee::parse_integer;
+using csbee::integer;
+using csbee::optional_integer;
 using csbee::split;
-}  // namespace
+}
 
 bool decode_gnss(const char* text, size_t length, Gnss& out) {
 	if (length < sizeof kGnssPrefix - 1 ||
@@ -83,47 +86,57 @@ bool decode_gnss(const char* text, size_t length, Gnss& out) {
 		return false;
 	}
 	out = Gnss{};
-	out.fix = parse_integer(f[0], 0) == 1;
-	out.quality = int8_t(parse_integer(f[1], -1));
-	out.satellites = int8_t(parse_integer(f[2], -1));
-	if (out.fix) {
-		out.latitude = parse_decimal(f[3], 0);
-		out.longitude = parse_decimal(f[4], 0);
-		out.altitude_ft = int32_t(parse_integer(f[5], 0));
-		out.speed_kt = parse_decimal(f[6], 0);
-		out.track_deg = parse_decimal(f[7], 0);
+	// The frame says fix or none, not which kind.
+	uint8_t fix = 0;
+	if (!integer(f[0], fix) || fix > 1 ||
+		!optional_integer(f[1], out.quality) ||
+		!optional_integer(f[2], out.satellites_used)) {
+		return false;
 	}
-	out.hdop = parse_decimal(f[8], -1);
-	if (f[9].length == 6) {
+	if (fix) {
+		if (!csbee::position(f[3], f[4], out.latitude, out.longitude) ||
+			!integer(f[5], out.altitude_ft) || !decimal(f[6], out.speed_kt) ||
+			!decimal(f[7], out.track_deg)) {
+			return false;
+		}
+		out.fix = Fix::fix_3d;
+	}
+	if (!f[8].empty() && !decimal(f[8], out.hdop)) {
+		return false;
+	}
+	if (!f[9].empty()) {
+		const char* utc = f[9].text;
+		if (f[9].length != 6 || !integer({utc, 2}, out.utc_hour) ||
+			!integer({utc + 2, 2}, out.utc_minute) ||
+			!integer({utc + 4, 2}, out.utc_second) || out.utc_hour > 23 ||
+			out.utc_minute > 59 || out.utc_second > 60) {
+			return false;
+		}
 		out.utc_known = true;
-		out.utc_hour =
-			uint8_t((f[9].text[0] - '0') * 10 + (f[9].text[1] - '0'));
-		out.utc_minute =
-			uint8_t((f[9].text[2] - '0') * 10 + (f[9].text[3] - '0'));
-		out.utc_second =
-			uint8_t((f[9].text[4] - '0') * 10 + (f[9].text[5] - '0'));
 	}
-	if (!f[10].empty()) {
-		char buffer[24];
-		copy(f[10], buffer, sizeof buffer);
-		out.epoch_ms = std::strtoull(buffer, nullptr, 10);
+	if (!optional_integer(f[10], out.epoch_ms) ||
+		!optional_integer(f[11], out.antenna) ||
+		!optional_integer(f[12], out.antenna_power) ||
+		!optional_integer(f[13], out.jamming)) {
+		return false;
 	}
-	out.antenna = int8_t(parse_integer(f[11], -1));
-	out.antenna_power = int8_t(parse_integer(f[12], -1));
-	out.jamming = int8_t(parse_integer(f[13], -1));
-	int16_t* counts[] = {&out.max_cno,   &out.seen,      &out.no_signal,
-						 &out.searching, &out.acquired,  &out.unusable,
-						 &out.locked,    &out.ephemeris, &out.used,
-						 &out.healthy,   &out.unhealthy};
-	for (size_t i = 0; i < 11; i++) {
-		*counts[i] = int16_t(parse_integer(f[14 + i], -1));
+	int16_t* const counts[] = {
+		&out.max_cno_dbhz, &out.seen,     &out.no_signal, &out.searching,
+		&out.acquired,     &out.unusable, &out.locked,    &out.ephemeris,
+		&out.used,         &out.healthy,  &out.unhealthy};
+	for (size_t i = 0; i < std::size(counts); i++) {
+		if (!optional_integer(f[14 + i], *counts[i])) {
+			return false;
+		}
 	}
 	copy(f[25], out.sbas_mode, sizeof out.sbas_mode);
 	copy(f[26], out.sbas_system, sizeof out.sbas_system);
-	out.sbas_satellites = int16_t(parse_integer(f[27], -1));
+	if (!optional_integer(f[27], out.sbas_satellites) ||
+		!optional_integer(f[28], out.prc_cm) ||
+		!optional_integer(f[29], out.ic_cm)) {
+		return false;
+	}
 	out.sbas_corrections = !f[28].empty() && !f[29].empty();
-	out.prc_cm = int32_t(parse_integer(f[28], 0));
-	out.ic_cm = int32_t(parse_integer(f[29], 0));
 	copy(f[30], out.module, sizeof out.module);
 	copy(f[31], out.software, sizeof out.software);
 	copy(f[32], out.hardware, sizeof out.hardware);
@@ -150,4 +163,4 @@ bool Link::permits_tx(int64_t now_us) const {
 	return powered_since_us_ > 0 && received_us_ > 0 &&
 		   now_us >= received_us_ && now_us - received_us_ <= kRxTimeoutUs;
 }
-}  // namespace adsbee
+}

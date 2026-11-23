@@ -1,0 +1,45 @@
+<component>
+	<!-- One cause the health check found: what it is about and its state. The state is there once per level,
+	     in the colour of the level. The application shows the one that applies. -->
+	<api>
+		<prop name="title" type="string" />
+		<prop name="value" type="string" />
+		<prop name="separator" type="bool" default="true" help="False on the last row" />
+	</api>
+	<view extends="lv_obj" width="100%" height="{touch}" clickable="false" scrollable="false" style_pad_left="16">
+		<remove_theme selector="main" />
+		<lv_obj
+			name="line"
+			width="100%"
+			height="100%"
+			flex_flow="row"
+			clickable="false"
+			scrollable="false"
+			style_flex_main_place="space_between"
+			style_flex_cross_place="center"
+			style_flex_track_place="center"
+			style_pad_right="16"
+			style_border_color="{color_separator}"
+			style_border_width="{separator ? 1 : 0}"
+			style_border_side="bottom"
+		>
+			<remove_theme selector="main" />
+			<lv_label name="label" text="{title}" />
+			<lv_label
+				name="failure"
+				text="{value}"
+				hidden="true"
+				style_translate_y="-1"
+				style_text_font="font_title"
+				style_text_color="{color_red}"
+			/>
+			<lv_label
+				name="caution"
+				text="{value}"
+				style_translate_y="-1"
+				style_text_font="font_title"
+				style_text_color="{color_yellow}"
+			/>
+		</lv_obj>
+	</view>
+</component>

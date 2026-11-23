@@ -1,0 +1,15 @@
+<component>
+	<!-- The zones of one region. One page for every region: the application sets the title and fills the list. -->
+	<view extends="page" page="8">
+		<nav_bar title="time_zone" page="8" back="7" />
+		<!-- The room of a section header. It stays while the list scrolls, the navigation bar names the list. -->
+		<lv_obj width="100%" height="32" scrollable="false">
+			<remove_theme selector="main" />
+		</lv_obj>
+		<lv_obj name="sheet" width="100%" flex_grow="1" flex_flow="column" scroll_dir="ver" scroll_elastic="false"
+			scrollbar_mode="active">
+			<remove_theme selector="main" />
+			<list_group name="zone_list" />
+		</lv_obj>
+	</view>
+</component>

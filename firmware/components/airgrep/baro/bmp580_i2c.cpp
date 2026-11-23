@@ -15,7 +15,7 @@ constexpr float molar_mass_air = 0.0289644f;  // kg / mol
 constexpr float exponent =
 	gas_constant * lapse_k_per_m / (gravity * molar_mass_air);
 constexpr float scale_m = sea_level_k / lapse_k_per_m;
-}  // namespace isa
+}
 
 namespace {
 // Data registers hold signed 24-bit fixed point values.
@@ -26,13 +26,14 @@ constexpr float kTemperatureCPerLsb = 1.0f / 65536;
 constexpr float kPaPerHPa = 100;
 
 int32_t signed24(uint8_t xlsb, uint8_t lsb, uint8_t msb) {
-	int32_t raw = uint32_t(xlsb) | (uint32_t(lsb) << 8) | (uint32_t(msb) << 16);
+	auto raw = static_cast<int32_t>(uint32_t(xlsb) | (uint32_t(lsb) << 8) |
+									(uint32_t(msb) << 16));
 	if (raw & kData24SignBit) {
 		raw -= kData24Range;
 	}
 	return raw;
 }
-}  // namespace
+}
 
 float pressure_altitude(float hpa) {
 	if (hpa <= 0) {
@@ -65,10 +66,11 @@ NvmStatus decode_status(uint8_t raw) {
 }
 
 float decode_temperature(uint8_t xlsb, uint8_t lsb, uint8_t msb) {
-	return signed24(xlsb, lsb, msb) * kTemperatureCPerLsb;
+	return static_cast<float>(signed24(xlsb, lsb, msb)) * kTemperatureCPerLsb;
 }
 
 float decode_pressure(uint8_t xlsb, uint8_t lsb, uint8_t msb) {
-	return signed24(xlsb, lsb, msb) * kPressurePaPerLsb / kPaPerHPa;
+	return static_cast<float>(signed24(xlsb, lsb, msb)) * kPressurePaPerLsb /
+		   kPaPerHPa;
 }
-}  // namespace barometer
+}

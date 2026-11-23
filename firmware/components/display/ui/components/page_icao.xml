@@ -1,0 +1,11 @@
+<component>
+	<!-- The own ICAO address on a hex keypad. The application owns the draft and what Save does. -->
+	<view extends="page" page="5">
+		<nav_bar title="icao_address" page="5" back="1">
+			<nav_bar-trailing>
+				<entry_field name="field" />
+			</nav_bar-trailing>
+		</nav_bar>
+		<keyboard name="keys" layout="hex" />
+	</view>
+</component>

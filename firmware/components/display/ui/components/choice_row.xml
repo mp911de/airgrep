@@ -1,0 +1,54 @@
+<component>
+	<!-- One choice of a list: its name and a note in secondary colour. A tap picks it. The application shows the
+	     checkmark of the chosen row. Every row keeps the place of the checkmark, so the notes stay in one line. -->
+	<api>
+		<prop name="title" type="string" />
+		<prop name="detail" type="string" />
+		<prop name="separator" type="bool" default="true" help="False on the last row" />
+	</api>
+	<view extends="lv_obj" width="100%" height="{touch}" clickable="true" scrollable="false" style_pad_left="16">
+		<remove_theme selector="main" />
+		<style name="style_pressed_clear" selector="pressed" />
+		<!-- Not clickable, so the press lands on the row. -->
+		<lv_obj
+			name="line"
+			width="100%"
+			height="100%"
+			flex_flow="row"
+			clickable="false"
+			scrollable="false"
+			style_flex_main_place="space_between"
+			style_flex_cross_place="center"
+			style_flex_track_place="center"
+			style_pad_right="16"
+			style_border_color="{color_separator}"
+			style_border_width="{separator ? 1 : 0}"
+			style_border_side="bottom"
+		>
+			<remove_theme selector="main" />
+			<lv_label name="label" text="{title}" />
+			<lv_obj
+				name="value"
+				width="content"
+				height="content"
+				flex_flow="row"
+				clickable="false"
+				scrollable="false"
+				style_flex_cross_place="center"
+				style_pad_column="10"
+				style_translate_y="-1"
+				style_text_font="font_title"
+			>
+				<remove_theme selector="main" />
+				<lv_label name="note" text="{detail}" style_text_color="{color_label_2}" />
+				<lv_image
+					name="check"
+					src="icon_chosen"
+					style_image_recolor="{color_tint}"
+					style_image_recolor_opa="100%"
+					style_image_opa="0"
+				/>
+			</lv_obj>
+		</lv_obj>
+	</view>
+</component>

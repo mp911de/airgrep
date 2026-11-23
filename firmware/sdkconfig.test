@@ -1,7 +1,8 @@
-# The Unity menu busy-waits on console input.
 CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
 CONFIG_TINYUSB_CDC_ENABLED=n
+CONFIG_AIRGREP_USB_SERVICE_COMMANDS=y
 CONFIG_TINYUSB_VENDOR_COUNT=0
+# The Unity menu busy-waits on console input.
 CONFIG_ESP_TASK_WDT_EN=n
 CONFIG_UNITY_ENABLE_BACKTRACE_ON_FAIL=y
 # Loop tests measure timeouts against a 10 ms tick.

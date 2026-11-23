@@ -16,16 +16,17 @@ struct {
 	struct arg_lit* schemes[BUZZER_SCHEME_COUNT];
 	struct arg_str* value;
 	struct arg_end* end;
+	void* table[BUZZER_SCHEME_COUNT + 2];
 } args;
 
 int command(int argc, char** argv) {
-	if (arg_parse(argc, argv, reinterpret_cast<void**>(&args))) {
+	if (arg_parse(argc, argv, args.table)) {
 		arg_print_errors(stderr, args.end, argv[0]);
 		return 1;
 	}
 	if (argc == 1) {
 		const auto state = buzzer_state();
-		static const char* mute[] = {"UNKNOWN", "ON", "OFF"};
+		static const char* const mute[] = {"UNKNOWN", "ON", "OFF"};
 		std::printf("%-20s %s\n%-20s %s\n%-20s", "Mute", mute[state.mute],
 					"Playing", state.playing ? "YES" : "NO", "Schemes");
 		for (size_t i = 0; const auto* scheme = buzzer_scheme_at(i); i++) {
@@ -43,13 +44,13 @@ int command(int argc, char** argv) {
 		}
 	}
 	const char* value = args.value->count ? args.value->sval[0] : nullptr;
-	bool off = value && !std::strcmp(value, "off");
+	const bool off = value && !std::strcmp(value, "off");
 	uint32_t hz = 0;
 	bool valid = off ? selected == 0 : selected == 1;
 	if (valid && value && !off) {
-		char* end;
+		char* end = nullptr;
 		errno = 0;
-		unsigned long parsed = std::strtoul(value, &end, 10);
+		const unsigned long parsed = std::strtoul(value, &end, 10);
 		valid = value[0] != '-' && !errno && end != value && !*end && parsed &&
 				parsed <= UINT32_MAX;
 		hz = parsed;
@@ -61,29 +62,34 @@ int command(int argc, char** argv) {
 			"shutdown] [hz] | off");
 		return 1;
 	}
-	bool queued = loop::try_submit("beep command", [name, hz](loop::Handle,
-															  loop::Value&) {
-		if (!name) {
-			buzzer_off();
-		} else if (esp_err_t result = buzzer_play(name, hz); result != ESP_OK) {
-			ESP_LOGW("beep", "%s failed: %s", name, esp_err_to_name(result));
-		}
-		return loop::Result::done;
-	});
+	const bool queued = loop::try_submit(
+		"beep command", [name, hz](loop::Handle, loop::Value&) {
+			if (!name) {
+				buzzer_off();
+			} else if (const esp_err_t result = buzzer_play(name, hz);
+					   result != ESP_OK) {
+				ESP_LOGW("beep", "%s failed: %s", name,
+						 esp_err_to_name(result));
+			}
+			return loop::Result::done;
+		});
 	return command_status::ack(queued ? ESP_OK : ESP_ERR_NO_MEM);
 }
-}  // namespace
+}
 
 extern "C" esp_err_t console_register_beep(void) {
 	for (size_t i = 0; i < BUZZER_SCHEME_COUNT; i++) {
 		args.schemes[i] = arg_lit0(nullptr, buzzer_scheme_at(i)->name,
 								   "Play this beep scheme");
+		args.table[i] = args.schemes[i];
 	}
 	args.value =
 		arg_str0(nullptr, nullptr, "hz|off",
 				 "Frequency in Hz, default 4000, ignored for sweep, or off");
 	args.end = arg_end(3);
-	if (arg_nullcheck(reinterpret_cast<void**>(&args))) {
+	args.table[BUZZER_SCHEME_COUNT] = args.value;
+	args.table[BUZZER_SCHEME_COUNT + 1] = args.end;
+	if (arg_nullcheck(args.table)) {
 		return ESP_ERR_NO_MEM;
 	}
 	const esp_console_cmd_t entry = {
@@ -93,7 +99,7 @@ extern "C" esp_err_t console_register_beep(void) {
 			"[--short|--long|--double|--alarm|--sweep|--startup|--shutdown]"
 			" [hz] | off",
 		.func = command,
-		.argtable = &args,
+		.argtable = static_cast<void*>(args.table),
 		.func_w_context = nullptr,
 		.context = nullptr,
 	};

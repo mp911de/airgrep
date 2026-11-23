@@ -31,10 +31,10 @@ bool previous_cr;
 bool initialized;
 std::atomic<bool> active;
 
-bool usb_task() {
-	// Pinned esp_tinyusb creates this task. It cannot wait for its own
-	// progress.
-	return !std::strcmp(pcTaskGetName(nullptr), "TinyUSB");
+std::atomic<TaskHandle_t> service_task;
+bool must_use_nonblocking_io() {
+	auto owner = service_task.load();
+	return !owner || xTaskGetCurrentTaskHandle() == owner;
 }
 
 ssize_t dropped_output(size_t size) {
@@ -44,7 +44,7 @@ ssize_t dropped_output(size_t size) {
 		errno = EAGAIN;
 		return -1;
 	}
-	return size;
+	return static_cast<ssize_t>(size);
 }
 
 int open_console(void*, const char*, int flags, int) {
@@ -85,7 +85,8 @@ ssize_t read_console(void*, int fd, void* output, size_t size) {
 	if (!size || !active) {
 		return 0;
 	}
-	const bool nonblocking = (modes[fd] & O_NONBLOCK) || usb_task();
+	const bool nonblocking =
+		(modes[fd] & O_NONBLOCK) || must_use_nonblocking_io();
 	if (xSemaphoreTake(read_mutex, nonblocking ? 0 : portMAX_DELAY) != pdTRUE) {
 		errno = EWOULDBLOCK;
 		return -1;
@@ -109,14 +110,14 @@ ssize_t read_console(void*, int fd, void* output, size_t size) {
 	// IDF's console expects LF for Enter, while serial terminals send CR.
 	auto* bytes = static_cast<char*>(output);
 	std::replace(bytes, bytes + received, '\r', '\n');
-	return received;
+	return static_cast<ssize_t>(received);
 }
 
 ssize_t write_console(void*, int, const void* data, size_t size) {
 	if (!size || !active) {
-		return size;
+		return static_cast<ssize_t>(size);
 	}
-	const bool nonblocking = usb_task();
+	const bool nonblocking = must_use_nonblocking_io();
 	const int64_t deadline = esp_timer_get_time() + kWriteTimeoutUs;
 	if (xSemaphoreTake(write_mutex, nonblocking ? 0 : pdMS_TO_TICKS(3000)) !=
 		pdTRUE) {
@@ -139,7 +140,6 @@ ssize_t write_console(void*, int, const void* data, size_t size) {
 			tud_cdc_n_write_flush(kConsole);
 			if (nonblocking || !tud_cdc_n_connected(kConsole) ||
 				esp_timer_get_time() >= deadline) {
-				// Console output must not hold application work indefinitely.
 				xSemaphoreGive(write_mutex);
 				return dropped_output(size);
 			}
@@ -155,12 +155,13 @@ ssize_t write_console(void*, int, const void* data, size_t size) {
 		tud_cdc_n_write_flush(kConsole);
 	}
 	xSemaphoreGive(write_mutex);
-	return size;
+	return static_cast<ssize_t>(size);
 }
 
 int flush_console(void*, int) {
 	if (active &&
-		xSemaphoreTake(write_mutex, usb_task() ? 0 : pdMS_TO_TICKS(3000)) ==
+		xSemaphoreTake(write_mutex,
+					   must_use_nonblocking_io() ? 0 : pdMS_TO_TICKS(3000)) ==
 			pdTRUE) {
 		if (active) {
 			tud_cdc_n_write_flush(kConsole);
@@ -169,7 +170,11 @@ int flush_console(void*, int) {
 	}
 	return 0;
 }
-}  // namespace
+}
+
+void usb_console_set_service_task() {
+	service_task = xTaskGetCurrentTaskHandle();
+}
 
 esp_err_t usb_console_init() {
 	read_mutex = xSemaphoreCreateMutex();
@@ -199,19 +204,22 @@ esp_err_t usb_console_init() {
 		.select = nullptr,
 #endif
 	};
-	esp_err_t result = esp_vfs_register_fs(
+	const esp_err_t result = esp_vfs_register_fs(
 		kPath, &operations, ESP_VFS_FLAG_STATIC | ESP_VFS_FLAG_CONTEXT_PTR,
 		nullptr);
 	if (result != ESP_OK) {
 		return result;
 	}
+	// NOLINTBEGIN(cppcoreguidelines-owning-memory): freopen returns the stream
+	// it was given.
 	if (!std::freopen(kPath, "r", stdin) || !std::freopen(kPath, "w", stdout) ||
 		!std::freopen(kPath, "w", stderr)) {
 		return ESP_FAIL;
 	}
-	setvbuf(stdin, nullptr, _IONBF, 0);
-	setvbuf(stdout, nullptr, _IONBF, 0);
-	setvbuf(stderr, nullptr, _IONBF, 0);
+	// NOLINTEND(cppcoreguidelines-owning-memory)
+	(void)setvbuf(stdin, nullptr, _IONBF, 0);
+	(void)setvbuf(stdout, nullptr, _IONBF, 0);
+	(void)setvbuf(stderr, nullptr, _IONBF, 0);
 	initialized = true;
 	active = true;
 	return ESP_OK;
@@ -233,6 +241,7 @@ extern "C" esp_err_t __wrap_esp_stdio_install_io_driver() {
 	return active ? ESP_OK : ESP_ERR_INVALID_STATE;
 }
 #else
+void usb_console_set_service_task() {}
 esp_err_t usb_console_init() { return ESP_OK; }
 void usb_console_stop() {}
 #endif

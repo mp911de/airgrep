@@ -1,0 +1,12 @@
+<component>
+	<!-- The altitude filter in feet on a keypad of digits. The application owns the draft and what Save does. -->
+	<view extends="page" page="9">
+		<nav_bar title="altitude" page="9" back="1">
+			<nav_bar-trailing>
+				<entry_field name="field" />
+				<lv_label text="ft" style_text_font="font_title" style_text_color="{color_label_2}" />
+			</nav_bar-trailing>
+		</nav_bar>
+		<keyboard name="keys" layout="digits" hint="altitude_zero" />
+	</view>
+</component>

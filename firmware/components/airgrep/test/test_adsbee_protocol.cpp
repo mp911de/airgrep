@@ -1,4 +1,5 @@
 #include <cstring>
+#include <string>
 
 #include "adsbee/adsbee_protocol.hpp"
 #include "unity.h"
@@ -74,9 +75,9 @@ CASE(gnss_full, "GNSS frame decodes every field in order") {
 		"45,MAX-M10S,ROM SPG 5.10 (7b202e),00000A00,OK,ABCD";
 	adsbee::Gnss g;
 	TEST_ASSERT_TRUE(adsbee::decode_gnss(frame, std::strlen(frame), g));
-	TEST_ASSERT_TRUE(g.fix);
+	TEST_ASSERT_TRUE(g.fix == adsbee::Fix::fix_3d);
 	TEST_ASSERT_EQUAL_INT(2, g.quality);
-	TEST_ASSERT_EQUAL_INT(11, g.satellites);
+	TEST_ASSERT_EQUAL_INT(11, g.satellites_used);
 	TEST_ASSERT_FLOAT_WITHIN(0.000001f, 50.5f, g.latitude);
 	TEST_ASSERT_FLOAT_WITHIN(0.000001f, -8.25f, g.longitude);
 	TEST_ASSERT_EQUAL_INT32(1234, g.altitude_ft);
@@ -91,7 +92,7 @@ CASE(gnss_full, "GNSS frame decodes every field in order") {
 	TEST_ASSERT_EQUAL_INT(2, g.antenna);
 	TEST_ASSERT_EQUAL_INT(1, g.antenna_power);
 	TEST_ASSERT_EQUAL_INT(1, g.jamming);
-	TEST_ASSERT_EQUAL_INT(47, g.max_cno);
+	TEST_ASSERT_EQUAL_INT(47, g.max_cno_dbhz);
 	TEST_ASSERT_EQUAL_INT(24, g.seen);
 	TEST_ASSERT_EQUAL_INT(1, g.unhealthy);
 	TEST_ASSERT_EQUAL_STRING("ENABLED", g.sbas_mode);
@@ -111,7 +112,7 @@ CASE(gnss_empty,
 	const char* frame = "#GNSS:0,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,2695";
 	adsbee::Gnss g;
 	TEST_ASSERT_TRUE(adsbee::decode_gnss(frame, std::strlen(frame), g));
-	TEST_ASSERT_FALSE(g.fix);
+	TEST_ASSERT_TRUE(g.fix == adsbee::Fix::none);
 	TEST_ASSERT_EQUAL_INT(0, g.quality);
 	TEST_ASSERT_FLOAT_WITHIN(0.001f, -1, g.hdop);
 	TEST_ASSERT_FALSE(g.utc_known);
@@ -123,6 +124,43 @@ CASE(gnss_empty,
 	TEST_ASSERT_FALSE(g.bbr);
 	TEST_ASSERT_FALSE(adsbee::decode_gnss("#GNSS:0,0,2695", 14, g));
 	TEST_ASSERT_FALSE(adsbee::decode_gnss("#M10:1:WARN:00:01/01:5,72B", 26, g));
+}
+
+CASE(position_fields,
+	 "GNSS accepts a zero position and rejects malformed fixes") {
+	const std::string valid =
+		"#GNSS:1,2,11,0.000000,0.000000,1234,87,271.5,0.90,070509,"
+		"1762588800123,2,1,1,47,24,5,4,3,2,10,12,11,13,1,ENABLED,EGNOS,2,-312,"
+		"45,MAX-M10S,ROM,00000A00,OK,ABCD";
+	adsbee::Gnss g;
+	TEST_ASSERT_TRUE(adsbee::decode_gnss(valid.data(), valid.size(), g));
+	TEST_ASSERT_TRUE(g.fix == adsbee::Fix::fix_3d);
+	TEST_ASSERT_EQUAL_FLOAT(0, g.latitude);
+	for (const char* invalid :
+		 {"", "0x", "nan", "inf", "1e500", "1e-80", "90.000001", "-91"}) {
+		std::string frame = valid;
+		frame.replace(frame.find("0.000000"), 8, invalid);
+		TEST_ASSERT_FALSE(adsbee::decode_gnss(frame.data(), frame.size(), g));
+	}
+	std::string frame = valid;
+	frame.insert(frame.find("1,") + 1, "junk");
+	TEST_ASSERT_FALSE(adsbee::decode_gnss(frame.data(), frame.size(), g));
+}
+
+CASE(fix_age, "Own position expires five seconds after the last GNSS report") {
+	adsbee::StateData state;
+	state.gnss.fix = adsbee::Fix::fix_3d;
+	TEST_ASSERT_TRUE(state.gnss_at(1).fix == adsbee::Fix::none);
+	state.last_gnss_report_us = 1234;
+	for (auto fix :
+		 {adsbee::Fix::none, adsbee::Fix::fix_2d, adsbee::Fix::fix_3d}) {
+		state.gnss.fix = fix;
+		TEST_ASSERT_TRUE(state.gnss_at(5001234).fix == fix);
+		state.updated_us = 5001235;
+		TEST_ASSERT_TRUE(state.gnss_at(5001235).fix == adsbee::Fix::none);
+	}
+	state.last_gnss_report_us = 5001236;
+	TEST_ASSERT_TRUE(state.gnss_at(5001236).fix == adsbee::Fix::fix_3d);
 }
 
 CASE(lifecycle,
@@ -171,11 +209,13 @@ int main() {
 	RUN_TEST(command);
 	RUN_TEST(gnss_full);
 	RUN_TEST(gnss_empty);
+	RUN_TEST(position_fields);
 	RUN_TEST(crc);
 	RUN_TEST(m10_crc);
 	RUN_TEST(reply);
 	RUN_TEST(full_reply);
 	RUN_TEST(lifecycle);
+	RUN_TEST(fix_age);
 	RUN_TEST(rx_timeout);
 	RUN_TEST(repeated_power);
 	return UNITY_END();

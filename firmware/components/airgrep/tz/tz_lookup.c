@@ -18,7 +18,8 @@ static uint32_t record(const uint8_t* p, uint32_t i, uint32_t bits) {
 
 int tz_init(tz_table* t, const void* blob, uint32_t bytes) {
 	const uint8_t* d = blob;
-	uint32_t mode, step, w, h, zones, index, payload, zi, strings, i, j, ref;
+	uint32_t mode = 0, step = 0, w = 0, h = 0, zones = 0, index = 0,
+			 payload = 0, zi = 0, strings = 0, i = 0, j = 0, ref = 0;
 	t->data = 0;
 	if (!d || bytes < 128 || memcmp(d, "TZL2", 4) || u32(d + 40) != bytes ||
 		!d[64] || !memchr(d + 64, 0, 64)) {
@@ -41,7 +42,7 @@ int tz_init(tz_table* t, const void* blob, uint32_t bytes) {
 		return 0;
 	}
 	for (i = 0; i < zones * 2; ++i) {
-		ref = u32(d + zi + i * 4);
+		ref = u32(d + zi + (size_t)i * 4);
 		if (ref >= bytes - strings ||
 			!memchr(d + strings + ref, 0, bytes - strings - ref)) {
 			return 0;
@@ -63,7 +64,7 @@ int tz_init(tz_table* t, const void* blob, uint32_t bytes) {
 		   mis-sorted run only yields a wrong zone, never an out-of-bounds
 		   read. */
 		for (i = 0; i < h; ++i) {
-			uint32_t offset = u24(d + index + i * 3), n;
+			uint32_t offset = u24(d + index + (size_t)i * 3), n = 0;
 			if (zi - payload < 2 || offset > zi - payload - 2) {
 				return 0;
 			}
@@ -83,7 +84,8 @@ int tz_init(tz_table* t, const void* blob, uint32_t bytes) {
 		/* Backward references make cycles impossible. */
 		for (i = 0; i < nodes; ++i) {
 			for (j = 0; j < 4; ++j) {
-				if (u24(d + payload + i * 12 + j * 3) >= zones + i) {
+				if (u24(d + payload + (size_t)i * 12 + (size_t)j * 3) >=
+					zones + i) {
 					return 0;
 				}
 			}
@@ -95,9 +97,27 @@ int tz_init(tz_table* t, const void* blob, uint32_t bytes) {
 	return 1;
 }
 
+int tz_mount(tz_table* t, const void* partition, uint32_t capacity) {
+	const uint8_t* data = partition;
+	t->data = 0;
+	if (!data || capacity < 128) {
+		return 0;
+	}
+	uint32_t size = u32(data + 40);
+	return size <= capacity && tz_init(t, partition, size);
+}
+
+uint32_t tz_table_size(const tz_table* t) {
+	return t->data ? u32(t->data + 40) : 0;
+}
+uint16_t tz_zone_count(const tz_table* t) {
+	return t->data ? (uint16_t)u32(t->data + 20) : 0;
+}
+
 uint16_t tz_lookup(const tz_table* t, int32_t lat, int32_t lon) {
 	const uint8_t* d = t->data;
-	uint32_t x, y, step, ref, span, zones, base, lo, hi, mid;
+	uint32_t x = 0, y = 0, step = 0, ref = 0, span = 0, zones = 0, base = 0,
+			 lo = 0, hi = 0, mid = 0;
 	if (!d || lat < -90000000 || lat > 90000000 || lon < -180000000 ||
 		lon > 180000000) {
 		return TZ_INVALID;
@@ -109,7 +129,7 @@ uint16_t tz_lookup(const tz_table* t, int32_t lat, int32_t lon) {
 	y = lat == 90000000 ? u32(d + 16) - 1 : (uint32_t)(lat + 90000000) / step;
 	if (u32(d + 4) == 1) {
 		uint32_t xb = u32(d + 56), bits = xb + u32(d + 60);
-		ref = base + u24(d + u32(d + 24) + y * 3);
+		ref = base + u24(d + u32(d + 24) + (size_t)y * 3);
 		lo = 0;
 		hi = u16(d + ref);
 		while (lo + 1 < hi) {
@@ -125,15 +145,15 @@ uint16_t tz_lookup(const tz_table* t, int32_t lat, int32_t lon) {
 	ref = u32(d + 44);
 	span = u32(d + 48);
 	while (ref >= zones) {
-		uint32_t child;
-		if (span < 2) {
+		uint32_t child = 0;
+		span /= 2;
+		if (!span) {
 			return TZ_INVALID;
 		}
-		span /= 2;
 		child = (y >= span ? 2u : 0u) | (x >= span ? 1u : 0u);
 		x %= span;
 		y %= span;
-		ref = u24(d + base + (ref - zones) * 12 + child * 3);
+		ref = u24(d + base + (size_t)(ref - zones) * 12 + (size_t)child * 3);
 	}
 	return (uint16_t)ref;
 }
@@ -144,7 +164,7 @@ static const char* text(const tz_table* t, uint16_t zone, uint32_t field) {
 		return 0;
 	}
 	return (const char*)(d + u32(d + 36) +
-						 u32(d + u32(d + 32) + zone * 8 + field));
+						 u32(d + u32(d + 32) + (size_t)zone * 8 + field));
 }
 const char* tz_name(const tz_table* t, uint16_t zone) {
 	return text(t, zone, 0);

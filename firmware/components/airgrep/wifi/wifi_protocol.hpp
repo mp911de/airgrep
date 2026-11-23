@@ -3,8 +3,8 @@
 #include <cstddef>
 #include <cstdint>
 
-// AT+WIFI_AP wire format of the ADSBee access point. Hardware free, so it has
-// a host test.
+#include "device.h"
+
 namespace wifi {
 #define WIFI_AP_SET_COMMAND "AT+WIFI_AP="
 #define WIFI_AP_QUERY_COMMAND "AT+WIFI_AP?"
@@ -28,4 +28,17 @@ bool decode_config(const char* text, size_t length, Config& out);
 // Writes AT+WIFI_AP=<enabled>,<ssid>,<password>,<channel>. False when it does
 // not fit.
 bool format_set(const Config& config, char* out, size_t capacity);
-}  // namespace wifi
+
+struct StateData {
+	Status status = Status::unknown;
+	bool slider_sampled = false;
+	bool slider_enabled = false;
+	bool reported_known = false;
+	bool set_pending = false;
+	Config last_reported_config;
+	int64_t sent_us = 0, reported_us = 0;
+	uint32_t sent = 0, mismatches = 0;
+	EspErrorCode last_error = 0;
+	int64_t error_us = 0;
+};
+}

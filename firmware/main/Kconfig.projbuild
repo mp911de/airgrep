@@ -3,8 +3,10 @@ menu "airgrep"
 		bool "USB State access and data injection commands"
 		default n
 		help
-			Enables READ, WRITE, UPDATE_TRAFFIC and UPDATE_GNSS over USB.
+			Enables READ, WRITE, UPDATE_TRAFFIC, UPDATE_GNSS, LIST_TRAFFIC,
+			READ_SETTINGS and WRITE_SETTINGS over USB.
 			WRITE can replace arbitrary bytes within exposed component States.
+			WRITE_SETTINGS replaces and removes the stored settings.
 			HELLO, REBOOT and ENTER_BOOTLOADER remain available when disabled.
 
 	config AIRGREP_TEST_TAGS

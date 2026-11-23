@@ -1,0 +1,17 @@
+= 800x480 display UI
+
+Edit the screens in LVGL Pro XML and press Ctrl+E to regenerate `*_gen.*`.
+
+See the [design drawings](../../../../docs/ui-design/README.md).
+
+The Editor previews the light theme.
+Use the built Utility to check C widgets, callbacks and theme switching.
+
+When changing Inter font sizes or weights in `globals.xml`, update the instances in [tabular.py](fonts/tabular.py) and run it before exporting.
+
+Run the display tests from `firmware/` with Pillow installed:
+
+[source,bash]
+----
+ctest --test-dir utility/build -L display --output-on-failure
+----

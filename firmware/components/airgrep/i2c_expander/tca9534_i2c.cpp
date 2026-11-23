@@ -35,4 +35,4 @@ Input decode_input(uint8_t raw) {
 	result.power = !(raw & kPowerPin);
 	return result;
 }
-}  // namespace expander
+}

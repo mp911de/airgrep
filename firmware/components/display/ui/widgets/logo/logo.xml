@@ -1,0 +1,6 @@
+<widget>
+	<!-- The airgrep logo, 480 px wide. Built in C: a ring of green leaves the plane and crosses the dots. -->
+	<view extends="lv_obj" width="480" height="126" clickable="false" scrollable="false">
+		<remove_theme selector="main" />
+	</view>
+</widget>

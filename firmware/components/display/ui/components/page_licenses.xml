@@ -1,0 +1,12 @@
+<component>
+	<!-- Every component in the shipped image. The application fills the list. -->
+	<view extends="page" page="3">
+		<nav_bar title="licenses" page="3" back="1" />
+		<lv_obj name="sheet" width="100%" flex_grow="1" flex_flow="column" scroll_dir="ver" scroll_elastic="false"
+			scrollbar_mode="active">
+			<remove_theme selector="main" />
+			<section_header title="section_components" />
+			<list_group name="license_list" />
+		</lv_obj>
+	</view>
+</component>

@@ -1,0 +1,45 @@
+<component>
+	<!-- Label left, value right. The separator starts after the leading edge. -->
+	<api>
+		<prop name="label" type="string" help="Translation tag" />
+		<prop name="separator" type="bool" default="true" help="False on the last row of a group" />
+		<slot name="value" />
+	</api>
+	<!-- Not clickable. The application makes a row clickable that goes deeper, then the row shows the press. -->
+	<view extends="lv_obj" width="100%" height="{touch}" clickable="false" scrollable="false" style_pad_left="16">
+		<remove_theme selector="main" />
+		<style name="style_pressed_clear" selector="pressed" />
+		<lv_obj
+			name="line"
+			width="100%"
+			height="100%"
+			flex_flow="row"
+			clickable="false"
+			scrollable="false"
+			style_flex_main_place="space_between"
+			style_flex_cross_place="center"
+			style_flex_track_place="center"
+			style_pad_right="16"
+			style_border_color="{color_separator}"
+			style_border_width="{separator ? 1 : 0}"
+			style_border_side="bottom"
+		>
+			<remove_theme selector="main" />
+			<lv_label translation_tag="{label}" />
+			<lv_obj
+				name="value"
+				width="content"
+				height="content"
+				flex_flow="row"
+				clickable="false"
+				scrollable="false"
+				style_flex_cross_place="center"
+				style_pad_column="10"
+				style_translate_y="-1"
+				style_text_font="font_title"
+			>
+				<remove_theme selector="main" />
+			</lv_obj>
+		</lv_obj>
+	</view>
+</component>

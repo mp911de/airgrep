@@ -5,7 +5,7 @@
 // two points the last state holds.
 class Threshold {
    public:
-	constexpr Threshold(float limit, float release)
+	constexpr Threshold(float limit, float release) noexcept
 		: limit_(limit), release_(release) {}
 
 	bool update(float value) {

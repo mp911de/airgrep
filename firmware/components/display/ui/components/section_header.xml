@@ -1,0 +1,14 @@
+<component>
+	<api>
+		<prop name="title" type="string" help="Translation tag" />
+	</api>
+	<view extends="lv_obj" width="100%" height="32" scrollable="false" style_pad_left="16" style_pad_top="10">
+		<remove_theme selector="main" />
+		<lv_label
+			translation_tag="{title}"
+			style_text_font="font_small"
+			style_text_color="{color_label_2}"
+			style_text_letter_space="1"
+		/>
+	</view>
+</component>

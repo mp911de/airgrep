@@ -6,11 +6,6 @@
 #include "sdkconfig.h"
 #include "subscribers.hpp"
 
-// The device runs a chain of I2C steps on the loop: identity, then configure,
-// then the live sample. The periodic poll starts the chain where State left
-// off, so a soft reset simply starts over. A failed identity or configure
-// step stops the poll, the system watchdog starts the driver again. After
-// SW_RES the chip wants tEN before the next access, ready_us holds that moment.
 namespace fusb {
 namespace {
 // FUSB303B datasheet Table 11 register map, Tables 12 and 18.
@@ -25,16 +20,16 @@ constexpr uint8_t kSwReset = 1 << 0;      // RESET SW_RES
 
 i2c_master_dev_handle_t device;
 loop::Handle periodic;
-State state;  // working copy of the loop task, published with State::update
-bool busy;    // a chain is running
+State poll_state;
+bool poll_in_progress;
 unsigned generation;  // bumped by reset, orphans the steps of the running chain
-int64_t ready_us;     // tEN after SW_RES
+int64_t earliest_i2c_access_us;
 Completion init_complete;
 
 Subscribers<Handler, FUSB_MAX_SUBSCRIBERS> subscribers;
 
 void publish() {
-	State::update([](State& shared) { shared = state; });
+	State::update([](State& shared) { shared = poll_state; });
 }
 
 void fail_poll(esp_err_t result) {
@@ -43,7 +38,7 @@ void fail_poll(esp_err_t result) {
 		shared.last_error = result;
 		shared.error_us = now;
 	});
-	busy = false;
+	poll_in_progress = false;
 }
 
 void stop(esp_err_t result) {
@@ -66,7 +61,7 @@ esp_err_t write(uint8_t reg, uint8_t value) {
 using Step = loop::Result (*)(loop::Handle, loop::Value&);
 
 void submit_step(const char* name, Step step) {
-	unsigned current = generation;
+	const unsigned current = generation;
 	if (!loop::try_submit(
 			name, [current, step](loop::Handle handle, loop::Value& value) {
 				if (current != generation) {
@@ -93,53 +88,51 @@ void finish_init(esp_err_t result) {
 void publish_events() {
 	static bool attached;
 	static uint16_t advertised_ma;
-	const bool plug = events::changed(attached, state.port.attached);
-	const bool power =
-		events::changed(advertised_ma, uint16_t(state.cc_limit_ma));
+	const bool plug =
+		events::update_if_changed(attached, poll_state.port.attached);
+	const bool power = events::update_if_changed(
+		advertised_ma, uint16_t(poll_state.cc_limit_ma));
 	if (plug) {
-		events::publish({.type = attached ? events::Type::usb_plugged
-										  : events::Type::usb_unplugged,
-						 .usb = {advertised_ma}});
-	} else if (power) {
 		events::publish(
-			{.type = events::Type::usb_power_changed, .usb = {advertised_ma}});
+			events::Event::usb_attachment_changed(attached, {advertised_ma}));
+	} else if (power) {
+		events::publish(events::Event::usb_power_changed({advertised_ma}));
 	}
 }
 
 loop::Result read_live_status(loop::Handle, loop::Value&) {
 	uint8_t data[kRegType - kRegStatus + 1];
-	esp_err_t result = read(kRegStatus, data, sizeof data);
+	const esp_err_t result = read(kRegStatus, data, sizeof data);
 	if (result != ESP_OK) {
 		fail_poll(result);
 		return loop::Result::done;
 	}
-	state.raw_status = data[0];
-	state.raw_status1 = data[kRegStatus1 - kRegStatus];
-	state.raw_type = data[kRegType - kRegStatus];
-	state.port = decode_status(state.raw_status);
-	state.remedy = decode_remedy(state.raw_status1);
-	state.role = decode_type(state.raw_type);
-	state.cc_limit_ma = cc_limit(state.port, state.role);
-	state.updated_us = esp_timer_get_time();
+	poll_state.raw_status = data[0];
+	poll_state.raw_status1 = data[kRegStatus1 - kRegStatus];
+	poll_state.raw_type = data[kRegType - kRegStatus];
+	poll_state.port = decode_status(poll_state.raw_status);
+	poll_state.remedy = decode_remedy(poll_state.raw_status1);
+	poll_state.role = decode_type(poll_state.raw_type);
+	poll_state.cc_limit_ma = cc_limit(poll_state.port, poll_state.role);
+	poll_state.updated_us = esp_timer_get_time();
 	publish();
-	busy = false;
-	subscribers.notify(state);
+	poll_in_progress = false;
+	subscribers.notify(poll_state);
 	publish_events();
 	return loop::Result::done;
 }
 
-// Sets CONTROL1.ENABLE with a read, modify, write, read-back sequence.
 loop::Result configure(loop::Handle, loop::Value&) {
-	esp_err_t result = read(kRegControl1, &state.raw_control1);
+	esp_err_t result = read(kRegControl1, &poll_state.raw_control1);
 	if (result == ESP_OK) {
-		result = write(kRegControl1, state.raw_control1 | kControl1Enable);
+		result = write(kRegControl1, poll_state.raw_control1 | kControl1Enable);
 	}
 	if (result == ESP_OK) {
-		result = read(kRegControl1, &state.raw_control1);
+		result = read(kRegControl1, &poll_state.raw_control1);
 	}
 	if (result == ESP_OK) {
-		state.control = decode_control1(state.raw_control1);
-		if (!state.control.enabled) {
+		poll_state.control = decode_control1(poll_state.raw_control1);
+		if (!poll_state.control.enabled) {
 			result = ESP_ERR_INVALID_RESPONSE;
 		}
 	}
@@ -147,18 +140,17 @@ loop::Result configure(loop::Handle, loop::Value&) {
 		stop(result);
 		return loop::Result::done;
 	}
-	state.configured = true;
+	poll_state.configured = true;
 	publish();
 	submit_step("fusb sample", read_live_status);
 	return loop::Result::done;
 }
 
-// Accepts only a FUSB303B. The first success completes the boot row.
 loop::Result read_identity_step(loop::Handle, loop::Value&) {
-	esp_err_t result = read(kRegDeviceId, &state.raw_identity);
+	esp_err_t result = read(kRegDeviceId, &poll_state.raw_identity);
 	if (result == ESP_OK) {
-		state.identity = decode_identity(state.raw_identity);
-		if (state.identity.version != kVersionFusb303b) {
+		poll_state.identity = decode_identity(poll_state.raw_identity);
+		if (poll_state.identity.version != kVersionFusb303b) {
 			result = ESP_ERR_INVALID_RESPONSE;
 		}
 	}
@@ -167,8 +159,8 @@ loop::Result read_identity_step(loop::Handle, loop::Value&) {
 		finish_init(result);
 		return loop::Result::done;
 	}
-	state.identity_known = true;
-	state.status = Status::ok;
+	poll_state.identity_known = true;
+	poll_state.status = Status::ok;
 	publish();
 	finish_init(ESP_OK);
 	submit_step("fusb configure", configure);
@@ -176,29 +168,16 @@ loop::Result read_identity_step(loop::Handle, loop::Value&) {
 }
 
 loop::Result poll_usb_c(loop::Handle, loop::Value&) {
-	if (busy || esp_timer_get_time() < ready_us) {
+	if (poll_in_progress || esp_timer_get_time() < earliest_i2c_access_us) {
 		return loop::Result::done;
 	}
-	busy = true;
-	state = State::copy();
-	submit_step("fusb poll", !state.identity_known ? read_identity_step
-							 : !state.configured   ? configure
-												   : read_live_status);
+	poll_in_progress = true;
+	poll_state = State::copy();
+	submit_step("fusb poll", !poll_state.identity_known ? read_identity_step
+							 : !poll_state.configured   ? configure
+														: read_live_status);
 	return loop::Result::done;
 }
-}  // namespace
-
-portMUX_TYPE State::mutex_ = portMUX_INITIALIZER_UNLOCKED;
-
-State& State::storage() {
-	static State shared;
-	return shared;
-}
-
-State State::copy() {
-	State result;
-	update([&](State& shared) { result = shared; });
-	return result;
 }
 
 bool subscribe(Handler handler, void* context) {
@@ -232,16 +211,17 @@ void init(Completion complete) {
 }
 
 esp_err_t reset() {
-	bool queued =
+	const bool queued =
 		loop::try_submit("fusb reset", [](loop::Handle, loop::Value&) {
-			if (!device || esp_timer_get_time() < ready_us) {
+			if (!device || esp_timer_get_time() < earliest_i2c_access_us) {
 				fail_poll(ESP_ERR_INVALID_STATE);
 				return loop::Result::done;
 			}
-			esp_err_t result = write(kRegReset, kSwReset);
+			const esp_err_t result = write(kRegReset, kSwReset);
 			++generation;
-			busy = false;
-			ready_us = esp_timer_get_time() + FUSB_RESET_DELAY_MS * 1000;
+			poll_in_progress = false;
+			earliest_i2c_access_us =
+				esp_timer_get_time() + int64_t{FUSB_RESET_DELAY_MS} * 1000;
 			if (result == ESP_OK) {
 				State::update([](State& shared) { shared = State{}; });
 			} else {
@@ -251,4 +231,4 @@ esp_err_t reset() {
 		});
 	return queued ? ESP_OK : ESP_ERR_NO_MEM;
 }
-}  // namespace fusb
+}

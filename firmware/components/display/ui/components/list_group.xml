@@ -1,0 +1,32 @@
+<component>
+	<!-- Rows on a surface between two hairlines, iOS 12 grouped style. -->
+	<api>
+		<slot name="rows" />
+	</api>
+	<view
+		extends="lv_obj"
+		width="100%"
+		height="content"
+		scrollable="false"
+		style_bg_color="{color_surface}"
+		style_bg_opa="100%"
+		style_border_color="{color_separator}"
+		style_border_width="{hairline}"
+		style_border_side="top"
+	>
+		<remove_theme selector="main" />
+		<!-- The lower hairline is on the inner object: the export cannot combine two border sides. -->
+		<lv_obj
+			name="rows"
+			width="100%"
+			height="content"
+			flex_flow="column"
+			scrollable="false"
+			style_border_color="{color_separator}"
+			style_border_width="{hairline}"
+			style_border_side="bottom"
+		>
+			<remove_theme selector="main" />
+		</lv_obj>
+	</view>
+</component>

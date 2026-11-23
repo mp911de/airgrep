@@ -1,4 +1,5 @@
 BasedOnStyle: Google
+FixNamespaceComments: false
 UseTab: ForContinuationAndIndentation
 IndentWidth: 4
 TabWidth: 4

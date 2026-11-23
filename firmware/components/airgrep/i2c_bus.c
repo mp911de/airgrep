@@ -21,11 +21,6 @@ esp_err_t i2c_bus_init(void) {
 
 i2c_master_bus_handle_t i2c_bus_handle(void) { return s_bus; }
 
-bool i2c_bus_present(uint8_t address) {
-	return i2c_master_probe(s_bus, address, CONFIG_AIRGREP_I2C_TIMEOUT_MS) ==
-		   ESP_OK;
-}
-
 esp_err_t i2c_bus_add_if_present(const i2c_device_config_t* config,
 								 i2c_master_dev_handle_t* device) {
 	if (!s_bus) {
@@ -34,7 +29,12 @@ esp_err_t i2c_bus_add_if_present(const i2c_device_config_t* config,
 	if (*device) {
 		return ESP_OK;
 	}
-	if (!i2c_bus_present(config->device_address)) {
+	// The I3C broadcast would switch the BMP580 away from I2C.
+	if (config->device_address == 0x7e) {
+		return ESP_ERR_INVALID_ARG;
+	}
+	if (i2c_master_probe(s_bus, config->device_address,
+						 CONFIG_AIRGREP_I2C_TIMEOUT_MS) != ESP_OK) {
 		return ESP_ERR_NOT_FOUND;
 	}
 	return i2c_master_bus_add_device(s_bus, config, device);

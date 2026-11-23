@@ -9,7 +9,6 @@
 
 #define CONSOLE_MAX_COMMANDS 24
 
-// Copies of the entries. The string literals they point to live in flash.
 static struct {
 	const char *command, *hint, *help;
 } commands[CONSOLE_MAX_COMMANDS];
@@ -37,8 +36,6 @@ esp_err_t console_register(const esp_console_cmd_t* command) {
 	return err;
 }
 
-// One line per command: name and synopsis padded to a column, then one
-// sentence.
 static int help(int argc, char** argv) {
 	(void)argv;
 	if (argc != 1) {
@@ -135,6 +132,12 @@ esp_err_t console_start(void) {
 	}
 	if (err == ESP_OK) {
 		err = console_register_traffic();
+	}
+	if (err == ESP_OK) {
+		err = console_register_hwtest();
+	}
+	if (err == ESP_OK) {
+		err = console_register_conflicts();
 	}
 	if (err == ESP_OK) {
 		err = logs_register();

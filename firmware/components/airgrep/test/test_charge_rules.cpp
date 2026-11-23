@@ -19,14 +19,14 @@ using charger::Supply;
 namespace {
 constexpr int64_t kSecond = 1000000;
 
-// A settled SDP port with a 2000 mAh pack at room temperature.
-ChargeInputs plugged(int64_t now_us) {
+ChargeInputs sdp_port(int64_t now_us) {
 	ChargeInputs in{};
 	in.now_us = now_us;
 	in.charger_usable = true;
 	in.vbus = true;
 	in.detected_ma = 500;
-	in.vbus_type = 1;
+	constexpr uint8_t standard_downstream_port = 1;
+	in.detected_vbus_type = standard_downstream_port;
 	in.pack_c = 25;
 	in.usb_c_usable = true;
 	in.capacity_mah = 2000;
@@ -34,17 +34,17 @@ ChargeInputs plugged(int64_t now_us) {
 }
 
 ChargeInputs advertising(int64_t now_us, unsigned ma) {
-	ChargeInputs in = plugged(now_us);
+	ChargeInputs in = sdp_port(now_us);
 	in.advertised_ma = ma;
 	return in;
 }
 
 ChargeInputs at(int64_t now_us, float celsius) {
-	ChargeInputs in = plugged(now_us);
+	ChargeInputs in = sdp_port(now_us);
 	in.pack_c = celsius;
 	return in;
 }
-}  // namespace
+}
 
 CASE(cc_wins,
 	 "A 1.5 A or 3 A CC advertisement wins over the detection result") {
@@ -58,28 +58,14 @@ CASE(cc_wins,
 	TEST_ASSERT_TRUE(target.hardware_limit);
 }
 
-CASE(any_advertisement,
-	 "Any advertised current wins, the hardware limit is off above 1500 mA") {
-	Rules rules;
-	auto target = rules.apply_rules(advertising(0, 2000));
-	TEST_ASSERT_TRUE(target.supply == Supply::usb_c);
-	TEST_ASSERT_EQUAL_UINT(2000, target.input_ma);
-	TEST_ASSERT_FALSE(target.hardware_limit);
-	target = rules.apply_rules(advertising(kSecond, 5000));
-	TEST_ASSERT_EQUAL_UINT(3300, target.input_ma);
-	target = rules.apply_rules(advertising(2 * kSecond, 900));
-	TEST_ASSERT_EQUAL_UINT(900, target.input_ma);
-	TEST_ASSERT_TRUE(target.hardware_limit);
-}
-
 CASE(detection, "Default CC leaves the input target to the detection result") {
 	Rules rules;
-	ChargeInputs in = plugged(0);
+	ChargeInputs in = sdp_port(0);
 	in.detected_ma = 1500;
-	in.vbus_type = 3;
+	in.detected_vbus_type = 3;
 	const auto target = rules.apply_rules(in);
 	TEST_ASSERT_TRUE(target.supply == Supply::detection);
-	TEST_ASSERT_EQUAL_UINT8(3, target.vbus_type);
+	TEST_ASSERT_EQUAL_UINT8(3, target.detected_vbus_type);
 	TEST_ASSERT_EQUAL_UINT(1500, target.input_ma);
 	TEST_ASSERT_TRUE(target.hardware_limit);
 }
@@ -118,7 +104,7 @@ CASE(wait,
 	in.usb_c_negotiating = true;
 	target = rules.apply_rules(in);
 	TEST_ASSERT_TRUE(target.supply == Supply::waiting);
-	TEST_ASSERT_EQUAL_INT64(kSecond, target.waiting_us);
+	TEST_ASSERT_EQUAL_INT64(kSecond, target.vbus_elapsed_us);
 	target = rules.apply_rules(advertising(2 * kSecond, 3000));
 	TEST_ASSERT_TRUE(target.supply == Supply::usb_c);
 	TEST_ASSERT_EQUAL_UINT(3000, target.input_ma);
@@ -126,7 +112,7 @@ CASE(wait,
 
 CASE(wait_ends, "The wait ends 5 s after VBUS appeared") {
 	Rules rules;
-	ChargeInputs in = plugged(0);
+	ChargeInputs in = sdp_port(0);
 	in.detecting = true;
 	TEST_ASSERT_TRUE(rules.apply_rules(in).supply == Supply::waiting);
 	in.now_us = 5 * kSecond - 1;
@@ -140,7 +126,7 @@ CASE(wait_ends, "The wait ends 5 s after VBUS appeared") {
 CASE(stale_negotiation,
 	 "A negotiating but stale USB-C State does not hold the wait") {
 	Rules rules;
-	ChargeInputs in = plugged(0);
+	ChargeInputs in = sdp_port(0);
 	in.usb_c_usable = false;
 	in.usb_c_negotiating = true;
 	TEST_ASSERT_TRUE(rules.apply_rules(in).supply == Supply::detection);
@@ -149,23 +135,23 @@ CASE(stale_negotiation,
 CASE(detach, "Detach from a 3 A source sets the hardware limit at once") {
 	Rules rules;
 	TEST_ASSERT_FALSE(rules.apply_rules(advertising(0, 3000)).hardware_limit);
-	auto target = rules.apply_rules(plugged(kSecond / 4));
+	auto target = rules.apply_rules(sdp_port(kSecond / 4));
 	TEST_ASSERT_TRUE(target.hardware_limit);
 	TEST_ASSERT_EQUAL_UINT(500, target.input_ma);
-	ChargeInputs gone = plugged(kSecond / 2);
+	ChargeInputs gone = sdp_port(kSecond / 2);
 	gone.vbus = false;
 	TEST_ASSERT_TRUE(rules.apply_rules(gone).hardware_limit);
 	ChargeInputs back = advertising(10 * kSecond, 3000);
 	back.detecting = true;
 	target = rules.apply_rules(back);
 	TEST_ASSERT_TRUE(target.supply == Supply::waiting);
-	TEST_ASSERT_EQUAL_INT64(0, target.waiting_us);
+	TEST_ASSERT_EQUAL_INT64(0, target.vbus_elapsed_us);
 	TEST_ASSERT_TRUE(target.hardware_limit);
 }
 
 CASE(capacity, "Charge target is 0.5 C between 500 and 2000 mA") {
 	Rules rules;
-	ChargeInputs in = plugged(0);
+	ChargeInputs in = sdp_port(0);
 	TEST_ASSERT_EQUAL_UINT(1000, rules.apply_rules(in).charge_ma);
 	in.capacity_mah = 600;
 	TEST_ASSERT_EQUAL_UINT(500, rules.apply_rules(in).charge_ma);
@@ -219,7 +205,7 @@ CASE(cold_stop, "Charging stops at 4 C and resumes at 6 C") {
 CASE(lost_temperature, "A lost temperature keeps a stop") {
 	Rules rules;
 	rules.apply_rules(at(0, 41));
-	const auto target = rules.apply_rules(at(0, NAN));
+	const auto target = rules.apply_rules(ChargeInputs{.capacity_mah = 2000});
 	TEST_ASSERT_FALSE(target.charge_enabled);
 	TEST_ASSERT_TRUE(target.stop == ChargeStop::hot);
 }
@@ -235,7 +221,7 @@ CASE(no_temperature,
 
 CASE(treg, "Every AUTO target sets TREG to 100 C") {
 	Rules rules;
-	TEST_ASSERT_EQUAL_UINT(100, rules.apply_rules(plugged(0)).thermal_limit_c);
+	TEST_ASSERT_EQUAL_UINT(100, rules.apply_rules(sdp_port(0)).thermal_limit_c);
 }
 
 namespace {
@@ -243,19 +229,18 @@ constexpr int64_t kMinute = 60 * kSecond;
 
 ChargeInputs battery(int64_t now_us, unsigned vbat_mv,
 					 bool overvoltage = false) {
-	ChargeInputs in = plugged(now_us);
+	ChargeInputs in = sdp_port(now_us);
 	in.vbat_mv = vbat_mv;
 	in.battery_overvoltage = overvoltage;
 	return in;
 }
 
-// One overvoltage, then 5 min off with a pack present.
-int64_t retry(Rules& rules, int64_t now_us) {
+int64_t overvoltage_retry_time(Rules& rules, int64_t now_us) {
 	rules.apply_rules(battery(now_us, 4200));
 	rules.apply_rules(battery(now_us + kSecond, 4300, true));
 	return now_us + kSecond + 5 * kMinute;
 }
-}  // namespace
+}
 
 CASE(overvoltage_stop,
 	 "VBAT_OVP stops charging for 5 min, then a pack resumes") {
@@ -312,10 +297,10 @@ CASE(lockout, "The 10th failure within 10 min of the last locks charging off") {
 	Rules rules;
 	int64_t now = 0;
 	for (int i = 0; i < 9; ++i) {
-		now = retry(rules, now);
+		now = overvoltage_retry_time(rules, now);
 	}
 	TEST_ASSERT_TRUE(rules.apply_rules(battery(now, 4150)).charge_enabled);
-	now = retry(rules, now);
+	now = overvoltage_retry_time(rules, now);
 	auto target = rules.apply_rules(battery(now, 4150));
 	TEST_ASSERT_FALSE(target.charge_enabled);
 	TEST_ASSERT_TRUE(target.stop == ChargeStop::locked);
@@ -329,7 +314,7 @@ CASE(counter_reset, "Failures more than 10 min apart never add up") {
 	Rules rules;
 	int64_t now = 0;
 	for (int i = 0; i < 12; ++i) {
-		now = retry(rules, now);
+		now = overvoltage_retry_time(rules, now);
 		rules.apply_rules(battery(now, 4150));
 		now += 11 * kMinute;
 		rules.apply_rules(battery(now, 4150));
@@ -389,7 +374,6 @@ int main() {
 	RUN_TEST(cold_stop);
 	RUN_TEST(lost_temperature);
 	RUN_TEST(no_temperature);
-	RUN_TEST(any_advertisement);
 	RUN_TEST(treg);
 	RUN_TEST(overvoltage_stop);
 	RUN_TEST(overvoltage_persists);

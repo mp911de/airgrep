@@ -1,0 +1,30 @@
+<component>
+	<!-- A page slides in from the right over Home and leaves the status header in place. -->
+	<api>
+		<prop name="page" type="int" help="The number of this page in subject_page" />
+	</api>
+
+	<animations>
+		<timeline name="timeline_push">
+			<animation prop="translate_x" target="self" start="800" end="0" duration="300" easing="bezier(0.2 0.8 0.2 1)" />
+		</timeline>
+	</animations>
+
+	<view
+		extends="lv_obj"
+		x="0"
+		y="{touch}"
+		width="800"
+		height="416"
+		flex_flow="column"
+		scrollable="false"
+		style_translate_x="800"
+		style_bg_color="{color_bg_grouped}"
+		style_bg_opa="100%"
+	>
+		<remove_theme selector="main" />
+		<!-- Not subject_page: going back to a page that is still open under another one must not slide it in again. -->
+		<play_timeline_event trigger="{subject_page_opening EQ page}" target="self" timeline="timeline_push" />
+		<play_timeline_event trigger="{subject_page_closing EQ page}" target="self" timeline="timeline_push" reverse="true" />
+	</view>
+</component>

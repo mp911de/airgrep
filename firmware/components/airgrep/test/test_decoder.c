@@ -3,6 +3,14 @@
 #include "adsbee/adsbee_decoder.h"
 #include "unity.h"
 
+#ifdef ESP_PLATFORM
+#define CASE(name, description) TEST_CASE(description, "[adsbee]")
+#else
+#define CASE(name, description) static void name(void)
+void setUp(void) {}
+void tearDown(void) {}
+#endif
+
 typedef struct {
 	int count;
 	char last[64];
@@ -13,13 +21,12 @@ static void capture(const char* text, size_t len, decoder_kind_t kind,
 					void* ctx) {
 	capture_t* c = ctx;
 	c->count++;
+	TEST_ASSERT_EQUAL_UINT(strlen(text), len);
 	strlcpy(c->last, text, sizeof c->last);
 	c->last_kind = kind;
 }
 
-TEST_CASE(
-
-	"Complete line is delivered as an AT reply", "[adsbee]") {
+CASE(complete_line, "Complete line is delivered as an AT reply") {
 	capture_t c = {0};
 	decoder_t d;
 	adsbee_decoder_init(&d, capture, &c);
@@ -29,9 +36,7 @@ TEST_CASE(
 	TEST_ASSERT_EQUAL(DECODER_AT_REPLY, c.last_kind);
 }
 
-TEST_CASE(
-
-	"CRLF line is delivered without CR", "[adsbee]") {
+CASE(crlf, "CRLF line is delivered without CR") {
 	capture_t c = {0};
 	decoder_t d;
 	adsbee_decoder_init(&d, capture, &c);
@@ -40,9 +45,7 @@ TEST_CASE(
 	TEST_ASSERT_EQUAL_STRING("OK", c.last);
 }
 
-TEST_CASE(
-
-	"Hash prefix classifies a CSBEE line", "[adsbee]") {
+CASE(csbee, "Hash prefix classifies a CSBEE line") {
 	capture_t c = {0};
 	decoder_t d;
 	adsbee_decoder_init(&d, capture, &c);
@@ -51,9 +54,7 @@ TEST_CASE(
 	TEST_ASSERT_EQUAL_STRING("#A:ABC", c.last);
 }
 
-TEST_CASE(
-
-	"Lines split across chunks and empty lines are skipped", "[adsbee]") {
+CASE(split_and_empty, "Lines split across chunks and empty lines are skipped") {
 	capture_t c = {0};
 	decoder_t d;
 	adsbee_decoder_init(&d, capture, &c);
@@ -63,10 +64,8 @@ TEST_CASE(
 	TEST_ASSERT_EQUAL_STRING("AT+X", c.last);
 }
 
-TEST_CASE(
-
-	"After an error the partial line is dropped through the next LF",
-	"[adsbee]") {
+CASE(after_error,
+	 "After an error the partial line is dropped through the next LF") {
 	capture_t c = {0};
 	decoder_t d;
 	adsbee_decoder_init(&d, capture, &c);
@@ -77,9 +76,7 @@ TEST_CASE(
 	TEST_ASSERT_EQUAL_STRING("OK", c.last);
 }
 
-TEST_CASE(
-
-	"Overlong line is discarded", "[adsbee]") {
+CASE(overlong, "Overlong line is discarded") {
 	capture_t c = {0};
 	decoder_t d;
 	adsbee_decoder_init(&d, capture, &c);
@@ -90,3 +87,16 @@ TEST_CASE(
 	TEST_ASSERT_EQUAL(1, c.count);
 	TEST_ASSERT_EQUAL_STRING("OK", c.last);
 }
+
+#ifndef ESP_PLATFORM
+int main(void) {
+	UNITY_BEGIN();
+	RUN_TEST(complete_line);
+	RUN_TEST(crlf);
+	RUN_TEST(csbee);
+	RUN_TEST(split_and_empty);
+	RUN_TEST(after_error);
+	RUN_TEST(overlong);
+	return UNITY_END();
+}
+#endif

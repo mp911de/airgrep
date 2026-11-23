@@ -1,0 +1,11 @@
+<component>
+	<!-- The own callsign on a keyboard. The application sets the layout of the language and owns the draft. -->
+	<view extends="page" page="6">
+		<nav_bar title="callsign" page="6" back="1">
+			<nav_bar-trailing>
+				<entry_field name="field" />
+			</nav_bar-trailing>
+		</nav_bar>
+		<keyboard name="keys" layout="en" />
+	</view>
+</component>

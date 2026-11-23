@@ -1,0 +1,16 @@
+menu "DAIDALUS"
+config DAIDALUS_FILE_IO
+    bool "Configuration and encounter file I/O"
+    default n
+    help
+        Include file readers, writers and batch processing. The application
+        must provide a mounted filesystem for filename-based operations.
+        All computational functionality remains available when disabled.
+config DAIDALUS_SINGLE_PRECISION
+    bool "Compute in single precision"
+    default n
+    help
+        Compute in float instead of double. The ESP32-S3 has a single
+        precision FPU and emulates double in software. Results differ from
+        the double build within the precision of float.
+endmenu

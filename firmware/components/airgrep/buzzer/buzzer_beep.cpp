@@ -21,7 +21,7 @@ esp_pm_lock_handle_t clock_lock;
 // stops it.
 void playing(bool value) {
 	portENTER_CRITICAL(&mutex);
-	bool changed = state.playing != value;
+	const bool changed = state.playing != value;
 	state.playing = value;
 	portEXIT_CRITICAL(&mutex);
 	if (changed && clock_lock) {
@@ -45,7 +45,7 @@ esp_err_t step() {
 		buzzer_off();
 		return result;
 	}
-	uint32_t expected = generation;
+	const uint32_t expected = generation;
 	next = loop::schedule(
 		tone.ms, {"buzzer step", [expected](loop::Handle, loop::Value&) {
 					  if (expected != generation) {
@@ -58,7 +58,7 @@ esp_err_t step() {
 						  }
 						  index = 0;
 					  }
-					  esp_err_t stepped = step();
+					  const esp_err_t stepped = step();
 					  if (stepped != ESP_OK) {
 						  ESP_LOGE("buzzer", "scheme stopped: %s",
 								   esp_err_to_name(stepped));
@@ -83,7 +83,7 @@ esp_err_t start(const buzzer_scheme_t* scheme, uint32_t hz) {
 	playing(true);
 	return step();
 }
-}  // namespace
+}
 
 buzzer_state_t buzzer_state(void) {
 	portENTER_CRITICAL(&mutex);
@@ -94,17 +94,18 @@ buzzer_state_t buzzer_state(void) {
 
 esp_err_t buzzer_prepare(void) {
 	const bool subscribed =
-		events::subscribe(events::of(events::Type::mute_switch_changed),
+		events::subscribe(events::mask_for(events::Type::mute_switch_changed),
 						  [](const events::Event& event, void*) {
-							  buzzer_set_mute(event.position.on);
+							  buzzer_set_mute(event.data.position.on);
 						  }) &&
-		events::subscribe(events::of(events::Type::mode_changed),
-						  [](const events::Event& event, void*) {
-							  if (const char* chime = power_mode_chime(
-									  event.mode.from, event.mode.to)) {
-								  buzzer_play(chime, 0);
-							  }
-						  });
+		events::subscribe(
+			events::mask_for(events::Type::mode_changed),
+			[](const events::Event& event, void*) {
+				if (const char* chime = power_mode_chime(event.data.mode.from,
+														 event.data.mode.to)) {
+					buzzer_play(chime, 0);
+				}
+			});
 	return subscribed ? ESP_OK : ESP_ERR_NO_MEM;
 }
 
@@ -122,7 +123,6 @@ void buzzer_set_mute(bool mute) {
 	portENTER_CRITICAL(&mutex);
 	state.mute = mute ? BUZZER_MUTE_ON : BUZZER_MUTE_OFF;
 	portEXIT_CRITICAL(&mutex);
-	// Cut a sounding tone at once, the scheme itself continues muted.
 	if (mute && ready) {
 		buzzer_pwm_off();
 	}

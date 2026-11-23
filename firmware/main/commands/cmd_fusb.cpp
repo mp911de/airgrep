@@ -10,10 +10,11 @@ namespace {
 struct {
 	struct arg_lit* reset;
 	struct arg_end* end;
+	void* table[2];
 } args;
 
 int command(int argc, char** argv) {
-	if (arg_parse(argc, argv, reinterpret_cast<void**>(&args))) {
+	if (arg_parse(argc, argv, args.table)) {
 		arg_print_errors(stderr, args.end, argv[0]);
 		return 1;
 	}
@@ -21,12 +22,14 @@ int command(int argc, char** argv) {
 		return command_status::ack(fusb::reset());
 	}
 	const auto state = fusb::State::copy();
-	if (!command_status::header(state.status, state.updated_us,
-								state.last_error, state.error_us)) {
+	command_status::print_status(state.status, state.updated_us,
+								 state.last_error, state.error_us);
+	if (!state.updated_us) {
 		return 0;
 	}
-	static const char* orientations[] = {"UNRESOLVED", "CC1", "CC2", "FAULT"};
-	static const char* roles[] = {
+	static const char* const orientations[] = {"UNRESOLVED", "CC1", "CC2",
+											   "FAULT"};
+	static const char* const roles[] = {
 		"NONE",         "SINK",         "SOURCE",
 		"ACTIVE CABLE", "AUDIO",        "AUDIO WITH VBUS",
 		"DEBUG SINK",   "DEBUG SOURCE", "INVALID"};
@@ -62,13 +65,15 @@ int command(int argc, char** argv) {
 				state.raw_identity);
 	return 0;
 }
-}  // namespace
+}
 
 extern "C" esp_err_t console_register_fusb(void) {
 	args.reset = arg_lit0(nullptr, "reset",
 						  "Reset and re-enable on the next poll after tEN");
 	args.end = arg_end(2);
-	if (arg_nullcheck(reinterpret_cast<void**>(&args))) {
+	args.table[0] = args.reset;
+	args.table[1] = args.end;
+	if (arg_nullcheck(args.table)) {
 		return ESP_ERR_NO_MEM;
 	}
 	const esp_console_cmd_t entry = {
@@ -78,7 +83,7 @@ extern "C" esp_err_t console_register_fusb(void) {
 			"controller.",
 		.hint = "[--reset]",
 		.func = command,
-		.argtable = &args,
+		.argtable = static_cast<void*>(args.table),
 		.func_w_context = nullptr,
 		.context = nullptr,
 	};

@@ -1,0 +1,89 @@
+#include "radar_private_gen.h"
+#ifdef LV_LVGL_H_INCLUDE_SIMPLE
+    #include "lvgl.h"
+#else
+    #include "lvgl/lvgl.h"
+#endif
+
+#if defined(LV_USE_XML) && LV_USE_XML
+    #include "lv_xml/lv_xml.h"
+#endif
+#include "../../airgrep_ui.h"
+
+void radar_constructor_hook(lv_obj_t * obj);
+void radar_destructor_hook(lv_obj_t * obj);
+void radar_event_hook(lv_event_t * e);
+
+static void radar_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj);
+static void radar_destructor(const lv_obj_class_t * class_p, lv_obj_t * obj);
+static void radar_event(const lv_obj_class_t * class_p, lv_event_t * e);
+
+const lv_obj_class_t radar_class = {
+    .base_class = &lv_obj_class,
+    .constructor_cb = radar_constructor,
+    .destructor_cb = radar_destructor,
+    .event_cb = radar_event,
+    .instance_size = sizeof(radar_t),
+    .editable = 1,
+    .name = "radar"
+};
+
+lv_obj_t * radar_create(lv_obj_t * parent)
+{
+    LV_LOG_INFO("begin");
+    lv_obj_t * obj = lv_obj_class_create_obj(&radar_class, parent);
+    lv_obj_class_init_obj(obj);
+
+    return obj;
+}
+
+static void radar_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
+{
+    LV_UNUSED(class_p);
+    LV_TRACE_OBJ_CREATE("begin");
+
+    radar_t * widget = (radar_t *)obj;
+
+    static bool style_inited = false;
+
+    if (!style_inited) {
+
+        style_inited = true;
+    }
+
+    lv_obj_t * the_root = NULL;
+    #if AIRGREP_UI_CHECK_COMPILE_TARGET(AIRGREP_UI_TARGET_ALL)
+    if (airgrep_ui_check_target(AIRGREP_UI_TARGET_ALL)) {
+        lv_obj_set_width(obj, 400);
+        lv_obj_set_height(obj, 416);
+        lv_obj_set_scrollable(obj, false);
+
+        lv_obj_remove_theme(obj, LV_PART_MAIN);
+
+        the_root = obj;
+    }
+    #endif
+    radar_constructor_hook(obj);
+
+    LV_TRACE_OBJ_CREATE("finished");
+}
+
+static void radar_destructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
+{
+    LV_UNUSED(class_p);
+
+    radar_destructor_hook(obj);
+}
+
+static void radar_event(const lv_obj_class_t * class_p, lv_event_t * e)
+{
+    LV_UNUSED(class_p);
+
+    lv_result_t res;
+
+    res = lv_obj_event_base(&radar_class, e);
+    if(res != LV_RESULT_OK) return;
+
+    radar_event_hook(e);
+}
+

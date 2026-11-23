@@ -1,0 +1,99 @@
+# The lint preset of the firmware and the utility. Both builds run clang-tidy with it and stop on a finding.
+# Checks: the groups that apply to this code, then the backlog, the checks that report on the code as it
+# is. Fix what a check finds, then remove its line. A clang-diagnostic line is a warning of the compiler.
+Checks:
+  - bugprone-*
+  - cert-*
+  - clang-analyzer-*
+  - concurrency-*
+  - cppcoreguidelines-*
+  - misc-*
+  - modernize-*
+  - performance-*
+  - portability-*
+  - readability-*
+  - -bugprone-crtp-constructor-accessibility
+  - -bugprone-easily-swappable-parameters
+  - -bugprone-exception-escape
+  - -bugprone-reserved-identifier
+  - -bugprone-signed-bitwise
+  - -bugprone-suspicious-string-compare
+  - -bugprone-suspicious-stringview-data-usage
+  - -bugprone-unchecked-string-to-number-conversion
+  - -cert-dcl37-c
+  - -cert-dcl50-cpp
+  - -cert-dcl51-cpp
+  - -cert-err34-c
+  - -clang-analyzer-core.FixedAddressDereference
+  - -clang-analyzer-optin.core.EnumCastOutOfRange
+  - -clang-analyzer-optin.osx.cocoa.localizability.NonLocalizedStringChecker
+  - -clang-analyzer-optin.performance.Padding
+  - -clang-analyzer-optin.taint.GenericTaint
+  - -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+  - -clang-diagnostic-missing-designated-field-initializers
+  - -concurrency-mt-unsafe
+  - -cppcoreguidelines-avoid-c-arrays
+  - -cppcoreguidelines-avoid-const-or-ref-data-members
+  - -cppcoreguidelines-avoid-do-while
+  - -cppcoreguidelines-avoid-magic-numbers
+  - -cppcoreguidelines-avoid-non-const-global-variables
+  - -cppcoreguidelines-macro-to-enum
+  - -cppcoreguidelines-macro-usage
+  - -cppcoreguidelines-non-private-member-variables-in-classes
+  - -cppcoreguidelines-pro-bounds-array-to-pointer-decay
+  - -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access
+  - -cppcoreguidelines-pro-bounds-constant-array-index
+  - -cppcoreguidelines-pro-bounds-pointer-arithmetic
+  - -cppcoreguidelines-pro-type-const-cast
+  - -cppcoreguidelines-pro-type-cstyle-cast
+  - -cppcoreguidelines-pro-type-reinterpret-cast
+  - -cppcoreguidelines-pro-type-union-access
+  - -cppcoreguidelines-pro-type-vararg
+  - -cppcoreguidelines-use-enum-class
+  - -misc-header-include-cycle
+  - -misc-include-cleaner
+  - -misc-no-recursion
+  - -misc-non-private-member-variables-in-classes
+  - -misc-use-anonymous-namespace
+  - -modernize-avoid-c-arrays
+  - -modernize-macro-to-enum
+  - -modernize-redundant-void-arg
+  - -modernize-use-auto
+  - -modernize-use-designated-initializers
+  - -modernize-use-nodiscard
+  - -modernize-use-nullptr
+  - -modernize-use-std-print
+  - -modernize-use-trailing-return-type
+  - -modernize-use-using
+  - -performance-enum-size
+  - -performance-no-int-to-ptr
+  - -portability-avoid-pragma-once
+  - -readability-avoid-nested-conditional-operator
+  - -readability-container-contains
+  - -readability-function-cognitive-complexity
+  - -readability-identifier-length
+  - -readability-implicit-bool-conversion
+  - -readability-isolate-declaration
+  - -readability-magic-numbers
+  - -readability-math-missing-parentheses
+  - -readability-named-parameter
+  - -readability-non-const-parameter
+  - -readability-qualified-auto
+  - -readability-redundant-casting
+  - -readability-redundant-member-init
+  - -readability-redundant-parentheses
+  - -readability-simplify-boolean-expr
+  - -readability-static-accessed-through-instance
+  - -readability-trailing-comma
+  - -readability-uppercase-literal-suffix
+WarningsAsErrors: '*'
+CheckOptions:
+  # The pointee analysis reports on what the TEST_CASE macro of the IDF declares.
+  misc-const-correctness.AnalyzePointers: false
+  # ESP_ERROR_CHECK of the IDF declares a local of this type that the check wants const.
+  misc-const-correctness.AllowedTypes: 'esp_err_t'
+  # A positive literal is no signed operand: 1 << 3.
+  bugprone-signed-bitwise.IgnorePositiveIntegerLiterals: true
+# Hand-written code only: not what the Editor or a build generates, and not what is fetched.
+HeaderFilterRegex: '/(main|components/(airgrep|loop|hwtest|display)|utility)/'
+ExcludeHeaderFilterRegex: '_gen\.h$|/ui/fonts/|/zones\.hpp$|/build/|/_deps/|/managed_components/|/esp-idf/'

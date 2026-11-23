@@ -5,6 +5,7 @@
 #include "command_status.hpp"
 #include "console.h"
 #include "esp_console.h"
+#include "settings/application_settings.hpp"
 #include "settings/settings.hpp"
 
 namespace {
@@ -14,10 +15,11 @@ struct {
 	struct arg_str* field;
 	struct arg_str* value;
 	struct arg_end* end;
+	void* table[5];
 } args;
 
 int command(int argc, char** argv) {
-	if (arg_parse(argc, argv, reinterpret_cast<void**>(&args))) {
+	if (arg_parse(argc, argv, args.table)) {
 		arg_print_errors(stderr, args.end, argv[0]);
 		return 1;
 	}
@@ -31,7 +33,8 @@ int command(int argc, char** argv) {
 		return command_status::ack(settings::reset());
 	}
 	if (args.format->count) {
-		return command_status::ack(settings::format());
+		return command_status::ack(
+			application_settings::format_nvs_partition());
 	}
 	if (args.value->count) {
 		return command_status::ack(
@@ -40,9 +43,9 @@ int command(int argc, char** argv) {
 	const settings::Settings current = settings::copy();
 	const settings::Settings fallback = settings::defaults();
 	const settings::Status status = settings::status();
-	size_t count;
+	size_t count = 0;
 	const settings::Field* fields = settings::fields(count);
-	char value[SETTINGS_TZ_RULE_SIZE], standard[SETTINGS_TZ_RULE_SIZE];
+	char value[SETTINGS_ZONE_SIZE], standard[SETTINGS_ZONE_SIZE];
 	for (size_t i = 0; i < count; i++) {
 		if (args.field->count &&
 			std::strcmp(fields[i].name, args.field->sval[0]) != 0) {
@@ -64,7 +67,7 @@ int command(int argc, char** argv) {
 	}
 	return 0;
 }
-}  // namespace
+}
 
 extern "C" esp_err_t console_register_settings(void) {
 	args.reset = arg_lit0(nullptr, "reset",
@@ -75,7 +78,12 @@ extern "C" esp_err_t console_register_settings(void) {
 	args.value =
 		arg_str0(nullptr, nullptr, "value", "New value, saved at once");
 	args.end = arg_end(3);
-	if (arg_nullcheck(reinterpret_cast<void**>(&args))) {
+	args.table[0] = args.reset;
+	args.table[1] = args.format;
+	args.table[2] = args.field;
+	args.table[3] = args.value;
+	args.table[4] = args.end;
+	if (arg_nullcheck(args.table)) {
 		return ESP_ERR_NO_MEM;
 	}
 	const esp_console_cmd_t entry = {
@@ -83,7 +91,7 @@ extern "C" esp_err_t console_register_settings(void) {
 		.help = "List, set or reset the persistent settings.",
 		.hint = "[<field> <value>] | --reset | --format",
 		.func = command,
-		.argtable = &args,
+		.argtable = static_cast<void*>(args.table),
 		.func_w_context = nullptr,
 		.context = nullptr,
 	};

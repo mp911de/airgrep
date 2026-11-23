@@ -1,0 +1,38 @@
+<component>
+	<api>
+		<prop name="title" type="string" help="Translation tag of the page title" />
+		<prop name="page" type="int" help="The page this bar belongs to" />
+		<prop name="back" type="int" default="0" help="The page the back chevron returns to" />
+		<slot name="trailing" />
+	</api>
+	<view
+		extends="lv_obj"
+		width="100%"
+		height="{touch}"
+		flex_flow="row"
+		scrollable="false"
+		style_flex_cross_place="center"
+		style_flex_track_place="center"
+		style_pad_bottom="2"
+		style_bg_color="{color_surface}"
+		style_bg_opa="100%"
+		style_border_color="{color_separator}"
+		style_border_width="{hairline}"
+		style_border_side="bottom"
+	>
+		<remove_theme selector="main" />
+		<lv_obj name="back_button" width="{touch}" height="{touch}" clickable="true" scrollable="false">
+			<remove_theme selector="main" />
+			<style name="style_pressed_clear" selector="pressed" />
+			<lv_image src="icon_chevron_left" align="center" style_image_recolor="{color_tint}" style_image_recolor_opa="100%" />
+			<set_subject_event subject="subject_page_closing" value="{page}" trigger="clicked" />
+			<set_subject_event subject="subject_page" value="{back}" trigger="clicked" />
+		</lv_obj>
+		<lv_label name="bar_title" translation_tag="{title}" flex_grow="1" style_text_font="font_title" />
+		<!-- What a page puts at the trailing edge: an entry field, and the unit of a number behind it. -->
+		<lv_obj name="trailing" width="content" height="content" flex_flow="row" clickable="false" scrollable="false"
+			style_flex_cross_place="center" style_pad_column="8" style_pad_right="14">
+			<remove_theme selector="main" />
+		</lv_obj>
+	</view>
+</component>

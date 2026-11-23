@@ -1,0 +1,204 @@
+<globals>
+	<!-- Tokens of docs/ui-design/design-language.md. A theme is a value set: light_* and dark_* hold the
+	     values, the color_* subjects hold the active set and are what screens use. -->
+	<consts>
+		<int name="touch" value="64" help="Smallest touch target, row and header height" />
+		<int name="hairline" value="1" />
+		<int name="alert_strip_width" value="16" />
+		<int name="traffic_width" value="400" />
+		<int name="traffic_padding" value="12" />
+		<int name="traffic_column_gap" value="4" />
+		<int name="traffic_title_width" value="154" />
+		<int name="traffic_alt_width" value="80" />
+		<int name="traffic_trend_width" value="18" />
+		<int name="traffic_bearing_width" value="36" />
+		<int name="traffic_distance_width" value="72" />
+		<int name="swipe_action_width" value="144" />
+		<int name="radius" value="12" />
+		<!-- Mixed into what a finger holds. Mid grey darkens a light theme and lightens a dark one. -->
+		<color name="pressed" value="0x808080" />
+		<int name="pressed_opacity_u8" value="64" />
+		<color name="light_bg" value="0xffffff" />
+		<color name="dark_bg" value="0x000000" />
+		<color name="light_bg_grouped" value="0xefeff4" />
+		<color name="dark_bg_grouped" value="0x000000" />
+		<color name="light_surface" value="0xffffff" />
+		<color name="dark_surface" value="0x1c1c1e" />
+		<color name="light_separator" value="0xc8c7cc" />
+		<color name="dark_separator" value="0x38383a" />
+		<color name="light_label" value="0x000000" />
+		<color name="dark_label" value="0xffffff" />
+		<color name="light_label_2" value="0x6d6d72" />
+		<color name="dark_label_2" value="0x98989f" />
+		<color name="light_tint" value="0x007aff" />
+		<color name="dark_tint" value="0x0a84ff" />
+		<color name="light_green" value="0x34c759" />
+		<color name="dark_green" value="0x30d158" />
+		<color name="light_red" value="0xff3b30" />
+		<color name="dark_red" value="0xff453a" />
+		<color name="light_red_dim" value="0xf6b1ac" />
+		<color name="dark_red_dim" value="0x5a1410" />
+		<color name="light_yellow" value="0xffcc00" />
+		<color name="dark_yellow" value="0xffd60a" />
+		<color name="light_grid" value="0xaeaeb2" />
+		<color name="dark_grid" value="0x48484a" />
+		<color name="light_control" value="0xe5e5ea" />
+		<color name="dark_control" value="0x2c2c2e" />
+		<!-- The dots of the logo, as in assets/logo.svg and assets/logo-dark.svg. -->
+		<color name="light_logo_dot" value="0xaeaeb2" />
+		<color name="dark_logo_dot" value="0x636366" />
+		<color name="light_on_green" value="0xffffff" />
+		<color name="dark_on_green" value="0x000000" />
+		<color name="light_pill" value="0xe5e5ea" />
+		<color name="dark_pill" value="0x2c2c2e" />
+		<color name="light_pill_label" value="0x3a3a3c" />
+		<color name="dark_pill_label" value="0xd1d1d6" />
+		<color name="light_pill_flarm" value="0xd6eaff" />
+		<color name="dark_pill_flarm" value="0x0f2e4d" />
+		<color name="light_pill_flarm_label" value="0x0a4a8a" />
+		<color name="dark_pill_flarm_label" value="0x8cc8ff" />
+	</consts>
+
+	<!-- Inter with tabular figures at the optical size of each font, made by fonts/tabular.py. -->
+	<fonts>
+		<bin name="font_label" size="20" src_path="fonts/InterTabular-20-600.ttf" bpp="8" range="0x20-0x7F,0xA0-0xFF" symbols="−–°" as_file="false" />
+		<bin name="font_small" size="16" src_path="fonts/InterTabular-16-600.ttf" bpp="8" range="0x20-0x7F,0xA0-0xFF" symbols="−–°" as_file="false" />
+		<!-- With the curly quotes of the license texts. -->
+		<bin name="font_text" size="20" src_path="fonts/InterTabular-20-500.ttf" bpp="8" range="0x20-0x7F,0xA0-0xFF" symbols="−–°‘’“”" as_file="false" />
+		<bin name="font_title" size="24" src_path="fonts/InterTabular-24-600.ttf" bpp="8" range="0x20-0x7F,0xA0-0xFF" symbols="−–°" as_file="false" />
+		<bin name="font_data" size="30" src_path="fonts/InterTabular-30-600.ttf" bpp="8" range="0x20-0x7F,0xA0-0xFF" symbols="−–°" as_file="false" />
+		<!-- The charge in charger mode: digits and the percent sign only. -->
+		<bin name="font_display" size="120" src_path="fonts/InterTabular-120-600.ttf" bpp="8" range="0x25,0x30-0x39" as_file="false" />
+		<!-- What an entry field shows of the stored value: lighter than font_data, digits and capitals only. -->
+		<bin name="font_stored" size="30" src_path="fonts/InterTabular-30-500.ttf" bpp="8" range="0x30-0x39,0x41-0x5A" as_file="false" />
+	</fonts>
+
+	<!-- Traffic symbols, one per kind of target. Alpha only, the radar colours and rotates them. -->
+	<images>
+		<convert src="images/traffic/light.svg" dest="images/traffic/light.png" width="64" color_format="argb8888" />
+		<data name="symbol_light" src_path="images/traffic/light.png" color_format="a8" />
+		<convert src="images/traffic/airliner.svg" dest="images/traffic/airliner.png" width="64" color_format="argb8888" />
+		<data name="symbol_airliner" src_path="images/traffic/airliner.png" color_format="a8" />
+		<convert src="images/traffic/glider.svg" dest="images/traffic/glider.png" width="64" color_format="argb8888" />
+		<data name="symbol_glider" src_path="images/traffic/glider.png" color_format="a8" />
+		<convert src="images/traffic/helicopter.svg" dest="images/traffic/helicopter.png" width="64" color_format="argb8888" />
+		<data name="symbol_helicopter" src_path="images/traffic/helicopter.png" color_format="a8" />
+		<convert src="images/traffic/balloon.svg" dest="images/traffic/balloon.png" width="64" color_format="argb8888" />
+		<data name="symbol_balloon" src_path="images/traffic/balloon.png" color_format="a8" />
+		<convert src="images/traffic/unknown.svg" dest="images/traffic/unknown.png" width="64" color_format="argb8888" />
+		<data name="symbol_unknown" src_path="images/traffic/unknown.png" color_format="a8" />
+		<!-- The simple style: one arrowhead for every target with a track, the paper plane of the logo for the own ship. -->
+		<convert src="images/traffic/simple.svg" dest="images/traffic/simple.png" width="64" color_format="argb8888" />
+		<data name="symbol_simple" src_path="images/traffic/simple.png" color_format="a8" />
+		<convert src="images/traffic/paper_plane.svg" dest="images/traffic/paper_plane.png" width="64" color_format="argb8888" />
+		<data name="symbol_paper_plane" src_path="images/traffic/paper_plane.png" color_format="a8" />
+
+		<data name="icon_gps_3d" src_path="images/sf/gps_3d.png" color_format="a8" />
+		<data name="icon_gps_2d" src_path="images/sf/gps_2d.png" color_format="a8" />
+		<data name="icon_gps_search" src_path="images/sf/gps_search.png" color_format="a8" />
+		<data name="icon_gps_antenna" src_path="images/sf/gps_antenna.png" color_format="a8" />
+		<data name="icon_gps_fault" src_path="images/sf/gps_fault.png" color_format="a8" />
+		<data name="icon_wifi" src_path="images/sf/wifi.png" color_format="a8" />
+		<data name="icon_wifi_off" src_path="images/sf/wifi_off.png" color_format="a8" />
+		<data name="icon_speaker" src_path="images/sf/speaker.png" color_format="a8" />
+		<data name="icon_speaker_off" src_path="images/sf/speaker_off.png" color_format="a8" />
+		<data name="icon_plus" src_path="images/sf/plus.png" color_format="a8" />
+		<data name="icon_minus" src_path="images/sf/minus.png" color_format="a8" />
+		<convert src="images/sf/track.svg" dest="images/sf/track.png" width="36" color_format="argb8888" />
+		<data name="icon_track" src_path="images/sf/track.png" color_format="a8" />
+		<convert src="images/sf/track_on.svg" dest="images/sf/track_on.png" width="36" color_format="argb8888" />
+		<data name="icon_track_on" src_path="images/sf/track_on.png" color_format="a8" />
+		<data name="icon_bell_slash" src_path="images/sf/bell_slash.png" color_format="a8" />
+		<data name="icon_bell" src_path="images/sf/bell.png" color_format="a8" />
+		<data name="icon_qrcode" src_path="images/sf/qrcode.png" color_format="a8" />
+		<data name="icon_chevron_left" src_path="images/sf/chevron_left.png" color_format="a8" />
+		<data name="icon_chevron_right" src_path="images/sf/chevron_right.png" color_format="a8" />
+		<data name="icon_delete" src_path="images/sf/delete.png" color_format="a8" />
+		<data name="icon_check" src_path="images/sf/check.png" color_format="a8" />
+		<data name="icon_chosen" src_path="images/sf/chosen.png" color_format="a8" />
+		<!-- What lies on the header battery while it charges or is absent. Each cut is its shape grown by 2 px,
+		     drawn below it in the background colour. A pair shares one canvas. -->
+		<data name="icon_bolt" src_path="images/sf/bolt.png" color_format="a8" />
+		<data name="icon_bolt_cut" src_path="images/sf/bolt_cut.png" color_format="a8" />
+		<data name="icon_bolt_line" src_path="images/sf/bolt_line.png" color_format="a8" />
+		<data name="icon_battery_slash" src_path="images/battery/slash.png" color_format="a8" />
+		<data name="icon_battery_slash_cut" src_path="images/battery/slash_cut.png" color_format="a8" />
+		<!-- The logo of assets/ in pieces, each takes its colour from the theme. The pill and the dots are drawn. -->
+		<data name="logo_air" src_path="images/logo/air.png" color_format="a8" />
+		<data name="logo_grep" src_path="images/logo/grep.png" color_format="a8" />
+		<data name="logo_plane" src_path="images/logo/plane.png" color_format="a8" />
+		<convert src="images/sf/signal_0.svg" dest="images/sf/signal_0.png" width="30" color_format="argb8888" />
+		<data name="icon_signal_0" src_path="images/sf/signal_0.png" color_format="a8" />
+		<convert src="images/sf/signal_1.svg" dest="images/sf/signal_1.png" width="30" color_format="argb8888" />
+		<data name="icon_signal_1" src_path="images/sf/signal_1.png" color_format="a8" />
+		<convert src="images/sf/signal_2.svg" dest="images/sf/signal_2.png" width="30" color_format="argb8888" />
+		<data name="icon_signal_2" src_path="images/sf/signal_2.png" color_format="a8" />
+		<convert src="images/sf/signal_3.svg" dest="images/sf/signal_3.png" width="30" color_format="argb8888" />
+		<data name="icon_signal_3" src_path="images/sf/signal_3.png" color_format="a8" />
+	</images>
+
+	<!-- For the selector "pressed". style_pressed is for an element with a fill, style_pressed_clear
+	     brings its own veil for one without. -->
+	<styles>
+		<style name="style_pressed" recolor="{pressed}" recolor_opa="{pressed_opacity_u8}" />
+		<style name="style_pressed_clear" recolor="{pressed}" recolor_opa="{pressed_opacity_u8}" bg_color="{pressed}" bg_opa="{pressed_opacity_u8}" />
+	</styles>
+
+	<subjects>
+		<!-- The active theme, light by default. The application writes all of them when the theme changes.
+		     Literal values: the Editor preview shows black for a colour subject that takes its value from a constant. -->
+		<color name="color_bg" value="0xffffff" />
+		<color name="color_bg_grouped" value="0xefeff4" />
+		<color name="color_surface" value="0xffffff" />
+		<color name="color_separator" value="0xc8c7cc" />
+		<color name="color_label" value="0x000000" />
+		<color name="color_label_2" value="0x6d6d72" />
+		<color name="color_tint" value="0x007aff" />
+		<color name="color_green" value="0x34c759" />
+		<color name="color_red" value="0xff3b30" />
+		<color name="color_red_dim" value="0xf6b1ac" />
+		<color name="color_yellow" value="0xffcc00" />
+		<color name="color_grid" value="0xaeaeb2" />
+		<color name="color_control" value="0xe5e5ea" />
+		<color name="color_on_green" value="0xffffff" />
+		<color name="color_logo_dot" value="0xaeaeb2" />
+		<color name="color_pill" value="0xe5e5ea" />
+		<color name="color_pill_label" value="0x3a3a3c" />
+		<color name="color_pill_flarm" value="0xd6eaff" />
+		<color name="color_pill_flarm_label" value="0x0a4a8a" />
+
+		<!-- A subject starts empty or at 0. What a screen shows comes from the device, never from here. -->
+		<string name="subject_time" value="" />
+		<int name="subject_health" value="0" min_value="0" max_value="2" help="0 OK, 1 caution, 2 failure" />
+		<int name="subject_battery" value="0" min_value="0" max_value="100" help="Percent" />
+		<int name="subject_battery_state" value="0" min_value="0" max_value="3" help="0 absent, 1 discharging, 2 charging, 3 full on the charger" />
+		<int name="subject_antenna" value="0" min_value="0" max_value="4" help="0 unknown, 1 active and OK, 2 passive and OK, 3 short, 4 disconnected" />
+		<int name="subject_gps" value="0" min_value="0" max_value="2" help="The fix: 0 none, 1 2D, 2 3D" />
+		<int name="subject_gps_symbol" value="0" min_value="0" max_value="5" help="The symbol in the header: 0 searching, 1 2D fix, 2 3D fix, 3 antenna short, 4 antenna disconnected, 5 no receiver" />
+		<int name="subject_wifi" value="0" min_value="0" max_value="1" help="1 while the Wi-Fi slider is on" />
+		<int name="subject_muted" value="0" min_value="0" max_value="1" help="1 while the MUTE slider is on" />
+		<int name="subject_page" value="0" min_value="0" max_value="9" help="The page in front: 0 Home, 1 System, 2 Wi-Fi and Battery, 3 Licenses, 4 License text, 5 ICAO address, 6 Callsign, 7 Time zone, 8 Zones of a region, 9 Altitude" />
+		<int name="subject_page_opening" value="0" min_value="0" max_value="9" help="The page that slides in. Going back to a page that is still open does not write it" />
+		<int name="subject_page_closing" value="0" min_value="0" max_value="9" help="The page that slides out. Whoever leaves a page writes it before subject_page" />
+		<string name="subject_time_zone" value="" help="Name of the chosen time zone, in the header and on System" />
+		<string name="subject_wifi_network" value="" />
+		<string name="subject_wifi_password" value="" />
+		<string name="subject_battery_remaining" value="" />
+		<int name="subject_satellites" value="0" min_value="0" max_value="99" />
+		<int name="subject_signal" value="0" min_value="-1" max_value="3" help="Level of the strongest satellite, -1 without a receiver" />
+		<int name="subject_theme_dark" value="0" min_value="0" max_value="1" help="What the theme control shows" />
+		<int name="subject_track_history" value="0" min_value="0" max_value="1" />
+		<int name="subject_simple_symbols" value="0" min_value="0" max_value="1" help="What the symbols control shows" />
+		<int name="subject_conflict_indicator" value="0" min_value="0" max_value="1" />
+		<int name="subject_time_zone_automatic" value="1" min_value="0" max_value="1" />
+		<string name="subject_zone" value="" help="The place of the time zone in use, as Berlin, or UTC" />
+		<int name="subject_radar_range" value="4" min_value="2" max_value="32" help="Nautical miles to the outer ring" />
+		<string name="subject_icao" value="" help="The own ICAO address, or the text for none" />
+		<string name="subject_callsign" value="" help="The own callsign, or the text for none" />
+		<string name="subject_altitude_filter" value="" help="The altitude filter with its unit, as 3000 ft" />
+		<string name="subject_device_id" value="" />
+		<string name="subject_version" value="" />
+		<int name="subject_alert_phase" value="0" min_value="0" max_value="1" help="Toggles while an alert blinks, 0 is the bright half" />
+		<int name="subject_alert" value="0" min_value="0" max_value="1" help="1 while a target is at alert level" />
+	</subjects>
+</globals>

@@ -36,15 +36,15 @@ class Callable<R(Args...)> {
 
 	template <typename F>
 		requires(!std::is_same_v<std::decay_t<F>, Callable>)
-	Callable(F f) {
+	Callable(F f)
+		: invoke_([](const void* s, Args... a) -> R {
+			  return (*static_cast<const F*>(s))(a...);
+		  }) {
 		static_assert(sizeof(F) <= capture_bytes, "capture exceeds 16 bytes");
 		static_assert(alignof(F) <= alignof(uint64_t), "capture over-aligned");
 		static_assert(std::is_trivially_copyable_v<F>,
 					  "capture must be trivially copyable");
-		std::memcpy(storage_, &f, sizeof f);
-		invoke_ = [](const void* s, Args... a) -> R {
-			return (*static_cast<const F*>(s))(a...);
-		};
+		std::memcpy(storage_, static_cast<const void*>(&f), sizeof f);
 	}
 
 	explicit operator bool() const { return invoke_ != nullptr; }
@@ -68,10 +68,12 @@ using Action = Callable<Result(Handle, Value&)>;
 using SuccessListener = Callable<void(Value)>;
 using ErrorListener = Callable<void(Outcome)>;
 
+inline constexpr uint32_t no_timeout = 0;
+
 struct Task {
-	const char* name;  // static string, logged at debug on run, warn on timeout
+	const char* name{};  // static string for diagnostics
 	Action action;
-	uint32_t timeout_ms = 0;  // 0 disables the timeout
+	uint32_t timeout_ms = no_timeout;
 };
 
 static_assert(std::is_trivially_copyable_v<Task>);
@@ -89,21 +91,25 @@ bool try_submit(const char* name, Action action);
 Handle submit(const Task& task, SuccessListener on_success = {},
 			  ErrorListener on_error = {});
 Handle submit(const char* name, Action action);
-// The timeout of a scheduled task counts from its due time.
 Handle schedule(uint32_t delay_ms, const Task& task,
 				SuccessListener on_success = {}, ErrorListener on_error = {});
-// Runs every period until cancelled or the action returns error. The timeout
-// of the task is ignored.
-Handle schedule_periodic(uint32_t period_ms, const Task& task,
-						 SuccessListener on_success = {},
+struct PeriodicTask {
+	const char* name{};
+	Action action;
+};
+Handle schedule_periodic(uint32_t period_ms, const PeriodicTask& task,
 						 ErrorListener on_error = {});
 
-// True only when the promise was live and not completed. The error listener
+// Moves an existing timer no earlier than delay_ms from now, keeping its slot.
+// Returns false if the handle no longer has a scheduled action.
+bool postpone(Handle handle, uint32_t delay_ms);
+
+// A running one-shot cannot be cancelled until its action returns pending.
+// On cancellation the error listener
 // runs with Outcome::cancelled on the calling task.
 bool cancel(Handle handle);
 // Completion for actions that returned pending. First caller wins.
 bool complete(Handle handle, Value value);
 bool fail(Handle handle, Outcome outcome);
-// True while the promise exists and nothing has completed it yet.
 bool pending(Handle handle);
-}  // namespace loop
+}

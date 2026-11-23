@@ -1,0 +1,96 @@
+= airgrep firmware and macOS Utility
+
+The airgrep Firmware and macOS Utility application.
+
+== Layout
+
+[cols="1,2",options="header"]
+|===
+| Component
+| Description
+
+| link:main/[`main`]
+| Main ESP32 Firmware code
+
+| link:components/[`components`]
+| airgrep system components, daidalus integration, LVGL frontend, Hardware tests, Event Loop
+
+| link:tools/[`tools`]
+| airgrep.py Command-Line interface
+
+| link:tzdb/[`tzdb`]
+| Builds the time zone table for GNSS positions.
+
+| link:utility/[`utility`]
+| macOS Utility application
+Firmware upgrade, Device information, debug console
+
+|===
+
+== Build Environment
+
+The firmware and the utility build independently.
+The utility is a macOS application, so Linux builds the firmware and runs the format check, Ruff, ShellCheck and the firmware host tests: `cmake -S tests/host -B build/host -G Ninja`, then `ctest --test-dir build/host`.
+
+[cols="1,3",options="header"]
+|===
+| Target
+| Needs
+
+| Firmware
+| ESP-IDF v6.1, which brings CMake, Ninja and Python, and the esp-clang of its tools, which has the compiler and clang-tidy. Git and clang-format.
+
+| Utility
+| CMake 3.27, Ninja, the Xcode Command Line Tools, libusb, pkg-config, Python, clang-format and clang-tidy from LLVM.
+
+| Checks
+| Ruff, ShellCheck, a C and C++ compiler for the host tests. On macOS also Pillow for the display checks.
+
+|===
+
+.macOS
+[source,bash]
+----
+xcode-select --install
+brew install cmake ninja clang-format llvm libusb pkgconf python pillow ruff shellcheck
+brew install espressif/eim/eim
+eim install -i v6.1
+----
+
+.Linux
+[source,bash]
+----
+sudo apt-get install git clang-format shellcheck python3 pipx build-essential
+pipx install ruff
+----
+
+Install ESP-IDF v6.1. If esp-clang is missing, run `idf_tools.py install esp-clang` in the ESP-IDF environment.
+
+== Build the firmware
+
+[source,bash]
+----
+source ~/.espressif/tools/activate_idf_v6.1.sh
+idf.py --preset s3 build
+----
+
+Choose the preset for your board from link:CMakePresets.json[CMakePresets.json].
+Remote Display, Show Data and settings reset require firmware built with `CONFIG_AIRGREP_USB_SERVICE_COMMANDS=y`. The `s3-debug` preset enables it.
+
+== Build the macOS Utility
+
+[source,bash]
+----
+cmake -S utility -B utility/build -G Ninja
+cmake --build utility/build --target app
+open "utility/build/airgrep Utility.app"
+----
+
+== Run checks
+
+On macOS, configure the Utility first. On Linux, configure the host tests with `cmake -S tests/host -B build/host -G Ninja`.
+Run `tools/check.sh` to build every firmware preset and run the host tests.
+
+== Service Commands
+
+The Remote Display, Show Data and the settings reset of the Utility need the service commands of the USB data protocol. A normal build leaves them out. The `s3-debug` preset builds a firmware that has them (`CONFIG_AIRGREP_USB_SERVICE_COMMANDS=y`).

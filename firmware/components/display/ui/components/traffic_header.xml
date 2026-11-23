@@ -1,0 +1,27 @@
+<component>
+	<view
+		extends="lv_obj"
+		width="{traffic_width}"
+		height="32"
+		flex_flow="row"
+		scrollable="false"
+		style_flex_cross_place="center"
+		style_flex_track_place="center"
+		style_pad_hor="{traffic_padding}"
+		style_pad_top="2"
+		style_pad_column="{traffic_column_gap}"
+		style_text_font="font_small"
+		style_text_color="{color_label_2}"
+		style_text_letter_space="1"
+		style_border_color="{color_separator}"
+		style_border_width="{hairline}"
+		style_border_side="bottom"
+	>
+		<remove_theme selector="main" />
+		<lv_label text="TRAFFIC" width="{traffic_title_width}" />
+		<lv_label text="ALT" width="{traffic_alt_width}" style_text_align="right" />
+		<lv_obj width="{traffic_trend_width}" height="1"><remove_theme selector="main" /></lv_obj>
+		<lv_label text="BRG" width="{traffic_bearing_width}" style_text_align="center" />
+		<lv_label text="NM" width="{traffic_distance_width}" style_text_align="right" />
+	</view>
+</component>

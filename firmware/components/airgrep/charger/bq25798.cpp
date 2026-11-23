@@ -1,6 +1,7 @@
 #include "bq25798.hpp"
 
 #include <atomic>
+#include <memory>
 #include <new>
 
 #include "esp_log.h"
@@ -60,19 +61,7 @@ constexpr uint8_t kWatchdogMask = kWatchdogReset | kWatchdogFieldMask;
 // ADC_EN, continuous conversion, ADC_SAMPLE 00 (15 bit, 24 ms per channel).
 constexpr uint8_t kAdcProfile = kAdcEnable;
 
-portMUX_TYPE State::mutex_ = portMUX_INITIALIZER_UNLOCKED;
-
-State& State::storage() {
-	static State state;
-	return state;
-}
-
-State State::copy() {
-	State result;
-	update([&](State& state) { result = state; });
-	return result;
-}
-
+namespace {
 i2c_master_dev_handle_t device;
 loop::Handle periodic;
 Completion completion;
@@ -100,16 +89,14 @@ void fail_poll(esp_err_t result) {
 
 void publish_state() {
 	State::update([](State& current) {
-		// Detection belongs to explicit verification, not to the
-		// periodic sample.
-		state.battery_detected = current.battery_detected;
-		state.battery_detection_vbat_mv = current.battery_detection_vbat_mv;
-		state.battery_detection_vbat_valid =
-			current.battery_detection_vbat_valid;
-		state.last_error = current.last_error;
-		state.error_us = current.error_us;
-		state.target = current.target;
-		current = state;
+		current.readings = state.readings;
+		current.ts_percent = state.ts_percent;
+		current.die_c = state.die_c;
+		current.updated_us = state.updated_us;
+		current.adc_ready_us = state.adc_ready_us;
+		current.identity_known = state.identity_known;
+		current.configured = state.configured;
+		current.adc_valid = state.adc_valid;
 	});
 }
 
@@ -125,9 +112,9 @@ void invalidate() {
 }
 
 esp_err_t read(Block block) {
-	return i2c_master_transmit_receive(device, &block.first, 1,
-									   state.raw + block.first, block.count,
-									   CONFIG_AIRGREP_I2C_TIMEOUT_MS);
+	return i2c_master_transmit_receive(
+		device, &block.first, 1, state.readings.raw + block.first, block.count,
+		CONFIG_AIRGREP_I2C_TIMEOUT_MS);
 }
 
 esp_err_t write(uint8_t reg, uint8_t value) {
@@ -139,9 +126,6 @@ esp_err_t write(uint8_t reg, uint8_t value) {
 void decode_configuration();
 void submit_step(const char* name, loop::Action action);
 
-// Charge operations. One runs at a time on the loop, guarded by busy like the
-// poll.
-namespace {
 constexpr uint8_t kChargeEnable = 1 << 5;  // REG0F EN_CHG
 constexpr uint32_t kSettleMs = 1000;
 
@@ -149,30 +133,31 @@ struct Operation {
 	ChargeCompletion complete;
 	void (*observe)(const ChargeResult&) = nullptr;
 	ChargeResult result;
-	bool changed = false;  // EN_CHG was written, restore it before completing
+	bool restore_charge_enable = false;
 } operation;
 
 void publish_control() {
 	State::update([](State& shared) {
-		shared.raw[kRegChargerControl0] = state.raw[kRegChargerControl0];
-		shared.control0 = decode_control0(state.raw[kRegChargerControl0]);
+		shared.readings.raw[kRegChargerControl0] =
+			state.readings.raw[kRegChargerControl0];
+		shared.readings.control0 =
+			decode_control0(state.readings.raw[kRegChargerControl0]);
 	});
 }
 
 esp_err_t read_enabled(bool& enabled) {
-	esp_err_t result = read({kRegChargerControl0, 1});
-	enabled = state.raw[kRegChargerControl0] & kChargeEnable;
+	const esp_err_t result = read({kRegChargerControl0, 1});
+	enabled = state.readings.raw[kRegChargerControl0] & kChargeEnable;
 	return result;
 }
 
-// EN_CHG for Commands and battery tests: read, modify, write, read back.
 esp_err_t set_charge_enabled(bool enabled) {
-	bool current;
+	bool current = false;
 	esp_err_t result = read_enabled(current);
 	if (result != ESP_OK) {
 		return result;
 	}
-	uint8_t control = state.raw[kRegChargerControl0] & ~kChargeEnable;
+	uint8_t control = state.readings.raw[kRegChargerControl0] & ~kChargeEnable;
 	if (enabled) {
 		control |= kChargeEnable;
 	}
@@ -197,12 +182,11 @@ esp_err_t write_pair(uint8_t reg, uint16_t value) {
 }
 
 uint16_t raw_pair(uint8_t reg) {
-	return uint16_t(state.raw[reg] << 8 | state.raw[reg + 1]);
+	return uint16_t(state.readings.raw[reg] << 8 | state.readings.raw[reg + 1]);
 }
 
 unsigned requested_ma;
 
-// ICHG or IINDPM: read, modify, write, read back.
 esp_err_t set_limit(uint8_t reg) {
 	esp_err_t result = read({reg, 2});
 	if (result == ESP_OK) {
@@ -212,17 +196,19 @@ esp_err_t set_limit(uint8_t reg) {
 		result = read({reg, 2});
 	}
 	if (result == ESP_OK &&
-		decode_charge_current(state.raw[reg], state.raw[reg + 1]) !=
+		decode_charge_current(state.readings.raw[reg],
+							  state.readings.raw[reg + 1]) !=
 			requested_ma / 10 * 10) {
 		result = ESP_ERR_INVALID_RESPONSE;
 	}
 	if (result == ESP_OK) {
 		decode_configuration();
 		State::update([reg](State& shared) {
-			shared.raw[reg] = state.raw[reg];
-			shared.raw[reg + 1] = state.raw[reg + 1];
-			shared.charge_current_ma = state.charge_current_ma;
-			shared.input_current_ma = state.input_current_ma;
+			shared.readings.raw[reg] = state.readings.raw[reg];
+			shared.readings.raw[reg + 1] = state.readings.raw[reg + 1];
+			shared.readings.charge_current_ma =
+				state.readings.charge_current_ma;
+			shared.readings.input_current_ma = state.readings.input_current_ma;
 		});
 	}
 	return result;
@@ -244,10 +230,9 @@ void complete_operation() {
 	finished.complete(finished.result);
 }
 
-// Every exit of the battery test passes here, so restoration exists once.
 void restore_and_complete() {
 	auto& result = operation.result;
-	if (operation.changed) {
+	if (operation.restore_charge_enable) {
 		result.restore_error = set_charge_enabled(result.initial_enabled);
 	}
 	complete_operation();
@@ -268,23 +253,23 @@ void apply_limit(uint8_t reg) {
 	complete_operation();
 }
 
-// Battery test: VBAT while charging, 1 s with charging off, VBAT again,
-// restore.
 esp_err_t read_vbat(uint16_t& mv, bool& valid) {
-	esp_err_t result = read({kRegVbatAdc, 2});
-	mv = decode_adc_mv(state.raw[kRegVbatAdc], state.raw[kRegVbatAdc + 1]);
+	const esp_err_t result = read({kRegVbatAdc, 2});
+	mv = decode_adc_mv(state.readings.raw[kRegVbatAdc],
+					   state.readings.raw[kRegVbatAdc + 1]);
 	valid = result == ESP_OK;
 	return result;
 }
 
 esp_err_t adc_continuous() {
-	esp_err_t result = read({kRegAdcControl, 3});
+	const esp_err_t result = read({kRegAdcControl, 3});
 	if (result != ESP_OK) {
 		return result;
 	}
-	bool enabled = state.raw[kRegAdcControl] & kAdcEnable;
-	bool one_shot = state.raw[kRegAdcControl] & kAdcOneShot;
-	bool vbat_disabled = state.raw[kRegAdcFunctionDisable0] & (1 << 4);
+	const bool enabled = state.readings.raw[kRegAdcControl] & kAdcEnable;
+	const bool one_shot = state.readings.raw[kRegAdcControl] & kAdcOneShot;
+	const bool vbat_disabled =
+		state.readings.raw[kRegAdcFunctionDisable0] & (1 << 4);
 	return enabled && !one_shot && !vbat_disabled ? ESP_OK
 												  : ESP_ERR_INVALID_STATE;
 }
@@ -292,15 +277,16 @@ esp_err_t adc_continuous() {
 // A failed write may still have reached the device, so changed is set
 // regardless.
 esp_err_t set_charge_enabled_then(bool enabled, void (*then)()) {
-	esp_err_t result = set_charge_enabled(enabled);
-	operation.changed = true;
+	const esp_err_t result = set_charge_enabled(enabled);
+	operation.restore_charge_enable = true;
 	if (result != ESP_OK) {
 		return result;
 	}
-	loop::Task settle{"charger settle", [then](loop::Handle, loop::Value&) {
-						  then();
-						  return loop::Result::done;
-					  }};
+	const loop::Task settle{"charger settle",
+							[then](loop::Handle, loop::Value&) {
+								then();
+								return loop::Result::done;
+							}};
 	auto settled = loop::schedule(kSettleMs, settle, {},
 								  [](loop::Outcome) { fail(ESP_ERR_NO_MEM); });
 	return settled.valid() ? ESP_OK : ESP_ERR_NO_MEM;
@@ -313,8 +299,8 @@ void measure_disabled() {
 		error = read({kRegIbatAdc, 2});
 	}
 	if (error == ESP_OK) {
-		result.ibat_after_ma =
-			decode_ibat(state.raw[kRegIbatAdc], state.raw[kRegIbatAdc + 1]);
+		result.ibat_after_ma = decode_ibat(state.readings.raw[kRegIbatAdc],
+										   state.readings.raw[kRegIbatAdc + 1]);
 	}
 	if (error != ESP_OK) {
 		result.error = error;
@@ -339,8 +325,6 @@ void start_battery_test() {
 	if (error == ESP_OK) {
 		error = adc_continuous();
 	}
-	// Charging off needs one settle period with it on to get the charging
-	// reading.
 	if (error == ESP_OK && !result.initial_enabled) {
 		error = set_charge_enabled_then(true, measure_charging);
 	} else if (error == ESP_OK) {
@@ -369,8 +353,6 @@ void start_verify_battery() {
 	start_battery_test();
 }
 
-// Admission: hop onto the loop, run start when the driver is idle and the
-// device known. A battery test also needs the configured continuous ADC.
 esp_err_t submit(const char* name, bool needs_adc, ChargeCompletion complete,
 				 void (*start)(), unsigned ma = 0) {
 	if (!complete) {
@@ -382,38 +364,41 @@ esp_err_t submit(const char* name, bool needs_adc, ChargeCompletion complete,
 		void (*start)();
 		unsigned ma;
 	};
-	auto* pending = new (std::nothrow) Pending{complete, needs_adc, start, ma};
-	if (!pending) {
+	std::unique_ptr<Pending> owned(new (std::nothrow)
+									   Pending{complete, needs_adc, start, ma});
+	if (!owned) {
 		return ESP_ERR_NO_MEM;
 	}
-	bool queued = loop::try_submit(name, [pending](loop::Handle, loop::Value&) {
-		const auto admitted = *pending;
-		delete pending;
-		const auto current = State::copy();
-		if (!device || !current.identity_known || busy ||
-			(admitted.needs_adc &&
-			 (!current.configured || !current.adc_valid))) {
-			ChargeResult result;
-			result.error = ESP_ERR_INVALID_STATE;
-			record_error(result.error);
-			admitted.complete(result);
+	// A queued task owns the request: its capture is a plain pointer.
+	Pending* const pending = owned.release();
+	const bool queued =
+		loop::try_submit(name, [pending](loop::Handle, loop::Value&) {
+			const auto admitted = *std::unique_ptr<Pending>(pending);
+			const auto current = State::copy();
+			if (!device || !current.identity_known || busy ||
+				(admitted.needs_adc &&
+				 (!current.configured || !current.adc_valid))) {
+				ChargeResult result;
+				result.error = ESP_ERR_INVALID_STATE;
+				record_error(result.error);
+				admitted.complete(result);
+				return loop::Result::done;
+			}
+			busy = true;
+			testing = admitted.needs_adc;
+			state = current;
+			operation = {};
+			operation.complete = admitted.complete;
+			requested_ma = admitted.ma;
+			admitted.start();
 			return loop::Result::done;
-		}
-		busy = true;
-		testing = admitted.needs_adc;
-		state = current;
-		operation = {};
-		operation.complete = admitted.complete;
-		requested_ma = admitted.ma;
-		admitted.start();
-		return loop::Result::done;
-	});
+		});
 	if (!queued) {
-		delete pending;
+		owned.reset(pending);
 	}
 	return queued ? ESP_OK : ESP_ERR_NO_MEM;
 }
-}  // namespace
+}
 
 esp_err_t set_charge_enabled(bool enabled, ChargeCompletion complete) {
 	return submit(
@@ -450,12 +435,13 @@ esp_err_t verify_battery(ChargeCompletion complete) {
 				  start_verify_battery);
 }
 
+namespace {
 esp_err_t kick_watchdog() {
-	uint8_t control1 = state.raw[kRegChargerControl1] & ~kWatchdogMask;
+	const uint8_t control1 =
+		state.readings.raw[kRegChargerControl1] & ~kWatchdogMask;
 	return write(kRegChargerControl1, control1 | kWatchdogReset | kWatchdog20s);
 }
 
-namespace {
 struct Write {
 	uint8_t reg;
 	uint16_t value;
@@ -468,17 +454,22 @@ void queue_write(uint8_t reg, uint16_t value, bool is_pair = false) {
 }
 
 loop::Result write_step(loop::Handle, loop::Value&) {
+	if (!State::copy().target.target_available) {
+		decode_configuration();
+		busy = false;
+		return loop::Result::done;
+	}
 	const Write& w = writes[write_next++];
-	esp_err_t result =
+	const esp_err_t result =
 		w.pair ? write_pair(w.reg, w.value) : write(w.reg, uint8_t(w.value));
 	if (result != ESP_OK) {
 		fail_poll(result);
 		return loop::Result::done;
 	}
 	if (w.pair) {
-		state.raw[w.reg] = uint8_t(w.value >> 8);
+		state.readings.raw[w.reg] = uint8_t(w.value >> 8);
 	}
-	state.raw[w.reg + w.pair] = uint8_t(w.value);
+	state.readings.raw[w.reg + w.pair] = uint8_t(w.value);
 	if (write_next < write_count) {
 		submit_step("charger reconcile", write_step);
 	} else {
@@ -487,15 +478,15 @@ loop::Result write_step(loop::Handle, loop::Value&) {
 	}
 	return loop::Result::done;
 }
-}  // namespace
+}
 
 void set_charger_target(const TargetState& target) {
 	State::update([&](State& shared) { shared.target = target; });
 
-	if (!target.decided || busy || !device || !state.configured) {
+	if (!target.target_available || busy || !device || !state.configured) {
 		return;
 	}
-	const auto* raw = state.raw;
+	const auto* raw = state.readings.raw;
 	const uint8_t control5 = raw[kRegChargerControl5];
 	const bool external_limit = control5 & kExternalLimit;
 	write_count = write_next = 0;
@@ -503,24 +494,24 @@ void set_charger_target(const TargetState& target) {
 	if (target.hardware_limit && !external_limit) {
 		queue_write(kRegChargerControl5, control5 | kExternalLimit);
 	}
-	if (state.thermal_limit_c != target.thermal_limit_c) {
+	if (state.readings.thermal_limit_c != target.thermal_limit_c) {
 		queue_write(kRegTemperatureControl,
 					encode_temperature_control(raw[kRegTemperatureControl],
 											   target.thermal_limit_c));
 	}
-	if (state.charge_current_ma != target.charge_ma) {
+	if (state.readings.charge_current_ma != target.charge_ma) {
 		queue_write(
 			kRegChargeCurrentLimit,
 			encode_current(raw_pair(kRegChargeCurrentLimit), target.charge_ma),
 			true);
 	}
-	if (state.control0.charge_enabled != target.charge_enabled) {
+	if (state.readings.control0.charge_enabled != target.charge_enabled) {
 		queue_write(kRegChargerControl0,
 					target.charge_enabled
 						? raw[kRegChargerControl0] | kChargeEnable
 						: raw[kRegChargerControl0] & ~kChargeEnable);
 	}
-	if (target.input_ma && state.input_current_ma != target.input_ma) {
+	if (target.input_ma && state.readings.input_current_ma != target.input_ma) {
 		queue_write(
 			kRegInputCurrentLimit,
 			encode_current(raw_pair(kRegInputCurrentLimit), target.input_ma),
@@ -535,10 +526,11 @@ void set_charger_target(const TargetState& target) {
 	}
 }
 
+namespace {
 int64_t conversion_cycle_us() {
-	unsigned channels =
-		decode_adc_disable0(state.raw[kRegAdcFunctionDisable0]) +
-		decode_adc_disable1(state.raw[kRegAdcFunctionDisable1]);
+	const unsigned channels =
+		decode_adc_disable0(state.readings.raw[kRegAdcFunctionDisable0]) +
+		decode_adc_disable1(state.readings.raw[kRegAdcFunctionDisable1]);
 	return int64_t(channels) * decode_adc_control(kAdcProfile).sample_ms * 1000;
 }
 
@@ -549,36 +541,41 @@ void submit_step(const char* name, loop::Action action) {
 }
 
 void decode_configuration() {
-	const auto* raw = state.raw;
-	state.charge_current_ma = decode_charge_current(
+	const auto* raw = state.readings.raw;
+	state.readings.charge_current_ma = decode_charge_current(
 		raw[kRegChargeCurrentLimit], raw[kRegChargeCurrentLimit + 1]);
-	state.input_current_ma = decode_input_current(
+	state.readings.input_current_ma = decode_input_current(
 		raw[kRegInputCurrentLimit], raw[kRegInputCurrentLimit + 1]);
-	state.control0 = decode_control0(raw[kRegChargerControl0]);
-	state.control1 = decode_control1(raw[kRegChargerControl1]);
-	state.control5 = decode_control5(raw[kRegChargerControl5]);
-	state.thermal_limit_c =
+	state.readings.control0 = decode_control0(raw[kRegChargerControl0]);
+	state.readings.control1 = decode_control1(raw[kRegChargerControl1]);
+	state.readings.control5 = decode_control5(raw[kRegChargerControl5]);
+	state.readings.thermal_limit_c =
 		decode_temperature_control(raw[kRegTemperatureControl]);
-	state.adc_control = decode_adc_control(raw[kRegAdcControl]);
+	state.readings.adc_control = decode_adc_control(raw[kRegAdcControl]);
 }
 
 void decode_status() {
-	const auto* raw = state.raw;
-	state.status0 = decode_status0(raw[kRegChargerStatus0]);
-	state.status1 = decode_status1(raw[kRegChargerStatus1]);
-	state.status2 = decode_status2(raw[kRegChargerStatus2]);
-	state.status3 = decode_status3(raw[kRegChargerStatus3]);
-	state.status4 = decode_status4(raw[kRegChargerStatus4]);
-	state.fault0 = decode_fault0(raw[kRegFaultStatus0]);
-	state.fault1 = decode_fault1(raw[kRegFaultStatus1]);
-	state.flag0 = decode_flag0(raw[kRegChargerFlag0]);
-	state.fault_flag0 = decode_fault_flag0(raw[kRegFaultFlag0]);
-	state.fault_flag1 = decode_fault_flag1(raw[kRegFaultFlag1]);
-	state.ibus_ma = decode_ibus(raw[kRegIbusAdc], raw[kRegIbusAdc + 1]);
-	state.ibat_ma = decode_ibat(raw[kRegIbatAdc], raw[kRegIbatAdc + 1]);
-	state.vbus_mv = decode_adc_mv(raw[kRegVbusAdc], raw[kRegVbusAdc + 1]);
-	state.vbat_mv = decode_adc_mv(raw[kRegVbatAdc], raw[kRegVbatAdc + 1]);
-	state.vsys_mv = decode_adc_mv(raw[kRegVsysAdc], raw[kRegVsysAdc + 1]);
+	const auto* raw = state.readings.raw;
+	state.readings.status0 = decode_status0(raw[kRegChargerStatus0]);
+	state.readings.status1 = decode_status1(raw[kRegChargerStatus1]);
+	state.readings.status2 = decode_status2(raw[kRegChargerStatus2]);
+	state.readings.status3 = decode_status3(raw[kRegChargerStatus3]);
+	state.readings.status4 = decode_status4(raw[kRegChargerStatus4]);
+	state.readings.fault0 = decode_fault0(raw[kRegFaultStatus0]);
+	state.readings.fault1 = decode_fault1(raw[kRegFaultStatus1]);
+	state.readings.flag0 = decode_flag0(raw[kRegChargerFlag0]);
+	state.readings.fault_flag0 = decode_fault_flag0(raw[kRegFaultFlag0]);
+	state.readings.fault_flag1 = decode_fault_flag1(raw[kRegFaultFlag1]);
+	state.readings.ibus_ma =
+		decode_ibus(raw[kRegIbusAdc], raw[kRegIbusAdc + 1]);
+	state.readings.ibat_ma =
+		decode_ibat(raw[kRegIbatAdc], raw[kRegIbatAdc + 1]);
+	state.readings.vbus_mv =
+		decode_adc_mv(raw[kRegVbusAdc], raw[kRegVbusAdc + 1]);
+	state.readings.vbat_mv =
+		decode_adc_mv(raw[kRegVbatAdc], raw[kRegVbatAdc + 1]);
+	state.readings.vsys_mv =
+		decode_adc_mv(raw[kRegVsysAdc], raw[kRegVsysAdc + 1]);
 	state.ts_percent = decode_ts(raw[kRegTsAdc], raw[kRegTsAdc + 1]);
 	state.die_c = decode_tdie(raw[kRegTdieAdc], raw[kRegTdieAdc + 1]);
 	state.updated_us = esp_timer_get_time();
@@ -591,7 +588,7 @@ void recover_poll(esp_err_t result) {
 	record_error(result);
 	invalidate();
 	submit_step("charger watchdog", [](loop::Handle, loop::Value&) {
-		esp_err_t kick = kick_watchdog();
+		const esp_err_t kick = kick_watchdog();
 		if (kick != ESP_OK) {
 			record_error(kick);
 		}
@@ -603,21 +600,19 @@ void recover_poll(esp_err_t result) {
 void publish_events() {
 	static bool charging;
 	static events::Protection protection;
-	const uint8_t phase = state.status1.charge;
-	if (events::changed(charging,
-						phase != kChargeNone && phase != kChargeDone)) {
-		events::publish({.type = charging ? events::Type::charging_started
-										  : events::Type::charging_stopped,
-						 .charging = {phase}});
+	const uint8_t phase = state.readings.status1.charge;
+	if (events::update_if_changed(
+			charging, phase != kChargeNone && phase != kChargeDone)) {
+		events::publish(events::Event::charging_changed(charging, {phase}));
 	}
-	const Fault0& f0 = state.fault0;
-	const Fault1& f1 = state.fault1;
+	const Fault0& f0 = state.readings.fault0;
+	const Fault1& f1 = state.readings.fault1;
 	const events::Protection now{
-		.cold = state.status4.cold,
-		.cool = state.status4.cool,
-		.warm = state.status4.warm,
-		.hot = state.status4.hot,
-		.thermal_regulation = state.status2.thermal,
+		.cold = state.readings.status4.cold,
+		.cool = state.readings.status4.cool,
+		.warm = state.readings.status4.warm,
+		.hot = state.readings.status4.hot,
+		.thermal_regulation = state.readings.status2.thermal,
 		.thermal_shutdown = f1.thermal_shutdown,
 		.fault = f0.vbus_overvoltage || f0.battery_overvoltage ||
 				 f0.bus_overcurrent || f0.battery_overcurrent ||
@@ -626,20 +621,19 @@ void publish_events() {
 				 f1.system_overvoltage || f1.otg_overvoltage ||
 				 f1.otg_undervoltage,
 	};
-	if (events::changed(protection, now)) {
-		events::publish({.type = events::Type::charger_protection_changed,
-						 .protection = now});
+	if (events::update_if_changed(protection, now)) {
+		events::publish(events::Event::charger_protection_changed(now));
 	}
 }
 
 loop::Result poll_configured(loop::Handle, loop::Value&) {
-	esp_err_t result;
+	esp_err_t result = ESP_OK;
 	switch (step++) {
 		case 0:
-			// A watchdog write clears WD_STAT. Observe it before the kick.
 			result = read(kBlockStatus);
 			if (result == ESP_OK &&
-				decode_status0(state.raw[kRegChargerStatus0]).watchdog) {
+				decode_status0(state.readings.raw[kRegChargerStatus0])
+					.watchdog) {
 				ESP_LOGW(tag,
 						 "watchdog expired, reapplying "
 						 "configuration on next poll");
@@ -679,8 +673,6 @@ loop::Result poll_configured(loop::Handle, loop::Value&) {
 	return loop::Result::done;
 }
 
-// A driver that cannot configure stops polling. The system watchdog starts it
-// again.
 void stop(esp_err_t result) {
 	fail_poll(result);
 	loop::cancel(periodic);
@@ -688,7 +680,7 @@ void stop(esp_err_t result) {
 }
 
 loop::Result configure(loop::Handle, loop::Value&) {
-	esp_err_t result;
+	esp_err_t result = ESP_OK;
 	switch (step++) {
 		case 0:
 			result = read(kBlockLimits);
@@ -703,9 +695,9 @@ loop::Result configure(loop::Handle, loop::Value&) {
 		// already runs continuously, the data sheet lists no separate cost for
 		// the sense path.
 		case 3:
-			result = write(kRegChargerControl5, state.raw[kRegChargerControl5] |
-													kSfetPresent |
-													kDischargeSensing);
+			result = write(kRegChargerControl5,
+						   state.readings.raw[kRegChargerControl5] |
+							   kSfetPresent | kDischargeSensing);
 			break;
 		case 4:
 			result = write(kRegAdcControl, kAdcProfile);
@@ -730,9 +722,10 @@ loop::Result configure(loop::Handle, loop::Value&) {
 		return loop::Result::done;
 	}
 	decode_configuration();
-	if (!state.control5.ship_fet || !state.control5.discharge_sensing ||
-		state.control1.watchdog_ms != CHARGER_WATCHDOG_MS ||
-		state.raw[kRegAdcControl] != kAdcProfile) {
+	if (!state.readings.control5.ship_fet ||
+		!state.readings.control5.discharge_sensing ||
+		state.readings.control1.watchdog_ms != CHARGER_WATCHDOG_MS ||
+		state.readings.raw[kRegAdcControl] != kAdcProfile) {
 		stop(ESP_ERR_INVALID_RESPONSE);
 		return loop::Result::done;
 	}
@@ -766,17 +759,17 @@ void finish(esp_err_t result) {
 
 loop::Result identify_at_init(loop::Handle, loop::Value&) {
 	esp_err_t result = read(kBlockPartInformation);
-	uint8_t raw = state.raw[kRegPartInformation];
+	uint8_t raw = state.readings.raw[kRegPartInformation];
 	Identity identity = decode_identity(raw);
 	if (result == ESP_OK && identity.part != kPartBq25798) {
 		result = ESP_ERR_INVALID_RESPONSE;
 	}
 	if (result == ESP_OK) {
 		State::update([&](State& shared) {
-			shared.status = Status::ok;
+			shared.readings.status = Status::ok;
 			shared.identity_known = true;
-			shared.raw[kRegPartInformation] = raw;
-			shared.identity = identity;
+			shared.readings.raw[kRegPartInformation] = raw;
+			shared.readings.identity = identity;
 		});
 		periodic = loop::schedule_periodic(CHARGER_POLL_PERIOD_MS,
 										   {"charger poll", poll_charger});
@@ -791,7 +784,8 @@ loop::Result identify_at_init(loop::Handle, loop::Value&) {
 loop::Result probe(loop::Handle, loop::Value&) {
 	esp_err_t result = i2c_bus_add_if_present(&i2c_config, &device);
 	if (result == ESP_ERR_NOT_FOUND) {
-		State::update([](State& shared) { shared.status = Status::off; });
+		State::update(
+			[](State& shared) { shared.readings.status = Status::off; });
 	}
 	if (result == ESP_OK &&
 		!loop::try_submit("charger identity", identify_at_init)) {
@@ -801,6 +795,7 @@ loop::Result probe(loop::Handle, loop::Value&) {
 		finish(result);
 	}
 	return loop::Result::done;
+}
 }
 
 bool subscribe(Handler handler, void* context) {
@@ -816,4 +811,4 @@ void init(Completion complete) {
 		finish(ESP_ERR_NO_MEM);
 	}
 }
-}  // namespace charger
+}

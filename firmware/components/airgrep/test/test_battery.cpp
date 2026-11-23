@@ -49,18 +49,29 @@ CASE(charge_duration,
 	 "Charge duration estimates charge and discharge, only a zero "
 	 "rate has none") {
 	const auto discharge = battery::calculate_charge_duration(40, -20);
-	TEST_ASSERT_TRUE(discharge.has_value());
-	TEST_ASSERT_EQUAL_FLOAT(2, *discharge);
+	TEST_ASSERT_EQUAL_UINT8(1, discharge.valid);
+	TEST_ASSERT_EQUAL_FLOAT(2, discharge.value);
 	const auto charge = battery::calculate_charge_duration(40, 20);
-	TEST_ASSERT_TRUE(charge.has_value());
-	TEST_ASSERT_EQUAL_FLOAT(3, *charge);
-	TEST_ASSERT_FALSE(battery::calculate_charge_duration(40, 0).has_value());
-	TEST_ASSERT_TRUE(
-		battery::calculate_charge_duration(40, 0.208f).has_value());
-	TEST_ASSERT_TRUE(
-		battery::calculate_charge_duration(40, -0.208f).has_value());
-	TEST_ASSERT_FALSE(battery::calculate_charge_duration(101, 20).has_value());
-	TEST_ASSERT_EQUAL_FLOAT(0, *battery::calculate_charge_duration(100, 20));
+	TEST_ASSERT_EQUAL_UINT8(1, charge.valid);
+	TEST_ASSERT_EQUAL_FLOAT(3, charge.value);
+	TEST_ASSERT_EQUAL_UINT8(0, battery::calculate_charge_duration(40, 0).valid);
+	TEST_ASSERT_EQUAL_UINT8(
+		1, battery::calculate_charge_duration(40, 0.208f).valid);
+	TEST_ASSERT_EQUAL_UINT8(
+		1, battery::calculate_charge_duration(40, -0.208f).valid);
+	TEST_ASSERT_EQUAL_UINT8(0,
+							battery::calculate_charge_duration(101, 20).valid);
+	TEST_ASSERT_EQUAL_FLOAT(0,
+							battery::calculate_charge_duration(100, 20).value);
+}
+
+CASE(duration_bytes, "USB battery duration keeps its protocol 1 bytes") {
+	battery::StateData gauge{};
+	const auto* bytes = reinterpret_cast<const uint8_t*>(&gauge) + 36;
+	const uint8_t unset[8]{}, one_hour[8]{0, 0, 0x80, 0x3f, 1, 0, 0, 0};
+	TEST_ASSERT_EQUAL_MEMORY(unset, bytes, sizeof unset);
+	gauge.charge_duration_hours = battery::calculate_charge_duration(50, 50);
+	TEST_ASSERT_EQUAL_MEMORY(one_hour, bytes, sizeof one_hour);
 }
 
 #ifndef ESP_PLATFORM
@@ -71,6 +82,7 @@ int main() {
 	RUN_TEST(crate);
 	RUN_TEST(status);
 	RUN_TEST(charge_duration);
+	RUN_TEST(duration_bytes);
 	return UNITY_END();
 }
 #endif

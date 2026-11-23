@@ -24,16 +24,10 @@ void Bus::publish(const Event& event) {
 	for (size_t i = 0; i < claimed; i++) {
 		const Entry& entry = entries_[i];
 		const Handler handler = entry.handler.load(std::memory_order_acquire);
-		if (handler && entry.types & of(event.type)) {
+		if (handler && entry.types & mask_for(event.type)) {
 			handler(event, entry.context);
 		}
 	}
-}
-
-void Bus::publish(Type type) {
-	Event event{};
-	event.type = type;
-	publish(event);
 }
 
 namespace {
@@ -46,5 +40,4 @@ bool subscribe(uint32_t types, Handler handler, void* context) {
 
 void publish(const Event& event) { bus.publish(event); }
 
-void publish(Type type) { bus.publish(type); }
-}  // namespace events
+}

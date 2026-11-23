@@ -98,5 +98,8 @@ else
   echo "FAIL tests    no venv at hardware/sim/.venv, see hardware/sim/README.md"
 fi
 
+# A README names files. One that names what is not there is no longer kept.
+if "$HERE/check-docs.py"; then echo "ok   docs     every path a README names is there"; else rc=1; fi
+
 [ $rc -eq 0 ] && echo "check passed" || echo "check FAILED"
 exit $rc

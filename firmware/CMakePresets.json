@@ -6,7 +6,8 @@
 			"hidden": true,
 			"generator": "Ninja",
 			"cacheVariables": {
-				"IDF_TARGET": "esp32s3"
+				"IDF_TARGET": "esp32s3",
+				"IDF_TOOLCHAIN": "clang"
 			}
 		},
 		{
@@ -23,10 +24,8 @@
 			"name": "s3-debug",
 			"displayName": "airgrep on XIAO ESP32-S3 Plus, USB service commands",
 			"inherits": "s3",
-			"generator": "Ninja",
 			"binaryDir": "build/s3-debug",
 			"cacheVariables": {
-				"IDF_TARGET": "esp32s3",
 				"SDKCONFIG": "build/s3-debug/sdkconfig",
 				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.s3;sdkconfig.usb-service"
 			}
@@ -39,6 +38,26 @@
 			"cacheVariables": {
 				"SDKCONFIG": "build/display/sdkconfig",
 				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display"
+			}
+		},
+		{
+			"name": "display-800x480-touch",
+			"displayName": "Seeed display module with the 800x480 touch display, app",
+			"inherits": "display",
+			"binaryDir": "build/display+800x480-touch",
+			"cacheVariables": {
+				"SDKCONFIG": "build/display+800x480-touch/sdkconfig",
+				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display;components/display/variants/800x480-touch/sdkconfig"
+			}
+		},
+		{
+			"name": "display-seeed-172x320-touch",
+			"displayName": "Seeed display module with the Seeed 172x320 touch display, app",
+			"inherits": "display",
+			"binaryDir": "build/display+seeed-172x320-touch",
+			"cacheVariables": {
+				"SDKCONFIG": "build/display+seeed-172x320-touch/sdkconfig",
+				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display;components/display/variants/seeed-172x320-touch/sdkconfig"
 			}
 		},
 		{
@@ -78,6 +97,14 @@
 		{
 			"name": "display",
 			"configurePreset": "display"
+		},
+		{
+			"name": "display-800x480-touch",
+			"configurePreset": "display-800x480-touch"
+		},
+		{
+			"name": "display-seeed-172x320-touch",
+			"configurePreset": "display-seeed-172x320-touch"
 		},
 		{
 			"name": "s3-test",

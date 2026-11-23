@@ -4,6 +4,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <utility>
 
 #include "adsbee_link.hpp"
 #include "adsbee_time.hpp"
@@ -13,25 +14,21 @@
 #include "events/events.hpp"
 
 namespace adsbee::timesync {
-portMUX_TYPE State::mutex_ = portMUX_INITIALIZER_UNLOCKED;
-
-State& State::storage() {
-	static State state;
-	return state;
-}
-
-State State::copy() {
-	State result;
-	update([&](State& state) { result = state; });
-	return result;
-}
-
 namespace {
 constexpr const char* tag = "timesync";
 TimeSample samples[ADSBEE_TIME_PING_COUNT];
 unsigned sent, attempted;
-bool running, had_gps_fix;
-loop::Handle scheduled;
+bool sync_requested_for_fix;
+bool set_burst_active(bool active) {
+	static bool active_on_scheduler;
+	bool changed = false;
+	State::update([&](State& status) {
+		changed = active_on_scheduler != active;
+		active_on_scheduler = active;
+		status.burst_running = active;
+	});
+	return changed;
+}
 
 void record_error(esp_err_t result) {
 	int64_t now = esp_timer_get_time();
@@ -53,7 +50,7 @@ void on_time_ping(const Message& message, void*) {
 		return;
 	}
 	for (unsigned i = 0; i < sent; i++) {
-		if (uint64_t(samples[i].t1_us) != ping.echo) {
+		if (!std::cmp_equal(samples[i].t1_us, ping.echo)) {
 			continue;
 		}
 		samples[i].answered = ping.epoch_known;
@@ -63,43 +60,44 @@ void on_time_ping(const Message& message, void*) {
 	}
 }
 
-// Applies the best sample to the system clock: step when far off or never set,
-// slew otherwise.
 void finish_time_sync() {
-	running = false;
 	TimeEstimate estimate = estimate_time(samples, sent);
 	unsigned answered = 0;
 	for (unsigned i = 0; i < sent; i++) {
 		answered += samples[i].answered;
 	}
-	State::update([&](State& state) {
-		state.running = false;
-		state.answered = uint8_t(answered);
-	});
+	State::update(
+		[&](State& state) { state.burst_replies = uint8_t(answered); });
+	set_burst_active(false);
 	if (!estimate.valid) {
 		record_error(answered ? ESP_ERR_NOT_SUPPORTED : ESP_ERR_TIMEOUT);
 		return;
 	}
-	// The system clock at the reply's arrival, then how far it was from the
-	// ADSBee's UTC.
 	int64_t now = esp_timer_get_time();
-	timeval tv;
-	gettimeofday(&tv, nullptr);
-	int64_t system_now = int64_t(tv.tv_sec) * 1000000 + tv.tv_usec;
-	int64_t system_at_t4 = system_now - (now - estimate.t4_us);
-	int64_t correction = estimate.utc_at_t4_us - system_at_t4;
-	bool set = State::copy().set;
+	timeval tv{};
+	int64_t system_now = 0, projected_utc_us = 0, correction = 0;
+	const int64_t elapsed_since_reply_us = now - estimate.reply_received_us;
+	if (gettimeofday(&tv, nullptr) != 0 ||
+		__builtin_mul_overflow(tv.tv_sec, 1000000, &system_now) ||
+		__builtin_add_overflow(system_now, tv.tv_usec, &system_now) ||
+		__builtin_add_overflow(estimate.utc_at_reply_us, elapsed_since_reply_us,
+							   &projected_utc_us) ||
+		__builtin_sub_overflow(projected_utc_us, system_now, &correction)) {
+		record_error(ESP_ERR_INVALID_RESPONSE);
+		return;
+	}
+	const bool set = State::copy().clock_set_from_gnss;
 	esp_err_t result = ESP_OK;
 	if (!set || correction > ADSBEE_TIME_STEP_THRESHOLD_US ||
 		correction < -ADSBEE_TIME_STEP_THRESHOLD_US) {
-		int64_t target = system_now + correction;
-		timeval next{time_t(target / 1000000), suseconds_t(target % 1000000)};
+		const timeval next{time_t(projected_utc_us / 1000000),
+						   suseconds_t(projected_utc_us % 1000000)};
 		if (settimeofday(&next, nullptr) != 0) {
 			result = ESP_FAIL;
 		}
 	} else {
-		timeval delta{time_t(correction / 1000000),
-					  suseconds_t(correction % 1000000)};
+		const timeval delta{time_t(correction / 1000000),
+							suseconds_t(correction % 1000000)};
 		if (adjtime(&delta, nullptr) != 0) {
 			result = ESP_FAIL;
 		}
@@ -112,47 +110,36 @@ void finish_time_sync() {
 			 set ? "slewed" : "set", (long long)correction,
 			 (long long)estimate.rtt_us, (unsigned long)estimate.pps);
 	State::update([&](State& state) {
-		state.set = true;
-		state.synced_us = now;
-		state.correction_us = correction;
+		state.clock_set_from_gnss = true;
+		state.last_sync_us = now;
+		state.last_correction_us = correction;
 		state.rtt_us = estimate.rtt_us;
 		state.pps = estimate.pps;
 	});
 	if (!set) {
-		events::publish(events::Type::clock_set);
+		events::publish(events::Event::clock_set());
 	}
 }
 
 loop::Result send_time_ping(loop::Handle, loop::Value&) {
-	if (!ready()) {
-		running = false;
-		State::update([](State& state) { state.running = false; });
+	if (!accepts_requests()) {
+		set_burst_active(false);
 		record_error(ESP_ERR_INVALID_STATE);
 		return loop::Result::done;
 	}
 	if (attempted < ADSBEE_TIME_PING_COUNT) {
 		attempted++;
-		// Later bursts only keep drift small, so a sample skipped for a
-		// busy link is fine. The first fix matters, that one still sends
-		// and fails loudly.
-		if (busy() && State::copy().set) {
-			if (!loop::schedule(ADSBEE_TIME_PING_SPACING_MS,
-								{"timesync ping", send_time_ping})
-					 .valid()) {
-				finish_time_sync();
-				record_error(ESP_ERR_NO_MEM);
+		if (!busy() || !State::copy().clock_set_from_gnss) {
+			char command[sizeof ADSBEE_TIME_PING_COMMAND + 20];
+			const int64_t t1 = esp_timer_get_time();
+			(void)std::snprintf(command, sizeof command,
+								ADSBEE_TIME_PING_COMMAND "%lld", (long long)t1);
+			samples[sent] = TimeSample{};
+			samples[sent].t1_us = t1;
+			sent++;
+			if (!request(command, {}, {}, ADSBEE_TIME_PING_WINDOW_MS).valid()) {
+				record_error(ESP_ERR_INVALID_STATE);
 			}
-			return loop::Result::done;
-		}
-		char command[sizeof ADSBEE_TIME_PING_COMMAND + 20];
-		int64_t t1 = esp_timer_get_time();
-		std::snprintf(command, sizeof command, ADSBEE_TIME_PING_COMMAND "%lld",
-					  (long long)t1);
-		samples[sent] = TimeSample{};
-		samples[sent].t1_us = t1;
-		sent++;
-		if (!request(command, {}, {}, ADSBEE_TIME_PING_WINDOW_MS).valid()) {
-			record_error(ESP_ERR_INVALID_STATE);
 		}
 		if (!loop::schedule(ADSBEE_TIME_PING_SPACING_MS,
 							{"timesync ping", send_time_ping})
@@ -167,53 +154,45 @@ loop::Result send_time_ping(loop::Handle, loop::Value&) {
 }
 
 loop::Result periodic(loop::Handle, loop::Value&) {
-	if (had_gps_fix) {
+	if (adsbee::State::copy().gnss_at(esp_timer_get_time()).fix != Fix::none) {
 		schedule_gnss_time_sync();
 	}
 	return loop::Result::done;
 }
 
-// The burst itself. The delay in schedule_gnss_time_sync() keeps it clear of
-// the init sequence and spreads the load across devices.
 loop::Result begin_time_sync(loop::Handle, loop::Value&) {
-	scheduled = {};
 	sent = attempted = 0;
 	if (!loop::try_submit("timesync burst", send_time_ping)) {
-		running = false;
-		State::update([](State& state) { state.running = false; });
+		set_burst_active(false);
 		record_error(ESP_ERR_NO_MEM);
 	}
 	return loop::Result::done;
 }
-}  // namespace
+}
 
 esp_err_t schedule_gnss_time_sync() {
-	if (running) {
+	if (!accepts_requests() || !set_burst_active(true)) {
 		return ESP_ERR_INVALID_STATE;
 	}
-	if (!ready()) {
-		return ESP_ERR_INVALID_STATE;
-	}
-	uint32_t delay =
+	const uint32_t delay =
 		ADSBEE_TIME_SYNC_DELAY_MS + esp_random() % ADSBEE_TIME_SYNC_JITTER_MS;
-	scheduled = loop::schedule(delay, {"timesync delay", begin_time_sync});
-	if (!scheduled.valid()) {
+	if (!loop::schedule(delay, {"timesync delay", begin_time_sync}).valid()) {
+		set_burst_active(false);
 		return ESP_ERR_NO_MEM;
 	}
-	running = true;
-	State::update([](State& state) { state.running = true; });
 	return ESP_OK;
 }
 
 namespace {
-void on_gnss(const Gnss& gnss, int64_t, void*) {
-	if (gnss.fix && !had_gps_fix) {
-		had_gps_fix = schedule_gnss_time_sync() == ESP_OK;
-	} else if (!gnss.fix) {
-		had_gps_fix = false;
+void on_gnss(const Gnss& gnss, int64_t, bool acquired, void*) {
+	const bool fix = gnss.fix != Fix::none;
+	if (fix && (acquired || !sync_requested_for_fix)) {
+		sync_requested_for_fix = schedule_gnss_time_sync() == ESP_OK;
+	} else if (!fix) {
+		sync_requested_for_fix = false;
 	}
 }
-}  // namespace
+}
 
 esp_err_t start() {
 	if (!subscribe(is_time_ping, on_time_ping, nullptr) ||
@@ -227,4 +206,4 @@ esp_err_t start() {
 	}
 	return ESP_OK;
 }
-}  // namespace adsbee::timesync
+}

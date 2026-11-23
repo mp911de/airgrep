@@ -16,6 +16,16 @@
 #include "esp_psram.h"
 #endif
 
+// ESP-IDF places this immediately after esp_app_desc_t in the first image
+// segment.
+static const char board_description[]
+	__attribute__((section(".rodata_custom_desc"), aligned(1))) =
+		"airgrep-board:" BOARD_NAME;
+
+const char* device_board_name(void) {
+	return board_description + sizeof("airgrep-board:") - 1;
+}
+
 const char* device_reset_reason(void) {
 	switch (esp_reset_reason()) {
 		case ESP_RST_POWERON:
@@ -54,8 +64,12 @@ const char* device_reset_reason(void) {
 }
 
 void device_id_format(const uint8_t mac[6], char out[21]) {
-	snprintf(out, 21, "airgrep-%02x%02x%02x%02x%02x%02x", mac[0], mac[1],
-			 mac[2], mac[3], mac[4], mac[5]);
+	(void)snprintf(out, 21, "airgrep-%02x%02x%02x%02x%02x%02x", mac[0], mac[1],
+				   mac[2], mac[3], mac[4], mac[5]);
+}
+
+const char* device_serial(void) {
+	return device_info()->device_id + sizeof("airgrep-") - 1;
 }
 
 static uint8_t efuse_bits(const esp_efuse_desc_t* field[], size_t bits) {
@@ -79,22 +93,22 @@ const device_info_t* device_info(void) {
 	info.psram_cap = efuse_bits(ESP_EFUSE_PSRAM_CAP, 3);
 	info.psram_vendor = efuse_bits(ESP_EFUSE_PSRAM_VENDOR, 2);
 	esp_flash_read_id(NULL, &info.flash_jedec_id);
-	esp_flash_get_physical_size(NULL, &info.flash_bytes);
+	esp_flash_get_physical_size(NULL, &info.detected_flash_bytes);
 #if CONFIG_SPIRAM
 	if (esp_psram_is_initialized()) {
 		info.psram_bytes = esp_psram_get_size();
 	}
 #endif
-	esp_read_mac(info.mac, ESP_MAC_EFUSE_FACTORY);
-	device_id_format(info.mac, info.device_id);
+	esp_read_mac(info.factory_mac, ESP_MAC_EFUSE_FACTORY);
+	device_id_format(info.factory_mac, info.device_id);
 	read = true;
 	return &info;
 }
 
 void device_firmware_format(char* out, size_t size) {
 	const esp_app_desc_t* app = esp_app_get_description();
-	snprintf(out, size, "%s %s (%s %s)", app->project_name, app->version,
-			 app->date, app->time);
+	(void)snprintf(out, size, "%s %s (%s %s)", app->project_name, app->version,
+				   app->date, app->time);
 }
 
 void device_chip_format(char* out, size_t size) {
@@ -103,7 +117,6 @@ void device_chip_format(char* out, size_t size) {
 	static const char* packages[] = {"QFN56", "PICO-1 LGA56"};
 	const char* package =
 		info->package < 2 ? packages[info->package] : "unknown package";
-	// Both cores share one clock. The range shows when it scales.
 	esp_pm_config_t clock = {
 		.max_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ,
 		.min_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ,
@@ -111,11 +124,11 @@ void device_chip_format(char* out, size_t size) {
 	esp_pm_get_configuration(&clock);
 	char scaling[16] = "";
 	if (clock.min_freq_mhz != clock.max_freq_mhz) {
-		snprintf(scaling, sizeof scaling, "%d to ", clock.min_freq_mhz);
+		(void)snprintf(scaling, sizeof scaling, "%d to ", clock.min_freq_mhz);
 	}
-	snprintf(out, size, "ESP32-S3 (%s) rev v%u.%u, %u cores @ %s%d MHz",
-			 package, info->revision / 100, info->revision % 100, info->cores,
-			 scaling, clock.max_freq_mhz);
+	(void)snprintf(out, size, "ESP32-S3 (%s) rev v%u.%u, %u cores @ %s%d MHz",
+				   package, info->revision / 100, info->revision % 100,
+				   info->cores, scaling, clock.max_freq_mhz);
 }
 
 void device_info_print(int width) {
@@ -136,18 +149,18 @@ void device_info_print(int width) {
 	device_firmware_format(row, sizeof row);
 	printf("%-*s %s\n", width, "Firmware", row);
 	printf("%-*s %s\n", width, "IDF", app->idf_ver);
-	printf("%-*s %s\n", width, "Board", BOARD_NAME);
+	printf("%-*s %s\n", width, "Board", device_board_name());
 	device_chip_format(row, sizeof row);
 	printf("%-*s %s\n", width, "Chip", row);
 	printf(
 		"%-*s Flash %lu MB (JEDEC 0x%06lX, embedded %s), PSRAM %u MB "
 		"(embedded %s %s)\n",
-		width, "Memory", (unsigned long)(info->flash_bytes >> 20),
+		width, "Memory", (unsigned long)(info->detected_flash_bytes >> 20),
 		(unsigned long)info->flash_jedec_id, flash_cap,
 		(unsigned)(info->psram_bytes >> 20), psram_cap, psram_vendor);
-	printf("%-*s %02X:%02X:%02X:%02X:%02X:%02X\n", width, "MAC", info->mac[0],
-		   info->mac[1], info->mac[2], info->mac[3], info->mac[4],
-		   info->mac[5]);
+	printf("%-*s %02X:%02X:%02X:%02X:%02X:%02X\n", width, "MAC",
+		   info->factory_mac[0], info->factory_mac[1], info->factory_mac[2],
+		   info->factory_mac[3], info->factory_mac[4], info->factory_mac[5]);
 	printf("%-*s %s\n", width, "Device ID", info->device_id);
 	printf("%-*s %s\n", width, "Last reset", device_reset_reason());
 }

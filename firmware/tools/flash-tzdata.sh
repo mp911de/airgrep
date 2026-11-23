@@ -22,7 +22,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ -n "$PORT" ] || { echo "usage: $0 -p PORT [--force]" >&2; exit 2; }
-[ -f "$TABLE" ] || { echo "FAIL $TABLE missing, run make tzdata in tzdb/" >&2; exit 1; }
+[ -f "$TABLE" ] || { echo "FAIL $TABLE missing, run cmake -S tzdb -B tzdb/build and cmake --build tzdb/build from firmware/" >&2; exit 1; }
 read -r OFFSET SIZE < <(awk -F',' '/^tzdata,/ { gsub(/ /, "", $4); gsub(/ /, "", $5); print $4, $5 }' "$ROOT/partitions.csv")
 [ -n "$OFFSET" ] || { echo "FAIL no tzdata partition in partitions.csv" >&2; exit 1; }
 TABLE_BYTES=$(stat -f %z "$TABLE" 2>/dev/null || stat -c %s "$TABLE")

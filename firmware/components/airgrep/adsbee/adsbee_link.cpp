@@ -3,6 +3,8 @@
 #include <atomic>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
+#include <mutex>
 #include <new>
 
 #include "adsbee_protocol.hpp"
@@ -15,22 +17,8 @@
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "subscribers.hpp"
-#include "wifi/wifi_ap.hpp"
 
 namespace adsbee {
-portMUX_TYPE State::mutex_ = portMUX_INITIALIZER_UNLOCKED;
-
-State& State::storage() {
-	static State state;
-	return state;
-}
-
-State State::copy() {
-	State result;
-	update([&](State& state) { result = state; });
-	return result;
-}
-
 namespace {
 constexpr const char* tag = "adsbee";
 constexpr uart_port_t uart = UART_NUM_1;
@@ -47,7 +35,6 @@ constexpr uart_config_t uart_config = {
 };
 constexpr gpio_num_t tx = static_cast<gpio_num_t>(BOARD_PIN_UART_TX);
 
-// A handler that only sees the messages its predicate accepts.
 struct Filtered {
 	Predicate predicate;
 	Handler handler;
@@ -72,12 +59,37 @@ Link liveness;
 loop::Handle periodic;
 void update_tx();
 
+void publish_fix(bool valid, AntennaStatus antenna) {
+	if (events::update_if_changed(fix_held, valid)) {
+		events::publish(events::Event::fix_changed(valid, {antenna}));
+	}
+}
+
+void expire_fix(int64_t now_us) {
+	if (!fix_held) {
+		return;
+	}
+	bool valid = false;
+	AntennaStatus antenna = AntennaStatus::unreported;
+	State::update([&](const State& state) {
+		valid = state.gnss_at(now_us).fix != Fix::none;
+		antenna = state.gnss.antenna;
+	});
+	publish_fix(valid, antenna);
+}
+
 constexpr size_t kCommandCapacity = 256;
+
+struct MessageDelete {
+	void operator()(Message* message) const { operator delete(message); }
+};
+using OwnedMessage = std::unique_ptr<Message, MessageDelete>;
 
 struct Request {
 	uint32_t window_ms = 0;
 	loop::SuccessListener success;
 	loop::ErrorListener failure;
+	loop::Callable<void()> on_written;
 	loop::Handle handle, finish;
 	uint32_t uart_errors = 0;
 	char command[];
@@ -90,9 +102,7 @@ Reply reply;
 std::atomic<uint32_t> uart_errors;
 
 char device_info_text[2048];
-StaticSemaphore_t device_info_storage;
-SemaphoreHandle_t device_info_lock =
-	xSemaphoreCreateMutexStatic(&device_info_storage);
+std::mutex device_info_mutex;
 
 void record_error(esp_err_t error) {
 	int64_t now = esp_timer_get_time();
@@ -110,7 +120,7 @@ esp_err_t detach() {
 		.pull_down_en = GPIO_PULLDOWN_DISABLE,
 		.intr_type = GPIO_INTR_DISABLE,
 	};
-	esp_err_t result = gpio_config(&config);
+	const esp_err_t result = gpio_config(&config);
 	tx_attached = false;
 	loop::cancel(init_step);
 	init_step = {};
@@ -138,15 +148,14 @@ void after_request_cleanup(Request* request, bool replied) {
 	loop::cancel(request->finish);
 	if (replied &&
 		std::strcmp(request->command, ADSBEE_DEVICE_INFO_COMMAND) == 0) {
-		xSemaphoreTake(device_info_lock, portMAX_DELAY);
+		const std::scoped_lock lock(device_info_mutex);
 		std::memcpy(device_info_text, reply.text, reply.length + 1);
-		xSemaphoreGive(device_info_lock);
 	}
 	release(request);
 }
 
 void finish_request(loop::Handle handle) {
-	Request* request = pending;
+	const Request* request = pending;
 	if (!request || request->handle.slot != handle.slot ||
 		request->handle.generation != handle.generation) {
 		return;
@@ -161,9 +170,10 @@ void finish_request(loop::Handle handle) {
 		record_error(error);
 		loop::fail(handle, error == ESP_ERR_TIMEOUT ? loop::Outcome::timeout
 													: loop::Outcome::error);
-		return;
+	} else {
+		loop::complete(handle, loop::Value{.p = &reply});
 	}
-	loop::complete(handle, loop::Value{.p = &reply});
+	events::publish(events::Event::adsbee_reply_window_closed());
 }
 
 void receive(const Message& message) {
@@ -183,6 +193,7 @@ void receive(const Message& message) {
 		!reply.append(message.text, message.len)) {
 		record_error(ESP_ERR_INVALID_SIZE);
 		loop::fail(pending->handle, loop::Outcome::error);
+		events::publish(events::Event::adsbee_reply_window_closed());
 	}
 	subscribers.notify(message);
 }
@@ -206,27 +217,29 @@ void on_message(const char* text, size_t length, decoder_kind_t kind, void*) {
 	if (!valid) {
 		return;
 	}
-	auto message =
-		static_cast<Message*>(std::malloc(sizeof(Message) + length + 1));
-	if (!message) {
+	OwnedMessage owned(static_cast<Message*>(operator new(
+		sizeof(Message) + length + 1, std::nothrow)));
+	if (!owned) {
 		record_error(ESP_ERR_NO_MEM);
 		return;
 	}
-	message->kind = kind;
-	message->len = length;
-	message->received_us = now;
-	std::memcpy(message->text, text, length + 1);
-	auto submit =
-		loop::try_submit({"adsbee rx",
-						  [message](loop::Handle, loop::Value&) {
-							  receive(*message);
-							  std::free(message);
-							  return loop::Result::done;
-						  },
-						  1000},
-						 {}, [message](loop::Outcome) { std::free(message); });
+	owned->kind = kind;
+	owned->len = length;
+	owned->received_us = now;
+	std::memcpy(owned->text, text, length + 1);
+	// A queued task owns the message: its capture is a plain pointer.
+	Message* const message = owned.release();
+	auto submit = loop::try_submit(
+		{"adsbee rx",
+		 [message](loop::Handle, loop::Value&) {
+			 const OwnedMessage received(message);
+			 receive(*received);
+			 return loop::Result::done;
+		 },
+		 1000},
+		{}, [message](loop::Outcome) { const OwnedMessage dropped(message); });
 	if (!submit) {
-		std::free(message);
+		owned.reset(message);
 		record_error(ESP_ERR_NO_MEM);
 	}
 }
@@ -240,7 +253,7 @@ void link_task(void*) {
 		}
 		if (event.type == UART_DATA) {
 			for (size_t left = event.size; left;) {
-				int count = uart_read_bytes(
+				const int count = uart_read_bytes(
 					uart, bytes, left < sizeof bytes ? left : sizeof bytes, 0);
 				if (count <= 0) {
 					break;
@@ -271,27 +284,20 @@ void link_task(void*) {
 }
 
 esp_err_t write_line(const char* text) {
-	if (uart_write_bytes(uart, text, std::strlen(text)) < 0 ||
-		uart_write_bytes(uart, "\n", 1) < 0) {
+	const int length = static_cast<int>(std::strlen(text));
+	if (uart_write_bytes(uart, text, length) != length ||
+		uart_write_bytes(uart, "\n", 1) != 1) {
 		return ESP_FAIL;
 	}
 	return ESP_OK;
 }
 
-loop::Handle submit_request(const char* command, uint32_t window_ms,
-							loop::SuccessListener success,
-							loop::ErrorListener failure);
-
-// Device initialization after TX attach: ADSBEE_INIT_REPEATS copies of the
-// init command, ADSBEE_INIT_REPEAT_MS apart, then one AT+DEVICE_INFO? whose
-// reply fills the device info. Requests wait until the init writes are
-// through.
 loop::Result init(loop::Handle, loop::Value&) {
 	init_step = {};
 	if (!tx_attached) {
 		return loop::Result::done;
 	}
-	esp_err_t result = write_line(ADSBEE_INIT_COMMAND);
+	const esp_err_t result = write_line(ADSBEE_INIT_COMMAND);
 	if (result != ESP_OK) {
 		record_error(result);
 		return loop::Result::done;
@@ -305,13 +311,21 @@ loop::Result init(loop::Handle, loop::Value&) {
 		return loop::Result::done;
 	}
 	State::update([](State& state) { state.initialized = true; });
-	submit_request(ADSBEE_DEVICE_INFO_COMMAND, ADSBEE_REPLY_WINDOW_MS, {}, {});
-	wifi::on_link_attached();
+	auto initialized = [](auto) {
+		if (accepts_requests()) {
+			events::publish(events::Event::adsbee_initialized());
+		}
+	};
+	if (!request(ADSBEE_DEVICE_INFO_COMMAND, initialized, initialized,
+				 ADSBEE_REPLY_WINDOW_MS)
+			 .valid()) {
+		events::publish(events::Event::adsbee_initialized());
+	}
 	return loop::Result::done;
 }
 
 void update_tx() {
-	int64_t now = esp_timer_get_time();
+	const int64_t now = esp_timer_get_time();
 	bool alive = liveness.permits_tx(now);
 	State::update([&](State& state) { state.known = alive; });
 	if (!started || !alive) {
@@ -342,11 +356,9 @@ void update_tx() {
 	}
 }
 
-// Runs on the loop: claims the single request slot, opens the response
-// window and writes the command. Returns pending until the window closes.
 loop::Result send(Request* request, loop::Handle handle) {
 	update_tx();
-	if (!started || !ready()) {
+	if (!started || !accepts_requests()) {
 		record_error(ESP_ERR_INVALID_STATE);
 		return loop::Result::error;
 	}
@@ -366,48 +378,68 @@ loop::Result send(Request* request, loop::Handle handle) {
 		record_error(ESP_ERR_NO_MEM);
 		return loop::Result::error;
 	}
-	pending = request;
 	reply.length = 0;
 	reply.text[0] = 0;
-	esp_err_t written = write_line(request->command);
+	const esp_err_t written = write_line(request->command);
 	if (written != ESP_OK) {
 		record_error(written);
 		return loop::Result::error;
 	}
+	pending = request;
+	if (request->on_written) {
+		request->on_written();
+	}
 	return loop::Result::pending;
 }
 
-loop::Handle submit_request(const char* command, uint32_t window_ms,
-							loop::SuccessListener success,
-							loop::ErrorListener failure) {
+void on_mode(const events::Event& event, void*) {
+	liveness.set_powered(event.data.mode.to == POWER_MODE_ON,
+						 esp_timer_get_time());
+	update_tx();
+	if (event.data.mode.from == POWER_MODE_ON) {
+		AntennaStatus antenna = AntennaStatus::unreported;
+		State::update([&](State& state) {
+			state.gnss.fix = Fix::none;
+			antenna = state.gnss.antenna;
+		});
+		publish_fix(false, antenna);
+	}
+}
+}
+
+loop::Handle request(const char* command, loop::SuccessListener success,
+					 loop::ErrorListener failure, uint32_t window_ms,
+					 loop::Callable<void()> on_written) {
 	if (!acceptable_command(command, kCommandCapacity) || !window_ms) {
 		record_error(ESP_ERR_INVALID_ARG);
 		return {};
 	}
-	void* storage = operator new(sizeof(Request) + std::strlen(command) + 1,
-								 std::nothrow);
-	if (!storage) {
+	const size_t command_size = std::strlen(command) + 1;
+	void* const memory = operator new(sizeof(Request) + command_size,
+									  std::nothrow);
+	if (!memory) {
 		return {};
 	}
-	auto* request = new (storage) Request;
-	std::strcpy(request->command, command);
+	auto* request = std::construct_at(static_cast<Request*>(memory));
+	std::memcpy(request->command, command, command_size);
 	request->window_ms = window_ms;
 	request->success = success;
 	request->failure = failure;
+	request->on_written = on_written;
 	loop::Handle handle = loop::submit(
 		{"adsbee at",
 		 [request](loop::Handle action, loop::Value&) {
 			 return send(request, action);
 		 }},
 		[request](loop::Value value) {
-			loop::SuccessListener on_reply = request->success;
+			const loop::SuccessListener on_reply = request->success;
 			after_request_cleanup(request, true);
 			if (on_reply) {
 				on_reply(value);
 			}
 		},
 		[request](loop::Outcome outcome) {
-			loop::ErrorListener on_error = request->failure;
+			const loop::ErrorListener on_error = request->failure;
 			after_request_cleanup(request, false);
 			if (outcome == loop::Outcome::timeout) {
 				record_error(ESP_ERR_TIMEOUT);
@@ -422,14 +454,9 @@ loop::Handle submit_request(const char* command, uint32_t window_ms,
 	return handle;
 }
 
-void on_mode(const events::Event& event, void*) {
-	liveness.set_powered(event.mode.to == POWER_MODE_ON, esp_timer_get_time());
-	update_tx();
-}
-}  // namespace
-
 esp_err_t prepare() {
-	return events::subscribe(events::of(events::Type::mode_changed), on_mode)
+	return events::subscribe(events::mask_for(events::Type::mode_changed),
+							 on_mode)
 			   ? ESP_OK
 			   : ESP_ERR_NO_MEM;
 }
@@ -442,7 +469,7 @@ bool subscribe_gnss(GnssHandler handler, void* context) {
 	return gnss_subscribers.add(handler, context);
 }
 
-bool ready() {
+bool accepts_requests() {
 	const auto link = State::copy();
 	return link.tx_attached && link.initialized;
 }
@@ -477,6 +504,7 @@ esp_err_t start() {
 	periodic = loop::schedule_periodic(
 		ADSBEE_POLL_MS, {"adsbee liveness", [](loop::Handle, loop::Value&) {
 							 update_tx();
+							 expire_fix(esp_timer_get_time());
 							 return loop::Result::done;
 						 }});
 	if (!periodic.valid()) {
@@ -496,24 +524,21 @@ esp_err_t start() {
 	return ESP_OK;
 }
 
-loop::Handle request(const char* command, loop::SuccessListener success,
-					 loop::ErrorListener failure, uint32_t timeout_ms) {
-	return submit_request(command, timeout_ms, success, failure);
-}
-
 bool busy() { return pending != nullptr; }
 
 void ingest_gnss(const Gnss& gnss, int64_t received_us) {
+	expire_fix(received_us);
 	State::update([&](State& state) {
 		state.gnss = gnss;
-		state.gnss_us = received_us;
+		state.last_gnss_report_us = received_us;
 	});
-	gnss_subscribers.notify(gnss, received_us);
-	if (events::changed(fix_held, gnss.fix)) {
-		events::publish({.type = fix_held ? events::Type::fix_acquired
-										  : events::Type::fix_lost,
-						 .fix = {gnss.antenna}});
+	if (!state_usable(received_us, esp_timer_get_time())) {
+		publish_fix(false, gnss.antenna);
+		return;
 	}
+	const bool has_fix = gnss.fix != Fix::none;
+	gnss_subscribers.notify(gnss, received_us, has_fix && !fix_held);
+	publish_fix(has_fix, gnss.antenna);
 }
 
 void reset_ingestion() {
@@ -523,22 +548,14 @@ void reset_ingestion() {
 	});
 }
 
-void drop_fix() {
-	if (events::changed(fix_held, false)) {
-		events::publish({.type = events::Type::fix_lost,
-						 .fix = {State::copy().gnss.antenna}});
-	}
-}
-
 size_t device_info(char* out, size_t capacity) {
-	xSemaphoreTake(device_info_lock, portMAX_DELAY);
+	const std::scoped_lock lock(device_info_mutex);
 	size_t length = std::strlen(device_info_text);
 	if (length >= capacity) {
 		length = capacity - 1;
 	}
 	std::memcpy(out, device_info_text, length);
 	out[length] = 0;
-	xSemaphoreGive(device_info_lock);
 	return length;
 }
-}  // namespace adsbee
+}

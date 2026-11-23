@@ -1,12 +1,32 @@
 #pragma once
 
-// Hardware test mode: checks read the driver States and print one line per
-// check, "HWTEST <name> PASS|FAIL <detail>", for a host script to judge.
+#include <cstdio>
+#include <span>
 
 namespace hwtest {
-void report(const char* name, bool pass, const char* detail);
+class Output {
+   public:
+	explicit Output(std::FILE* stream) : stream_(stream) {}
+	void print(const char* format, ...) __attribute__((format(printf, 2, 3)));
+	// One line "HWTEST <name> PASS|FAIL <detail>", for a host script to judge.
+	void report(const char* name, bool pass, const char* detail);
 
-// Runs the checks on the calling task and blocks up to 6 s for the drivers to
-// get ready. The loop must be started and the drivers initialised.
-void run();
-}  // namespace hwtest
+   private:
+	std::FILE* stream_;
+};
+
+struct Entry {
+	const char* name;
+	const char* what;
+	bool benchmark;
+	void (*run)(Output& output);
+};
+
+std::span<const Entry> entries();
+
+enum class RunResult { done, busy, no_memory };
+RunResult run(const Entry& entry, std::FILE* stream);
+
+// Call after starting the loop and initializing the drivers.
+void run_boot_checks();
+}

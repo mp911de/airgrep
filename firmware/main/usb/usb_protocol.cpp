@@ -5,13 +5,13 @@
 namespace usb::protocol {
 namespace {
 uint16_t read16(const uint8_t* bytes) {
-	return bytes[0] | (static_cast<uint16_t>(bytes[1]) << 8);
+	return static_cast<uint16_t>(bytes[0] | (unsigned{bytes[1]} << 8U));
 }
 
 void write_le(uint8_t* bytes, uint64_t value, size_t size) {
 	for (size_t i = 0; i < size; i++) {
 		bytes[i] = static_cast<uint8_t>(value);
-		value >>= 8;
+		value >>= 8U;
 	}
 }
 
@@ -26,17 +26,17 @@ size_t finish_response(Command command, Status status, uint8_t* output,
 	write_le(output + 4, crc, 2);
 	return size;
 }
-}  // namespace
+}
 
 uint16_t crc16(const uint8_t* bytes, size_t size, uint16_t seed) {
+	unsigned crc = seed;
 	for (size_t i = 0; i < size; i++) {
-		seed ^= static_cast<uint16_t>(bytes[i]) << 8;
+		crc ^= unsigned{bytes[i]} << 8U;
 		for (unsigned bit = 0; bit < 8; bit++) {
-			seed = static_cast<uint16_t>((seed << 1) ^
-										 (seed & 0x8000 ? 0x1021 : 0));
+			crc = (crc << 1U) ^ (crc & 0x8000U ? 0x1021U : 0U);
 		}
 	}
-	return seed;
+	return static_cast<uint16_t>(crc);
 }
 
 bool Decoder::timed_out(int64_t now_us) const {
@@ -72,8 +72,10 @@ bool Decoder::feed(uint8_t byte, int64_t now_us) {
 		status_ = Status::crc_mismatch;
 	} else if (header_[0] != kVersion) {
 		status_ = Status::version_mismatch;
-	} else if (!service_commands_ && command() >= Command::read &&
-			   command() <= Command::update_gnss) {
+	} else if (!service_commands_ && ((command() >= Command::read &&
+									   command() <= Command::update_gnss) ||
+									  (command() >= Command::list_traffic &&
+									   command() <= Command::write_settings))) {
 		status_ = Status::unknown_command;
 	} else {
 		switch (command()) {
@@ -86,8 +88,22 @@ bool Decoder::feed(uint8_t byte, int64_t now_us) {
 			case Command::read:
 				status_ = length_ == 7 ? Status::ok : Status::invalid_length;
 				break;
+			case Command::list_traffic:
+				status_ = length_ == 8 ? Status::ok : Status::invalid_length;
+				break;
 			case Command::write:
 				status_ = length_ >= 11 ? Status::ok : Status::invalid_length;
+				break;
+			case Command::read_settings:
+				status_ = length_ == 6 + kKeySize ? Status::ok
+												  : Status::invalid_length;
+				break;
+			case Command::write_settings:
+				// No payload removes every setting, otherwise a key and
+				// its struct.
+				status_ = length_ == 6 || length_ > 6 + kKeySize
+							  ? Status::ok
+							  : Status::invalid_length;
 				break;
 			case Command::update_traffic:
 			case Command::update_gnss:
@@ -100,20 +116,25 @@ bool Decoder::feed(uint8_t byte, int64_t now_us) {
 	return true;
 }
 
-size_t encode_status(Status status, uint8_t* output) {
-	return finish_response(Command::status, status, output, kStatusSize);
+size_t encode_status(Status status, std::span<uint8_t> output) {
+	return encode_response(Command::status, status, output, 0);
 }
 
-size_t encode_response(Command command, Status status, uint8_t* output,
-					   size_t payload_size) {
-	if (payload_size > UINT16_MAX - kStatusSize) {
+size_t encode_response(Command command, Status status,
+					   std::span<uint8_t> output, size_t payload_size) {
+	if (payload_size > UINT16_MAX - kStatusSize ||
+		output.size() < kStatusSize + payload_size) {
 		return 0;
 	}
-	return finish_response(command, status, output, kStatusSize + payload_size);
+	return finish_response(command, status, output.data(),
+						   kStatusSize + payload_size);
 }
 
-size_t encode_hello(const Hello& hello, uint8_t* output) {
-	uint8_t* payload = output + kStatusSize;
+size_t encode_hello(const Hello& hello, std::span<uint8_t> output) {
+	if (output.size() < kHelloSize) {
+		return 0;
+	}
+	uint8_t* payload = output.data() + kStatusSize;
 	write_le(payload, hello.uptime_seconds, 8);
 	std::memcpy(payload + 8, hello.firmware_version, 32);
 	write_le(payload + 40, hello.internal_free, 4);
@@ -127,10 +148,12 @@ size_t encode_hello(const Hello& hello, uint8_t* output) {
 	payload[67] = hello.cpu_core0;
 	payload[68] = hello.cpu_core1;
 	payload[69] = hello.cpu_overall;
-	payload[70] = payload[71] = 0;
+	payload[70] = static_cast<uint8_t>(hello.service);
+	payload[71] = 0;
 	std::memcpy(payload + 72, hello.firmware_description, 128);
 	std::memcpy(payload + 200, hello.board, 128);
 	std::memcpy(payload + 328, hello.chip, 128);
-	return finish_response(Command::hello, Status::ok, output, kHelloSize);
+	return finish_response(Command::hello, Status::ok, output.data(),
+						   kHelloSize);
 }
-}  // namespace usb::protocol
+}

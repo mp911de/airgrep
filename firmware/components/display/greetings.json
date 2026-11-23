@@ -1,0 +1,22 @@
+{
+	"en": [
+		"Safe flight.",
+		"Blue skies.",
+		"Happy landings.",
+		"Clear skies and tailwinds.",
+		"Enjoy the view.",
+		"Safe flight, {callsign}.",
+		"Eyes outside, {callsign}.",
+		"{callsign}, wind right down the runway."
+	],
+	"de": [
+		"Guten Flug.",
+		"Allzeit gute Landungen.",
+		"Blauer Himmel und Rückenwind.",
+		"Immer eine Handbreit Luft unter den Flügeln.",
+		"Genieß die Aussicht.",
+		"Guten Flug, {callsign}.",
+		"Augen nach draußen, {callsign}.",
+		"{callsign}, Hals- und Beinbruch."
+	]
+}

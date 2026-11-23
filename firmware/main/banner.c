@@ -1,8 +1,7 @@
+#include <stdio.h>
+
 #include "console.h"
 #include "system/device_info.h"
-
-#define BANNER_LABEL_WIDTH 16
-#include <stdio.h>
 
 void console_banner(void) {
 	printf(
@@ -17,6 +16,6 @@ void console_banner(void) {
 		"                      /\\____/             \\ \\_\\\n"
 		"                      \\_/__/               \\/_/\n"
 		"\n");
-	device_info_print(BANNER_LABEL_WIDTH);
+	device_info_print(CONSOLE_LABEL_WIDTH);
 	printf("\n");
 }

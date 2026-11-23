@@ -86,41 +86,43 @@ constexpr unsigned kChargeStatusShift = 5;
 constexpr unsigned kVbusStatusShift = 1;
 constexpr uint8_t kVbusStatusMask = 0x0f;
 constexpr uint8_t kDetectionDone = 1 << 0;
-}  // namespace
+}
 
 BatteryDetected detect_battery(unsigned vbat_charging_mv,
 							   unsigned vbat_disabled_mv) {
 	return int(vbat_charging_mv) - int(vbat_disabled_mv) > 1500
-			   ? BatteryDetected::no
-			   : BatteryDetected::yes;
+			   ? BatteryDetected::absent
+			   : BatteryDetected::test_present;
 }
 
 float decode_tdie(uint8_t high, uint8_t low) {
-	unsigned raw = (unsigned(high) << 8) | low;
-	return (raw & kAdcSignBit ? int(raw) - kAdcRange : int(raw)) * kTdieCPerLsb;
+	const unsigned raw = (unsigned(high) << 8) | low;
+	return static_cast<float>(raw & kAdcSignBit ? int(raw) - kAdcRange
+												: int(raw)) *
+		   kTdieCPerLsb;
 }
 
 float decode_ts(uint8_t high, uint8_t low) {
-	return ((unsigned(high) << 8) | low) * kTsPercentPerLsb;
+	return static_cast<float>((unsigned(high) << 8) | low) * kTsPercentPerLsb;
 }
 
 float estimate_ntc_c(float ts_percent) {
-	float ratio = ts_percent / 100.0f;
+	const float ratio = ts_percent / 100.0f;
 	if (!std::isfinite(ratio) || ratio <= 0 || ratio >= 1) {
 		return NAN;
 	}
-	float parallel_ohms = kTsPullupOhms * ratio / (1 - ratio);
-	float ntc_conductance = 1 / parallel_ohms - 1 / kTsPulldownOhms;
+	const float parallel_ohms = kTsPullupOhms * ratio / (1 - ratio);
+	const float ntc_conductance = 1 / parallel_ohms - 1 / kTsPulldownOhms;
 	if (ntc_conductance <= 0) {
 		return NAN;
 	}
-	float kelvin_inverse =
+	const float kelvin_inverse =
 		1 / 298.15f +
 		std::log(1 / (ntc_conductance * kNtcR25Ohms)) / kNtcBetaKelvin;
 	if (kelvin_inverse <= 0) {
 		return NAN;
 	}
-	float temperature = 1 / kelvin_inverse - 273.15f;
+	const float temperature = 1 / kelvin_inverse - 273.15f;
 	// The selected NTC is specified for -40 to 150 C.
 	return temperature >= -40 && temperature <= 150 ? temperature : NAN;
 }
@@ -130,12 +132,12 @@ unsigned decode_adc_mv(uint8_t high, uint8_t low) {
 }
 
 int decode_ibat(uint8_t high, uint8_t low) {
-	unsigned raw = (unsigned(high) << 8) | low;
+	const unsigned raw = (unsigned(high) << 8) | low;
 	return raw & kAdcSignBit ? int(raw) - kAdcRange : int(raw);
 }
 
 int decode_ibus(uint8_t high, uint8_t low) {
-	unsigned raw = (unsigned(high) << 8) | low;
+	const unsigned raw = (unsigned(high) << 8) | low;
 	return raw & kAdcSignBit ? int(raw) - kAdcRange : int(raw);
 }
 
@@ -286,4 +288,4 @@ Status0 decode_status0(uint8_t raw) {
 			bool(raw & kAc2Present), bool(raw & kAc1Present),
 			bool(raw & kVbusPresent)};
 }
-}  // namespace charger
+}

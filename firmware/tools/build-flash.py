@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Build and flash AIRGREP, then open its console, tracking one device across USB modes."""
+"""Build and flash AIRGREP, then open its console, tracking one device across USB modes.
+"""
 
 import argparse
 from contextlib import contextmanager
@@ -19,7 +20,7 @@ import airgrep
 FIRMWARE = Path(__file__).resolve().parents[1]
 # Each profile with a pattern for the board its firmware reports, BOARD_NAME in components/airgrep/board.h.
 PROFILES = {"s3": r"S3 Plus", "s3-debug": r"S3 Plus", "display": r"Seeed Display"}
-FRAGMENTS = {"debug-uart": "sdkconfig.uart0", "hwtest": "sdkconfig.hwtest"}
+FRAGMENTS = {"debug-uart": "sdkconfig.uart0", "hwtest": "sdkconfig.hwtest", "float": "sdkconfig.float"}
 ROM_USB = (0x303A, 0x1001)
 identity = airgrep.identity
 
@@ -151,6 +152,10 @@ def wait_port(usb, selected, timeout, rom):
             raise airgrep.ProtocolError("Multiple ports report the selected factory MAC")
         remaining = deadline - time.monotonic()
         if remaining <= 0:
+            # A reset over USB does not read the BOOT button again: a bootloader entered with it stays.
+            if not rom and any(is_rom(port) and identity(port.serial_number) == selected for port in ports):
+                raise airgrep.ProtocolError(f"Flashed. {selected} is still in its bootloader: "
+                                            "press RESET, or unplug it and plug it in again")
             mode = "ROM download port" if rom else "application console"
             raise airgrep.ProtocolError(f"Timed out waiting for {selected} {mode}")
         if matches:
@@ -203,11 +208,13 @@ def build_flash(command, usb, profile, selector, timeout):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--profile", choices=PROFILES, default="s3",
                         help="Application build profile, default s3")
     parser.add_argument("--debug-uart", action="store_true", help="Console on UART0 GPIO1/2")
     parser.add_argument("--hwtest", action="store_true", help="Hardware test mode")
+    parser.add_argument("--float", action="store_true",
+                        help="Conflict engine in single precision, default double")
     parser.add_argument("--display", choices=displays(), help="Display variant, default none")
     parser.add_argument("--serial", help="Factory MAC or USB serial, default first found device. "
                         "Without a device the image is built and not flashed")

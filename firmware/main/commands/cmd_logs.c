@@ -32,6 +32,7 @@ static struct {
 	struct arg_str* level;
 	struct arg_str* tags;
 	struct arg_end* end;
+	void* table[4];
 } args;
 
 static int capture(const char* format, va_list ap) {
@@ -86,7 +87,7 @@ void logs_stop(void) {
 static int logs(int argc, char** argv) {
 	static const char* levels[] = {"none", "error", "warn",
 								   "info", "debug", "verbose"};
-	if (arg_parse(argc, argv, (void**)&args)) {
+	if (arg_parse(argc, argv, args.table)) {
 		arg_print_errors(stderr, args.end, argv[0]);
 		return 1;
 	}
@@ -155,14 +156,16 @@ static int logs(int argc, char** argv) {
 			break;
 		}
 		if (!args.count->count) {
-			char key;
+			char key = 0;
 			ssize_t got = read(STDIN_FILENO, &key, 1);
 			if (got > 0) {
 				break;
 			}
 			if (got < 0 && errno != EAGAIN && errno != EWOULDBLOCK &&
 				errno != EINTR) {
-				printf("log input failed: %s\n", strerror(errno));
+				char reason[64];
+				printf("log input failed: %s\n",
+					   strerror_r(errno, reason, sizeof reason));
 				result = 1;
 				break;
 			}
@@ -175,7 +178,7 @@ static int logs(int argc, char** argv) {
 		bool found = log_ring_next(&view, &cursor, filter, line, LINE_SIZE);
 		xSemaphoreGive(lock);
 		if (found) {
-			fputs(line, stdout);
+			(void)fputs(line, stdout);
 		} else if (args.count->count) {
 			break;
 		} else {
@@ -201,7 +204,11 @@ esp_err_t logs_register(void) {
 	args.tags = arg_str0(NULL, NULL, "tag,...",
 						 "Tags to display and raise for this session");
 	args.end = arg_end(3);
-	if (arg_nullcheck((void**)&args)) {
+	args.table[0] = args.count;
+	args.table[1] = args.level;
+	args.table[2] = args.tags;
+	args.table[3] = args.end;
+	if (arg_nullcheck(args.table)) {
 		return ESP_ERR_NO_MEM;
 	}
 	const esp_console_cmd_t command = {
@@ -209,7 +216,7 @@ esp_err_t logs_register(void) {
 		.hint = "[level [tag,...]] | -n N",
 		.help = "Replay logs and tail until a key, or replay the last N lines.",
 		.func = logs,
-		.argtable = &args,
+		.argtable = (void*)args.table,
 	};
 	return console_register(&command);
 }

@@ -1,7 +1,5 @@
 #include "tca9534.hpp"
 
-#include <new>
-
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "events/events.hpp"
@@ -10,28 +8,17 @@
 #include "subscribers.hpp"
 
 namespace expander {
-portMUX_TYPE State::mutex_ = portMUX_INITIALIZER_UNLOCKED;
-
-State& State::storage() {
-	static State state;
-	return state;
-}
-
 bool State::is_valid() {
 	return state_usable(copy().updated_us, esp_timer_get_time());
-}
-
-State State::copy() {
-	State result;
-	update([&](State& state) { result = state; });
-	return result;
 }
 
 namespace {
 i2c_master_dev_handle_t device;
 loop::Handle periodic;
 unsigned configuration_step;
-bool pulse_active;
+unsigned pulse_pin;  // zero while idle
+using PulseStep = loop::Result (*)(loop::Handle, loop::Value&);
+PulseStep retry_pulse;
 
 Subscribers<Handler, EXPANDER_MAX_SUBSCRIBERS> subscribers;
 
@@ -53,8 +40,8 @@ esp_err_t read(uint8_t reg, uint8_t& value) {
 
 esp_err_t write(uint8_t reg, uint8_t value) {
 	const uint8_t data[] = {reg, value};
-	esp_err_t result = i2c_master_transmit(device, data, sizeof data,
-										   CONFIG_AIRGREP_I2C_TIMEOUT_MS);
+	const esp_err_t result = i2c_master_transmit(device, data, sizeof data,
+												 CONFIG_AIRGREP_I2C_TIMEOUT_MS);
 	if (result == ESP_OK) {
 		State::update([&](State& state) {
 			if (reg == 1) {
@@ -72,15 +59,16 @@ esp_err_t write(uint8_t reg, uint8_t value) {
 	return result;
 }
 
-loop::Result poll_expander(loop::Handle, loop::Value&) {
+loop::Result poll_expander(loop::Handle handle, loop::Value& value) {
+	if (retry_pulse) {
+		return retry_pulse(handle, value);
+	}
 	if (!State::copy().configured) {
 		static constexpr uint8_t registers[] = {1, 2, 3};
 		static constexpr uint8_t values[] = {0x30, 0x00, 0xff};
-		esp_err_t result =
+		const esp_err_t result =
 			write(registers[configuration_step], values[configuration_step]);
 		if (result != ESP_OK) {
-			// A driver that cannot configure stops polling. The system
-			// watchdog starts it again.
 			loop::cancel(periodic);
 			periodic = {};
 			configuration_step = 0;
@@ -95,13 +83,13 @@ loop::Result poll_expander(loop::Handle, loop::Value&) {
 		}
 		return loop::Result::done;
 	}
-	uint8_t raw;
-	esp_err_t result = read(0, raw);
+	uint8_t raw = 0;
+	const esp_err_t result = read(0, raw);
 	if (result != ESP_OK) {
 		record_error(result);
 		return loop::Result::done;
 	}
-	uint8_t changed;
+	uint8_t changed = 0;
 	int64_t now = esp_timer_get_time();
 	State::update([&](State& state) {
 		changed = state.updated_us ? state.raw_input ^ raw : 0xff;
@@ -113,101 +101,79 @@ loop::Result poll_expander(loop::Handle, loop::Value&) {
 	// is published last.
 	const Input input = decode_input(raw);
 	if (changed & kMutePin) {
-		events::publish({.type = events::Type::mute_switch_changed,
-						 .position = {input.mute}});
+		events::publish(events::Event::mute_switch_changed({input.mute}));
 	}
 	if (changed & kWifiPin) {
-		events::publish({.type = events::Type::wifi_switch_changed,
-						 .position = {input.wifi}});
+		events::publish(events::Event::wifi_switch_changed({input.wifi}));
 	}
 	notify(changed);
 	return loop::Result::done;
 }
 
-struct Pulse {
-	unsigned pin;
-	esp_err_t first_error = ESP_OK;
-	bool retried = false;
-};
+void retry_on_poll(PulseStep action, esp_err_t error) {
+	retry_pulse = action;
+	record_error(error);
+}
 
-void finish(Pulse* pulse, esp_err_t result) {
-	if (pulse->first_error != ESP_OK) {
-		result = pulse->first_error;
+loop::Result restore_latch(loop::Handle, loop::Value&) {
+	const esp_err_t result =
+		write(1, State::copy().raw_output | (1u << pulse_pin));
+	if (result != ESP_OK) {
+		retry_on_poll(restore_latch, result);
+	} else {
+		retry_pulse = nullptr;
+		pulse_pin = 0;
+	}
+	return loop::Result::done;
+}
+
+void finish_release() {
+	retry_pulse = nullptr;
+	if (pulse_pin < 4) {
+		pulse_pin = 0;
+	} else if (!loop::try_submit("exp restore latch", restore_latch)) {
+		retry_on_poll(restore_latch, ESP_ERR_NO_MEM);
+	}
+}
+
+loop::Result release_pin(loop::Handle, loop::Value&) {
+	const esp_err_t result =
+		write(3, State::copy().raw_configuration | (1u << pulse_pin));
+	if (result != ESP_OK) {
+		retry_on_poll(release_pin, result);
+	} else {
+		finish_release();
+	}
+	return loop::Result::done;
+}
+
+loop::Result assert_pin(loop::Handle, loop::Value&) {
+	const auto release =
+		loop::schedule(EXPANDER_PULSE_MS, {"exp release", release_pin});
+	if (!release.valid()) {
+		record_error(ESP_ERR_NO_MEM);
+		finish_release();
+		return loop::Result::done;
+	}
+	const esp_err_t result =
+		write(3, State::copy().raw_configuration & ~(1u << pulse_pin));
+	// The width starts at the direction write, including one with a lost ACK.
+	// Only this loop can dispatch the release and this action still owns it.
+	if (!loop::postpone(release, EXPANDER_PULSE_MS)) {
+		retry_on_poll(release_pin, ESP_ERR_INVALID_STATE);
 	}
 	if (result != ESP_OK) {
 		record_error(result);
-		ESP_LOGE("exp", "P%u trigger failed: %s", pulse->pin,
-				 esp_err_to_name(result));
 	}
-	pulse_active = false;
-	delete pulse;
+	return loop::Result::done;
 }
-
-void restore(Pulse* pulse) {
-	if (pulse->pin < 4) {
-		finish(pulse, ESP_OK);
-		return;
-	}
-	if (!loop::try_submit(
-			"exp restore latch", [pulse](loop::Handle, loop::Value&) {
-				esp_err_t result =
-					write(1, State::copy().raw_output | (1u << pulse->pin));
-				finish(pulse, result);
-				return loop::Result::done;
-			})) {
-		finish(pulse, ESP_ERR_NO_MEM);
-	}
 }
-
-void release(Pulse* pulse) {
-	esp_err_t result =
-		write(3, State::copy().raw_configuration | (1u << pulse->pin));
-	if (result == ESP_OK) {
-		restore(pulse);
-		return;
-	}
-	if (pulse->first_error == ESP_OK) {
-		pulse->first_error = result;
-	}
-	if (!pulse->retried) {
-		pulse->retried = true;
-		if (loop::try_submit("exp release retry",
-							 [pulse](loop::Handle, loop::Value&) {
-								 release(pulse);
-								 return loop::Result::done;
-							 })) {
-			return;
-		}
-	}
-	finish(pulse, result);
-}
-
-void assert_pin(Pulse* pulse) {
-	esp_err_t result =
-		write(3, State::copy().raw_configuration & ~(1u << pulse->pin));
-	if (result != ESP_OK) {
-		pulse->first_error = result;
-	}
-	// Even an unacknowledged write may have reached the chip. Always release.
-	loop::Task task{"exp release", [pulse](loop::Handle, loop::Value&) {
-						release(pulse);
-						return loop::Result::done;
-					}};
-	if (!loop::schedule(EXPANDER_PULSE_MS, task).valid()) {
-		if (pulse->first_error == ESP_OK) {
-			pulse->first_error = ESP_ERR_NO_MEM;
-		}
-		if (!loop::try_submit("exp emergency release", task.action)) {
-			finish(pulse, ESP_ERR_NO_MEM);
-		}
-	}
-}
-}  // namespace
 
 bool subscribe(Handler handler, void* context) {
 	return subscribers.add(handler, context);
 }
 
+namespace {
 Completion init_complete;
 
 void finish_init(esp_err_t result) {
@@ -220,8 +186,8 @@ void finish_init(esp_err_t result) {
 }
 
 loop::Result identify_at_init(loop::Handle, loop::Value&) {
-	uint8_t raw;
-	esp_err_t result = read(0, raw);
+	uint8_t raw = 0;
+	const esp_err_t result = read(0, raw);
 	if (result != ESP_OK) {
 		finish_init(result);
 		return loop::Result::done;
@@ -251,9 +217,10 @@ loop::Result probe(loop::Handle, loop::Value&) {
 	}
 	return loop::Result::done;
 }
+}
 
 void init(Completion complete) {
-	if (periodic.valid()) {
+	if (loop::pending(periodic)) {
 		return;
 	}
 	init_complete = complete;
@@ -266,41 +233,28 @@ esp_err_t trigger(unsigned pin) {
 	if (pin < 2 || pin > 5) {
 		return ESP_ERR_INVALID_ARG;
 	}
-	Pulse* pulse = new (std::nothrow) Pulse{pin};
-	if (!pulse) {
-		return ESP_ERR_NO_MEM;
-	}
-	if (!loop::try_submit("exp trigger", [pulse](loop::Handle, loop::Value&) {
+	const bool queued = loop::try_submit(
+		"exp trigger", [pin](loop::Handle handle, loop::Value& value) {
 			const State current = State::copy();
-			if (pulse_active || !current.configured) {
+			if (pulse_pin || !current.configured) {
 				record_error(ESP_ERR_INVALID_STATE);
-				delete pulse;
 				return loop::Result::done;
 			}
-			pulse_active = true;
-			if (pulse->pin < 4) {
-				assert_pin(pulse);
-				return loop::Result::done;
+			pulse_pin = pin;
+			if (pin < 4) {
+				return assert_pin(handle, value);
 			}
-			esp_err_t result =
-				write(1, current.raw_output & ~(1u << pulse->pin));
+			const esp_err_t result =
+				write(1, current.raw_output & ~(1u << pin));
 			if (result != ESP_OK) {
-				finish(pulse, result);
-				return loop::Result::done;
-			}
-			if (!loop::try_submit("exp assert",
-								  [pulse](loop::Handle, loop::Value&) {
-									  assert_pin(pulse);
-									  return loop::Result::done;
-								  })) {
-				pulse->first_error = ESP_ERR_NO_MEM;
-				restore(pulse);
+				record_error(result);
+				finish_release();
+			} else if (!loop::try_submit("exp assert", assert_pin)) {
+				record_error(ESP_ERR_NO_MEM);
+				finish_release();
 			}
 			return loop::Result::done;
-		})) {
-		delete pulse;
-		return ESP_ERR_NO_MEM;
-	}
-	return ESP_OK;
+		});
+	return queued ? ESP_OK : ESP_ERR_NO_MEM;
 }
-}  // namespace expander
+}

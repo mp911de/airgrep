@@ -1,5 +1,6 @@
 #include "loop.hpp"
 
+#include <algorithm>
 #include <atomic>
 
 #include "esp_log.h"
@@ -12,7 +13,7 @@
 
 namespace loop {
 namespace {
-static const char* TAG = "loop";
+const char* TAG = "loop";
 constexpr uint16_t SLOTS = CONFIG_AIRGREP_LOOP_QUEUE_DEPTH;
 constexpr size_t SCHEDULED = CONFIG_AIRGREP_LOOP_SCHEDULED;
 constexpr int64_t TICK_US = int64_t{CONFIG_AIRGREP_LOOP_TICK_MS} * 1000;
@@ -20,44 +21,43 @@ constexpr int64_t TICK_US = int64_t{CONFIG_AIRGREP_LOOP_TICK_MS} * 1000;
 // One word per slot: the low bits hold the state, the rest the generation.
 // Every transition is one compare-and-swap that expects the handle's
 // generation, so a stale handle fails the compare and does nothing.
-// RESERVED covers the window between claiming the slot and queuing the
-// task: the sweep ignores it and cancel() returns false in it, although
-// the submission is about to succeed. Only the submitter holds the handle
-// then, so nobody else can observe the window.
 enum State : uint32_t { FREE, RESERVED, LIVE, RUNNING, DONE };
+
+constexpr int64_t no_deadline = 0;
+constexpr uint32_t one_shot = 0;
 
 constexpr uint32_t STATE_BITS = 3;
 constexpr uint32_t STATE_MASK = (1u << STATE_BITS) - 1;
 
-constexpr uint32_t pack(uint32_t generation, State state) {
+constexpr uint32_t pack(uint32_t generation, State state) noexcept {
 	return (generation << STATE_BITS) | state;
 }
 
 struct Slot {
 	std::atomic<uint32_t> word{pack(1, FREE)};
-	const char* name;
-	int64_t deadline_us;  // 0 means none
+	int64_t deadline_us = no_deadline;
 	SuccessListener on_success;
 	ErrorListener on_error;
 };
 
 struct QueuedTask {
-	const char* name;
+	const char* name{};
 	Action action;
 	Handle handle;
-	int64_t deadline_us;
+	int64_t deadline_us{};
 };
 
 static_assert(std::is_trivially_copyable_v<QueuedTask>);
 
 struct ScheduledTask {
 	QueuedTask task;
-	int64_t due_us;
-	uint32_t period_ms;  // 0 for a one-shot
-	uint32_t timeout_ms;
+	int64_t due_us{};
+	uint32_t period_ms = one_shot;
+	uint32_t timeout_ms{};
 };
 
 Slot s_slots[SLOTS];
+portMUX_TYPE s_deadline_mux = portMUX_INITIALIZER_UNLOCKED;
 ScheduledTask s_scheduled[SCHEDULED];
 size_t s_scheduled_count;
 portMUX_TYPE s_scheduled_mux = portMUX_INITIALIZER_UNLOCKED;
@@ -66,7 +66,7 @@ QueueHandle_t s_queue;
 int64_t now_us() { return esp_timer_get_time(); }
 
 int64_t deadline(int64_t now, uint32_t timeout_ms) {
-	return timeout_ms ? now + int64_t{timeout_ms} * 1000 : 0;
+	return timeout_ms ? now + int64_t{timeout_ms} * 1000 : no_deadline;
 }
 
 uint32_t at_least_one_ms(uint32_t ms) { return ms ? ms : 1; }
@@ -83,9 +83,8 @@ uint32_t generation_of(const Slot& slot) {
 Handle reserve(SuccessListener on_success, ErrorListener on_error) {
 	for (uint16_t i = 0; i < SLOTS; i++) {
 		Slot& slot = s_slots[i];
-		uint32_t generation = generation_of(slot);
+		const uint32_t generation = generation_of(slot);
 		if (cas(slot, pack(generation, FREE), pack(generation, RESERVED))) {
-			slot.deadline_us = 0;
 			slot.on_success = on_success;
 			slot.on_error = on_error;
 			return Handle{generation, i};
@@ -98,7 +97,7 @@ void release(Slot& slot, uint32_t generation) {
 	cas(slot, pack(generation, DONE), pack(generation + 1, FREE));
 }
 
-void publish(Handle handle) {
+void publish_if_reserved(Handle handle) {
 	cas(s_slots[handle.slot], pack(handle.generation, RESERVED),
 		pack(handle.generation, LIVE));
 }
@@ -113,7 +112,7 @@ void abandon(Handle handle) {
 // exactly once.
 bool finish(Handle handle, bool success, Value value, Outcome outcome) {
 	Slot& slot = s_slots[handle.slot];
-	uint32_t generation = handle.generation;
+	const uint32_t generation = handle.generation;
 	if (!cas(slot, pack(generation, LIVE), pack(generation, DONE)) &&
 		!cas(slot, pack(generation, RUNNING), pack(generation, DONE))) {
 		return false;
@@ -136,20 +135,13 @@ bool fail_promise(Handle handle, Outcome outcome) {
 	return finish(handle, false, Value{}, outcome);
 }
 
-// Reserved counts as live here: the submitter publishes right after queuing.
 bool is_live(Handle handle) {
-	uint32_t w = s_slots[handle.slot].word.load(std::memory_order_acquire);
-	return w == pack(handle.generation, LIVE) ||
-		   w == pack(handle.generation, RESERVED);
+	const uint32_t w =
+		s_slots[handle.slot].word.load(std::memory_order_acquire);
+	return w == pack(handle.generation, LIVE);
 }
 
-// Scheduled tasks stay sorted by due time, earliest first.
-bool insert_scheduled(const ScheduledTask& item) {
-	portENTER_CRITICAL(&s_scheduled_mux);
-	if (s_scheduled_count == SCHEDULED) {
-		portEXIT_CRITICAL(&s_scheduled_mux);
-		return false;
-	}
+void insert_locked(const ScheduledTask& item) {
 	size_t i = s_scheduled_count;
 	while (i > 0 && s_scheduled[i - 1].due_us > item.due_us) {
 		s_scheduled[i] = s_scheduled[i - 1];
@@ -157,8 +149,45 @@ bool insert_scheduled(const ScheduledTask& item) {
 	}
 	s_scheduled[i] = item;
 	s_scheduled_count++;
+}
+
+bool insert_scheduled(const ScheduledTask& item) {
+	portENTER_CRITICAL(&s_scheduled_mux);
+	if (s_scheduled_count == SCHEDULED) {
+		portEXIT_CRITICAL(&s_scheduled_mux);
+		return false;
+	}
+	insert_locked(item);
+	publish_if_reserved(item.task.handle);
 	portEXIT_CRITICAL(&s_scheduled_mux);
 	return true;
+}
+
+size_t scheduled_index_locked(Handle handle) {
+	for (size_t i = 0; i < s_scheduled_count; ++i) {
+		const Handle queued = s_scheduled[i].task.handle;
+		if (queued.slot == handle.slot &&
+			queued.generation == handle.generation) {
+			return i;
+		}
+	}
+	return s_scheduled_count;
+}
+
+void erase_locked(size_t i) {
+	--s_scheduled_count;
+	for (; i < s_scheduled_count; ++i) {
+		s_scheduled[i] = s_scheduled[i + 1];
+	}
+}
+
+void remove_scheduled(Handle handle) {
+	portENTER_CRITICAL(&s_scheduled_mux);
+	const size_t i = scheduled_index_locked(handle);
+	if (i < s_scheduled_count) {
+		erase_locked(i);
+	}
+	portEXIT_CRITICAL(&s_scheduled_mux);
 }
 
 size_t count_due(int64_t now) {
@@ -173,12 +202,15 @@ size_t count_due(int64_t now) {
 
 bool pop_due(int64_t now, ScheduledTask& out) {
 	portENTER_CRITICAL(&s_scheduled_mux);
-	bool due = s_scheduled_count > 0 && s_scheduled[0].due_us <= now;
+	const bool due = s_scheduled_count > 0 && s_scheduled[0].due_us <= now;
 	if (due) {
 		out = s_scheduled[0];
-		s_scheduled_count--;
-		for (size_t i = 0; i < s_scheduled_count; i++) {
-			s_scheduled[i] = s_scheduled[i + 1];
+		erase_locked(0);
+		// A periodic task keeps its timer slot while its action runs.
+		if (out.period_ms && is_live(out.task.handle)) {
+			ScheduledTask next = out;
+			next.due_us = now + int64_t{out.period_ms} * 1000;
+			insert_locked(next);
 		}
 	}
 	portEXIT_CRITICAL(&s_scheduled_mux);
@@ -187,22 +219,25 @@ bool pop_due(int64_t now, ScheduledTask& out) {
 
 int64_t next_due() {
 	portENTER_CRITICAL(&s_scheduled_mux);
-	int64_t due = s_scheduled_count > 0 ? s_scheduled[0].due_us : 0;
+	const int64_t due = s_scheduled_count > 0 ? s_scheduled[0].due_us : 0;
 	portEXIT_CRITICAL(&s_scheduled_mux);
 	return due;
 }
 
-// Runs a one-shot action: uncancellable while it executes, cancellable again
-// when it returns pending. Mirrors Netty's PromiseTask.run.
 void run_once(const QueuedTask& task) {
 	Slot& slot = s_slots[task.handle.slot];
-	uint32_t generation = task.handle.generation;
-	if (!cas(slot, pack(generation, LIVE), pack(generation, RUNNING)) &&
-		!cas(slot, pack(generation, RESERVED), pack(generation, RUNNING))) {
+	const uint32_t generation = task.handle.generation;
+	portENTER_CRITICAL(&s_deadline_mux);
+	const bool claimed =
+		cas(slot, pack(generation, LIVE), pack(generation, RUNNING));
+	if (claimed) {
+		slot.deadline_us = task.deadline_us;
+	}
+	portEXIT_CRITICAL(&s_deadline_mux);
+	if (!claimed) {
 		return;
 	}
 	ESP_LOGD(TAG, "run %s", task.name);
-	slot.deadline_us = task.deadline_us;
 	Value value{};
 	switch (task.action(task.handle, value)) {
 		case Result::done:
@@ -217,48 +252,41 @@ void run_once(const QueuedTask& task) {
 	}
 }
 
-// Periodic actions are never uncancellable: the loop checks before and after
-// each run and re-arms only while the promise is still live, as Netty's
-// ScheduledFutureTask does.
-void run_periodic(ScheduledTask item, int64_t now) {
+void run_periodic(const ScheduledTask& item) {
 	if (!is_live(item.task.handle)) {
 		return;
 	}
 	ESP_LOGD(TAG, "run %s", item.task.name);
 	Value value{};
 	if (item.task.action(item.task.handle, value) == Result::error) {
-		fail_promise(item.task.handle, Outcome::error);
-		return;
-	}
-	if (!is_live(item.task.handle)) {
-		return;
-	}
-	item.due_us = now + int64_t{item.period_ms} * 1000;
-	if (!insert_scheduled(item)) {
-		ESP_LOGW(TAG, "scheduled full, %s stops", item.task.name);
+		remove_scheduled(item.task.handle);
 		fail_promise(item.task.handle, Outcome::error);
 	}
 }
 
-// Fails expired promises. Returns the earliest remaining deadline, 0 if none.
-int64_t sweep_deadlines(int64_t now) {
-	int64_t next = 0;
+int64_t expire_and_find_next_deadline(int64_t now) {
+	int64_t next = no_deadline;
 	for (uint16_t i = 0; i < SLOTS; i++) {
-		Slot& slot = s_slots[i];
-		uint32_t w = slot.word.load(std::memory_order_acquire);
-		if ((w & STATE_MASK) != LIVE || slot.deadline_us == 0) {
+		const Slot& slot = s_slots[i];
+		if ((slot.word.load(std::memory_order_relaxed) & STATE_MASK) != LIVE) {
 			continue;
 		}
-		if (slot.deadline_us > now) {
-			if (next == 0 || slot.deadline_us < next) {
-				next = slot.deadline_us;
+		portENTER_CRITICAL(&s_deadline_mux);
+		const uint32_t w = slot.word.load(std::memory_order_acquire);
+		const int64_t due = slot.deadline_us;
+		portEXIT_CRITICAL(&s_deadline_mux);
+		if ((w & STATE_MASK) != LIVE || !due) {
+			continue;
+		}
+		if (due > now) {
+			if (next == no_deadline || due < next) {
+				next = due;
 			}
 			continue;
 		}
-		Handle handle{w >> STATE_BITS, i};
-		const char* name = slot.name;
+		const Handle handle{w >> STATE_BITS, i};
 		if (fail_promise(handle, Outcome::timeout)) {
-			ESP_LOGW(TAG, "%s timed out", name);
+			ESP_LOGW(TAG, "slot %u timed out", unsigned(i));
 		}
 	}
 	return next;
@@ -269,21 +297,26 @@ int64_t sweep_deadlines(int64_t now) {
 // Returns the next wake time, 0 when nothing is pending.
 int64_t sweep() {
 	int64_t now = now_us();
-	int64_t next = sweep_deadlines(now);
+	int64_t next = expire_and_find_next_deadline(now);
 	ScheduledTask item;
 	for (size_t budget = count_due(now); budget > 0 && pop_due(now, item);
 		 budget--) {
 		if (item.period_ms) {
-			run_periodic(item, now);
+			run_periodic(item);
 		} else {
-			item.task.deadline_us = deadline(now, item.timeout_ms);
-			run_once(item.task);
+			item.task.deadline_us = deadline(item.due_us, item.timeout_ms);
+			if (item.task.deadline_us != no_deadline &&
+				item.task.deadline_us <= now) {
+				fail_promise(item.task.handle, Outcome::timeout);
+			} else {
+				run_once(item.task);
+			}
 		}
 		now = now_us();
-		next = sweep_deadlines(now);
+		next = expire_and_find_next_deadline(now);
 	}
-	int64_t due = next_due();
-	if (due && (next == 0 || due < next)) {
+	const int64_t due = next_due();
+	if (due && (next == no_deadline || due < next)) {
 		next = due;
 	}
 	return next;
@@ -292,10 +325,8 @@ int64_t sweep() {
 TickType_t wait_ticks(int64_t next_wake) {
 	int64_t wait = TICK_US;
 	if (next_wake) {
-		int64_t until = next_wake - now_us();
-		if (until < wait) {
-			wait = until;
-		}
+		const int64_t until = next_wake - now_us();
+		wait = std::min(wait, until);
 	}
 	if (wait <= 0) {
 		return 0;
@@ -303,9 +334,6 @@ TickType_t wait_ticks(int64_t next_wake) {
 	return (TickType_t)((wait * configTICK_RATE_HZ + 999999) / 1000000);
 }
 
-// The task watchdog turns an action that never returns into a restart. The
-// tick bounds every wait, so a healthy loop resets it well inside the timeout.
-// The test build runs without it, the Unity menu busy-waits.
 void watchdog_reset() {
 #if CONFIG_ESP_TASK_WDT_EN
 	esp_task_wdt_reset();
@@ -322,14 +350,13 @@ void run_loop(void*) {
 		QueuedTask task;
 		while (xQueueReceive(s_queue, &task, wait_ticks(next_wake)) == pdTRUE) {
 			watchdog_reset();
+			publish_if_reserved(task.handle);
 			run_once(task);
 			next_wake = sweep();
 		}
 	}
 }
 
-// delay_ms 0 queues the task now, otherwise it waits in the scheduled
-// array. period_ms 0 is a one-shot, otherwise the task re-arms.
 Handle enqueue(const Task& task, uint32_t delay_ms, uint32_t period_ms,
 			   SuccessListener on_success, ErrorListener on_error) {
 	if (!s_queue) {
@@ -345,17 +372,21 @@ Handle enqueue(const Task& task, uint32_t delay_ms, uint32_t period_ms,
 		ESP_LOGW(TAG, "slots full, dropped %s", task.name);
 		return handle;
 	}
-	s_slots[handle.slot].name = task.name;
-	int64_t now = now_us();
-	QueuedTask queued{task.name, task.action, handle, 0};
-	bool accepted;
+	const int64_t now = now_us();
+	QueuedTask queued{task.name, task.action, handle,
+					  delay_ms ? no_deadline : deadline(now, task.timeout_ms)};
+	portENTER_CRITICAL(&s_deadline_mux);
+	s_slots[handle.slot].deadline_us = queued.deadline_us;
+	portEXIT_CRITICAL(&s_deadline_mux);
+	bool accepted = false;
 	if (delay_ms == 0) {
-		queued.deadline_us = deadline(now, task.timeout_ms);
-		s_slots[handle.slot].deadline_us = queued.deadline_us;
 		accepted = xQueueSend(s_queue, &queued, 0) == pdTRUE;
+		if (accepted) {
+			publish_if_reserved(handle);
+		}
 	} else {
-		ScheduledTask item{queued, now + int64_t{delay_ms} * 1000, period_ms,
-						   task.timeout_ms};
+		const ScheduledTask item{queued, now + int64_t{delay_ms} * 1000,
+								 period_ms, task.timeout_ms};
 		accepted = insert_scheduled(item);
 	}
 	if (!accepted) {
@@ -363,10 +394,9 @@ Handle enqueue(const Task& task, uint32_t delay_ms, uint32_t period_ms,
 		abandon(handle);
 		return Handle{};
 	}
-	publish(handle);
 	return handle;
 }
-}  // namespace
+}
 
 void start() {
 	if (s_queue) {
@@ -387,31 +417,49 @@ void start() {
 
 bool try_submit(const Task& task, SuccessListener on_success,
 				ErrorListener on_error) {
-	return enqueue(task, 0, 0, on_success, on_error).valid();
+	return enqueue(task, 0, one_shot, on_success, on_error).valid();
 }
 
 bool try_submit(const char* name, Action action) {
-	return enqueue(Task{name, action}, 0, 0, {}, {}).valid();
+	return enqueue(Task{name, action}, 0, one_shot, {}, {}).valid();
 }
 
 Handle submit(const Task& task, SuccessListener on_success,
 			  ErrorListener on_error) {
-	return enqueue(task, 0, 0, on_success, on_error);
+	return enqueue(task, 0, one_shot, on_success, on_error);
 }
 
 Handle submit(const char* name, Action action) {
-	return enqueue(Task{name, action}, 0, 0, {}, {});
+	return enqueue(Task{name, action}, 0, one_shot, {}, {});
 }
 
 Handle schedule(uint32_t delay_ms, const Task& task, SuccessListener on_success,
 				ErrorListener on_error) {
-	return enqueue(task, at_least_one_ms(delay_ms), 0, on_success, on_error);
+	return enqueue(task, at_least_one_ms(delay_ms), one_shot, on_success,
+				   on_error);
 }
 
-Handle schedule_periodic(uint32_t period_ms, const Task& task,
-						 SuccessListener on_success, ErrorListener on_error) {
-	uint32_t period = at_least_one_ms(period_ms);
-	return enqueue(task, period, period, on_success, on_error);
+Handle schedule_periodic(uint32_t period_ms, const PeriodicTask& task,
+						 ErrorListener on_error) {
+	const uint32_t period = at_least_one_ms(period_ms);
+	return enqueue({task.name, task.action}, period, period, {}, on_error);
+}
+
+bool postpone(Handle handle, uint32_t delay_ms) {
+	portENTER_CRITICAL(&s_scheduled_mux);
+	const size_t i = scheduled_index_locked(handle);
+	const bool scheduled = i < s_scheduled_count && is_live(handle);
+	if (scheduled) {
+		ScheduledTask item = s_scheduled[i];
+		const int64_t due = now_us() + int64_t{delay_ms} * 1000;
+		if (due > item.due_us) {
+			erase_locked(i);
+			item.due_us = due;
+			insert_locked(item);
+		}
+	}
+	portEXIT_CRITICAL(&s_scheduled_mux);
+	return scheduled;
 }
 
 bool cancel(Handle handle) {
@@ -423,6 +471,7 @@ bool cancel(Handle handle) {
 			 pack(handle.generation, DONE))) {
 		return false;
 	}
+	remove_scheduled(handle);
 	if (slot.on_error) {
 		slot.on_error(Outcome::cancelled);
 	}
@@ -443,7 +492,9 @@ bool pending(Handle handle) {
 	if (!handle.valid() || handle.slot >= SLOTS) {
 		return false;
 	}
-	uint32_t w = s_slots[handle.slot].word.load(std::memory_order_acquire);
-	return (w >> STATE_BITS) == handle.generation && (w & STATE_MASK) != FREE;
+	const uint32_t w =
+		s_slots[handle.slot].word.load(std::memory_order_acquire);
+	return w == pack(handle.generation, LIVE) ||
+		   w == pack(handle.generation, RUNNING);
 }
-}  // namespace loop
+}

@@ -40,7 +40,10 @@ static bool matches(const log_ring_t* ring, uint64_t begin, uint64_t end,
 		return true;
 	}
 	if (at(ring, begin) == '\033') {
-		while (begin < end && at(ring, begin++) != 'm') {
+		while (begin < end) {
+			if (at(ring, begin++) == 'm') {
+				break;
+			}
 		}
 	}
 	if (begin + 2 >= end || !strchr("EWIDV", at(ring, begin)) ||
@@ -49,7 +52,10 @@ static bool matches(const log_ring_t* ring, uint64_t begin, uint64_t end,
 	}
 	begin += 2;
 	if (at(ring, begin) == '(') {
-		while (begin < end && at(ring, begin++) != ')') {
+		while (begin < end) {
+			if (at(ring, begin++) == ')') {
+				break;
+			}
 		}
 		if (begin < end && at(ring, begin) == ' ') {
 			begin++;

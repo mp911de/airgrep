@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <cstdio>
 
-#include "board.h"
 #include "esp_app_desc.h"
 #include "esp_heap_caps.h"
 #include "esp_pm.h"
@@ -23,9 +22,9 @@
 #include "freertos/task.h"
 #include "soc/rtc_cntl_reg.h"
 #include "soc/soc.h"
+#include "system/cpu_sampler.hpp"
 #include "system/device_info.h"
 #include "system/system.h"
-#include "system/task_stats.h"
 #include "tinyusb.h"
 #include "tinyusb_cdc_acm.h"
 #include "tinyusb_default_config.h"
@@ -43,7 +42,6 @@ using protocol::Command;
 using protocol::Status;
 constexpr uint8_t kData = 0;
 constexpr uint16_t kDataInterface = 2;
-constexpr uint8_t kResetSession = 0x01;
 constexpr size_t kFrameCapacity = UINT16_MAX;
 constexpr size_t kTransferCapacity =
 	std::min(CONFIG_TINYUSB_VENDOR_EPSIZE, CONFIG_TINYUSB_VENDOR_TX_BUFSIZE);
@@ -54,6 +52,8 @@ static_assert(kTransferCapacity >= 64);
 
 SemaphoreHandle_t mutex;
 TaskHandle_t control_task;
+// Held while USB is mounted, also while the host suspends: the full-speed
+// PHY of the S3 cannot wake from light sleep.
 esp_pm_lock_handle_t sleep_lock;
 bool mounted, reset_required, transmitting, shutting_down, work_pending,
 	executing;
@@ -71,6 +71,10 @@ protocol::Decoder decoder;
 struct Guard {
 	Guard() { xSemaphoreTake(mutex, portMAX_DELAY); }
 	~Guard() { xSemaphoreGive(mutex); }
+	Guard(const Guard&) = delete;
+	Guard& operator=(const Guard&) = delete;
+	Guard(Guard&&) = delete;
+	Guard& operator=(Guard&&) = delete;
 };
 
 void clear_input() { tud_vendor_n_read_flush(kData); }
@@ -104,11 +108,12 @@ protocol::Hello hello() {
 	protocol::Hello result{};
 	const uint64_t now = esp_timer_get_time();
 	result.uptime_seconds = now / 1000000;
-	std::snprintf(result.firmware_version, sizeof result.firmware_version, "%s",
-				  esp_app_get_description()->version);
+	(void)std::snprintf(result.firmware_version, sizeof result.firmware_version,
+						"%s", esp_app_get_description()->version);
 	device_firmware_format(result.firmware_description,
 						   sizeof result.firmware_description);
-	std::snprintf(result.board, sizeof result.board, "%s", BOARD_NAME);
+	(void)std::snprintf(result.board, sizeof result.board, "%s",
+						device_board_name());
 	device_chip_format(result.chip, sizeof result.chip);
 	constexpr uint32_t internal = MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT;
 	constexpr uint32_t psram = MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT;
@@ -120,20 +125,21 @@ protocol::Hello hello() {
 	result.psram_total = heap_caps_get_total_size(psram);
 	result.health = system_health();
 	result.mode = system_mode();
-	result.cpu_core0 = result.cpu_core1 = result.cpu_overall = 0xff;
+#if CONFIG_AIRGREP_USB_SERVICE_COMMANDS
+	result.service = protocol::Service::present;
+#else
+	result.service = protocol::Service::absent;
+#endif
+	result.cpu_core0 = result.cpu_core1 = result.cpu_overall =
+		AIRGREP_CPU_UNAVAILABLE;
 #if CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
-	static uint64_t idle_at[CONFIG_FREERTOS_NUMBER_OF_CORES], time_at;
-	const uint64_t elapsed = now - time_at;
-	unsigned sum = 0;
-	for (int core = 0; core < CONFIG_FREERTOS_NUMBER_OF_CORES; ++core) {
-		uint64_t idle = ulTaskGetIdleRunTimeCounterForCore(core);
-		unsigned percent = core_load_percent(idle - idle_at[core], elapsed);
-		(core == 0 ? result.cpu_core0 : result.cpu_core1) = percent;
-		sum += percent;
-		idle_at[core] = idle;
+	static cpu::Sampler window;
+	const auto load = cpu::sample(window, now);
+	result.cpu_core0 = load.cores[0];
+	if constexpr (CONFIG_FREERTOS_NUMBER_OF_CORES > 1) {
+		result.cpu_core1 = load.cores[1];
 	}
-	time_at = now;
-	result.cpu_overall = sum / CONFIG_FREERTOS_NUMBER_OF_CORES;
+	result.cpu_overall = load.overall;
 #endif
 	return result;
 }
@@ -154,7 +160,7 @@ void send_chunk() {
 		expire();
 		return;
 	}
-	size_t queued =
+	const size_t queued =
 		tud_vendor_n_write(kData, response + response_offset, length);
 	transmitting = queued != 0;
 	if (queued != length) {
@@ -185,9 +191,9 @@ void send_response(size_t length) {
 
 #if CONFIG_AIRGREP_USB_SERVICE_COMMANDS
 void execute_request(uint32_t ticket, Command command, size_t payload_size) {
-	int64_t received_at;
+	int64_t received_at = 0;
 	{
-		Guard guard;
+		const Guard guard;
 		if (ticket != generation || !work_pending || shutting_down) {
 			return;
 		}
@@ -201,10 +207,10 @@ void execute_request(uint32_t ticket, Command command, size_t payload_size) {
 	}
 	// Subscribers may print to the console. Keep USB servicing available while
 	// they run, but retain both frame buffers until the operation finishes.
-	size_t length =
+	const size_t length =
 		protocol::execute_data(command, input + 6, payload_size, received_at,
 							   component_services(), response, kFrameCapacity);
-	Guard guard;
+	const Guard guard;
 	executing = false;
 	if (ticket != generation || shutting_down) {
 		adsbee::reset_ingestion();
@@ -215,50 +221,40 @@ void execute_request(uint32_t ticket, Command command, size_t payload_size) {
 #endif
 
 void reply() {
-	const auto command = decoder.command();
-	const auto status = decoder.status();
 #if CONFIG_AIRGREP_USB_SERVICE_COMMANDS
+	const auto command = decoder.command();
 	const size_t payload_size =
 		decoder.frame_length() >= 6 ? decoder.frame_length() - 6 : 0;
 #endif
+	sent_at = esp_timer_get_time();
+	auto immediate =
+		protocol::route(decoder, {response, kFrameCapacity}, hello);
 	decoder.reset();
 	input_size = 0;
-	sent_at = esp_timer_get_time();
-	pending_action = status == Status::ok ? command : Command::status;
-	if (status != Status::ok) {
-		send_response(protocol::encode_status(status, response));
+	if (immediate) {
+		pending_action = immediate->after_send;
+		send_response(immediate->size);
 		return;
-	}
-	switch (command) {
-		case Command::hello:
-			send_response(protocol::encode_hello(hello(), response));
-			return;
-		case Command::reboot:
-		case Command::enter_bootloader:
-			send_response(protocol::encode_status(Status::ok, response));
-			return;
-		default:
-			break;
 	}
 #if CONFIG_AIRGREP_USB_SERVICE_COMMANDS
 	const uint32_t ticket = generation;
 	work_pending = true;
-	// GNSS subscribers and Events run on the same loop as the live UART feed.
 	if (!loop::try_submit("USB command", [ticket, command, payload_size](
 											 loop::Handle, loop::Value&) {
 			execute_request(ticket, command, payload_size);
 			return loop::Result::done;
 		})) {
-		send_response(
-			protocol::encode_status(Status::internal_error, response));
+		send_response(protocol::encode_status(Status::internal_error,
+											  {response, kFrameCapacity}));
 	}
 #else
-	send_response(protocol::encode_status(Status::unknown_command, response));
+	send_response(protocol::encode_status(Status::unknown_command,
+										  {response, kFrameCapacity}));
 #endif
 }
 
 void receive() {
-	Guard guard;
+	const Guard guard;
 	if (shutting_down) {
 		return;
 	}
@@ -268,10 +264,10 @@ void receive() {
 		return;
 	}
 	uint8_t bytes[64];
-	size_t size;
+	size_t size = 0;
 	while ((size = tud_vendor_n_read(kData, bytes, sizeof bytes)) != 0) {
 		for (size_t i = 0; i < size; ++i) {
-			int64_t now = esp_timer_get_time();
+			const int64_t now = esp_timer_get_time();
 			if (decoder.timed_out(now) || input_size == kFrameCapacity) {
 				expire();
 				return;
@@ -287,7 +283,8 @@ void receive() {
 
 bool reset_control(uint8_t rhport, uint8_t stage,
 				   const tusb_control_request_t* request) {
-	if (request->bmRequestType != 0x41 || request->bRequest != kResetSession ||
+	if (request->bmRequestType != 0x41 ||
+		request->bRequest != AIRGREP_USB_RESET_SESSION ||
 		request->wValue != 0 || request->wIndex != kDataInterface ||
 		request->wLength != 0) {
 		return false;
@@ -295,7 +292,7 @@ bool reset_control(uint8_t rhport, uint8_t stage,
 	if (stage != CONTROL_STAGE_SETUP) {
 		return true;
 	}
-	Guard guard;
+	const Guard guard;
 	if (shutting_down) {
 		return false;
 	}
@@ -305,7 +302,8 @@ bool reset_control(uint8_t rhport, uint8_t stage,
 }
 
 void device_event(tinyusb_event_t* event, void*) {
-	Guard guard;
+	usb_console_set_service_task();
+	const Guard guard;
 	if (shutting_down) {
 		return;
 	}
@@ -328,7 +326,7 @@ void device_event(tinyusb_event_t* event, void*) {
 
 void restart(Command action) {
 	{
-		Guard guard;
+		const Guard guard;
 		shutting_down = true;
 	}
 	usb_console_stop();
@@ -340,7 +338,7 @@ void restart(Command action) {
 		usb_phy_config_t config{};
 		config.controller = USB_PHY_CTRL_SERIAL_JTAG;
 		config.target = USB_PHY_TARGET_INT;
-		usb_phy_handle_t phy;
+		usb_phy_handle_t phy = nullptr;
 		ESP_ERROR_CHECK(usb_new_phy(&config, &phy));
 		REG_SET_BIT(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
 	}
@@ -350,11 +348,11 @@ void restart(Command action) {
 void control(void*) {
 	for (;;) {
 		ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(20));
-		Command action;
+		Command action = Command::status;
 		{
-			Guard guard;
+			const Guard guard;
 			action = committed_action;
-			int64_t now = esp_timer_get_time();
+			const int64_t now = esp_timer_get_time();
 			if (decoder.timed_out(now) || response_timed_out(now)) {
 				expire();
 			}
@@ -364,10 +362,9 @@ void control(void*) {
 		}
 	}
 }
-}  // namespace
 
 void transmitted() {
-	Guard guard;
+	const Guard guard;
 	if (shutting_down || !transmitting) {
 		return;
 	}
@@ -392,6 +389,7 @@ void transmitted() {
 	}
 	pending_action = Command::status;
 }
+}
 
 esp_err_t start() {
 	input = static_cast<uint8_t*>(
@@ -414,24 +412,30 @@ esp_err_t start() {
 		return ESP_ERR_NO_MEM;
 	}
 	static const char language[] = {0x09, 0x04};
-	// The serial is the device id without its airgrep- prefix.
-	static const char* strings[] = {
-		language,
-		CONFIG_TINYUSB_DESC_MANUFACTURER_STRING,
-		device_info()->device_id,
-		device_info()->device_id + sizeof "airgrep-" - 1,
-		CONFIG_TINYUSB_DESC_CDC_STRING,
-		"airgrep Data"};
+
+	static const char* strings[] = {language,
+									CONFIG_TINYUSB_DESC_MANUFACTURER_STRING,
+									device_info()->device_id,
+									device_serial(),
+									CONFIG_TINYUSB_DESC_CDC_STRING,
+									"airgrep Data"};
 	auto config = TINYUSB_DEFAULT_CONFIG(device_event);
 	config.descriptor.string = strings;
 	config.descriptor.string_count = sizeof strings / sizeof strings[0];
+	// The ROM's USB download keeps the USB controller out of reset across a
+	// restart. The driver's reset of it then does nothing and the host keeps
+	// the ROM's device until the cable is pulled. Espressif's Arduino core
+	// clears the same two bits before it starts TinyUSB. Both are 0 after
+	// any other start.
+	REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_IO_MUX_RESET_DISABLE);
+	REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_USB_RESET_DISABLE);
 	ESP_ERROR_CHECK(tinyusb_driver_install(&config));
 	tinyusb_config_cdcacm_t cdc{};
 	cdc.cdc_port = TINYUSB_CDC_ACM_0;
 	ESP_ERROR_CHECK(tinyusb_cdcacm_init(&cdc));
 	return usb_console_init();
 }
-}  // namespace usb
+}
 
 extern "C" void tud_vendor_rx_cb(uint8_t interface, const uint8_t*,
 #if CFG_TUD_API_V0_19_COMPAT

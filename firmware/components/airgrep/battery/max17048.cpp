@@ -1,5 +1,7 @@
 #include "max17048.hpp"
 
+#include <iterator>
+
 #include "esp_timer.h"
 #include "events/events.hpp"
 #include "i2c_bus.h"
@@ -7,19 +9,6 @@
 #include "system/threshold.hpp"
 
 namespace battery {
-portMUX_TYPE State::mutex_ = portMUX_INITIALIZER_UNLOCKED;
-
-State& State::storage() {
-	static State state;
-	return state;
-}
-
-State State::copy() {
-	State result;
-	update([&](State& state) { result = state; });
-	return result;
-}
-
 namespace {
 
 // MAX17048 datasheet: slave address 0x6C/0x6D (7-bit 0x36), register summary
@@ -29,14 +18,21 @@ constexpr uint8_t kRegSoc = 0x04;
 constexpr uint8_t kRegVersion = 0x08;
 constexpr uint8_t kRegCrate = 0x16;
 constexpr uint8_t kRegStatus = 0x1a;
-constexpr unsigned kSampleReads = 4;  // VCELL, SOC, CRATE, STATUS
+struct RegisterRead {
+	uint8_t address;
+	uint16_t StateData::* value;
+};
+constexpr RegisterRead kSample[] = {{kRegVcell, &StateData::raw_vcell},
+									{kRegSoc, &StateData::raw_soc},
+									{kRegCrate, &StateData::raw_crate},
+									{kRegStatus, &StateData::raw_status}};
 
 i2c_master_dev_handle_t device;
 loop::Handle periodic;
 State sample;
 bool busy;
 unsigned step;
-Threshold low_soc{10, 10.5f};  // percent
+Threshold low_soc_percent{10, 10.5f};
 
 void fail_poll(esp_err_t result) {
 	int64_t now = esp_timer_get_time();
@@ -49,7 +45,7 @@ void fail_poll(esp_err_t result) {
 
 esp_err_t read(uint8_t reg, uint16_t& word) {
 	uint8_t bytes[2];
-	esp_err_t result = i2c_master_transmit_receive(
+	const esp_err_t result = i2c_master_transmit_receive(
 		device, &reg, 1, bytes, sizeof bytes, CONFIG_AIRGREP_I2C_TIMEOUT_MS);
 	if (result == ESP_OK) {
 		word = (uint16_t(bytes[0]) << 8) | bytes[1];
@@ -66,7 +62,7 @@ esp_err_t write(uint8_t reg, uint16_t word) {
 // RI marks a gauge power-up. Nothing to reload, the defaults are in use, so
 // just clear it.
 loop::Result acknowledge_reset(loop::Handle, loop::Value&) {
-	esp_err_t result =
+	const esp_err_t result =
 		write(kRegStatus, battery::acknowledge_reset(sample.raw_status));
 	if (result != ESP_OK) {
 		fail_poll(result);
@@ -75,28 +71,15 @@ loop::Result acknowledge_reset(loop::Handle, loop::Value&) {
 }
 
 loop::Result i2c_read(loop::Handle, loop::Value&) {
-	esp_err_t result;
 	// One register per transaction. A 4 byte read from VCELL returned the
 	// VCELL word twice on the bench
-	switch (step++) {
-		case 0:
-			result = read(kRegVcell, sample.raw_vcell);
-			break;
-		case 1:
-			result = read(kRegSoc, sample.raw_soc);
-			break;
-		case 2:
-			result = read(kRegCrate, sample.raw_crate);
-			break;
-		default:
-			result = read(kRegStatus, sample.raw_status);
-			break;
-	}
+	const RegisterRead& reg = kSample[step++];
+	const esp_err_t result = read(reg.address, sample.*reg.value);
 	if (result != ESP_OK) {
 		fail_poll(result);
 		return loop::Result::done;
 	}
-	if (step < kSampleReads) {
+	if (step < std::size(kSample)) {
 		if (!loop::try_submit("battery sample", i2c_read)) {
 			fail_poll(ESP_ERR_NO_MEM);
 		}
@@ -109,14 +92,13 @@ loop::Result i2c_read(loop::Handle, loop::Value&) {
 	sample.charge_duration_hours =
 		calculate_charge_duration(sample.soc, sample.rate);
 	const bool was_low = sample.low;
-	sample.low = low_soc.update(sample.soc);
+	sample.low = low_soc_percent.update(sample.soc);
 	sample.updated_us = esp_timer_get_time();
 	State::update([](State& state) { state = sample; });
 	busy = false;
 	if (sample.low != was_low) {
-		events::publish({.type = sample.low ? events::Type::battery_low
-											: events::Type::battery_normal,
-						 .battery = {sample.soc}});
+		events::publish(
+			events::Event::battery_changed(sample.low, {sample.soc}));
 	}
 	if (sample.alerts.reset &&
 		!loop::try_submit("battery ack reset", acknowledge_reset)) {
@@ -131,13 +113,10 @@ loop::Result poll_gauge(loop::Handle handle, loop::Value& value) {
 	}
 	busy = true;
 	sample = State::copy();
-	// Telemetry uses the retained gauge configuration. Only RI is cleared,
-	// after each sample that shows it.
 	sample.configured = true;
 	step = 0;
 	return i2c_read(handle, value);
 }
-}  // namespace
 
 Completion init_complete;
 
@@ -151,8 +130,8 @@ void finish_init(esp_err_t result) {
 }
 
 loop::Result identify_at_init(loop::Handle, loop::Value&) {
-	uint16_t raw;
-	esp_err_t result = read(kRegVersion, raw);
+	uint16_t raw = 0;
+	const esp_err_t result = read(kRegVersion, raw);
 	if (result != ESP_OK) {
 		finish_init(result);
 		return loop::Result::done;
@@ -183,6 +162,7 @@ loop::Result probe(loop::Handle, loop::Value&) {
 	}
 	return loop::Result::done;
 }
+}
 
 void init(Completion complete) {
 	if (periodic.valid()) {
@@ -193,4 +173,4 @@ void init(Completion complete) {
 		finish_init(ESP_ERR_NO_MEM);
 	}
 }
-}  // namespace battery
+}

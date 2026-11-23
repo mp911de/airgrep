@@ -10,7 +10,10 @@ typedef struct {
 
 /* Validates a complete immutable TZL2 blob. Returns 1 on success, 0 on error.
  */
-int tz_init(tz_table* table, const void* data, uint32_t bytes);
+int tz_init(tz_table* table, const void* blob, uint32_t bytes);
+int tz_mount(tz_table* table, const void* partition, uint32_t capacity);
+uint32_t tz_table_size(const tz_table* table);
+uint16_t tz_zone_count(const tz_table* table);
 /* Integer microdegrees. +180 wraps to -180. +90 uses the northernmost row. */
 uint16_t tz_lookup(const tz_table* table, int32_t latitude, int32_t longitude);
 /* Returned strings point into the blob. NULL for invalid zone IDs. */

@@ -15,7 +15,9 @@ static int reboot(int argc, char** argv) {
 	}
 	printf("Rebooting...\n");
 	if (fflush(stdout) != 0 || fsync(fileno(stdout)) != 0) {
-		printf("reboot: output flush failed: %s\n", strerror(errno));
+		char reason[64];
+		printf("reboot: output flush failed: %s\n",
+			   strerror_r(errno, reason, sizeof reason));
 		return 1;
 	}
 	esp_restart();

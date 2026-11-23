@@ -10,10 +10,11 @@ namespace {
 struct {
 	struct arg_int* trigger;
 	struct arg_end* end;
+	void* table[2];
 } args;
 
 int command(int argc, char** argv) {
-	if (arg_parse(argc, argv, reinterpret_cast<void**>(&args))) {
+	if (arg_parse(argc, argv, args.table)) {
 		arg_print_errors(stderr, args.end, argv[0]);
 		return 1;
 	}
@@ -21,22 +22,23 @@ int command(int argc, char** argv) {
 		return command_status::ack(expander::trigger(args.trigger->ival[0]));
 	}
 	const auto state = expander::State::copy();
-	if (!command_status::header(state.status, state.updated_us,
-								state.last_error, state.error_us)) {
+	command_status::print_status(state.status, state.updated_us,
+								 state.last_error, state.error_us);
+	if (!state.updated_us) {
 		return 0;
 	}
-	static const char* names[] = {"Buzzer Mute",     "WLAN",
-								  "M10S Reset",      "M10S Safeboot",
-								  "Display Reset 1", "Display Reset 2",
-								  "Backlight",       "Power"};
-	static const char* signals[] = {"BUZZ_ENABLE", "WIFI_ENABLE", "RESET_N",
-									"SAFEBOOT_N",  "RST_1",       "RST_2",
-									"LCD_LED",     "PWR_ON"};
+	static const char* const names[] = {"Buzzer Mute",     "WLAN",
+										"M10S Reset",      "M10S Safeboot",
+										"Display Reset 1", "Display Reset 2",
+										"Backlight",       "Power"};
+	static const char* const signals[] = {
+		"BUZZ_ENABLE", "WIFI_ENABLE", "RESET_N", "SAFEBOOT_N",
+		"RST_1",       "RST_2",       "LCD_LED", "PWR_ON"};
 	for (unsigned pin = 0; pin < 8; pin++) {
-		bool high = state.input.high[pin];
+		const bool high = state.input.high[pin];
 		const char* direction =
 			state.configuration.input[pin] ? "input" : "output";
-		const char* meaning;
+		const char* meaning = nullptr;
 		if (pin == 0) {
 			meaning = state.input.mute ? "OFF (muted)" : "ON";
 		} else if (pin == 1) {
@@ -48,7 +50,7 @@ int command(int argc, char** argv) {
 		} else {
 			meaning = high ? "RELEASED" : "HELD";
 		}
-		int written = std::printf("P%u %s", pin, signals[pin]);
+		const int written = std::printf("P%u %s", pin, signals[pin]);
 		std::printf("%*s%s %s, %s (%s)\n", written < 20 ? 21 - written : 1, "",
 					direction, high ? "high" : "low", meaning, names[pin]);
 	}
@@ -61,13 +63,15 @@ int command(int argc, char** argv) {
 	}
 	return 0;
 }
-}  // namespace
+}
 
 extern "C" esp_err_t console_register_exp(void) {
 	args.trigger = arg_int0(nullptr, "trigger", "N",
 							"Pulse control pin P2 to P5 for 10 ms");
 	args.end = arg_end(2);
-	if (arg_nullcheck(reinterpret_cast<void**>(&args))) {
+	args.table[0] = args.trigger;
+	args.table[1] = args.end;
+	if (arg_nullcheck(args.table)) {
 		return ESP_ERR_NO_MEM;
 	}
 	const esp_console_cmd_t entry = {
@@ -75,7 +79,7 @@ extern "C" esp_err_t console_register_exp(void) {
 		.help = "Show expander pins or pulse a reset control.",
 		.hint = "[--trigger N]",
 		.func = command,
-		.argtable = &args,
+		.argtable = static_cast<void*>(args.table),
 		.func_w_context = nullptr,
 		.context = nullptr,
 	};

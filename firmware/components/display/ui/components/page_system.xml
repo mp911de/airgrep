@@ -1,0 +1,229 @@
+<component>
+	<view extends="page" page="1">
+		<nav_bar title="system" page="1" />
+		<!-- Both columns scroll together as one sheet. -->
+		<lv_obj name="sheet" width="100%" flex_grow="1" flex_flow="row" scroll_dir="ver" scroll_elastic="false"
+			scrollbar_mode="active" style_pad_column="16">
+			<remove_theme selector="main" />
+
+			<lv_obj name="left" flex_grow="1" height="content" flex_flow="column" scrollable="false">
+				<remove_theme selector="main" />
+				<section_header title="section_time_zone" />
+				<list_group>
+					<list_group-rows>
+						<list_row label="automatic">
+							<list_row-value>
+								<!-- A value is lifted 1 px for its text, and a separator takes 1 px of the row. The switch
+								     stays in the middle of the row: translate 2 with a separator, 1 without. -->
+								<lv_switch
+									name="time_zone_automatic"
+									width="76"
+									height="44"
+									style_translate_y="2"
+									checked="{subject_time_zone_automatic EQ 1}"
+									style_bg_color="{color_control}"
+									style_bg_opa="100%"
+									style_radius="22"
+									style_bg_color-indicator-checked="{color_green}"
+									style_bg_opa-indicator-checked="100%"
+									style_radius-indicator="22"
+									style_bg_color-knob="0xffffff"
+									style_bg_opa-knob="100%"
+									style_radius-knob="22"
+									style_pad_all-knob="-3"
+								>
+									<remove_theme selector="main" />
+									<remove_theme selector="indicator" />
+									<remove_theme selector="knob" />
+									<set_subject_event
+										subject="subject_time_zone_automatic"
+										value="{!subject_time_zone_automatic}"
+										trigger="clicked"
+									/>
+								</lv_switch>
+							</list_row-value>
+						</list_row>
+						<!-- With Automatic on the row only shows the zone. Off, the application makes it open the choice. -->
+						<list_row name="time_zone" label="time_zone" separator="false">
+							<list_row-value>
+								<lv_label
+									text="{subject_zone}"
+									style_text_color="{subject_time_zone_automatic EQ 1 ? color_label_2 : color_label}"
+								/>
+								<chevron name="time_zone_chevron" hidden="{subject_time_zone_automatic EQ 1}" />
+							</list_row-value>
+						</list_row>
+					</list_group-rows>
+				</list_group>
+
+				<section_header title="section_health" />
+				<!-- The application adds one row per cause and hides the row of a device without one. -->
+				<list_group name="health_list">
+					<list_group-rows>
+						<list_row name="all_systems" label="all_systems" separator="false">
+							<list_row-value>
+								<lv_label translation_tag="ok" style_text_color="{color_green}" />
+							</list_row-value>
+						</list_row>
+					</list_group-rows>
+				</list_group>
+
+				<section_header title="section_gps" />
+				<list_group>
+					<list_group-rows>
+						<list_row label="fix">
+							<list_row-value>
+								<lv_label text="–" hidden="{subject_gps NE 0}" style_text_color="{color_label_2}" />
+								<lv_label text="2D" hidden="{subject_gps NE 1}" style_text_color="{color_yellow}" />
+								<lv_label text="3D" hidden="{subject_gps NE 2}" style_text_color="{color_green}" />
+							</list_row-value>
+						</list_row>
+						<!-- Without a receiver there is no count and no level, the application sets the level to -1. -->
+						<list_row label="satellites">
+							<list_row-value>
+								<lv_label text="–" hidden="{subject_gps_symbol NE 5}" style_text_color="{color_label_2}" />
+								<lv_image src="icon_signal_0" hidden="{subject_signal NE 0}" style_translate_y="2" style_image_recolor="{color_label}" style_image_recolor_opa="100%" />
+								<lv_image src="icon_signal_1" hidden="{subject_signal NE 1}" style_translate_y="2" style_image_recolor="{color_label}" style_image_recolor_opa="100%" />
+								<lv_image src="icon_signal_2" hidden="{subject_signal NE 2}" style_translate_y="2" style_image_recolor="{color_label}" style_image_recolor_opa="100%" />
+								<lv_image src="icon_signal_3" hidden="{subject_signal NE 3}" style_translate_y="2" style_image_recolor="{color_label}" style_image_recolor_opa="100%" />
+								<lv_label text="{subject_satellites}" hidden="{subject_gps_symbol EQ 5}" />
+							</list_row-value>
+						</list_row>
+						<list_row label="antenna" separator="false">
+							<list_row-value>
+								<lv_label translation_tag="antenna_unknown" hidden="{subject_antenna NE 0}" style_text_color="{color_yellow}" />
+								<lv_label translation_tag="antenna_active_ok" hidden="{subject_antenna NE 1}" style_text_color="{color_green}" />
+								<lv_label translation_tag="ok" hidden="{subject_antenna NE 2}" style_text_color="{color_green}" />
+								<lv_label translation_tag="antenna_short" hidden="{subject_antenna NE 3}" style_text_color="{color_red}" />
+								<lv_label translation_tag="antenna_disconnected" hidden="{subject_antenna NE 4}" style_text_color="{color_yellow}" />
+							</list_row-value>
+						</list_row>
+					</list_group-rows>
+				</list_group>
+
+				<section_header title="section_info" />
+				<list_group>
+					<list_group-rows>
+						<list_row label="device_id">
+							<list_row-value>
+								<lv_label text="{subject_device_id}" style_text_font="font_text" style_text_color="{color_label_2}" />
+							</list_row-value>
+						</list_row>
+						<list_row label="version">
+							<list_row-value>
+								<lv_label text="{subject_version}" style_text_color="{color_label_2}" />
+							</list_row-value>
+						</list_row>
+						<list_row name="licenses" label="licenses" separator="false">
+							<list_row-value>
+								<chevron />
+							</list_row-value>
+						</list_row>
+					</list_group-rows>
+				</list_group>
+			</lv_obj>
+
+			<lv_obj name="right" flex_grow="1" height="content" flex_flow="column" scrollable="false">
+				<remove_theme selector="main" />
+				<!-- What decides which traffic counts. Each row opens its number page. -->
+				<section_header title="section_filter" />
+				<list_group>
+					<list_group-rows>
+						<list_row name="altitude_filter" label="altitude" separator="false">
+							<list_row-value>
+								<lv_label text="{subject_altitude_filter}" />
+								<chevron />
+							</list_row-value>
+						</list_row>
+					</list_group-rows>
+				</list_group>
+
+				<section_header title="section_ownship" />
+				<list_group>
+					<list_group-rows>
+						<list_row name="callsign" label="callsign">
+							<list_row-value>
+								<lv_label text="{subject_callsign}" />
+								<chevron />
+							</list_row-value>
+						</list_row>
+						<list_row name="icao_address" label="icao_address" separator="false">
+							<list_row-value>
+								<lv_label text="{subject_icao}" />
+								<chevron />
+							</list_row-value>
+						</list_row>
+					</list_group-rows>
+				</list_group>
+
+				<section_header title="section_display" />
+				<list_group>
+					<list_group-rows>
+						<list_row label="theme">
+							<list_row-value>
+								<segmented_theme />
+							</list_row-value>
+						</list_row>
+						<list_row label="track_history">
+							<list_row-value>
+								<lv_switch
+									name="track_history"
+									width="76"
+									height="44"
+									style_translate_y="1"
+									checked="{subject_track_history EQ 1}"
+									style_bg_color="{color_control}"
+									style_bg_opa="100%"
+									style_radius="22"
+									style_bg_color-indicator-checked="{color_green}"
+									style_bg_opa-indicator-checked="100%"
+									style_radius-indicator="22"
+									style_bg_color-knob="0xffffff"
+									style_bg_opa-knob="100%"
+									style_radius-knob="22"
+									style_pad_all-knob="-3"
+								>
+									<remove_theme selector="main" />
+									<remove_theme selector="indicator" />
+									<remove_theme selector="knob" />
+									<set_subject_event subject="subject_track_history" value="{!subject_track_history}" trigger="clicked" />
+								</lv_switch>
+							</list_row-value>
+						</list_row>
+						<list_row label="symbols">
+							<list_row-value>
+								<segmented_symbols />
+							</list_row-value>
+						</list_row>
+						<list_row label="conflict_indicator" separator="false">
+							<list_row-value>
+								<lv_switch
+									name="conflict_indicator"
+									width="76"
+									height="44"
+									style_translate_y="1"
+									checked="{subject_conflict_indicator EQ 1}"
+									style_bg_color="{color_control}"
+									style_bg_opa="100%"
+									style_radius="22"
+									style_bg_color-indicator-checked="{color_green}"
+									style_bg_opa-indicator-checked="100%"
+									style_radius-indicator="22"
+									style_bg_color-knob="0xffffff"
+									style_bg_opa-knob="100%"
+									style_radius-knob="22"
+									style_pad_all-knob="-3"
+								>
+									<remove_theme selector="main" />
+									<remove_theme selector="indicator" />
+									<remove_theme selector="knob" />
+									<set_subject_event subject="subject_conflict_indicator" value="{!subject_conflict_indicator}" trigger="clicked" />
+								</lv_switch>
+							</list_row-value>
+						</list_row>
+					</list_group-rows>
+				</list_group>
+			</lv_obj>
+		</lv_obj>
+	</view>
+</component>

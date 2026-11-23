@@ -1,0 +1,49 @@
+= DAIDALUS Fork
+
+The fork fixes several memory leaks, inefficiencies, stack memory usage in favor of heap memory usage resulting in a performance change from `4.8 s` down to `0.4 s` on an ESP32 S3 for 500 aircraft (alerts) and 25 aircraft for maneuver bands.
+
+Performance tuning was quite a journey and with several optimizations (shrinking the bands according to ownship altitude, ground speed) we now have an acceptable computational performance.
+
+Note that the remaining time indicates time to well-clear-lost.
+
+== Settings
+
+**DO-365B**
+
+*Profile: En route, for every Target
+* Sensor uncertainty mitigation: On
+* Preventive: 0.66 NM, 700 ft, tau 35 s, alert 50 s, early 75 s
+* Corrective: 0.66 NM, 450 ft, tau 35 s, alert 50 s, early 75 s
+* Warning: 0.66 NM, 450 ft, tau 35 s, alert 25 s, early 55 s
+* Turns: Kinematic, 3°/s
+
+**Pipeline**
+
+1. Traffic:The nearest 60 targets with a position
+2. Motion: Reported speed, track and rate first with fallback to own tracking over 10 seconds (inferring track and speed from tracking)
+3. Reach/Alerting: Reach within 180 s, both flying at each other at full speed and climb
+4. Bands (altitude, ground speed, track): Most 25 relevant ones
+
+**Band Settings**
+
+* Track: 20° steps
+* Ground speed: 10 kts, ±50 kt around own speed, 0 to 500 kt
+* Altitude: 250 ft steps,  ±2000 ft around own altitude, not below 0
+* Vertical speed: Omitted
+
+== Precision
+
+The ESP32 has a single-precision FPU so any `double` computation would happen in software, therefore, the fork features a tunable precision option that can be enabled through definition of `DAIDALUS_SINGLE_PRECISION`
+
+[cols="3,>1,>1,>1",options="header"]
+|===
+| Metric | Median | 95th percentile | Maximum
+| Current horizontal separation | 0.34 m | 1.52 m | 2.36 m
+| Predicted distance at closest approach | 1.31 m | 67.39 m | 104.19 m
+| Predicted time to closest approach | 0.008 s | 0.101 s | 0.290 s
+|===
+
+== File access and errors
+
+`DAIDALUS_FILE_IO` defaults on for native builds.
+IDF uses `CONFIG_DAIDALUS_FILE_IO` default off.

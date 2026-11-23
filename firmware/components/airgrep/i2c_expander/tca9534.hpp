@@ -2,8 +2,8 @@
 
 #include "device.h"
 #include "esp_err.h"
-#include "freertos/FreeRTOS.h"
 #include "i2c_bus.h"
+#include "locked_state.hpp"
 #include "loop.hpp"
 #include "tca9534_i2c.hpp"
 
@@ -21,32 +21,8 @@ const i2c_device_config_t device_config = {
 	.flags = {},
 };
 
-struct State {
-	Status status = Status::unknown;
-	uint8_t raw_input = 0, raw_output = 0, raw_polarity = 0,
-			raw_configuration = 0;
-	Input input{};
-	Output output{};
-	Polarity polarity{};
-	Configuration configuration{};
-	int64_t updated_us = 0, error_us = 0;
-	esp_err_t last_error = ESP_OK;
-	bool identity_known = false, configured = false;
-
-	template <typename F>
-	static void update(F f) {
-		portENTER_CRITICAL(&mutex_);
-		f(storage());
-		portEXIT_CRITICAL(&mutex_);
-	}
-
+struct State : StateData, LockedState<State> {
 	static bool is_valid();
-
-	static State copy();
-
-   private:
-	static State& storage();
-	static portMUX_TYPE mutex_;
 };
 
 using Completion = loop::Callable<void(esp_err_t)>;
@@ -55,9 +31,7 @@ using Completion = loop::Callable<void(esp_err_t)>;
 // wifi_switch_changed.
 using Handler = void (*)(const State&, uint8_t changed, void*);
 bool subscribe(Handler handler, void* context = nullptr);
-// Starts the driver unless it polls already. The system watchdog calls it
-// again on the loop for a driver that stopped or never showed up.
 void init(Completion complete);
 // Posts a 10 ms pulse on P2 to P5. Failures land in State and the log.
 esp_err_t trigger(unsigned pin);
-}  // namespace expander
+}

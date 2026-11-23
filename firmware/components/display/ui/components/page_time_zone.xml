@@ -1,0 +1,15 @@
+<component>
+	<!-- The first level of the time zone choice: UTC and the detected zone are picked here, a region opens the
+	     list of its zones. The application fills both lists. -->
+	<view extends="page" page="7">
+		<nav_bar title="time_zone" page="7" back="1" />
+		<lv_obj name="sheet" width="100%" flex_grow="1" flex_flow="column" scroll_dir="ver" scroll_elastic="false"
+			scrollbar_mode="active">
+			<remove_theme selector="main" />
+			<section_header title="section_quick_access" />
+			<list_group name="quick_list" />
+			<section_header title="section_regions" />
+			<list_group name="region_list" />
+		</lv_obj>
+	</view>
+</component>

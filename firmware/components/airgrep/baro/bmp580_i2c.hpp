@@ -1,6 +1,9 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+
+#include "device.h"
 
 namespace barometer {
 // Register field layout, BMP580 datasheet section 7.
@@ -46,4 +49,24 @@ struct Iir {
 
 Iir decode_iir(uint8_t raw);
 float pressure_altitude(float hpa);
-}  // namespace barometer
+
+// State::data mirrors TEMP_DATA_XLSB..PRESS_DATA_MSB, registers 0x1D..0x22.
+static constexpr size_t kDataTemperatureOffset = 0;
+static constexpr size_t kDataPressureOffset = 3;
+static constexpr size_t kDataLength = 6;
+
+struct StateData {
+	Status status = Status::unknown;
+	uint8_t chip_id = 0, raw_status = 0, raw_odr = 0, raw_osr = 0, raw_iir = 0,
+			raw_int = 0, raw_fifo = 0, raw_osr_eff = 0;
+	uint8_t data[kDataLength]{};
+	NvmStatus nvm{};
+	Odr odr{};
+	Osr osr{};
+	Iir iir{};
+	float pressure_hpa = 0, temperature_c = 0, altitude_m = 0;
+	int64_t updated_us = 0, error_us = 0;
+	EspErrorCode last_error = 0;
+	bool identity_known = false, configured = false;
+};
+}

@@ -3,8 +3,6 @@
 #include <cstddef>
 #include <cstdint>
 
-// NTP-style time transfer over the ADSBee AT link. Hardware free, so it has a
-// host test.
 namespace adsbee {
 #define ADSBEE_TIME_PING_COMMAND "AT+TIME_PING="
 #define ADSBEE_TIME_PING_REPLY "TIME_PING="
@@ -41,8 +39,8 @@ struct TimeSample {
 struct TimeEstimate {
 	bool valid = false;
 	int64_t rtt_us = 0;
-	int64_t t4_us = 0;         // monotonic arrival of the chosen reply
-	int64_t utc_at_t4_us = 0;  // UTC in microseconds at that arrival
+	int64_t reply_received_us = 0;
+	int64_t utc_at_reply_us = 0;
 	uint32_t pps = 0;
 };
 
@@ -50,4 +48,4 @@ struct TimeEstimate {
 // receiver had PPS, the NTP clock filter. Only PPS-disciplined epochs are
 // precise enough to apply.
 TimeEstimate estimate_time(const TimeSample* samples, size_t count);
-}  // namespace adsbee
+}

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "charge_target.hpp"
 #include "device.h"
 
 namespace charger {
@@ -127,4 +128,64 @@ Status4 decode_status4(uint8_t raw);
 Status3 decode_status3(uint8_t raw);
 Status2 decode_status2(uint8_t raw);
 Status1 decode_status1(uint8_t raw);
-}  // namespace charger
+
+struct PollReadings {
+	Status status = Status::unknown;
+	uint8_t raw[0x49]{};
+	Identity identity{};
+	Status0 status0{};
+	Status1 status1{};
+	Status2 status2{};
+	Status3 status3{};
+	Status4 status4{};
+	Fault0 fault0{}, fault_flag0{};
+	Fault1 fault1{}, fault_flag1{};
+	Flag0 flag0{};
+	Control0 control0{};
+	Control1 control1{};
+	Control5 control5{};
+	AdcControl adc_control{};
+	unsigned charge_current_ma = 0, input_current_ma = 0, thermal_limit_c = 0;
+	int ibus_ma = 0, ibat_ma = 0;
+	unsigned vbus_mv = 0, vbat_mv = 0, vsys_mv = 0;
+};
+
+struct StateData {
+	PollReadings readings{};
+	BatteryDetected battery_detected = BatteryDetected::unknown;
+	unsigned battery_detection_vbat_mv = 0;
+	bool battery_detection_vbat_valid = false;
+	float ts_percent = 0, die_c = 0;
+	int64_t updated_us = 0, error_us = 0, adc_ready_us = 0;
+	EspErrorCode last_error = 0;
+	bool identity_known = false, configured = false, adc_valid = false;
+	TargetState target{};
+
+	// The battery test result when one ran. Otherwise, without VBUS the system
+	// runs from the pack, so a valid VBAT reading proves it. With VBUS the BAT
+	// pin carries the charger's own voltage and says nothing (data
+	// sheet 7.3.8).
+	BatteryDetected battery() const {
+		if (battery_detected != BatteryDetected::unknown) {
+			return battery_detected;
+		}
+		if (adc_valid && !readings.status0.vbus && readings.vbat_mv >= 3000) {
+			return BatteryDetected::voltage_present;
+		}
+		return BatteryDetected::unknown;
+	}
+
+	bool usable(int64_t now_us) const {
+		return state_usable(updated_us, now_us);
+	}
+	bool detecting() const {
+		return charger::detecting(readings.status0.vbus, readings.status1);
+	}
+	unsigned detected_ma() const {
+		return charger::detected_ma(readings.status1, readings.status0.vbus);
+	}
+	float pack_celsius() const {
+		return charger::pack_celsius(adc_valid, ts_percent);
+	}
+};
+}

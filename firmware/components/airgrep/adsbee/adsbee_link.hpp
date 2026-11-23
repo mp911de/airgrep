@@ -6,7 +6,7 @@
 #include "adsbee_decoder.h"
 #include "adsbee_protocol.hpp"
 #include "esp_err.h"
-#include "freertos/FreeRTOS.h"
+#include "locked_state.hpp"
 #include "loop.hpp"
 
 namespace adsbee {
@@ -25,32 +25,7 @@ namespace adsbee {
 #define ADSBEE_INIT_REPEAT_MS 100
 #define ADSBEE_DEVICE_INFO_COMMAND "AT+DEVICE_INFO?"
 
-enum class Ingestion : uint8_t { read = 0, ignore = 1 };
-
-struct State {
-	bool known = false, tx_attached = false, initialized = false;
-	int64_t updated_us = 0, reply_us = 0, error_us = 0;
-	esp_err_t last_error = ESP_OK;
-	uint32_t telemetry_lines = 0, crc_failures = 0, parity_errors = 0,
-			 framing_errors = 0, overruns = 0;
-	Gnss gnss;
-	int64_t gnss_us = 0;  // last #GNSS frame, 0 until the first one
-	Ingestion traffic_ingestion = Ingestion::read;
-	Ingestion gnss_ingestion = Ingestion::read;
-
-	template <typename F>
-	static void update(F f) {
-		portENTER_CRITICAL(&mutex_);
-		f(storage());
-		portEXIT_CRITICAL(&mutex_);
-	}
-
-	static State copy();
-
-   private:
-	static State& storage();
-	static portMUX_TYPE mutex_;
-};
+struct State : StateData, LockedState<State> {};
 
 struct Message {
 	decoder_kind_t kind;
@@ -62,12 +37,11 @@ struct Message {
 using Predicate = bool (*)(const Message&);
 using Handler = void (*)(const Message&, void* ctx);
 
-bool subscribe(Predicate predicate, Handler handler, void* ctx);
-// Every decoded #GNSS frame, after State carries it. Runs on the loop task.
-// A flip of the frame's fix field is also published as fix_acquired and
-// fix_lost.
-using GnssHandler = void (*)(const Gnss&, int64_t received_us, void* ctx);
-bool subscribe_gnss(GnssHandler handler, void* ctx);
+bool subscribe(Predicate predicate, Handler handler, void* context);
+// Fresh GNSS reports on the loop. A fix after a gap counts as acquired again.
+using GnssHandler = void (*)(const Gnss&, int64_t received_us, bool acquired,
+							 void* ctx);
+bool subscribe_gnss(GnssHandler handler, void* context);
 // Publishes a decoded live or injected report. Call on the event loop.
 void ingest_gnss(const Gnss& gnss, int64_t received_us);
 // A closed or reset data connection restores live input.
@@ -77,14 +51,12 @@ esp_err_t prepare();
 esp_err_t uart_init();
 esp_err_t start();
 
-loop::Handle request(const char* command, loop::SuccessListener on_reply,
-					 loop::ErrorListener on_error,
-					 uint32_t timeout_ms = ADSBEE_REQUEST_TIMEOUT_MS);
+// on_written runs on the loop after the UART accepts the whole line.
+loop::Handle request(const char* command, loop::SuccessListener success,
+					 loop::ErrorListener failure,
+					 uint32_t window_ms = ADSBEE_REQUEST_TIMEOUT_MS,
+					 loop::Callable<void()> on_written = {});
 bool busy();
-// On the loop, when the health check finds the link down or the mode leaves
-// ON: a held fix is published as fix_lost, since no frame will report it.
-void drop_fix();
-// TX attached and the init sequence done, so the link takes requests.
-bool ready();
+bool accepts_requests();
 size_t device_info(char* out, size_t capacity);
-}  // namespace adsbee
+}

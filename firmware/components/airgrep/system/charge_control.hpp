@@ -12,4 +12,4 @@ charger::ControlMode get_charger_mode();
 // ESP_ERR_INVALID_STATE while a battery test runs.
 esp_err_t set_charger_mode(charger::ControlMode mode);
 const char* get_charger_mode_name(charger::ControlMode mode);
-}  // namespace charge_control
+}

@@ -1,0 +1,7 @@
+<widget>
+	<!-- The places of a short code a keypad fills. Each place is underlined, the one the next key lands on in tint.
+	     Places and text are set from C. -->
+	<view extends="lv_obj" width="content" height="48" flex_flow="row" clickable="false" scrollable="false" style_pad_column="8">
+		<remove_theme selector="main" />
+	</view>
+</widget>

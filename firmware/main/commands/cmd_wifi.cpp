@@ -12,10 +12,11 @@ struct {
 	struct arg_lit* apply;
 	struct arg_lit* poll;
 	struct arg_end* end;
+	void* table[3];
 } args;
 
 int command(int argc, char** argv) {
-	if (arg_parse(argc, argv, reinterpret_cast<void**>(&args))) {
+	if (arg_parse(argc, argv, args.table)) {
 		arg_print_errors(stderr, args.end, argv[0]);
 		return 1;
 	}
@@ -26,7 +27,7 @@ int command(int argc, char** argv) {
 		return command_status::ack(wifi::query_access_point());
 	}
 	const auto state = wifi::State::copy();
-	int64_t now = esp_timer_get_time();
+	const int64_t now = esp_timer_get_time();
 	std::printf("%-20s %s\n", "Status",
 				state.status == Status::ok ? "OK" : "OFF");
 	if (state.last_error != ESP_OK) {
@@ -34,15 +35,16 @@ int command(int argc, char** argv) {
 					esp_err_to_name(state.last_error),
 					(long long)((now - state.error_us) / 1000000));
 	}
-	if (state.switch_known) {
-		std::printf("%-20s %s\n", "Switch", state.wanted ? "ON" : "OFF");
+	if (state.slider_sampled) {
+		std::printf("%-20s %s\n", "Switch",
+					state.slider_enabled ? "ON" : "OFF");
 	} else {
 		std::printf("%-20s UNKNOWN\n", "Switch");
 	}
 	std::printf("%-20s %s\n", "Pending apply",
-				state.pending_apply ? "YES" : "NO");
+				state.set_pending ? "YES" : "NO");
 	if (state.reported_known) {
-		const wifi::Config& c = state.reported;
+		const wifi::Config& c = state.last_reported_config;
 		std::printf("%-20s %s, %s, channel %u (%lld s ago)\n", "ADSBee",
 					c.enabled ? "ON" : "OFF", c.ssid, unsigned(c.channel),
 					(long long)((now - state.reported_us) / 1000000));
@@ -59,14 +61,17 @@ int command(int argc, char** argv) {
 	}
 	return 0;
 }
-}  // namespace
+}
 
 extern "C" esp_err_t console_register_wifi(void) {
 	args.apply = arg_lit0(nullptr, "apply",
 						  "Send the wanted Wi-Fi state to the ADSBee now");
 	args.poll = arg_lit0(nullptr, "poll", "Ask the ADSBee what it runs");
 	args.end = arg_end(2);
-	if (arg_nullcheck(reinterpret_cast<void**>(&args))) {
+	args.table[0] = args.apply;
+	args.table[1] = args.poll;
+	args.table[2] = args.end;
+	if (arg_nullcheck(args.table)) {
 		return ESP_ERR_NO_MEM;
 	}
 	const esp_console_cmd_t entry = {
@@ -74,7 +79,7 @@ extern "C" esp_err_t console_register_wifi(void) {
 		.help = "Show the Wi-Fi slider and the ADSBee access point, or resend.",
 		.hint = "[--apply] [--poll]",
 		.func = command,
-		.argtable = &args,
+		.argtable = static_cast<void*>(args.table),
 		.func_w_context = nullptr,
 		.context = nullptr,
 	};

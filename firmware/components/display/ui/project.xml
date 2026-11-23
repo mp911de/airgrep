@@ -1,0 +1,7 @@
+<project name="airgrep_ui" lvgl_version="9.6.0" theme="simple">
+	<targets>
+		<target name="touch_800x480">
+			<display width="800" height="480" />
+		</target>
+	</targets>
+</project>

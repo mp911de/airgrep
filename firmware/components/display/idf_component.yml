@@ -1,0 +1,5 @@
+# utility/CMakeLists.txt reads the version from here.
+dependencies:
+  lvgl/lvgl:
+    version: "9.6.0"
+    public: true

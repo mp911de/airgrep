@@ -1,0 +1,11 @@
+<widget>
+	<!-- The keys below an entry field, with delete and Save. Keys are created in C from the layout.
+	     What a key does goes to a callback set from C. -->
+	<api>
+		<prop name="layout" type="string" default="hex" help="hex for 0 to 9 and A to F, digits for 0 to 9, or a language as en or de for 0 to 9 and A to Z in the order of that language" />
+		<prop name="hint" type="string" default="" help="Translation tag of one line that says what a value does, shown where digits has no letters" />
+	</api>
+	<view extends="lv_obj" width="800" height="352" scrollable="false">
+		<remove_theme selector="main" />
+	</view>
+</widget>

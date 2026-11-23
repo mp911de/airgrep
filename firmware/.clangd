@@ -1,0 +1,38 @@
+# Firmware sources read the database of an IDF build, what also runs on the host reads the one of the utility.
+# Both exist after a build: idf.py --preset s3-debug build, cmake --build utility/build.
+CompileFlags:
+  CompilationDatabase: build/s3-debug
+  # GCC options clang does not know.
+  Remove: [-mlongcalls, -mdisable-hardware-atomics, -fno-shrink-wrap, -fno-tree-switch-conversion, -fstrict-volatile-bitfields]
+---
+If:
+  PathMatch: [components/airgrep/test/.*, main/test/.*]
+CompileFlags:
+  CompilationDatabase: build/s3-test
+---
+# What the utility compiles. The same list is excluded below.
+If:
+  PathMatch:
+    - utility/.*
+    - components/display/.*
+    - main/display/(display_mapping|settings_store)\..*
+    - main/daidalus/(detection|monitor)\..*
+    - main/usb/usb_(commands|protocol|layout)\..*
+    - components/airgrep/system/health\..*
+    - components/airgrep/traffic/traffic_(protocol|table)\..*
+CompileFlags:
+  CompilationDatabase: utility/build
+---
+# A host clang has no Xtensa target and does not find the headers of the toolchain, so what it reports on
+# firmware sources is noise. The IDF build checks them.
+If:
+  PathExclude:
+    - utility/.*
+    - components/display/.*
+    - main/display/(display_mapping|settings_store)\..*
+    - main/daidalus/(detection|monitor)\..*
+    - main/usb/usb_(commands|protocol|layout)\..*
+    - components/airgrep/system/health\..*
+    - components/airgrep/traffic/traffic_(protocol|table)\..*
+Diagnostics:
+  Suppress: "*"

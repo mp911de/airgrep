@@ -29,7 +29,13 @@ CONFIG_PARTITION_TABLE_CUSTOM=y
 CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
 # The event loop task is watched with the 5 s default timeout. Expiry restarts.
 CONFIG_ESP_TASK_WDT_PANIC=y
+# The conflict engine is many small C++ functions: built for debugging it is several times slower.
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
 CONFIG_PM_ENABLE=y
 CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
 # The 8 MB test takes 730 ms per boot, the hwtest profile runs it.
 CONFIG_SPIRAM_MEMTEST=n
+# The conflict engine runs through more code than 16 KB of instruction cache hold
+CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB=y
+CONFIG_DAIDALUS_SINGLE_PRECISION=y

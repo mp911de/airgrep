@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
-"""AIRGREP USB control via PyUSB/libusb, console via pyserial and picocom."""
+"""AIRGREP USB control via PyUSB/libusb, console via pyserial and picocom.
+
+Without a command the tool lists the devices it finds, each with its --serial value, console path and
+bulk interface. It finds them by USB identity and interface number, and sends the console no binary
+data. --serial takes the factory MAC with or without colons or the airgrep- prefix. Binary commands
+claim only the vendor interface. The protocol is in docs/usb-data-protocol.md.
+
+dfu makes the device enter the ROM serial download mode for idf.py flash or esptool, it is no USB DFU
+class. The ROM port has Espressif's identity and may have another path than the console, so find the
+console again with the console command after flashing. For the old dual-CDC firmware dfu uses that
+device's second CDC port, no other command works there. An application that does not run leaves BOOT
+plus RESET as the way into ROM download.
+"""
 
 import argparse
 import binascii
@@ -22,8 +34,15 @@ TIMEOUT_MS = int(TIMEOUT * 1000)
 APP_USB = (0xFA00, 0xFA01)
 LEGACY_USB = (0x303A, 0x4002)
 conversation_ns = 0
-COMMANDS = {"hello": 0x01, "reboot": 0x06, "dfu": 0x07}
+COMMANDS = {"hello": 0x01, "read": 0x02, "write": 0x03, "reboot": 0x06, "dfu": 0x07}
 STATUS = 0x80
+# A component's ID and the size of its State in protocol version 1, see docs/usb-data-protocol.md.
+COMPONENTS = {
+    "adsbee": (0x01, 240), "traffic": (0x02, 61440), "barometer": (0x03, 88), "battery": (0x04, 72),
+    "charger": (0x05, 288), "expander": (0x06, 64), "usb_c": (0x07, 72), "wifi": (0x08, 144),
+    "adsbee_clock": (0x09, 56),
+}
+WRITE = struct.Struct("<BHH")
 GREEN = "\033[32m"
 ORANGE = "\033[38;5;208m"
 BLUE = "\033[38;2;146;179;244m"
@@ -32,12 +51,15 @@ STATUS_NAMES = (
     "OK", "CRC_MISMATCH", "VERSION_MISMATCH", "UNKNOWN_COMMAND",
     "UNKNOWN_COMPONENT", "INVALID_LENGTH", "INVALID_RANGE", "INTERNAL_ERROR",
 )
-HELLO = struct.Struct("<Q32s6IH4B2x128s128s128s")
+HELLO = struct.Struct("<Q32s6IH5Bx128s128s128s")
+# Whether READ and WRITE exist. Firmware that predates the field reports the first.
+SERVICE_NAMES = ("UNKNOWN, firmware predates the field", "UNAVAILABLE", "AVAILABLE")
 # Firmware that predates the board and chip fields stops after the description.
 HELLO_WITHOUT_BOARD = 200
 HEALTH_NAMES = (
-    "expander", "charger", "gauge", "usb_c", "barometer", "adsbee",
-    "gnss", "battery", "memory", "cpu",
+    "i2c", "adsbee", "gnss", "antenna_short", "charger_overvoltage", "charger_overheated",
+    "battery_overheated", "antenna_open", "backup_battery", "barometer", "gauge", "usb_c",
+    "battery_low", "battery_cold", "memory", "cpu",
 )
 
 
@@ -49,10 +71,38 @@ def crc(frame):
     return binascii.crc_hqx(frame[:4] + frame[6:], 0xFFFF)
 
 
-def request(command):
-    frame = bytearray(struct.pack("<BHBH", VERSION, 6, command, 0))
+def request(command, payload=b""):
+    frame = bytearray(struct.pack("<BHBH", VERSION, 6 + len(payload), command, 0) + payload)
     struct.pack_into("<H", frame, 4, crc(frame))
     return bytes(frame)
+
+
+def read_payload(component):
+    return bytes([COMPONENTS[component][0]])
+
+
+def write_payload(component, offset, length, state):
+    """WRITE carries the complete State. The device copies length bytes of it at offset."""
+    return WRITE.pack(COMPONENTS[component][0], offset, length) + state
+
+
+def patched(component, state, offset, data):
+    """The State with data at offset, refused when the State is not the one this client knows."""
+    size = COMPONENTS[component][1]
+    if len(state) != size:
+        raise ProtocolError(f"{component} State has {len(state)} bytes, this client expects {size}. Not writing")
+    if offset + len(data) > size:
+        raise ProtocolError(f"{len(data)} bytes at offset {offset} lie outside the {size} bytes of {component}")
+    return state[:offset] + data + state[offset + len(data):]
+
+
+def hexdump(data, start=0):
+    """Sixteen bytes a line behind their offset, in decimal and hex, so a dump can be pasted and compared."""
+    lines = []
+    for at in range(0, len(data), 16):
+        chunk = data[at:at + 16]
+        lines.append(f"{start + at:5d}  {start + at:04x}  {chunk.hex(' ')}")
+    return "\n".join(lines)
 
 
 def decode_response(frame, command):
@@ -74,6 +124,9 @@ def decode_response(frame, command):
     if command == COMMANDS["hello"]:
         if response != command or len(frame) - 7 not in (HELLO_WITHOUT_BOARD, HELLO.size):
             raise ProtocolError(f"HELLO response is missing its {HELLO.size}-byte payload")
+    elif command == COMMANDS["read"]:
+        if response != command or len(frame) == 7:
+            raise ProtocolError("READ response is missing its State")
     elif response != STATUS:
         raise ProtocolError("Expected STATUS acknowledgement")
     return frame[7:]
@@ -146,29 +199,40 @@ def drain_stale(port):
             return
 
 
-def transact(port, command, reset):
-    reset()
-    drain_stale(port)
-    frame = request(command)
+def converse(port, command, payload=b""):
+    frame = request(command, payload)
     started_ns = time.perf_counter_ns()
     if port.write(frame) != len(frame):
         raise ProtocolError("Incomplete request write, command outcome unknown")
     return read_response(port, command, time.monotonic() + TIMEOUT, started_ns)
 
 
-def exchange(core, util, record, command):
+def transact(port, command, reset, payload=b""):
+    reset()
+    drain_stale(port)
+    return converse(port, command, payload)
+
+
+def session(core, util, record, work):
+    """Runs work(send) in one data session. The device restores session state on the reset that opens it."""
     if record.vendor is None:
         raise ProtocolError(f"Vendor bulk data interface unavailable: {record.error}. Upgrade the firmware")
     device = record.device
     channel = UsbChannel(device, record.vendor, core.USBTimeoutError)
+
+    def send(command, payload=b""):
+        payload = converse(channel, command, payload)
+        if channel.buffer:
+            raise ProtocolError("Unexpected bytes after the response frame")
+        return payload
+
     claimed = False
     try:
         util.claim_interface(device, channel.interface)
         claimed = True
-        payload = transact(channel, command, channel.reset)
-        if channel.buffer:
-            raise ProtocolError("Unexpected bytes after the response frame")
-        return payload
+        channel.reset()
+        drain_stale(channel)
+        return work(send)
     except (ProtocolError, OSError, KeyboardInterrupt):
         if claimed:
             try:
@@ -183,6 +247,10 @@ def exchange(core, util, record, command):
             except OSError:
                 pass
         util.dispose_resources(device)
+
+
+def exchange(core, util, record, command, payload=b""):
+    return session(core, util, record, lambda send: send(command, payload))
 
 
 def vendor_interface(configuration):
@@ -424,10 +492,10 @@ def decode_hello(payload):
     """Board and chip are empty for firmware that predates them."""
     uptime, _firmware_version, *values = HELLO.unpack(bytes(payload).ljust(HELLO.size, b"\0"))
     firmware, board, chip = (value.split(b"\0", 1)[0].decode("utf-8", errors="replace")
-                             for value in values[11:14])
-    health, mode, core0, core1, overall = values[6:11]
+                             for value in values[12:15])
+    health, mode, core0, core1, overall, service = values[6:12]
     return SimpleNamespace(uptime=uptime, internal=values[:3], psram=values[3:6], health=health,
-                           mode=mode, load=(core0, core1, overall), firmware=firmware,
+                           mode=mode, load=(core0, core1, overall), service=service, firmware=firmware,
                            board=board, chip=chip)
 
 
@@ -464,20 +532,69 @@ def print_hello(payload, serial_number=None):
     color = ORANGE if health else GREEN
     status = f"ALERT (0x{health:X}{' ' + ', '.join(failures) if failures else ''})" if health else "OK (0x0)"
     print(f"{'Health':20} {color}{status}{RESET}")
+    service = SERVICE_NAMES[hello.service] if hello.service < len(SERVICE_NAMES) else SERVICE_NAMES[0]
+    print(f"{'Service commands':20} {service}")
     print(f"{'Load':20} core0 {percent(core0)}, core1 {percent(core1)}, overall {percent(overall)}")
     for label, memory in (("Internal RAM", hello.internal), ("PSRAM", hello.psram)):
         print(f"{label:20} {memory[0] // 1024} KB free, {memory[1] // 1024} KB minimum, {memory[2] // 1024} KB total")
 
 
+def read_state(send, component):
+    """The State as hex, and a note when it is not as long as this client expects."""
+    state = send(COMMANDS["read"], read_payload(component))
+    size = COMPONENTS[component][1]
+    note = "" if len(state) == size else f", this client expects {size}"
+    return f"{component}: {len(state)} bytes{note}\n{hexdump(state)}"
+
+
+def write_state(send, component, offset, data):
+    """Replaces bytes of a State and shows them as read before and after. A poll may replace them again."""
+    before = send(COMMANDS["read"], read_payload(component))
+    state = patched(component, before, offset, data)
+    send(COMMANDS["write"], write_payload(component, offset, len(data), state))
+    after = send(COMMANDS["read"], read_payload(component))
+    end = offset + len(data)
+    return (f"{component}: wrote {len(data)} bytes at offset {offset}\n"
+            f"before\n{hexdump(before[offset:end], offset)}\nafter\n{hexdump(after[offset:end], offset)}")
+
+
+def service_arguments(command, arguments):
+    """What a service command does with a way to send, or None for another command. ValueError names a misuse."""
+    if command not in ("read", "write"):
+        if arguments:
+            raise ValueError(f"{command or 'listing devices'} takes no arguments")
+        return None
+    if not arguments or arguments[0] not in COMPONENTS:
+        raise ValueError(f"{command} needs a component: {', '.join(COMPONENTS)}")
+    component = arguments[0]
+    if command == "read":
+        if len(arguments) != 1:
+            raise ValueError("read takes a component only")
+        return lambda send: read_state(send, component)
+    if len(arguments) < 3:
+        raise ValueError("write needs a component, an offset and the bytes as hex")
+    offset, data = int(arguments[1], 0), bytes.fromhex("".join(arguments[2:]))
+    if not data:
+        raise ValueError("write needs at least one byte")
+    return lambda send: write_state(send, component, offset, data)
+
+
 def main(argv=None):
     global conversation_ns
     conversation_ns = 0
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("command", nargs="?", choices=(*COMMANDS, "console"),
                         help="Command to execute, or omit to list connected devices")
+    parser.add_argument("arguments", nargs="*", metavar="ARGUMENT",
+                        help="read COMPONENT prints a State as hex. write COMPONENT OFFSET HEX replaces bytes of it. "
+                             f"Components: {', '.join(COMPONENTS)}. Both need firmware with service commands")
     parser.add_argument("--port", help="Explicit console serial device, only for console")
     parser.add_argument("--serial", help="Select an AIRGREP device by its USB serial number")
     args = parser.parse_args(argv)
+    try:
+        service = service_arguments(args.command, args.arguments)
+    except ValueError as error:
+        parser.error(str(error))
     if args.port and args.serial:
         parser.error("Use either --port or --serial")
     if args.port and args.command != "console":
@@ -520,6 +637,9 @@ def main(argv=None):
         if args.command == "dfu" and is_legacy_cdc(record):
             usb.util.dispose_resources(record.device)
             payload = legacy_dfu(record)
+        elif service:
+            print(session(usb.core, usb.util, record, service))
+            return 0
         else:
             payload = exchange(usb.core, usb.util, record, COMMANDS[args.command])
         if args.command == "hello":

@@ -14,13 +14,18 @@ constexpr uint16_t kStatusVl = 1u << 10;
 constexpr uint16_t kStatusVr = 1u << 11;
 constexpr uint16_t kStatusHd = 1u << 12;
 constexpr uint16_t kStatusSc = 1u << 13;
-}  // namespace
+}
 
-float decode_vcell(uint16_t raw) { return raw * kVcellVoltsPerLsb; }
-float decode_soc(uint16_t raw) { return raw * kSocPercentPerLsb; }
+float decode_vcell(uint16_t raw) {
+	return static_cast<float>(raw) * kVcellVoltsPerLsb;
+}
+float decode_soc(uint16_t raw) {
+	return static_cast<float>(raw) * kSocPercentPerLsb;
+}
 
 float decode_crate(uint16_t raw) {
-	return static_cast<int16_t>(raw) * kCratePercentPerHourPerLsb;
+	return static_cast<float>(static_cast<int16_t>(raw)) *
+		   kCratePercentPerHourPerLsb;
 }
 
 Alerts decode_status(uint16_t raw) {
@@ -33,10 +38,10 @@ uint16_t acknowledge_reset(uint16_t raw_status) {
 	return raw_status & ~kStatusRi;
 }
 
-std::optional<float> calculate_charge_duration(float soc, float rate) {
+OptionalFloat calculate_charge_duration(float soc, float rate) {
 	if (!(soc >= 0 && soc <= 100) || rate == 0) {
 		return {};
 	}
-	return rate < 0 ? soc / -rate : (100 - soc) / rate;
+	return {.value = rate < 0 ? soc / -rate : (100 - soc) / rate, .valid = 1};
 }
-}  // namespace battery
+}

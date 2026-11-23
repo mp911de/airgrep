@@ -1,0 +1,4 @@
+<component>
+	<!-- Marks a row that goes deeper. -->
+	<view extends="lv_image" src="icon_chevron_right" style_image_recolor="{color_grid}" style_image_recolor_opa="100%" style_translate_y="2" />
+</component>

@@ -11,7 +11,9 @@ void app_main(void) {
 			 CONFIG_AIRGREP_TEST_TAGS);
 
 	char tags[] = CONFIG_AIRGREP_TEST_TAGS;
-	for (char* tag = strtok(tags, " "); tag; tag = strtok(NULL, " ")) {
+	char* rest = NULL;
+	for (char* tag = strtok_r(tags, " ", &rest); tag;
+		 tag = strtok_r(NULL, " ", &rest)) {
 		UNITY_BEGIN();
 		unity_run_tests_by_tag(tag, false);
 		UNITY_END();

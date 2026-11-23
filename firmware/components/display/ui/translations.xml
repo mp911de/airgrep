@@ -1,0 +1,76 @@
+<!-- Texts the pilot reads. Column heads and units stay as they are in every language. --><translations languages="en de">
+	<translation tag="no_gps_fix" en="NO GPS FIX" de="KEIN GPS-FIX" />
+	<translation tag="system" en="System" de="System" />
+	<translation tag="section_time_zone" en="TIME ZONE" de="ZEITZONE" />
+	<translation tag="automatic" en="Automatic" de="Automatisch" />
+	<translation tag="time_zone" en="Time zone" de="Zeitzone" />
+	<translation tag="section_gps" en="GPS" de="GPS" />
+	<translation tag="fix" en="Fix" de="Fix" />
+	<translation tag="satellites" en="Satellites" de="Satelliten" />
+	<translation tag="antenna" en="Antenna" de="Antenne" />
+	<translation tag="antenna_unknown" en="Unknown" de="Unbekannt" />
+	<translation tag="antenna_active_ok" en="Active, OK" de="Aktiv, OK" />
+	<translation tag="antenna_short" en="Short" de="Kurzschluss" />
+	<translation tag="antenna_disconnected" en="Disconnected" de="Getrennt" />
+	<translation tag="section_health" en="HEALTH" de="ZUSTAND" />
+	<translation tag="all_systems" en="System" de="System" />
+	<translation tag="ok" en="OK" de="OK" />
+	<translation tag="section_display" en="DISPLAY" de="ANZEIGE" />
+	<translation tag="theme" en="Theme" de="Design" />
+	<translation tag="light" en="Light" de="Hell" />
+	<translation tag="dark" en="Dark" de="Dunkel" />
+	<translation tag="track_history" en="Track history" de="Flugstrecke" />
+	<translation tag="symbols" en="Symbols" de="Symbole" />
+	<translation tag="planes" en="Planes" de="Flugzeuge" />
+	<translation tag="simple" en="Simple" de="Einfach" />
+	<translation tag="conflict_indicator" en="Conflict Indicator" de="Conflict Indicator" />
+	<translation tag="section_filter" en="FILTER" de="FILTER" />
+	<translation tag="altitude" en="Altitude" de="Vertikal" />
+	<translation tag="altitude_zero" en="0 ft shows traffic at every altitude." de="0 ft zeigt Verkehr in jeder Höhe." />
+	<translation tag="section_ownship" en="OWNSHIP" de="EIGENES FLUGZEUG" />
+	<translation tag="callsign" en="Callsign" de="Rufzeichen" />
+	<translation tag="icao_address" en="ICAO address" de="ICAO-Adresse" />
+	<translation tag="not_set" en="Not set" de="Nicht gesetzt" />
+	<translation tag="section_info" en="INFO" de="INFO" />
+	<translation tag="device_id" en="Device ID" de="Geräte-ID" />
+	<translation tag="version" en="Version" de="Version" />
+	<translation tag="licenses" en="Licenses" de="Lizenzen" />
+	<translation tag="section_quick_access" en="QUICK ACCESS" de="SCHNELLZUGRIFF" />
+	<translation tag="section_regions" en="REGIONS" de="REGIONEN" />
+	<translation tag="detected" en="Detected" de="Erkannt" />
+	<translation tag="section_components" en="COMPONENTS" de="KOMPONENTEN" />
+	<translation tag="wifi_battery" en="Wi-Fi and Battery" de="WLAN und Akku" />
+	<translation tag="section_wifi" en="WI-FI" de="WLAN" />
+	<translation tag="network" en="Network" de="Netzwerk" />
+	<translation tag="password" en="Password" de="Passwort" />
+	<translation tag="section_battery" en="BATTERY" de="AKKU" />
+	<translation tag="charge" en="Charge" de="Ladung" />
+	<translation tag="remaining" en="Remaining" de="Restzeit" />
+	<translation tag="no_battery" en="No battery" de="Kein Akku" />
+	<translation tag="charging" en="Charging" de="Lädt" />
+	<translation tag="until_full" en="h until full" de="h bis voll" />
+	<translation tag="fully_charged" en="Fully charged" de="Voll geladen" />
+	<translation tag="scan_to_join" en="Scan to join" de="Scannen zum Verbinden" />
+	<translation tag="wifi_off" en="Wi-Fi off" de="WLAN aus" />
+	<translation tag="mute" en="Mute" de="Stumm" />
+	<translation tag="unmute" en="Unmute" de="Laut" />
+	<translation tag="own_ship" en="Own ship" de="Ownship" />
+	<translation tag="beyond" en="BEYOND" de="ÜBER" />
+	<translation tag="i2c" en="I2C" de="I2C" />
+	<translation tag="adsbee" en="ADSBee" de="ADSBee" />
+	<translation tag="barometer" en="Barometer" de="Barometer" />
+	<translation tag="usb_c" en="USB-C" de="USB-C" />
+	<translation tag="cpu" en="CPU" de="CPU" />
+	<translation tag="oom" en="OOM" de="OOM" />
+	<translation tag="gps_receiver" en="GPS receiver" de="GPS-Empfänger" />
+	<translation tag="gps_antenna" en="GPS antenna" de="GPS-Antenne" />
+	<translation tag="charger" en="Charger" de="Ladegerät" />
+	<translation tag="battery" en="Battery" de="Akku" />
+	<translation tag="memory" en="Memory" de="Speicher" />
+	<translation tag="unresponsive" en="Unresponsive" de="Kein Signal" />
+	<translation tag="overvoltage" en="Overvoltage" de="Überspannung" />
+	<translation tag="overheated" en="Overheated" de="Überhitzt" />
+	<translation tag="backup_battery" en="Backup battery" de="Batterie" />
+	<translation tag="battery_low" en="Low" de="Schwach" />
+	<translation tag="too_cold" en="Too cold" de="Zu kalt" />
+</translations>

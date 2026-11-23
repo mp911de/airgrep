@@ -123,9 +123,8 @@ CASE(encode_limits,
 	 "Charger limit encoders keep reserved bits and round down") {
 	TEST_ASSERT_EQUAL_HEX16(0x00b4, charger::encode_current(0x0000, 1800));
 	TEST_ASSERT_EQUAL_HEX16(0xfe32, charger::encode_current(0xfe00, 505));
-	TEST_ASSERT_EQUAL_UINT32(
-		3000, charger::decode_input_current(
-				  0x01, charger::encode_current(0x0000, 3000) & 0xff));
+	TEST_ASSERT_EQUAL_HEX16(0x012c, charger::encode_current(0x0000, 3000));
+	TEST_ASSERT_EQUAL_UINT32(3000, charger::decode_input_current(0x01, 0x2c));
 	TEST_ASSERT_EQUAL_HEX8(0xab,
 						   charger::encode_temperature_control(0xeb, 100));
 	TEST_ASSERT_EQUAL_UINT32(100, charger::decode_temperature_control(0xab));
@@ -267,19 +266,20 @@ CASE(
 	"Charger NTC estimate rejects invalid ratios and sensor range violations") {
 	const float invalid[] = {-1.0f,  0.0f,   0.001f, 90.0f,   90.35295f,
 							 100.0f, 101.0f, NAN,    INFINITY};
-	for (float percent : invalid) {
+	for (const float percent : invalid) {
 		TEST_ASSERT_TRUE(std::isnan(charger::estimate_ntc_c(percent)));
 	}
 }
 
 CASE(detect_battery,
 	 "Battery detection calls a VBAT drop above 1500 mV no battery") {
-	TEST_ASSERT_EQUAL(BatteryDetected::yes,
+	TEST_ASSERT_EQUAL(BatteryDetected::test_present,
 					  charger::detect_battery(4100, 4050));
-	TEST_ASSERT_EQUAL(BatteryDetected::yes,
+	TEST_ASSERT_EQUAL(BatteryDetected::test_present,
 					  charger::detect_battery(4100, 2600));
-	TEST_ASSERT_EQUAL(BatteryDetected::no, charger::detect_battery(4100, 2500));
-	TEST_ASSERT_EQUAL(BatteryDetected::yes,
+	TEST_ASSERT_EQUAL(BatteryDetected::absent,
+					  charger::detect_battery(4100, 2500));
+	TEST_ASSERT_EQUAL(BatteryDetected::test_present,
 					  charger::detect_battery(3000, 3100));
 }
 

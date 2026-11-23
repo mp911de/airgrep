@@ -12,8 +12,6 @@ static const buzzer_step_t sweep_steps[] = {
 	{true, 50, 3900}, {true, 50, 4000}, {true, 50, 4100}, {true, 50, 4200},
 	{true, 50, 4300}, {true, 50, 4400}, {true, 50, 4500},
 };
-// POWER slider chimes at reduced duty: three notes rising to resonance when
-// switched on, the same notes falling when switched off.
 static const buzzer_step_t startup_steps[] = {
 	{true, 80, 3200}, {false, 30, 0},   {true, 80, 3600},
 	{false, 30, 0},   {true, 80, 4000},

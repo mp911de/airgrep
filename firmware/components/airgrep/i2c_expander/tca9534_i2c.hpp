@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "device.h"
+
 namespace expander {
 inline constexpr uint8_t kMutePin = 1 << 0, kWifiPin = 1 << 1,
 						 kPowerPin = 1 << 7;
@@ -30,4 +32,17 @@ struct Configuration {
 };
 
 Configuration decode_configuration(uint8_t raw);
-}  // namespace expander
+
+struct StateData {
+	Status status = Status::unknown;
+	uint8_t raw_input = 0, raw_output = 0, raw_polarity = 0,
+			raw_configuration = 0;
+	Input input{};
+	Output output{};
+	Polarity polarity{};
+	Configuration configuration{};
+	int64_t updated_us = 0, error_us = 0;
+	EspErrorCode last_error = 0;
+	bool identity_known = false, configured = false;
+};
+}

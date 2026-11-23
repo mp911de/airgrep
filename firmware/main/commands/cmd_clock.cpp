@@ -16,10 +16,11 @@ namespace {
 struct {
 	struct arg_lit* sync;
 	struct arg_end* end;
+	void* table[2];
 } args;
 
 int command(int argc, char** argv) {
-	if (arg_parse(argc, argv, reinterpret_cast<void**>(&args))) {
+	if (arg_parse(argc, argv, args.table)) {
 		arg_print_errors(stderr, args.end, argv[0]);
 		return 1;
 	}
@@ -27,30 +28,35 @@ int command(int argc, char** argv) {
 		return command_status::ack(adsbee::timesync::schedule_gnss_time_sync());
 	}
 	const auto state = adsbee::timesync::State::copy();
-	int64_t now = esp_timer_get_time();
-	timeval tv;
+	const int64_t now = esp_timer_get_time();
+	timeval tv{};
 	gettimeofday(&tv, nullptr);
-	tm utc;
+	tm utc{};
 	gmtime_r(&tv.tv_sec, &utc);
 	char text[32];
-	std::strftime(text, sizeof text, "%Y-%m-%d %H:%M:%S", &utc);
+	(void)std::strftime(text, sizeof text, "%Y-%m-%d %H:%M:%S", &utc);
 	std::printf("%-20s %s UTC\n", "Time", text);
-	tm local;
+	tm local{};
 	localtime_r(&tv.tv_sec, &local);
-	std::strftime(text, sizeof text, "%Y-%m-%d %H:%M:%S %Z", &local);
+	(void)std::strftime(text, sizeof text, "%Y-%m-%d %H:%M:%S %Z", &local);
 	std::printf("%-20s %s\n", "Local", text);
 	const auto zone = tz::State::copy();
 	const auto current = settings::copy();
 	if (!current.tz_detect) {
-		std::printf("%-20s %s (tz_rule)\n", "Zone", zone.rule);
-	} else if (zone.detected) {
-		std::printf("%-20s %s (detected %lld s ago), %s\n", "Zone", zone.zone,
-					(long long)((now - zone.detected_us) / 1000000), zone.rule);
+		std::printf("%-20s %s (chosen), %s\n", "Zone",
+					current.zone[0] ? current.zone : "UTC",
+					zone.applied_posix_rule);
+	} else if (zone.has_detected_zone) {
+		std::printf("%-20s %s (detected %lld s ago), %s\n", "Zone",
+					zone.detected_iana_zone,
+					(long long)((now - zone.last_zone_match_us) / 1000000),
+					zone.applied_posix_rule);
 	} else {
-		std::printf("%-20s UTC (not detected, table %s)\n", "Zone",
-					zone.status == Status::ok ? "OK" : "OFF");
+		std::printf(
+			"%-20s UTC (not detected, table %s)\n", "Zone",
+			zone.table_status == tz::TableStatus::available ? "OK" : "OFF");
 	}
-	if (zone.status == Status::ok) {
+	if (zone.table_status == tz::TableStatus::available) {
 		std::printf("%-20s %s, %u zones, rules for %u, %lu bytes\n", "Table",
 					zone.source, zone.zones, zone.rule_year,
 					(unsigned long)zone.table_bytes);
@@ -60,15 +66,15 @@ int command(int argc, char** argv) {
 	// The RTC keeps the time across resets, so without a
 	// sync this boot the time is still the last one it was
 	// set to.
-	if (state.set) {
-		time_t synced_at =
-			tv.tv_sec - time_t((now - state.synced_us) / 1000000);
+	if (state.clock_set_from_gnss) {
+		const time_t synced_at =
+			tv.tv_sec - time_t((now - state.last_sync_us) / 1000000);
 		gmtime_r(&synced_at, &utc);
-		std::strftime(text, sizeof text, "%Y-%m-%d %H:%M:%S", &utc);
+		(void)std::strftime(text, sizeof text, "%Y-%m-%d %H:%M:%S", &utc);
 		std::printf(
 			"%-20s GNSS, synced %s UTC, correction %+lld ms, RTT %lld "
 			"ms, PPS %lu\n",
-			"Source", text, (long long)(state.correction_us / 1000),
+			"Source", text, (long long)(state.last_correction_us / 1000),
 			(long long)(state.rtt_us / 1000), (unsigned long)state.pps);
 	} else {
 		std::printf("%-20s RTC\n", "Source");
@@ -80,12 +86,14 @@ int command(int argc, char** argv) {
 	}
 	return 0;
 }
-}  // namespace
+}
 
 extern "C" esp_err_t console_register_clock(void) {
 	args.sync = arg_lit0(nullptr, "sync", "Start a time ping burst now");
 	args.end = arg_end(2);
-	if (arg_nullcheck(reinterpret_cast<void**>(&args))) {
+	args.table[0] = args.sync;
+	args.table[1] = args.end;
+	if (arg_nullcheck(args.table)) {
 		return ESP_ERR_NO_MEM;
 	}
 	const esp_console_cmd_t entry = {
@@ -93,7 +101,7 @@ extern "C" esp_err_t console_register_clock(void) {
 		.help = "Show the system clock and its GNSS time sync.",
 		.hint = "[--sync]",
 		.func = command,
-		.argtable = &args,
+		.argtable = static_cast<void*>(args.table),
 		.func_w_context = nullptr,
 		.context = nullptr,
 	};

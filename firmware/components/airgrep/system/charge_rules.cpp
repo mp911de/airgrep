@@ -7,29 +7,26 @@ namespace charge_control {
 namespace {
 constexpr int64_t kNegotiationTimeoutUs = 5000000;
 constexpr unsigned kInputLimitMaxMa = 3300;  // IINDPM range maximum
-// lower and upper bounds of charger power
 constexpr unsigned kMinimumChargeMa = 500, kMaximumChargeMa = 2000;
 constexpr unsigned kChargeStepMa = 10;
 
-// thermal throttling
 constexpr unsigned kWarmChargeMa = 1000, kWarmerChargeMa = 500;
 constexpr unsigned kThermalLimitC = 100;
 
 constexpr int64_t kMinuteUs = 60000000;
 constexpr int64_t kOffUs = 5 * kMinuteUs, kFailureMemoryUs = 10 * kMinuteUs;
 
-// battery/charger failure threshold
 constexpr unsigned kFailureLatchThreshold = 10;
 
 // Without a battery and with charging off, the charger holds BAT close to 2.5
 // V.
 constexpr unsigned kNoBatteryVBATThreshold = 2600;
-}  // namespace
+}
 
 charger::TargetState Rules::apply_rules(const ChargeInputs& in) {
 	charger::TargetState target;
 	target.mode = in.mode;
-	target.decided = true;
+	target.target_available = true;
 	target.thermal_limit_c = kThermalLimitC;
 	decide_input_limit(in, target);
 	decide_charge_current(in, target);
@@ -46,10 +43,10 @@ void Rules::decide_input_limit(const ChargeInputs& in,
 	if (!vbus) {
 		return;
 	}
-	target.waiting_us = in.now_us - vbus_since_us_;
+	target.vbus_elapsed_us = in.now_us - vbus_since_us_;
 	const bool negotiating = in.usb_c_usable && in.usb_c_negotiating;
 	if ((in.detecting || negotiating) &&
-		target.waiting_us < kNegotiationTimeoutUs) {
+		target.vbus_elapsed_us < kNegotiationTimeoutUs) {
 		target.supply = charger::Supply::waiting;
 		return;
 	}
@@ -61,7 +58,7 @@ void Rules::decide_input_limit(const ChargeInputs& in,
 		return;
 	}
 	target.supply = charger::Supply::detection;
-	target.vbus_type = in.vbus_type;
+	target.detected_vbus_type = in.detected_vbus_type;
 	target.input_ma = std::max(in.detected_ma, kMinimumChargeMa);
 }
 
@@ -99,19 +96,18 @@ void Rules::decide_charge_current(const ChargeInputs& in,
 // pack protection reads like a removed pack.
 charger::ChargeStop Rules::decide_charge_stop(const ChargeInputs& in) {
 	const int64_t now = in.now_us;
-	// TODO: encapsulate timeout in method instead of spreading timeout checks
-	// across the entire code base
-	if (!locked_ && failures_ && now - failure_us_ > kFailureMemoryUs) {
+	if (!locked_ && failures_ &&
+		now - last_overvoltage_us_ > kFailureMemoryUs) {
 		failures_ = 0;
 	}
 	if (in.charger_usable) {
 		if (in.battery_overvoltage && battery_ == Battery::ok) {
 			battery_ = Battery::overvoltage;
-			off_since_us_ = failure_us_ = now;
+			last_overvoltage_us_ = now;
 			locked_ = ++failures_ >= kFailureLatchThreshold;
 		} else if (battery_ == Battery::overvoltage &&
 				   !in.battery_overvoltage && in.vbat_mv &&
-				   now - off_since_us_ >= kOffUs) {
+				   now - last_overvoltage_us_ >= kOffUs) {
 			battery_ = in.vbat_mv >= kNoBatteryVBATThreshold ? Battery::ok
 															 : Battery::absent;
 		} else if (battery_ == Battery::absent &&
@@ -131,4 +127,4 @@ charger::ChargeStop Rules::decide_charge_stop(const ChargeInputs& in) {
 			return charger::ChargeStop::none;
 	}
 }
-}  // namespace charge_control
+}

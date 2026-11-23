@@ -8,22 +8,27 @@
 #include "esp_console.h"
 
 namespace {
+BatteryDetected battery_presence(BatteryDetected charger,
+								 BatteryDetected gauge) {
+	return charger == BatteryDetected::voltage_present &&
+				   gauge != BatteryDetected::voltage_present
+			   ? BatteryDetected::unknown
+			   : charger;
+}
+
 int command(int argc, char**) {
 	if (argc != 1) {
 		std::puts("usage: battery_level");
 		return 1;
 	}
 	const auto state = battery::State::copy();
-	// A battery test result wins. Without one the charger and the gauge must
-	// both see VBAT.
-	auto detected = charger::State::copy().battery();
-	if (detected == BatteryDetected::vbat &&
-		state.battery() != BatteryDetected::vbat) {
-		detected = BatteryDetected::unknown;
-	}
+
+	const auto detected =
+		battery_presence(charger::State::copy().battery(), state.battery());
 	std::printf("%-20s %s\n", "Battery", battery_detected_name(detected));
-	if (!command_status::header(state.status, state.updated_us,
-								state.last_error, state.error_us)) {
+	command_status::print_status(state.status, state.updated_us,
+								 state.last_error, state.error_us);
+	if (!state.updated_us) {
 		return 0;
 	}
 	std::printf("%-20s %.2f %% (0x%04X)\n", "Charge (SOC)", state.soc,
@@ -32,9 +37,9 @@ int command(int argc, char**) {
 				state.raw_vcell);
 	std::printf("%-20s %+.3f %%/h (0x%04X)\n", "Rate (CRATE)", state.rate,
 				state.raw_crate);
-	if (state.charge_duration_hours) {
+	if (state.charge_duration_hours.valid == 1) {
 		char remaining[16];
-		format_hours_minutes(*state.charge_duration_hours, remaining,
+		format_hours_minutes(state.charge_duration_hours.value, remaining,
 							 sizeof remaining);
 		std::printf("%-20s %s to %s\n", "Remaining", remaining,
 					state.rate < 0 ? "EMPTY" : "FULL");
@@ -59,7 +64,7 @@ int command(int argc, char**) {
 	std::printf("%-20s 0x%04X\n", "Version", state.raw_version);
 	return 0;
 }
-}  // namespace
+}
 
 extern "C" esp_err_t console_register_battery_level(void) {
 	const esp_console_cmd_t entry = {

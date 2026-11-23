@@ -23,7 +23,7 @@ buzzer_state_t buzzer_state(void);
 // for the startup and shutdown chimes.
 esp_err_t buzzer_prepare(void);
 esp_err_t buzzer_init(void);
-esp_err_t buzzer_play(const char* scheme, uint32_t hz);
+esp_err_t buzzer_play(const char* name, uint32_t hz);
 void buzzer_set_mute(bool mute);
 void buzzer_off(void);
 

@@ -2,6 +2,10 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
+#include <span>
+
+#include "usb_constants.h"
 
 namespace usb::protocol {
 
@@ -9,6 +13,11 @@ inline constexpr uint8_t kVersion = 1;
 inline constexpr int64_t kTimeoutUs = 3000000;
 inline constexpr size_t kStatusSize = 7;
 inline constexpr size_t kHelloSize = 463;
+inline constexpr size_t kListCountsSize = 4, kListPresentOffset = 0,
+						kListReturnedOffset = 2;
+// A settings key travels as this many bytes: its characters, its end and
+// zeros. It is the key in NVS, which takes 15 characters.
+inline constexpr size_t kKeySize = 16;
 
 enum class Command : uint8_t {
 	hello = 0x01,
@@ -18,8 +27,23 @@ enum class Command : uint8_t {
 	update_gnss = 0x05,
 	reboot = 0x06,
 	enter_bootloader = 0x07,
+	list_traffic = 0x08,
+	read_settings = 0x09,
+	write_settings = 0x0a,
 	status = 0x80,
 };
+
+constexpr Command success_response(Command command) {
+	switch (command) {
+		case Command::hello:
+		case Command::read:
+		case Command::list_traffic:
+		case Command::read_settings:
+			return command;
+		default:
+			return Command::status;
+	}
+}
 
 enum class Status : uint8_t {
 	ok,
@@ -30,7 +54,14 @@ enum class Status : uint8_t {
 	invalid_length,
 	invalid_range,
 	internal_error,
+
+	unknown_settings,
 };
+
+// Whether READ, WRITE, the UPDATE and the SETTINGS commands exist in this
+// firmware. Firmware older than the field reports unknown, a client then has
+// to try one.
+enum class Service : uint8_t { unknown, absent, present };
 
 struct Hello {
 	uint64_t uptime_seconds;
@@ -39,7 +70,8 @@ struct Hello {
 	uint32_t psram_free, psram_minimum, psram_total;
 	uint16_t health;
 	uint8_t mode, cpu_core0, cpu_core1, cpu_overall;
-	uint8_t reserved[2];
+	Service service;
+	uint8_t reserved;
 	char firmware_description[128];
 	char board[128];
 	char chip[128];
@@ -60,7 +92,8 @@ static_assert(offsetof(Hello, mode) == 66);
 static_assert(offsetof(Hello, cpu_core0) == 67);
 static_assert(offsetof(Hello, cpu_core1) == 68);
 static_assert(offsetof(Hello, cpu_overall) == 69);
-static_assert(offsetof(Hello, reserved) == 70);
+static_assert(offsetof(Hello, service) == 70);
+static_assert(offsetof(Hello, reserved) == 71);
 static_assert(offsetof(Hello, firmware_description) == 72);
 static_assert(offsetof(Hello, board) == 200);
 static_assert(offsetof(Hello, chip) == 328);
@@ -71,7 +104,7 @@ uint16_t crc16(const uint8_t* bytes, size_t size, uint16_t seed = 0xffff);
 // and only dispatches it after this decoder completes with Status::ok.
 class Decoder {
    public:
-	explicit Decoder(bool service_commands = false)
+	explicit Decoder(bool service_commands = false) noexcept
 		: service_commands_(service_commands) {}
 	bool feed(uint8_t byte, int64_t now_us);
 	bool timed_out(int64_t now_us) const;
@@ -90,12 +123,33 @@ class Decoder {
 	bool service_commands_;
 };
 
-// Output must have room for kStatusSize or kHelloSize respectively.
-size_t encode_status(Status status, uint8_t* output);
-size_t encode_hello(const Hello& hello, uint8_t* output);
-// Payload is already at output + kStatusSize. Returns zero if it cannot fit
-// the 16-bit frame length. The caller supplies room for header and payload.
-size_t encode_response(Command command, Status status, uint8_t* output,
-					   size_t payload_size);
+size_t encode_status(Status status, std::span<uint8_t> output);
+size_t encode_hello(const Hello& hello, std::span<uint8_t> output);
 
-}  // namespace usb::protocol
+size_t encode_response(Command command, Status status,
+					   std::span<uint8_t> output, size_t payload_size);
+
+struct Reply {
+	size_t size;
+	Command after_send = Command::status;
+};
+
+// A completed frame either has an immediate reply or needs a data service.
+// A reset takes effect after its acknowledgement reaches the host.
+inline std::optional<Reply> route(const Decoder& request,
+								  std::span<uint8_t> output, auto&& hello) {
+	if (request.status() != Status::ok) {
+		return Reply{encode_status(request.status(), output)};
+	}
+	switch (request.command()) {
+		case Command::hello:
+			return Reply{encode_hello(hello(), output)};
+		case Command::reboot:
+		case Command::enter_bootloader:
+			return Reply{encode_status(Status::ok, output), request.command()};
+		default:
+			return std::nullopt;
+	}
+}
+
+}

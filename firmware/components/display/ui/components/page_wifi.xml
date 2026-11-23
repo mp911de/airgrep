@@ -1,0 +1,109 @@
+<component>
+	<!-- Display only. The Wi-Fi slider on the device owns the state, the layout is the same when it is off. -->
+	<view extends="page" page="2">
+		<nav_bar title="wifi_battery" page="2" />
+		<lv_obj name="sheet" width="100%" flex_grow="1" flex_flow="row" scrollable="false" style_pad_column="16">
+			<remove_theme selector="main" />
+
+			<lv_obj name="left" flex_grow="1" height="content" flex_flow="column" scrollable="false">
+				<remove_theme selector="main" />
+				<section_header title="section_wifi" />
+				<list_group>
+					<list_group-rows>
+						<list_row label="network">
+							<list_row-value>
+								<lv_label text="{subject_wifi_network}" style_text_color="{subject_wifi EQ 1 ? color_label : color_label_2}" />
+							</list_row-value>
+						</list_row>
+						<list_row label="password" separator="false">
+							<list_row-value>
+								<lv_label text="{subject_wifi_password}" style_text_color="{subject_wifi EQ 1 ? color_label : color_label_2}" />
+							</list_row-value>
+						</list_row>
+					</list_group-rows>
+				</list_group>
+
+				<section_header title="section_battery" />
+				<list_group>
+					<list_group-rows>
+						<list_row label="charge">
+							<list_row-value>
+								<lv_label text="{subject_battery . ' %'}" hidden="{subject_battery_state EQ 0}" style_text_color="{subject_battery LT 20 ? color_red : color_label}" />
+								<lv_label translation_tag="no_battery" hidden="{subject_battery_state NE 0}" style_text_color="{color_label_2}" />
+							</list_row-value>
+						</list_row>
+						<list_row label="remaining" separator="false">
+							<list_row-value>
+								<lv_label text="{subject_battery_remaining}" style_text_color="{subject_battery_state EQ 0 ? color_label_2 : color_label}" />
+							</list_row-value>
+						</list_row>
+					</list_group-rows>
+				</list_group>
+			</lv_obj>
+
+			<lv_obj
+				name="join"
+				width="264"
+				height="100%"
+				flex_flow="column"
+				scrollable="false"
+				style_flex_cross_place="center"
+				style_flex_track_place="center"
+				style_pad_top="24"
+				style_pad_row="10"
+			>
+				<remove_theme selector="main" />
+				<!-- White in both themes, a phone reads dark on light. -->
+				<lv_obj
+					name="qr_box"
+					width="232"
+					height="232"
+					hidden="{subject_wifi EQ 0}"
+					scrollable="false"
+					style_pad_all="12"
+					style_radius="{radius}"
+					style_bg_color="0xffffff"
+					style_bg_opa="100%"
+				>
+					<remove_theme selector="main" />
+					<!-- 165 px is 5 px for each of the 33 modules of a version 4 code. The white box around it is the
+					     quiet zone: a QR code needs four modules of it on every side, this leaves more than six. -->
+					<lv_qrcode name="wifi_qr" size="165" align="center" dark_color="0x000000" light_color="0xffffff" quiet_zone="false" />
+				</lv_obj>
+				<lv_label
+					translation_tag="scan_to_join"
+					hidden="{subject_wifi EQ 0}"
+					style_text_font="font_small"
+					style_text_color="{color_label_2}"
+				/>
+
+				<lv_obj name="qr_off" width="232" height="232" hidden="{subject_wifi EQ 1}" scrollable="false">
+					<remove_theme selector="main" />
+					<lv_image src="icon_qrcode" align="center" style_image_recolor="{color_grid}" style_image_recolor_opa="100%" />
+					<lv_obj
+						name="strike"
+						width="210"
+						height="10"
+						align="center"
+						style_radius="5"
+						style_bg_color="{color_grid}"
+						style_bg_opa="100%"
+						style_outline_width="6"
+						style_outline_color="{color_bg_grouped}"
+						style_transform_pivot_x="105"
+						style_transform_pivot_y="5"
+						style_transform_rotation="-450"
+					>
+						<remove_theme selector="main" />
+					</lv_obj>
+				</lv_obj>
+				<lv_label
+					translation_tag="wifi_off"
+					hidden="{subject_wifi EQ 1}"
+					style_text_font="font_small"
+					style_text_color="{color_label_2}"
+				/>
+			</lv_obj>
+		</lv_obj>
+	</view>
+</component>

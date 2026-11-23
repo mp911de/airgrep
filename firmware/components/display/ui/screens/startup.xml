@@ -1,0 +1,16 @@
+<screen>
+	<!-- Shown while the device starts. The application sets the two texts and leaves for home. -->
+	<view
+		extends="lv_obj"
+		scrollable="false"
+		style_bg_color="{color_bg}"
+		style_bg_opa="100%"
+		style_text_color="{color_label}"
+		style_text_font="font_text"
+	>
+		<logo name="logo" align="top_mid" y="112" />
+		<!-- Device name and firmware version. -->
+		<lv_label name="unit" text="" align="top_mid" y="263" style_text_color="{color_label_2}" />
+		<lv_label name="greeting" text="" align="top_mid" y="346" style_text_font="font_data" />
+	</view>
+</screen>

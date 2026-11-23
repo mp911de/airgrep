@@ -1,0 +1,23 @@
+<component>
+	<!-- The full text of one license. The application sets the title and the text. -->
+	<view extends="page" page="4">
+		<nav_bar title="licenses" page="4" back="3" />
+		<lv_obj
+			name="sheet"
+			width="100%"
+			flex_grow="1"
+			scroll_dir="ver"
+			scroll_elastic="false"
+			scrollbar_mode="active"
+			style_bg_color="{color_surface}"
+			style_bg_opa="100%"
+			style_pad_left="24"
+			style_pad_right="32"
+			style_pad_top="21"
+			style_pad_bottom="20"
+		>
+			<remove_theme selector="main" />
+			<lv_label name="license_text" width="100%" style_text_line_space="3" />
+		</lv_obj>
+	</view>
+</component>

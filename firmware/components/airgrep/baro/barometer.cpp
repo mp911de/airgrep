@@ -10,19 +10,6 @@
 
 namespace barometer {
 constexpr const char* tag = "baro";
-portMUX_TYPE State::mutex_ = portMUX_INITIALIZER_UNLOCKED;
-
-State& State::storage() {
-	static State state;
-	return state;
-}
-
-State State::copy() {
-	State result;
-	update([&](State& state) { result = state; });
-	return result;
-}
-
 namespace {
 i2c_master_dev_handle_t device;
 loop::Handle periodic;
@@ -42,8 +29,6 @@ void fail_poll(esp_err_t result) {
 	busy = false;
 }
 
-// A driver that cannot identify or configure the sensor stops polling. The
-// system watchdog starts it again.
 void stop(esp_err_t result) {
 	fail_poll(result);
 	loop::cancel(periodic);
@@ -64,15 +49,15 @@ esp_err_t write(uint8_t reg, uint8_t value) {
 void submit_step(const char* name,
 				 loop::Result (*action)(loop::Handle, loop::Value&),
 				 uint32_t delay = 0) {
-	unsigned current = generation;
-	loop::Task task{name,
-					[current, action](loop::Handle handle, loop::Value& value) {
-						if (current != generation) {
-							return loop::Result::done;
-						}
-						return action(handle, value);
-					}};
-	loop::Handle handle =
+	const unsigned current = generation;
+	const loop::Task task{
+		name, [current, action](loop::Handle handle, loop::Value& value) {
+			if (current != generation) {
+				return loop::Result::done;
+			}
+			return action(handle, value);
+		}};
+	const loop::Handle handle =
 		delay ? loop::schedule(delay, task) : loop::submit(task);
 	if (!handle.valid()) {
 		fail_poll(ESP_ERR_NO_MEM);
@@ -82,7 +67,8 @@ void submit_step(const char* name,
 // NVM status only means something in standby, so the live poll reads data
 // alone.
 loop::Result read_measurement(loop::Handle, loop::Value&) {
-	esp_err_t result = read(kRegTempDataXlsb, state.data, sizeof state.data);
+	const esp_err_t result =
+		read(kRegTempDataXlsb, state.data, sizeof state.data);
 	if (result != ESP_OK) {
 		fail_poll(result);
 		return loop::Result::done;
@@ -98,14 +84,13 @@ loop::Result read_measurement(loop::Handle, loop::Value&) {
 	state.updated_us = esp_timer_get_time();
 	State::update([](State& shared) { shared = state; });
 	busy = false;
-	events::publish({.type = events::Type::barometer_reading,
-					 .barometer = {state.pressure_hpa, state.temperature_c,
-								   state.altitude_m}});
+	events::publish(events::Event::barometer_reading(
+		{state.pressure_hpa, state.temperature_c, state.altitude_m}));
 	return loop::Result::done;
 }
 
 loop::Result configure(loop::Handle, loop::Value&) {
-	esp_err_t result;
+	esp_err_t result = ESP_OK;
 	switch (step++) {
 		// Deep standby powers the NVM down, so leave it before checking
 		// nvm_rdy.
@@ -207,7 +192,7 @@ loop::Result configure(loop::Handle, loop::Value&) {
 }
 
 loop::Result standby(loop::Handle, loop::Value&) {
-	esp_err_t result = write(kRegOdrConfig, kOdrConfigStandby);
+	const esp_err_t result = write(kRegOdrConfig, kOdrConfigStandby);
 	if (result != ESP_OK) {
 		stop(result);
 	} else {
@@ -218,9 +203,8 @@ loop::Result standby(loop::Handle, loop::Value&) {
 	return loop::Result::done;
 }
 
-// Reads CHIP_ID into the working copy and accepts only a BMP580.
 esp_err_t read_identity() {
-	esp_err_t result = read(kRegChipId, &state.chip_id);
+	const esp_err_t result = read(kRegChipId, &state.chip_id);
 	if (result != ESP_OK) {
 		return result;
 	}
@@ -233,7 +217,7 @@ esp_err_t read_identity() {
 }
 
 loop::Result read_identity_step(loop::Handle, loop::Value&) {
-	esp_err_t result = read_identity();
+	const esp_err_t result = read_identity();
 	if (result != ESP_OK) {
 		stop(result);
 		return loop::Result::done;
@@ -258,11 +242,11 @@ loop::Result poll_barometer(loop::Handle, loop::Value&) {
 												   : standby);
 	return loop::Result::done;
 }
-}  // namespace
+}
 
 namespace {
 void on_mode(const events::Event& event, void*) {
-	const bool value = event.mode.to == POWER_MODE_ON;
+	const bool value = event.data.mode.to == POWER_MODE_ON;
 	if (enabled == value) {
 		return;
 	}
@@ -281,7 +265,6 @@ void on_mode(const events::Event& event, void*) {
 					esp_timer_get_time() < ready_us ? BMP_STARTUP_MS : 0);
 	}
 }
-}  // namespace
 
 Completion init_complete;
 
@@ -296,7 +279,7 @@ void finish_init(esp_err_t result) {
 
 loop::Result identify_at_init(loop::Handle, loop::Value&) {
 	state = State::copy();
-	esp_err_t result = read_identity();
+	const esp_err_t result = read_identity();
 	if (result != ESP_OK) {
 		finish_init(result);
 		return loop::Result::done;
@@ -327,9 +310,11 @@ loop::Result probe(loop::Handle, loop::Value&) {
 	}
 	return loop::Result::done;
 }
+}
 
 esp_err_t prepare() {
-	return events::subscribe(events::of(events::Type::mode_changed), on_mode)
+	return events::subscribe(events::mask_for(events::Type::mode_changed),
+							 on_mode)
 			   ? ESP_OK
 			   : ESP_ERR_NO_MEM;
 }
@@ -339,14 +324,13 @@ void init(Completion complete) {
 		return;
 	}
 	init_complete = complete;
-	// The sensor needs its start-up time after power before the first access.
 	if (!loop::schedule(BMP_STARTUP_MS, {"baro probe", probe}).valid()) {
 		finish_init(ESP_ERR_NO_MEM);
 	}
 }
 
 esp_err_t reset() {
-	bool queued =
+	const bool queued =
 		loop::try_submit("baro reset", [](loop::Handle, loop::Value&) {
 			esp_err_t result =
 				device ? write(kRegCmd, kCmdSoftReset) : ESP_ERR_INVALID_STATE;
@@ -355,9 +339,9 @@ esp_err_t reset() {
 			}
 			++generation;
 			busy = false;
-			ready_us = esp_timer_get_time() + BMP_STARTUP_MS * 1000;
+			ready_us = esp_timer_get_time() + int64_t{BMP_STARTUP_MS} * 1000;
 			if (result == ESP_OK) {
-				State::update([](State& state) { state = State{}; });
+				State::update([](State& shared) { shared = State{}; });
 				if (!periodic.valid()) {
 					periodic = loop::schedule_periodic(
 						BMP_POLL_PERIOD_MS, {"baro poll", poll_barometer});
@@ -367,9 +351,9 @@ esp_err_t reset() {
 					}
 				}
 			} else {
-				State::update([](State& state) {
-					state.identity_known = false;
-					state.configured = false;
+				State::update([](State& shared) {
+					shared.identity_known = false;
+					shared.configured = false;
 				});
 				fail_poll(result);
 			}
@@ -377,4 +361,4 @@ esp_err_t reset() {
 		});
 	return queued ? ESP_OK : ESP_ERR_NO_MEM;
 }
-}  // namespace barometer
+}

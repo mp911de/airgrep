@@ -1,0 +1,159 @@
+<screen permanent="true">
+	<view
+		extends="lv_obj"
+		scrollable="false"
+		style_bg_color="{color_bg}"
+		style_bg_opa="100%"
+		style_text_color="{color_label}"
+		style_text_font="font_text"
+	>
+		<status_header name="header" />
+
+		<!-- 16 px at each side stay free for the alert bars, so nothing moves in an alert. -->
+		<lv_obj
+			name="radar_area"
+			x="0"
+			y="{touch}"
+			width="400"
+			height="416"
+			scrollable="false"
+			style_border_color="{color_separator}"
+			style_border_width="{hairline}"
+			style_border_side="right"
+		>
+			<remove_theme selector="main" />
+			<radar name="radar" range_nm="4" />
+			<lv_obj
+				name="bar_left"
+				width="{alert_strip_width}"
+				height="100%"
+				hidden="{subject_alert EQ 0}"
+				style_bg_opa="100%"
+				style_bg_color="{subject_alert_phase EQ 0 ? color_red : color_red_dim}"
+			>
+				<remove_theme selector="main" />
+			</lv_obj>
+			<lv_obj
+				name="bar_right"
+				width="{alert_strip_width}"
+				height="100%"
+				align="top_right"
+				hidden="{subject_alert EQ 0}"
+				style_bg_opa="100%"
+				style_bg_color="{subject_alert_phase EQ 0 ? color_red : color_red_dim}"
+			>
+				<remove_theme selector="main" />
+			</lv_obj>
+			<!-- Without a position the device is of no use, so this state is loud. -->
+			<lv_label
+				name="no_fix"
+				translation_tag="no_gps_fix"
+				hidden="{subject_gps NE 0}"
+				align="top_mid"
+				y="104"
+				style_text_font="font_title"
+				style_text_color="0x000000"
+				style_bg_color="{color_yellow}"
+				style_bg_opa="100%"
+				style_radius="32"
+				style_pad_hor="20"
+				style_pad_top="6"
+				style_pad_bottom="8"
+			/>
+			<!-- While tracks show, the button carries a ring and the filled symbol, both in tint. -->
+			<lv_obj
+				name="track"
+				align="top_right"
+				x="-24"
+				y="8"
+				width="{touch}"
+				height="{touch}"
+				clickable="true"
+				scrollable="false"
+				style_radius="32"
+				style_bg_opa="100%"
+				style_bg_color="{color_control}"
+				style_border_color="{color_tint}"
+				style_border_width="{subject_track_history EQ 1 ? 2 : 0}"
+			>
+				<remove_theme selector="main" />
+				<style name="style_pressed" selector="pressed" />
+				<lv_image
+					src="icon_track"
+					align="center"
+					hidden="{subject_track_history EQ 1}"
+					style_image_recolor="{color_label}"
+					style_image_recolor_opa="100%"
+				/>
+				<lv_image
+					src="icon_track_on"
+					align="center"
+					hidden="{subject_track_history EQ 0}"
+					style_image_recolor="{color_tint}"
+					style_image_recolor_opa="100%"
+				/>
+				<set_subject_event subject="subject_track_history" value="{!subject_track_history}" trigger="clicked" />
+			</lv_obj>
+			<!-- At the end of the ranges a zoom button fades to the colour of the grid. -->
+			<lv_obj
+				name="zoom_out"
+				align="bottom_left"
+				x="24"
+				y="-8"
+				width="{touch}"
+				height="{touch}"
+				clickable="true"
+				scrollable="false"
+				style_radius="32"
+				style_bg_opa="100%"
+				style_bg_color="{color_control}"
+			>
+				<remove_theme selector="main" />
+				<style name="style_pressed" selector="pressed" />
+				<lv_image
+					src="icon_minus"
+					align="center"
+					style_image_recolor="{subject_radar_range EQ 32 ? color_grid : color_label}"
+					style_image_recolor_opa="100%"
+				/>
+				<event_cb callback="zoom_out_clicked" trigger="clicked" />
+			</lv_obj>
+			<lv_obj
+				name="zoom_in"
+				align="bottom_right"
+				x="-24"
+				y="-8"
+				width="{touch}"
+				height="{touch}"
+				clickable="true"
+				scrollable="false"
+				style_radius="32"
+				style_bg_opa="100%"
+				style_bg_color="{color_control}"
+			>
+				<remove_theme selector="main" />
+				<style name="style_pressed" selector="pressed" />
+				<lv_image
+					src="icon_plus"
+					align="center"
+					style_image_recolor="{subject_radar_range EQ 2 ? color_grid : color_label}"
+					style_image_recolor_opa="100%"
+				/>
+				<event_cb callback="zoom_in_clicked" trigger="clicked" />
+			</lv_obj>
+		</lv_obj>
+
+		<traffic_header name="traffic_header" x="400" y="{touch}" />
+		<traffic_table name="traffic" x="400" y="{touch + 32}" />
+
+		<page_system name="page_system" />
+		<page_wifi name="page_wifi" />
+		<page_licenses name="page_licenses" />
+		<page_license name="page_license" />
+		<page_icao name="page_icao" />
+		<page_callsign name="page_callsign" />
+		<page_time_zone name="page_time_zone" />
+		<page_zones name="page_zones" />
+		<page_altitude name="page_altitude" />
+	</view>
+</screen>

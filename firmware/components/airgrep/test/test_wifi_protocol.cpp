@@ -2,6 +2,7 @@
 
 #include "unity.h"
 #include "wifi/wifi_protocol.hpp"
+#include "wifi/wifi_requests.hpp"
 
 #ifdef ESP_PLATFORM
 #define CASE(name, description) TEST_CASE(description, "[wifi]")
@@ -46,11 +47,57 @@ CASE(compare_and_format, "Config equality and the set command round trip") {
 	TEST_ASSERT_FALSE(wifi::format_set(wanted, command, 20));
 }
 
+CASE(rejected_write, "A rejected write retries the pending set") {
+	wifi::Requests requests;
+	requests.apply();
+	TEST_ASSERT_TRUE(requests.submit() == wifi::Command::set);
+	requests.finished();
+	TEST_ASSERT_TRUE(requests.set_pending());
+	TEST_ASSERT_TRUE(requests.submit() == wifi::Command::set);
+}
+
+CASE(edit_during_write, "An edit during a queued write survives completion") {
+	wifi::Requests requests;
+	requests.apply();
+	TEST_ASSERT_TRUE(requests.submit() == wifi::Command::set);
+	requests.apply();
+	requests.written(false);
+	TEST_ASSERT_TRUE(requests.set_pending());
+	TEST_ASSERT_TRUE(requests.submit() == wifi::Command::none);
+	requests.finished();
+	TEST_ASSERT_TRUE(requests.submit() == wifi::Command::set);
+}
+
+CASE(verify_after_write, "A completed write schedules a verification query") {
+	wifi::Requests requests;
+	requests.apply();
+	TEST_ASSERT_TRUE(requests.submit() == wifi::Command::set);
+	requests.written(true);
+	TEST_ASSERT_FALSE(requests.set_pending());
+	TEST_ASSERT_TRUE(requests.submit() == wifi::Command::none);
+	requests.finished();
+	TEST_ASSERT_TRUE(requests.submit() == wifi::Command::query);
+}
+
+CASE(edit_during_query, "An edit during a query schedules a set") {
+	wifi::Requests requests;
+	requests.poll();
+	TEST_ASSERT_TRUE(requests.submit() == wifi::Command::query);
+	requests.apply();
+	requests.written(true);
+	requests.finished();
+	TEST_ASSERT_TRUE(requests.submit() == wifi::Command::set);
+}
+
 #ifndef ESP_PLATFORM
 int main() {
 	UNITY_BEGIN();
 	RUN_TEST(decode);
 	RUN_TEST(compare_and_format);
+	RUN_TEST(rejected_write);
+	RUN_TEST(edit_during_write);
+	RUN_TEST(verify_after_write);
+	RUN_TEST(edit_during_query);
 	return UNITY_END();
 }
 #endif

@@ -25,7 +25,7 @@ constexpr uint8_t kTypeSource = 1 << 3;
 constexpr uint8_t kTypeSink = 1 << 4;
 constexpr uint8_t kTypeDebugSink = 1 << 5;
 constexpr uint8_t kTypeDebugSource = 1 << 6;
-}  // namespace
+}
 
 unsigned cc_limit(const PortStatus& status, Role role) {
 	return status.attached && status.vbus && role == Role::sink &&
@@ -42,7 +42,7 @@ bool negotiating(const PortStatus& status, bool remedy) {
 }
 
 Control decode_control1(uint8_t raw) {
-	unsigned debounce = raw & kControl1DebounceMask;
+	const unsigned debounce = raw & kControl1DebounceMask;
 	return {bool(raw & kControl1Enable),
 			debounce == kDebounceReserved
 				? 0
@@ -73,10 +73,11 @@ Role decode_type(uint8_t raw) {
 }
 
 PortStatus decode_status(uint8_t raw) {
-	unsigned advertisement = (raw >> kStatusBcLvlShift) & kStatusBcLvlMask;
-	unsigned advertised_ma = advertisement == kBcLvl1500mA   ? 1500
-							 : advertisement == kBcLvl3000mA ? 3000
-															 : 0;
+	const unsigned advertisement =
+		(raw >> kStatusBcLvlShift) & kStatusBcLvlMask;
+	const unsigned advertised_ma = advertisement == kBcLvl1500mA   ? 1500
+								   : advertisement == kBcLvl3000mA ? 3000
+																   : 0;
 	return {bool(raw & kStatusAttach), bool(raw & kStatusVbusOk),
 			unsigned((raw >> kStatusOrientShift) & kStatusOrientMask),
 			advertised_ma, advertisement == kBcLvlDefault};
@@ -86,4 +87,4 @@ Identity decode_identity(uint8_t raw) {
 	return {unsigned(raw >> kIdentityVersionShift),
 			unsigned(raw & kIdentityRevisionMask)};
 }
-}  // namespace fusb
+}

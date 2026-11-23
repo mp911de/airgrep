@@ -1,0 +1,74 @@
+<screen>
+	<!-- Charger mode: the device is off and charges. The battery of the header, large, with the charge inside it.
+	     The application sets the width of the fill, the texts and where the second percentage lies. -->
+	<view
+		extends="lv_obj"
+		scrollable="false"
+		style_bg_color="{color_bg}"
+		style_bg_opa="100%"
+		style_text_color="{color_label}"
+		style_text_font="font_display"
+	>
+		<lv_obj
+			name="body"
+			x="152"
+			y="64"
+			width="480"
+			height="240"
+			scrollable="false"
+			style_radius="56"
+			style_border_width="8"
+			style_border_color="{color_label}"
+			style_pad_all="8"
+		>
+			<remove_theme selector="main" />
+			<lv_obj name="well" width="100%" height="100%" scrollable="false" style_radius="40" style_clip_corner="true">
+				<remove_theme selector="main" />
+				<!-- The percentage is written twice: here in label colour, and in the fill in on-green. The fill cuts
+				     its own off at its edge, so each part of a digit has the colour that reads on what is below it. -->
+				<lv_obj name="percent" width="content" height="content" align="center" flex_flow="row" scrollable="false" style_pad_column="16" style_translate_y="-1">
+					<remove_theme selector="main" />
+					<lv_label name="number" text="" />
+					<lv_label text="%" />
+				</lv_obj>
+				<lv_obj
+					name="fill"
+					height="100%"
+					scrollable="false"
+					style_radius="8"
+					style_bg_color="{color_green}"
+					style_bg_opa="100%"
+					style_text_color="{color_on_green}"
+				>
+					<remove_theme selector="main" />
+					<lv_obj name="percent_on" width="content" height="content" align="left_mid" flex_flow="row" scrollable="false" style_pad_column="16" style_translate_y="-1">
+						<remove_theme selector="main" />
+						<lv_label name="number_on" text="" />
+						<lv_label text="%" />
+					</lv_obj>
+				</lv_obj>
+			</lv_obj>
+		</lv_obj>
+		<!-- The battery's terminal, 8 px right of the body. -->
+		<lv_obj name="terminal" x="640" y="148" width="16" height="72" style_radius="8" style_bg_color="{color_label}" style_bg_opa="100%">
+			<remove_theme selector="main" />
+		</lv_obj>
+		<lv_obj
+			name="line"
+			y="347"
+			width="100%"
+			height="38"
+			flex_flow="row"
+			scrollable="false"
+			style_flex_main_place="center"
+			style_flex_cross_place="center"
+			style_pad_column="16"
+			style_text_font="font_data"
+			style_text_color="{color_label_2}"
+		>
+			<remove_theme selector="main" />
+			<lv_image name="bolt" src="icon_bolt_line" style_image_recolor="{color_label_2}" style_image_recolor_opa="100%" />
+			<lv_label name="text" text="" />
+		</lv_obj>
+	</view>
+</screen>

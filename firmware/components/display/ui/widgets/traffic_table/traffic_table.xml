@@ -1,0 +1,6 @@
+<widget>
+	<!-- Scrolling list of targets. Rows are created and filled in C, a subject cannot hold a list. -->
+	<view extends="lv_obj" width="400" height="384">
+		<remove_theme selector="main" />
+	</view>
+</widget>

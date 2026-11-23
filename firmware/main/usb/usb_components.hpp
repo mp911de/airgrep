@@ -15,6 +15,7 @@ enum class Component : uint8_t {
 	adsbee_clock = 0x09,
 };
 
-// Injection runs on the event loop, like decoded live input.
+// Execute on the event loop. The listing scratch buffer is shared between
+// requests.
 const protocol::Services& component_services();
-}  // namespace usb
+}

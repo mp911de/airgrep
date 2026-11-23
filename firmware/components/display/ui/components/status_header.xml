@@ -1,0 +1,200 @@
+<component>
+	<!-- Two halves that show, and two touch targets of half the width each on top of them. -->
+	<view
+		extends="lv_obj"
+		width="100%"
+		height="{touch}"
+		flex_flow="row"
+		scrollable="false"
+		style_bg_color="{color_bg}"
+		style_bg_opa="100%"
+		style_border_color="{color_separator}"
+		style_border_width="{hairline}"
+		style_border_side="bottom"
+	>
+		<remove_theme selector="main" />
+
+		<lv_obj
+			name="left"
+			height="100%"
+			flex_grow="1"
+			flex_flow="row"
+			clickable="false"
+			scrollable="false"
+			style_flex_cross_place="center"
+			style_flex_track_place="center"
+			style_pad_hor="20"
+			style_pad_column="12"
+		>
+			<remove_theme selector="main" />
+			<lv_label text="{subject_time}" style_text_font="font_title" />
+			<lv_label
+				text="{subject_time_zone}"
+				style_translate_x="-8"
+				style_translate_y="5"
+				style_text_font="font_small"
+				style_text_color="{color_label_2}"
+			/>
+			<lv_obj
+				name="health"
+				style_translate_x="-4"
+				width="12"
+				height="12"
+				style_radius="6"
+				style_bg_opa="100%"
+				style_bg_color="{subject_health EQ 0 ? color_green : (subject_health EQ 1 ? color_yellow : color_red)}"
+			>
+				<remove_theme selector="main" />
+			</lv_obj>
+			<lv_image
+				src="icon_gps_search"
+				hidden="{subject_gps_symbol NE 0}"
+				style_image_recolor="{color_yellow}"
+				style_image_recolor_opa="100%"
+			/>
+			<lv_image
+				src="icon_gps_2d"
+				hidden="{subject_gps_symbol NE 1}"
+				style_image_recolor="{color_yellow}"
+				style_image_recolor_opa="100%"
+			/>
+			<lv_image
+				src="icon_gps_3d"
+				hidden="{subject_gps_symbol NE 2}"
+				style_image_recolor="{color_green}"
+				style_image_recolor_opa="100%"
+			/>
+			<!-- One antenna symbol, its colour is the level: a short is a failure, a missing antenna a caution. -->
+			<lv_image
+				src="icon_gps_antenna"
+				hidden="{subject_gps_symbol NE 3}"
+				style_image_recolor="{color_red}"
+				style_image_recolor_opa="100%"
+			/>
+			<lv_image
+				src="icon_gps_antenna"
+				hidden="{subject_gps_symbol NE 4}"
+				style_image_recolor="{color_yellow}"
+				style_image_recolor_opa="100%"
+			/>
+			<lv_image
+				src="icon_gps_fault"
+				hidden="{subject_gps_symbol NE 5}"
+				style_image_recolor="{color_red}"
+				style_image_recolor_opa="100%"
+			/>
+		</lv_obj>
+
+		<lv_obj
+			name="right"
+			height="100%"
+			flex_grow="1"
+			flex_flow="row"
+			clickable="false"
+			scrollable="false"
+			style_flex_main_place="end"
+			style_flex_cross_place="center"
+			style_flex_track_place="center"
+			style_pad_hor="20"
+			style_pad_top="1"
+			style_pad_column="12"
+		>
+			<remove_theme selector="main" />
+			<lv_image
+				src="icon_speaker"
+				hidden="{subject_muted EQ 1}"
+				style_translate_x="4"
+				style_image_recolor="{color_label}"
+				style_image_recolor_opa="100%"
+			/>
+			<lv_image
+				src="icon_speaker_off"
+				hidden="{subject_muted EQ 0}"
+				style_translate_x="4"
+				style_image_recolor="{color_label}"
+				style_image_recolor_opa="100%"
+			/>
+			<lv_image
+				src="icon_wifi"
+				hidden="{subject_wifi EQ 0}"
+				style_translate_x="4"
+				style_image_recolor="{color_label}"
+				style_image_recolor_opa="100%"
+			/>
+			<lv_image
+				src="icon_wifi_off"
+				hidden="{subject_wifi EQ 1}"
+				style_translate_x="4"
+				style_image_recolor="{color_label}"
+				style_image_recolor_opa="100%"
+			/>
+			<lv_label text="{subject_battery . ' %'}" hidden="{subject_battery_state EQ 0}" style_translate_x="4"
+				style_translate_y="-1" />
+			<lv_bar
+				name="battery"
+				width="40"
+				height="20"
+				bind_value="subject_battery"
+				style_radius="6"
+				style_pad_all="4"
+				style_bg_opa="0"
+				style_border_width="2"
+				style_border_color="{subject_battery_state EQ 0 ? color_grid : color_label}"
+				style_radius-indicator="2"
+				style_bg_opa-indicator="100%"
+				style_bg_color-indicator="{subject_battery LT 20 ? color_red : color_green}"
+			>
+				<remove_theme selector="main" />
+				<remove_theme selector="indicator" />
+			</lv_bar>
+			<!-- The battery's terminal, in the padding right of the bar. -->
+			<lv_obj
+				name="battery_terminal"
+				floating="true"
+				align="right_mid"
+				x="4"
+				width="3"
+				height="6"
+				style_radius="1"
+				style_bg_opa="100%"
+				style_bg_color="{subject_battery_state EQ 0 ? color_grid : color_label}"
+			>
+				<remove_theme selector="main" />
+			</lv_obj>
+			<!-- Bolt and slash lie on the middle of the bar, 20 px left of its right edge. -->
+			<lv_image src="icon_bolt_cut" floating="true" align="right_mid" x="-8" hidden="{subject_battery_state NE 2}" style_image_recolor="{color_bg}" style_image_recolor_opa="100%" />
+			<lv_image src="icon_bolt" floating="true" align="right_mid" x="-8" hidden="{subject_battery_state NE 2}" style_image_recolor="{color_label}" style_image_recolor_opa="100%" />
+			<lv_image src="icon_battery_slash_cut" floating="true" align="right_mid" x="-3" hidden="{subject_battery_state NE 0}" style_image_recolor="{color_bg}" style_image_recolor_opa="100%" />
+			<lv_image src="icon_battery_slash" floating="true" align="right_mid" x="-3" hidden="{subject_battery_state NE 0}" style_image_recolor="{color_label}" style_image_recolor_opa="100%" />
+		</lv_obj>
+
+		<!-- The touch targets lie on top of everything the header shows. Whatever is added to a half,
+		     it cannot take a touch from them. In C: opening a page has to close the one that is open. -->
+		<lv_obj
+			name="touch_left"
+			floating="true"
+			align="left_mid"
+			width="50%"
+			height="100%"
+			clickable="true"
+			scrollable="false"
+		>
+			<remove_theme selector="main" />
+			<style name="style_pressed_clear" selector="pressed" />
+			<event_cb callback="header_left_clicked" trigger="clicked" />
+		</lv_obj>
+		<lv_obj
+			name="touch_right"
+			floating="true"
+			align="right_mid"
+			width="50%"
+			height="100%"
+			clickable="true"
+			scrollable="false"
+		>
+			<remove_theme selector="main" />
+			<style name="style_pressed_clear" selector="pressed" />
+			<event_cb callback="header_right_clicked" trigger="clicked" />
+		</lv_obj>
+	</view>
+</component>

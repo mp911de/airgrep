@@ -6,18 +6,20 @@
 #include "command_status.hpp"
 #include "console.h"
 #include "esp_console.h"
+#include "navigation/units.h"
 
 namespace {
 struct {
 	struct arg_lit* reset;
 	struct arg_end* end;
+	void* table[2];
 } args;
 unsigned raw24(const uint8_t* bytes) {
 	return unsigned(bytes[0]) | (unsigned(bytes[1]) << 8) |
 		   (unsigned(bytes[2]) << 16);
 }
 int command(int argc, char** argv) {
-	if (arg_parse(argc, argv, reinterpret_cast<void**>(&args))) {
+	if (arg_parse(argc, argv, args.table)) {
 		arg_print_errors(stderr, args.end, argv[0]);
 		return 1;
 	}
@@ -25,8 +27,9 @@ int command(int argc, char** argv) {
 		return command_status::ack(barometer::reset());
 	}
 	const auto state = barometer::State::copy();
-	if (!command_status::header(state.status, state.updated_us,
-								state.last_error, state.error_us)) {
+	command_status::print_status(state.status, state.updated_us,
+								 state.last_error, state.error_us);
+	if (!state.updated_us) {
 		return 0;
 	}
 	std::printf("%-20s %.3f hPa (0x%06X)\n", "Pressure", state.pressure_hpa,
@@ -35,11 +38,13 @@ int command(int argc, char** argv) {
 				raw24(state.data + barometer::kDataTemperatureOffset));
 	if (std::isfinite(state.altitude_m)) {
 		std::printf("%-20s %.1f m / %.0f ft (1013.25 hPa)\n", "Altitude",
-					state.altitude_m, state.altitude_m / 0.3048f);
+					state.altitude_m,
+					state.altitude_m / units::metres_per_foot);
 	} else {
 		std::printf("%-20s UNAVAILABLE\n", "Altitude");
 	}
-	static const char* modes[] = {"STANDBY", "NORMAL", "FORCED", "CONTINUOUS"};
+	static const char* const modes[] = {"STANDBY", "NORMAL", "FORCED",
+										"CONTINUOUS"};
 	std::printf("%-20s %s (0x%02X)\n", "Power mode (ODR)",
 				modes[state.odr.mode], state.raw_odr);
 	std::printf(
@@ -55,13 +60,15 @@ int command(int argc, char** argv) {
 	std::printf("%-20s 0x%02X\n", "Chip ID", state.chip_id);
 	return 0;
 }
-}  // namespace
+}
 
 extern "C" esp_err_t console_register_baro(void) {
 	args.reset = arg_lit0(nullptr, "reset",
 						  "Soft reset and reconfigure on the next poll");
 	args.end = arg_end(2);
-	if (arg_nullcheck(reinterpret_cast<void**>(&args))) {
+	args.table[0] = args.reset;
+	args.table[1] = args.end;
+	if (arg_nullcheck(args.table)) {
 		return ESP_ERR_NO_MEM;
 	}
 	const esp_console_cmd_t entry = {
@@ -70,7 +77,7 @@ extern "C" esp_err_t console_register_baro(void) {
 			"Show barometer readings and configuration or reset the sensor.",
 		.hint = "[--reset]",
 		.func = command,
-		.argtable = &args,
+		.argtable = static_cast<void*>(args.table),
 		.func_w_context = nullptr,
 		.context = nullptr,
 	};

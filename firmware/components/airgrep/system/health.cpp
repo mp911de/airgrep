@@ -12,63 +12,79 @@ bool overvoltage(const charger::Fault0& f0, const charger::Fault1& f1) {
 		   f1.otg_overvoltage;
 }
 
-// More than half of a region in use. A region without memory is fine.
-bool crowded(size_t free, size_t total) { return free * 2 < total; }
+bool exhausted(size_t free, size_t total) { return free * 10 < total; }
 
-bool gnss_problem(const HealthInputs& s) {
-	return !s.gnss_fix || !s.gnss_utc || !s.gnss_bbr ||
-		   !state_usable(s.gnss_us, s.now_us);
+bool needs_gauge(power_mode_t mode, const HealthInputs& s) {
+	return !s.battery_absent &&
+		   (mode == POWER_MODE_ON || mode == POWER_MODE_CHARGER);
 }
-}  // namespace
+
+// What the GNSS frame says. A missing fix is no cause, the receiver may
+// still search.
+uint16_t gnss_causes(const HealthInputs& s) {
+	if (!state_usable(s.last_update.gnss_us, s.now_us)) {
+		return kGnss;
+	}
+	return (s.gnss_antenna == adsbee::AntennaStatus::shorted ? kAntennaShort
+															 : 0) |
+		   (s.gnss_antenna == adsbee::AntennaStatus::open ? kAntennaOpen : 0) |
+		   (s.gnss_bbr ? 0 : kBackupBattery);
+}
+}
 
 uint16_t evaluate_health(power_mode_t mode, const HealthInputs& s) {
 	if (mode == POWER_MODE_UNKNOWN) {
 		return 0;
 	}
 	const bool on = mode == POWER_MODE_ON, off = mode == POWER_MODE_OFF;
-	auto usable = [&](int64_t updated_us) {
+	const auto usable = [&](int64_t updated_us) {
 		return state_usable(updated_us, s.now_us);
 	};
 	uint16_t mask = 0;
-	if (!usable(s.expander_us)) {
-		mask |= kExpander;
-	}
 	// In OFF without a pack the charger has no supply, so it counts only
 	// when it answers.
-	const bool charger_usable = usable(s.charger_us);
-	if (off ? charger_usable && overvoltage(s.fault0, s.fault1)
-			: !charger_usable || overvoltage(s.fault0, s.fault1)) {
-		mask |= kCharger;
+	const bool charger_usable = usable(s.last_update.charger_us);
+	if (!usable(s.last_update.expander_us) || (!off && !charger_usable)) {
+		mask |= kRequiredI2cDeviceMissing;
 	}
-	if (!off) {
-		if (!usable(s.gauge_us)) {
+	if (charger_usable) {
+		if (overvoltage(s.fault0, s.fault1)) {
+			mask |= kChargerOvervoltage;
+		}
+		if (s.fault1.thermal_shutdown) {
+			mask |= kChargerOverheated;
+		}
+	}
+	if (needs_gauge(mode, s)) {
+		if (!usable(s.last_update.gauge_us)) {
 			mask |= kGauge;
+		} else if (on && s.battery_low) {
+			mask |= kBatteryLow;
 		}
-		if (!usable(s.usb_c_us)) {
-			mask |= kUsbC;
-		}
+	}
+	if (!off && !usable(s.last_update.usb_c_us)) {
+		mask |= kUsbC;
 	}
 	if (on) {
-		if (!usable(s.barometer_us)) {
+		if (!usable(s.last_update.barometer_us)) {
 			mask |= kBarometer;
 		}
-		if (!usable(s.adsbee_us)) {
+		if (!usable(s.last_update.adsbee_us)) {
 			mask |= kAdsbee;
-		} else if (gnss_problem(s)) {
-			mask |= kGnss;
+		} else {
+			mask |= gnss_causes(s);
 		}
 	}
-	const bool decided = s.target_decided && (!off || charger_usable);
-	const bool thermal = s.stop == charger::ChargeStop::hot ||
-						 s.stop == charger::ChargeStop::cold;
-	const bool unchargeable = s.stop == charger::ChargeStop::no_battery ||
-							  s.stop == charger::ChargeStop::locked;
-	if ((decided && (thermal || (!off && unchargeable))) ||
-		(on && usable(s.gauge_us) && s.battery_low)) {
-		mask |= kBattery;
+	if (s.target_decided && !s.battery_absent && (!off || charger_usable)) {
+		if (s.stop == charger::ChargeStop::hot) {
+			mask |= kBatteryOverheated;
+		}
+		if (s.stop == charger::ChargeStop::cold) {
+			mask |= kBatteryCold;
+		}
 	}
-	if (crowded(s.internal_free, s.internal_total) ||
-		crowded(s.psram_free, s.psram_total)) {
+	if (exhausted(s.internal_free, s.internal_total) ||
+		exhausted(s.psram_free, s.psram_total)) {
 		mask |= kMemory;
 	}
 	if (s.cpu_high) {
@@ -78,8 +94,9 @@ uint16_t evaluate_health(power_mode_t mode, const HealthInputs& s) {
 }
 
 bool ready(power_mode_t mode, const HealthInputs& s) {
-	const bool charging =
-		s.expander_ready && s.charger_ready && s.gauge_ready && s.usb_c_ready;
+	const bool charging = s.expander_ready && s.charger_ready &&
+						  (!needs_gauge(mode, s) || s.gauge_ready) &&
+						  s.usb_c_ready;
 	switch (mode) {
 		case POWER_MODE_ON:
 			return charging && s.barometer_ready && s.adsbee_ready;
@@ -93,11 +110,24 @@ bool ready(power_mode_t mode, const HealthInputs& s) {
 }
 
 void format(uint16_t mask, char* out, size_t size) {
-	static const char* names[] = {"expander",  "charger", "gauge", "usb_c",
-								  "barometer", "adsbee",  "gnss",  "battery",
-								  "memory",    "cpu"};
+	static const char* const names[] = {"i2c",
+										"adsbee",
+										"gnss",
+										"antenna_short",
+										"charger_overvoltage",
+										"charger_overheated",
+										"battery_overheated",
+										"antenna_open",
+										"backup_battery",
+										"barometer",
+										"gauge",
+										"usb_c",
+										"battery_low",
+										"battery_cold",
+										"memory",
+										"cpu"};
 	if (!mask) {
-		snprintf(out, size, "OK (0x0)");
+		(void)snprintf(out, size, "OK (0x0)");
 		return;
 	}
 	size_t used = snprintf(out, size, "ALERT (0x%X", mask);
@@ -110,7 +140,7 @@ void format(uint16_t mask, char* out, size_t size) {
 		}
 	}
 	if (used < size) {
-		snprintf(out + used, size - used, ")");
+		(void)snprintf(out + used, size - used, ")");
 	}
 }
-}  // namespace health
+}

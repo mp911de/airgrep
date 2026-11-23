@@ -17,7 +17,7 @@ using namespace usb::protocol;
 static const uint8_t hello_request[] = {1, 6, 0, 1, 0xf5, 0x50};
 
 static void set_crc(uint8_t* frame, size_t size) {
-	uint16_t crc = crc16(frame + 6, size - 6, crc16(frame, 4));
+	const uint16_t crc = crc16(frame + 6, size - 6, crc16(frame, 4));
 	frame[4] = static_cast<uint8_t>(crc);
 	frame[5] = static_cast<uint8_t>(crc >> 8);
 }
@@ -59,6 +59,7 @@ CASE(hello, "USB HELLO completes only after all header bytes, at every split") {
 }
 
 CASE(reset_commands, "USB restart commands need valid frames, not HELLO") {
+	uint8_t output[kHelloSize];
 	for (auto command : {Command::reboot, Command::enter_bootloader}) {
 		uint8_t frame[] = {kVersion, 6, 0, static_cast<uint8_t>(command), 0, 0};
 		set_crc(frame, sizeof frame);
@@ -66,15 +67,24 @@ CASE(reset_commands, "USB restart commands need valid frames, not HELLO") {
 		feed(decoder, frame, sizeof frame);
 		TEST_ASSERT_EQUAL(Status::ok, decoder.status());
 		TEST_ASSERT_EQUAL(command, decoder.command());
+		auto reply = route(decoder, output, [] { return Hello{}; });
+		TEST_ASSERT_TRUE(reply.has_value());
+		TEST_ASSERT_EQUAL(command, reply->after_send);
+		TEST_ASSERT_EQUAL_UINT(kStatusSize, reply->size);
+		TEST_ASSERT_EQUAL(Status::ok, output[6]);
 		decoder.reset();
 		frame[4] ^= 1;
 		feed(decoder, frame, sizeof frame);
 		TEST_ASSERT_EQUAL(Status::crc_mismatch, decoder.status());
+		reply = route(decoder, output, [] { return Hello{}; });
+		TEST_ASSERT_TRUE(reply.has_value());
+		TEST_ASSERT_EQUAL(Command::status, reply->after_send);
+		TEST_ASSERT_EQUAL(Status::crc_mismatch, output[6]);
 	}
 }
 
 CASE(integrity, "USB CRC failure takes precedence over version and command") {
-	for (size_t changed : {size_t{0}, size_t{3}, size_t{4}, size_t{5}}) {
+	for (const size_t changed : {size_t{0}, size_t{3}, size_t{4}, size_t{5}}) {
 		uint8_t frame[sizeof hello_request];
 		std::memcpy(frame, hello_request, sizeof frame);
 		frame[changed] ^= 0x80;
@@ -90,7 +100,7 @@ CASE(integrity, "USB CRC failure takes precedence over version and command") {
 }
 
 CASE(unsupported, "USB unsupported commands use generic unknown status") {
-	for (uint8_t command : {0, 0x80, 0xff}) {
+	for (const uint8_t command : {0, 0x80, 0xff}) {
 		uint8_t frame[] = {kVersion, 6, 0, command, 0, 0};
 		set_crc(frame, sizeof frame);
 		Decoder decoder;
@@ -101,20 +111,29 @@ CASE(unsupported, "USB unsupported commands use generic unknown status") {
 
 CASE(data_shapes,
 	 "USB data commands check framing before dispatching payloads") {
-	uint8_t frame[12] = {kVersion};
+	uint8_t frame[6 + kKeySize + 2] = {kVersion};
+	uint8_t output[kHelloSize];
 	for (auto command : {Command::read, Command::write, Command::update_traffic,
-						 Command::update_gnss}) {
+						 Command::update_gnss, Command::list_traffic,
+						 Command::read_settings, Command::write_settings}) {
 		for (size_t size = 6; size <= sizeof frame; size++) {
 			frame[1] = static_cast<uint8_t>(size);
 			frame[3] = static_cast<uint8_t>(command);
 			set_crc(frame, size);
 			Decoder decoder{true};
 			feed(decoder, frame, size);
-			bool valid = command == Command::read    ? size == 7
-						 : command == Command::write ? size >= 11
-													 : size > 6;
+			const bool valid = command == Command::read           ? size == 7
+							   : command == Command::list_traffic ? size == 8
+							   : command == Command::write        ? size >= 11
+							   : command == Command::read_settings
+								   ? size == 6 + kKeySize
+							   : command == Command::write_settings
+								   ? size == 6 || size > 6 + kKeySize
+								   : size > 6;
 			TEST_ASSERT_EQUAL(valid ? Status::ok : Status::invalid_length,
 							  decoder.status());
+			auto reply = route(decoder, output, [] { return Hello{}; });
+			TEST_ASSERT_EQUAL(!valid, reply.has_value());
 			TEST_ASSERT_EQUAL_UINT(size, decoder.frame_length());
 			decoder.reset();
 			frame[4] ^= 1;
@@ -127,11 +146,16 @@ CASE(data_shapes,
 CASE(
 	service_gate,
 	"USB service commands are disabled by default and stay disabled on reset") {
-	uint8_t frame[12] = {kVersion};
+	uint8_t frame[6 + kKeySize] = {kVersion};
 	Decoder decoder;
 	for (auto command : {Command::read, Command::write, Command::update_traffic,
-						 Command::update_gnss}) {
-		frame[1] = command == Command::write ? 12 : 7;
+						 Command::update_gnss, Command::list_traffic,
+						 Command::read_settings, Command::write_settings}) {
+		frame[1] = command == Command::write            ? 12
+				   : command == Command::list_traffic   ? 8
+				   : command == Command::read_settings  ? sizeof frame
+				   : command == Command::write_settings ? 6
+														: 7;
 		frame[3] = static_cast<uint8_t>(command);
 		set_crc(frame, frame[1]);
 		feed(decoder, frame, frame[1]);
@@ -150,6 +174,12 @@ CASE(
 	}
 	feed(decoder, hello_request, sizeof hello_request);
 	TEST_ASSERT_EQUAL(Status::ok, decoder.status());
+	uint8_t output[kHelloSize];
+	auto reply = route(decoder, output, [] { return Hello{}; });
+	TEST_ASSERT_TRUE(reply.has_value());
+	TEST_ASSERT_EQUAL_UINT(kHelloSize, reply->size);
+	TEST_ASSERT_EQUAL(Command::status, reply->after_send);
+	TEST_ASSERT_EQUAL(Command::hello, output[3]);
 }
 
 CASE(lengths, "USB supported commands reject payloads after CRC validation") {
@@ -225,6 +255,21 @@ CASE(connection_reset, "USB connection reset discards an incomplete header") {
 	TEST_ASSERT_EQUAL(Status::ok, decoder.status());
 }
 
+CASE(short_output, "USB encoders leave short output buffers untouched") {
+	uint8_t storage[kHelloSize];
+	std::memset(storage, 0xa5, sizeof storage);
+	auto room = std::span(storage);
+	TEST_ASSERT_EQUAL_UINT(
+		0, encode_status(Status::ok, room.first(kStatusSize - 1)));
+	TEST_ASSERT_EQUAL_UINT(0,
+						   encode_hello(Hello{}, room.first(kHelloSize - 1)));
+	TEST_ASSERT_EQUAL_UINT(0, encode_response(Command::read, Status::ok, room,
+											  room.size() - kStatusSize + 1));
+	TEST_ASSERT_EQUAL_UINT(
+		0, encode_response(Command::read, Status::ok, room, SIZE_MAX));
+	TEST_ASSERT_EACH_EQUAL_UINT8(0xa5, storage, sizeof storage);
+}
+
 CASE(hello_response, "USB HELLO encodes all fields at their declared offsets") {
 	Hello sample{};
 	sample.uptime_seconds = 0x0807060504030201ULL;
@@ -244,7 +289,8 @@ CASE(hello_response, "USB HELLO encodes all fields at their declared offsets") {
 	sample.cpu_core0 = 10;
 	sample.cpu_core1 = 20;
 	sample.cpu_overall = 15;
-	sample.reserved[0] = sample.reserved[1] = 0xff;
+	sample.service = Service::present;
+	sample.reserved = 0xff;
 	uint8_t output[kHelloSize];
 	TEST_ASSERT_EQUAL_UINT(kHelloSize, encode_hello(sample, output));
 	TEST_ASSERT_EQUAL_UINT8(kVersion, output[0]);
@@ -259,7 +305,7 @@ CASE(hello_response, "USB HELLO encodes all fields at their declared offsets") {
 	const uint8_t tail[] = {
 		0x11, 0x22, 0x33, 0x44, 0x22, 0x33, 0x44, 0x55, 0x33, 0x44, 0x55,
 		0x66, 0x44, 0x55, 0x66, 0x77, 0x55, 0x66, 0x77, 0x88, 0x66, 0x77,
-		0x88, 0x99, 0x02, 0x03, 2,    10,   20,   15,   0,    0,
+		0x88, 0x99, 0x02, 0x03, 2,    10,   20,   15,   2,    0,
 	};
 	TEST_ASSERT_EQUAL_HEX8_ARRAY(tail, output + 47, sizeof tail);
 	TEST_ASSERT_EQUAL_STRING("airgrep 0.1.0 (Nov 15 2026 14:23:45)",
@@ -267,7 +313,7 @@ CASE(hello_response, "USB HELLO encodes all fields at their declared offsets") {
 	TEST_ASSERT_EQUAL_MEMORY(sample.firmware_description, output + 79, 128);
 	TEST_ASSERT_EQUAL_MEMORY(sample.board, output + 207, 128);
 	TEST_ASSERT_EQUAL_MEMORY(sample.chip, output + 335, 128);
-	uint16_t expected_crc =
+	const uint16_t expected_crc =
 		crc16(output + 6, sizeof output - 6, crc16(output, 4));
 	TEST_ASSERT_EQUAL_HEX16(expected_crc, output[4] | (output[5] << 8));
 }
@@ -302,6 +348,7 @@ int main() {
 	RUN_TEST(deadline);
 	RUN_TEST(before_deadline);
 	RUN_TEST(connection_reset);
+	RUN_TEST(short_output);
 	RUN_TEST(hello_response);
 	RUN_TEST(unsupported_version);
 	return UNITY_END();

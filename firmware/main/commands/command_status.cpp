@@ -5,9 +5,9 @@
 #include "esp_timer.h"
 
 namespace command_status {
-bool header(Status status, int64_t updated_us, esp_err_t last_error,
-			int64_t error_us) {
-	int64_t now = esp_timer_get_time();
+void print_status(Status status, int64_t updated_us, esp_err_t last_error,
+				  int64_t error_us) {
+	const int64_t now = esp_timer_get_time();
 	if (!updated_us) {
 		std::printf("%-20s %s\n", "Status",
 					status == Status::off ? "OFF" : "UNKNOWN");
@@ -20,7 +20,6 @@ bool header(Status status, int64_t updated_us, esp_err_t last_error,
 					esp_err_to_name(last_error),
 					(long long)((now - error_us) / 1000));
 	}
-	return updated_us != 0;
 }
 
 int ack(esp_err_t result) {
@@ -33,4 +32,4 @@ int ack(esp_err_t result) {
 	}
 	return result == ESP_OK ? 0 : 1;
 }
-}  // namespace command_status
+}

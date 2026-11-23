@@ -12,22 +12,21 @@ namespace {
 struct {
 	struct arg_str* at;
 	struct arg_end* end;
+	void* table[2];
 } args;
 int command(int argc, char** argv) {
-	if (arg_parse(argc, argv, reinterpret_cast<void**>(&args))) {
+	if (arg_parse(argc, argv, args.table)) {
 		arg_print_errors(stderr, args.end, argv[0]);
 		return 1;
 	}
 	if (args.at->count) {
-		// The reply is logged at debug level by the link and kept for
-		// AT+DEVICE_INFO?.
-		loop::Handle handle =
+		const loop::Handle handle =
 			adsbee::request(args.at->sval[0], {}, {}, ADSBEE_REPLY_WINDOW_MS);
 		return command_status::ack(
 			handle.valid() ? ESP_OK : adsbee::State::copy().last_error);
 	}
 	const auto state = adsbee::State::copy();
-	int64_t now = esp_timer_get_time();
+	const int64_t now = esp_timer_get_time();
 	if (state.updated_us) {
 		std::printf("%-20s %lld ms ago\n", "Updated",
 					(long long)((now - state.updated_us) / 1000));
@@ -53,10 +52,12 @@ int command(int argc, char** argv) {
 				"Parity errors", (unsigned long)state.parity_errors,
 				"Framing errors", (unsigned long)state.framing_errors,
 				"Overruns", (unsigned long)state.overruns);
-	if (state.gnss_us) {
+	if (state.last_gnss_report_us) {
+		const auto& gnss = state.gnss_at(now);
 		std::printf("%-20s %s, %d used, %lld s ago\n", "GNSS",
-					state.gnss.fix ? "VALID" : "NONE", state.gnss.satellites,
-					(long long)((now - state.gnss_us) / 1000000));
+					gnss.fix != adsbee::Fix::none ? "VALID" : "NONE",
+					gnss.satellites_used,
+					(long long)((now - state.last_gnss_report_us) / 1000000));
 	} else {
 		std::printf("%-20s UNKNOWN\n", "GNSS");
 	}
@@ -68,13 +69,15 @@ int command(int argc, char** argv) {
 	}
 	return 0;
 }
-}  // namespace
+}
 
 extern "C" esp_err_t console_register_adsbee(void) {
 	args.at = arg_str0(nullptr, "at", "cmd",
 					   "Send one AT command, the reply goes to the debug log");
 	args.end = arg_end(2);
-	if (arg_nullcheck(reinterpret_cast<void**>(&args))) {
+	args.table[0] = args.at;
+	args.table[1] = args.end;
+	if (arg_nullcheck(args.table)) {
 		return ESP_ERR_NO_MEM;
 	}
 	const esp_console_cmd_t entry = {
@@ -82,7 +85,7 @@ extern "C" esp_err_t console_register_adsbee(void) {
 		.help = "Show ADSBee link state or send an AT command.",
 		.hint = "[--at <cmd>]",
 		.func = command,
-		.argtable = &args,
+		.argtable = static_cast<void*>(args.table),
 		.func_w_context = nullptr,
 		.context = nullptr,
 	};

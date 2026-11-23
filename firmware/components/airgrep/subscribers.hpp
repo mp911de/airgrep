@@ -22,7 +22,6 @@ class Subscribers {
 		return free;
 	}
 
-	// Calls each handler with the arguments, then its context.
 	template <typename... Args>
 	void notify(const Args&... args) {
 		Entry current[Capacity];

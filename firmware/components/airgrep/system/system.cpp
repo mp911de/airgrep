@@ -8,14 +8,13 @@
 #include "board.h"
 #include "charge_control.hpp"
 #include "charger/bq25798.hpp"
+#include "cpu_sampler.hpp"
 #include "driver/gpio.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_pm.h"
 #include "esp_timer.h"
 #include "events/events.hpp"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "health.hpp"
 #include "i2c_expander/tca9534.hpp"
 #include "loop.hpp"
@@ -30,25 +29,13 @@ constexpr unsigned kCpuLimitPercent = 50;
 constexpr uint32_t kWatchdogPeriodMs = 10000;
 
 std::atomic mode{POWER_MODE_UNKNOWN};
-std::atomic<bool> cpu_high{false};
-// A mode change wants one health check as soon as the mode is ready.
+std::atomic<unsigned> cpu_percent{0};
 bool check_pending;
 
-// Average load of all cores since the previous call.
-unsigned cpu_load_percent() {
+unsigned busiest_core_load_since_last_sample() {
 #if CONFIG_AIRGREP_CPU_METRICS
-	static uint64_t idle_at[CONFIG_FREERTOS_NUMBER_OF_CORES], time_at;
-	const uint64_t now = esp_timer_get_time(), elapsed = now - time_at;
-	uint64_t busy = 0;
-	for (int core = 0; core < CONFIG_FREERTOS_NUMBER_OF_CORES; core++) {
-		const uint64_t idle = ulTaskGetIdleRunTimeCounterForCore(core);
-		const uint64_t idle_delta = idle - idle_at[core];
-		busy += idle_delta < elapsed ? elapsed - idle_delta : 0;
-		idle_at[core] = idle;
-	}
-	time_at = now;
-	return elapsed ? busy * 100 / (elapsed * CONFIG_FREERTOS_NUMBER_OF_CORES)
-				   : 0;
+	static cpu::Sampler window;
+	return cpu::sample(window, esp_timer_get_time()).busiest;
 #else
 	return 0;
 #endif
@@ -58,39 +45,39 @@ health::HealthInputs health_snapshot() {
 	health::HealthInputs s;
 	s.now_us = esp_timer_get_time();
 	const expander::State controls = expander::State::copy();
-	s.expander_us = controls.updated_us;
+	s.last_update.expander_us = controls.updated_us;
 	s.expander_ready = is_ready(controls);
 	const charger::State charger_state = charger::State::copy();
-	s.charger_us = charger_state.updated_us;
+	s.last_update.charger_us = charger_state.updated_us;
 	s.charger_ready = is_ready(charger_state);
-	s.fault0 = charger_state.fault0;
-	s.fault1 = charger_state.fault1;
-	s.target_decided = charger_state.target.decided;
+	s.fault0 = charger_state.readings.fault0;
+	s.fault1 = charger_state.readings.fault1;
+	s.target_decided = charger_state.target.target_available;
 	s.stop = charger_state.target.stop;
+	s.battery_absent = charger_state.battery() == BatteryDetected::absent;
 	const battery::State gauge = battery::State::copy();
-	s.gauge_us = gauge.updated_us;
+	s.last_update.gauge_us = gauge.updated_us;
 	s.gauge_ready = is_ready(gauge);
 	s.battery_low = gauge.low;
 	const fusb::State usb_c = fusb::State::copy();
-	s.usb_c_us = usb_c.updated_us;
+	s.last_update.usb_c_us = usb_c.updated_us;
 	s.usb_c_ready = is_ready(usb_c);
 	const barometer::State baro = barometer::State::copy();
-	s.barometer_us = baro.updated_us;
+	s.last_update.barometer_us = baro.updated_us;
 	s.barometer_ready = is_ready(baro);
 	const adsbee::State link = adsbee::State::copy();
-	s.adsbee_us = link.updated_us;
-	s.adsbee_ready = adsbee::ready();
-	s.gnss_us = link.gnss_us;
-	s.gnss_fix = link.gnss.fix;
-	s.gnss_utc = link.gnss.utc_known;
+	s.last_update.adsbee_us = link.updated_us;
+	s.adsbee_ready = adsbee::accepts_requests();
+	s.last_update.gnss_us = link.last_gnss_report_us;
 	s.gnss_bbr = link.gnss.bbr;
+	s.gnss_antenna = link.gnss.antenna;
 	const uint32_t internal = MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT,
 				   psram = MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT;
 	s.internal_free = heap_caps_get_free_size(internal);
 	s.internal_total = heap_caps_get_total_size(internal);
 	s.psram_free = heap_caps_get_free_size(psram);
 	s.psram_total = heap_caps_get_total_size(psram);
-	s.cpu_high = cpu_high;
+	s.cpu_high = cpu_percent > kCpuLimitPercent;
 	return s;
 }
 
@@ -100,15 +87,11 @@ void check_health() {
 	if (BOARD_PIN_USR_LED >= 0) {
 		gpio_set_level(gpio_num_t(BOARD_PIN_USR_LED), mask ? 0 : 1);
 	}
-	char text[96];
+	char text[256];
 	health::format(mask, text, sizeof text);
 	ESP_LOGD("system", "health %s", text);
-	if (mask & ~before & health::kAdsbee) {
-		adsbee::drop_fix();
-	}
-	if (events::changed(last, mask)) {
-		events::publish(
-			{.type = events::Type::health_changed, .health = {before, mask}});
+	if (events::update_if_changed(last, mask)) {
+		events::publish(events::Event::health_changed({before, mask}));
 	}
 }
 
@@ -141,7 +124,8 @@ esp_err_t start_health_task() {
 	}
 	auto periodic = loop::schedule_periodic(
 		kHealthPeriodMs, {"health", [](loop::Handle, loop::Value&) {
-							  cpu_high = cpu_load_percent() > kCpuLimitPercent;
+							  cpu_percent =
+								  busiest_core_load_since_last_sample();
 							  check_health();
 							  return loop::Result::done;
 						  }});
@@ -154,7 +138,7 @@ void scale_clock(const bool charger) {
 		.min_freq_mhz = kCpuMhz,
 		.light_sleep_enable = charger && kChargerLightSleep,
 	};
-	esp_err_t result = esp_pm_configure(&config);
+	const esp_err_t result = esp_pm_configure(&config);
 	if (result != ESP_OK) {
 		ESP_LOGE("system", "clock scaling: %s", esp_err_to_name(result));
 	}
@@ -163,19 +147,16 @@ void scale_clock(const bool charger) {
 void transition(const power_mode_t from, const power_mode_t to) {
 	ESP_LOGI("system", "mode %s to %s", power_mode_name(from),
 			 power_mode_name(to));
-	events::publish({.type = events::Type::mode_changed, .mode = {from, to}});
-	if (from == POWER_MODE_ON) {
-		adsbee::drop_fix();
-	}
+	events::publish(events::Event::mode_changed({from, to}));
 }
 
 void apply_system_controls(const expander::State& controls, uint8_t, void*) {
-	bool valid = controls.is_valid();
-	charger::State charger = charger::State::copy();
-	power_mode_t from = mode;
-	power_mode_t to = power_mode_decode(
+	const bool valid = controls.is_valid();
+	const charger::State charger = charger::State::copy();
+	const power_mode_t from = mode;
+	const power_mode_t to = power_mode_decode(
 		{valid, controls.input.power},
-		{charger.usable(esp_timer_get_time()), charger.status0.vbus});
+		{charger.usable(esp_timer_get_time()), charger.readings.status0.vbus});
 	if (to != from) {
 		mode = to;
 		transition(from, to);
@@ -186,13 +167,13 @@ void apply_system_controls(const expander::State& controls, uint8_t, void*) {
 		check_health();
 	}
 }
-}  // namespace
+}
 
 esp_err_t system_prepare() {
 	return events::subscribe(
-			   events::of(events::Type::mode_changed),
+			   events::mask_for(events::Type::mode_changed),
 			   [](const events::Event& event, void*) {
-				   scale_clock(event.mode.to == POWER_MODE_CHARGER);
+				   scale_clock(event.data.mode.to == POWER_MODE_CHARGER);
 			   })
 			   ? ESP_OK
 			   : ESP_ERR_NO_MEM;
@@ -206,7 +187,6 @@ esp_err_t system_init() {
 	if (err == ESP_OK) {
 		err = start_health_task();
 	}
-	// The expander polls already, so its handler runs from here on.
 	if (err == ESP_OK && !expander::subscribe(apply_system_controls)) {
 		err = ESP_ERR_NO_MEM;
 	}
@@ -218,3 +198,5 @@ power_mode_t system_mode() { return mode; }
 uint16_t system_health() {
 	return health::evaluate_health(mode, health_snapshot());
 }
+
+unsigned system_cpu_percent() { return cpu_percent; }

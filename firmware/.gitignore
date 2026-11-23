@@ -6,3 +6,7 @@ managed_components/
 venv/
 __pycache__/
 tzdb/data/
+tzdb/test/results.csv
+tzdb/test/summary.json
+# The Editor writes these on export. The build makes its own from the PNG files.
+components/display/ui/images/*_data.c

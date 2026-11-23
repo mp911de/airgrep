@@ -15,7 +15,7 @@ const char* formatted(float hours) {
 	format_hours_minutes(hours, text, sizeof text);
 	return text;
 }
-}  // namespace
+}
 
 CASE(rounding, "Hours format as HH:MM, half a minute rounds up") {
 	TEST_ASSERT_EQUAL_STRING("06:37", formatted(6.61f));

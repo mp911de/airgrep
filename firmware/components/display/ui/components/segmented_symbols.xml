@@ -1,0 +1,47 @@
+<component>
+	<!-- A choice of two. The chosen half lies on the surface. -->
+	<view
+		extends="lv_obj"
+		width="content"
+		height="content"
+		flex_flow="row"
+		scrollable="false"
+		style_pad_all="3"
+		style_radius="{radius}"
+		style_bg_color="{color_control}"
+		style_bg_opa="100%"
+		style_text_font="font_label"
+	>
+		<remove_theme selector="main" />
+		<lv_obj
+			name="planes"
+			width="content"
+			height="44"
+			clickable="true"
+			scrollable="false"
+			style_pad_hor="20"
+			style_radius="9"
+			style_bg_color="{color_surface}"
+			style_bg_opa="{subject_simple_symbols EQ 0 ? 255 : 0}"
+		>
+			<remove_theme selector="main" />
+			<lv_label translation_tag="planes" align="center" />
+			<set_subject_event subject="subject_simple_symbols" value="0" trigger="clicked" />
+		</lv_obj>
+		<lv_obj
+			name="simple"
+			width="content"
+			height="44"
+			clickable="true"
+			scrollable="false"
+			style_pad_hor="20"
+			style_radius="9"
+			style_bg_color="{color_surface}"
+			style_bg_opa="{subject_simple_symbols EQ 1 ? 255 : 0}"
+		>
+			<remove_theme selector="main" />
+			<lv_label translation_tag="simple" align="center" />
+			<set_subject_event subject="subject_simple_symbols" value="1" trigger="clicked" />
+		</lv_obj>
+	</view>
+</component>

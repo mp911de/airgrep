@@ -5,8 +5,8 @@
 #include "bmp580_i2c.hpp"
 #include "device.h"
 #include "esp_err.h"
-#include "freertos/FreeRTOS.h"
 #include "i2c_bus.h"
+#include "locked_state.hpp"
 #include "loop.hpp"
 
 namespace barometer {
@@ -52,38 +52,7 @@ const i2c_device_config_t i2c_config = {
 	.flags = {},
 };
 
-// State::data mirrors TEMP_DATA_XLSB..PRESS_DATA_MSB, registers 0x1D..0x22.
-static constexpr size_t kDataTemperatureOffset = 0;
-static constexpr size_t kDataPressureOffset = 3;
-static constexpr size_t kDataLength = 6;
-
-struct State {
-	Status status = Status::unknown;
-	uint8_t chip_id = 0, raw_status = 0, raw_odr = 0, raw_osr = 0, raw_iir = 0,
-			raw_int = 0, raw_fifo = 0, raw_osr_eff = 0;
-	uint8_t data[kDataLength]{};
-	NvmStatus nvm{};
-	Odr odr{};
-	Osr osr{};
-	Iir iir{};
-	float pressure_hpa = 0, temperature_c = 0, altitude_m = 0;
-	int64_t updated_us = 0, error_us = 0;
-	esp_err_t last_error = ESP_OK;
-	bool identity_known = false, configured = false;
-
-	template <typename F>
-	static void update(F f) {
-		portENTER_CRITICAL(&mutex_);
-		f(storage());
-		portEXIT_CRITICAL(&mutex_);
-	}
-
-	static State copy();
-
-   private:
-	static State& storage();
-	static portMUX_TYPE mutex_;
-};
+struct State : StateData, LockedState<State> {};
 
 using Completion = loop::Callable<void(esp_err_t)>;
 // Subscribes to mode_changed: the sensor measures in ON only.
@@ -94,4 +63,4 @@ esp_err_t prepare();
 void init(Completion complete);
 // Posts the soft reset. The outcome shows in State on the next poll.
 esp_err_t reset();
-}  // namespace barometer
+}

@@ -2,8 +2,8 @@
 
 #include "device.h"
 #include "esp_err.h"
-#include "freertos/FreeRTOS.h"
 #include "i2c_bus.h"
+#include "locked_state.hpp"
 #include "loop.hpp"
 #include "max17048_i2c.hpp"
 
@@ -19,47 +19,8 @@ const i2c_device_config_t i2c_config = {
 	.flags = {},
 };
 
-struct State {
-	Status status = Status::unknown;
-	uint16_t raw_vcell = 0, raw_soc = 0, raw_status = 0, raw_version = 0;
-	uint16_t raw_crate = 0;  // charge/discharge rate
-	float volts = 0, soc = 0, rate = 0;
-	bool low = false;  // SoC at or below 10 %, until it is back at 10.5 %
-	uint16_t version = 0;
-	Alerts alerts{};
-	std::optional<float> charge_duration_hours;
-	int64_t updated_us = 0, error_us = 0;
-	esp_err_t last_error = ESP_OK;
-	bool identity_known = false, configured = false;
-
-	// The gauge sits on the pack side, so no gauge means no pack and a live
-	// cell reading means one is fitted.
-	BatteryDetected battery() const {
-		if (status == Status::off) {
-			return BatteryDetected::no;
-		}
-		if (status == Status::ok && updated_us && updated_us >= error_us &&
-			volts >= 2.5f) {
-			return BatteryDetected::vbat;
-		}
-		return BatteryDetected::unknown;
-	}
-
-	template <typename F>
-	static void update(F f) {
-		portENTER_CRITICAL(&mutex_);
-		f(storage());
-		portEXIT_CRITICAL(&mutex_);
-	}
-	static State copy();
-
-   private:
-	static State& storage();
-	static portMUX_TYPE mutex_;
-};
+struct State : StateData, LockedState<State> {};
 
 using Completion = loop::Callable<void(esp_err_t)>;
-// Starts the driver unless it polls already. The system watchdog calls it
-// again on the loop for a driver that stopped or never showed up.
 void init(Completion complete);
-}  // namespace battery
+}

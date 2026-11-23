@@ -1,6 +1,8 @@
 #pragma once
 #include <stdint.h>
 
+using EspErrorCode = int;
+
 enum class Status : uint8_t { unknown, ok, off };
 
 // One rule for every driver State: usable while the last successful Poll is
@@ -18,11 +20,15 @@ bool is_ready(const State& state) {
 	return state.identity_known && state.configured && state.updated_us;
 }
 
-// Battery presence as seen by one source. yes and no come from the battery
-// test, vbat from a live cell voltage without a test.
-enum class BatteryDetected : uint8_t { unknown, yes, no, vbat };
+enum class BatteryDetected : uint8_t {
+	unknown,
+	test_present,
+	absent,
+	voltage_present
+};
 
 inline const char* battery_detected_name(BatteryDetected detected) {
-	static const char* names[] = {"UNKNOWN", "YES", "NO", "VBAT_DETECTED"};
-	return names[uint8_t(detected)];
+	static const char* const names[] = {"UNKNOWN", "YES", "NO",
+										"VBAT_DETECTED"};
+	return names[static_cast<uint8_t>(detected)];
 }
