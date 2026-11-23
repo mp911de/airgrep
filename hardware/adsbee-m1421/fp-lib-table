@@ -1,0 +1,1 @@
+(fp_lib_table (version 7) (lib (name "m1421-adapter")(type "KiCad")(uri "${KIPRJMOD}/lib/m1421-adapter.pretty")(options "")(descr "Manufacturer module footprint")))

@@ -1,0 +1,206 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2080" height="1814" viewBox="0 0 1040 907">
+<title>ADSBee m1421 adapter, front pinout</title>
+<style>
+text{font-family:Montserrat,"Avenir Next","Helvetica Neue",Arial,sans-serif;font-weight:700}
+.t{font-size:15px;fill:#fff;text-anchor:middle}
+.l{fill:none;stroke:#9aa5ab;stroke-width:1.4}
+.d{fill:#fff;stroke:#7d898f;stroke-width:1.2}
+.pin{fill:#7a564a}.pwr{fill:#e5484d}.gnd{fill:#2f3437}.uart{fill:#1fa598}.tim{fill:#2196d9}.dbg{fill:#a24bbf}.ctl{fill:#7890a0}.rf{fill:#0b4a6b}
+.gold{fill:#e2b34a;stroke:#b98a25;stroke-width:.08}
+.hole{fill:#fff;stroke:#8a6a1c;stroke-width:.06}
+</style>
+<defs>
+<filter id="shadow" x="-20%" y="-10%" width="140%" height="120%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#000" flood-opacity=".25"/></filter>
+<linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#f1f2f3"/><stop offset=".35" stop-color="#cdd1d4"/><stop offset=".6" stop-color="#e6e8ea"/><stop offset="1" stop-color="#b8bdc1"/>
+</linearGradient>
+<g id="ufl">
+<rect class="gold" x="-2" y="-1.1" width="1.05" height="2.2" rx=".1"/>
+<rect class="gold" x=".95" y="-1.1" width="1.05" height="2.2" rx=".1"/>
+<rect class="gold" x="-.5" y="1" width="1" height="1.05" rx=".1"/>
+<rect x="-1.3" y="-1.3" width="2.6" height="2.6" rx=".3" fill="#efe3bd" stroke="#c4b384" stroke-width=".08"/>
+<circle r="1" fill="#dcae45" stroke="#b28324" stroke-width=".08"/>
+<circle r=".7" fill="#f4ead0"/>
+<circle r=".24" fill="#c8962e"/>
+</g>
+<g id="c0402">
+<rect x="-.25" y="-.5" width=".5" height="1" rx=".06" fill="#dfe1e2"/>
+<rect x="-.25" y="-.29" width=".5" height=".58" fill="#b58a5f"/>
+</g>
+<g id="c0805">
+<rect x="-.625" y="-1" width="1.25" height="2" rx=".1" fill="#dfe1e2"/>
+<rect x="-.625" y="-.58" width="1.25" height="1.16" fill="#b58a5f"/>
+</g>
+<g id="pad"><circle class="gold" r=".85"/><circle class="hole" r=".5"/></g>
+</defs>
+<rect width="1040" height="907" fill="#fff"/>
+<text x="40" y="48" font-size="32" fill="#1c2529">ADSBee m1421 adapter</text>
+<text x="40" y="77" font-size="19" fill="#7b878d">Front view  /  J4 pin header</text>
+<text x="998" y="48" text-anchor="end" font-size="16" fill="#7b878d">REV A</text>
+
+<!-- Board art uses KiCad board coordinates in mm. -->
+<g filter="url(#shadow)">
+<g transform="translate(367 102) scale(14.29) translate(-26.924 -59.696)">
+<rect x="26.924" y="59.696" width="21.336" height="43.18" rx="1.016" fill="#1b1c1e"/>
+<rect x="27.074" y="59.846" width="21.036" height="42.88" rx=".9" fill="none" stroke="#34363a" stroke-width=".1"/>
+<circle cx="29.337" cy="62.107" r="1.35" fill="#fff" stroke="#3d4044" stroke-width=".15"/>
+<circle cx="45.847" cy="62.107" r="1.35" fill="#fff" stroke="#3d4044" stroke-width=".15"/>
+<use xlink:href="#ufl" x="34.925" y="62.482"/>
+<use xlink:href="#ufl" x="40.386" y="62.488"/>
+<g id="U1" transform="translate(1.37 0)">
+<rect x="29.58" y="67.248" width="14.5" height="23.5" rx=".3" fill="#3a3d40"/>
+<rect x="29.83" y="67.498" width="14" height="23" rx=".35" fill="url(#metal)" stroke="#8f969b" stroke-width=".08"/>
+<rect x="30.03" y="67.698" width="13.6" height="22.6" rx=".25" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width=".08"/>
+</g>
+<g id="U2" transform="translate(1.371 0)">
+<path d="M31.8865 91.9h1.675M31.8865 94.04h1.675" stroke="#dfe1e2" stroke-width=".3" stroke-dasharray=".375 .275"/>
+<rect x="31.724" y="91.968" width="2" height="2" rx=".12" fill="#2b2d30" stroke="#4a4d52" stroke-width=".06"/>
+<circle cx="33.33" cy="92.36" r=".17" fill="#7c8187"/>
+</g>
+<use id="C5" xlink:href="#c0805" x="31.597" y="92.968"/>
+<use id="C6" xlink:href="#c0805" x="36.423" y="92.968"/>
+<use id="C1" xlink:href="#c0402" x="38.201" y="92.714"/>
+<use id="C2" xlink:href="#c0402" x="39.370" y="92.714"/>
+<use id="C3" xlink:href="#c0402" x="44.196" y="92.460"/>
+<use id="C4" xlink:href="#c0402" x="40.386" y="92.714"/>
+<g id="D1" transform="translate(28.956 81.030)">
+<rect x="-.65" y="-.65" width="1.3" height="1.3" rx=".06" fill="#ece6d6"/>
+<rect x="-.45" y="-.45" width=".9" height=".9" rx=".08" fill="#d7d2bd"/>
+</g>
+<use id="C7" xlink:href="#c0402" transform="translate(28.956 82.554) rotate(90)"/>
+<g id="R1" transform="translate(28.956 86.872)">
+<rect x="-.5" y="-.25" width="1" height=".5" fill="#dfe1e2"/>
+<rect x="-.29" y="-.25" width=".58" height=".5" fill="#383838"/>
+</g>
+<g id="Q1" transform="translate(28.829 89.031)">
+<path d="M-.5 -.7v.4M.5 -.7v.4M0 .3v.4" stroke="#dfe1e2" stroke-width=".22"/>
+<rect x="-.8" y="-.4" width="1.6" height=".8" rx=".08" fill="#303235"/>
+</g>
+<g id="J4" transform="translate(0.508 0)">
+<rect class="gold" x="29.376" y="99.235" width="1.7" height="1.7" rx=".12"/><circle class="hole" cx="30.226" cy="100.085" r=".5"/>
+<use xlink:href="#pad" x="30.226" y="97.545"/>
+<use xlink:href="#pad" x="32.766" y="100.085"/><use xlink:href="#pad" x="32.766" y="97.545"/>
+<use xlink:href="#pad" x="35.306" y="100.085"/><use xlink:href="#pad" x="35.306" y="97.545"/>
+<use xlink:href="#pad" x="37.846" y="100.085"/><use xlink:href="#pad" x="37.846" y="97.545"/>
+<use xlink:href="#pad" x="40.386" y="100.085"/><use xlink:href="#pad" x="40.386" y="97.545"/>
+<use xlink:href="#pad" x="42.926" y="100.085"/><use xlink:href="#pad" x="42.926" y="97.545"/>
+<use xlink:href="#pad" x="45.466" y="100.085"/><use xlink:href="#pad" x="45.466" y="97.545"/>
+</g>
+</g>
+</g>
+<g id="U1-marking" transform="translate(19.58 0)">
+<text x="508.5" y="318" text-anchor="middle" font-size="19" fill="#fff" stroke="#9aa1a6" stroke-width=".4">ADSBee</text>
+<text x="508.5" y="360" text-anchor="middle" font-size="40" fill="#fff" stroke="#9aa1a6" stroke-width=".5">m1421</text>
+<rect x="453.5" y="392" width="110" height="118" rx="14" fill="#fff" stroke="#c9cdd0"/>
+<g transform="translate(473.5 406) scale(10)" fill="#17191b">
+<path d="M0 0h3v3h-3zM4 0h3v3h-3zM0 4h3v3h-3z"/>
+<path d="M.5 .5h2v2h-2zM4.5 .5h2v2h-2zM.5 4.5h2v2h-2z" fill="#fff"/>
+<path d="M1 1h1v1h-1zM5 1h1v1h-1zM1 5h1v1h-1zM3 1h1v1h-1zM3 3h2v1h-2zM6 3h1v1h-1zM4 4h1v1h-1zM5 5h2v1h-2zM3 6h1v1h-1zM5 6h1v1h-1zM0 3h1v1h-1z"/>
+</g>
+<rect x="473.5" y="486" width="70" height="5" rx="2.5" fill="#9aa1a6"/>
+</g>
+
+<g id="J4-8"><title>J4 pin 8, JTAG_TCKC</title>
+<path class="l" d="M530.33,642.86 V610 Q530.33,605 525.33,605 H350 Q345,605 345,600 V520 Q345,515 340,515 H281"/>
+<circle class="d" cx="530.33" cy="642.86" r="3.4"/>
+<rect class="pin" x="228" y="501" width="53" height="28" rx="5"/><text class="t" x="254.5" y="520">8</text>
+<rect class="dbg" x="56" y="501" width="166" height="28" rx="5"/><text class="t" x="139" y="520">JTAG_TCKC</text>
+</g>
+<g id="J4-6"><title>J4 pin 6, RESET_N</title>
+<path class="l" d="M494.04,642.86 V618 Q494.04,613 489.04,613 H335 Q330,613 330,608 V558 Q330,553 325,553 H281"/>
+<circle class="d" cx="494.04" cy="642.86" r="3.4"/>
+<rect class="pin" x="228" y="539" width="53" height="28" rx="5"/><text class="t" x="254.5" y="558">6</text>
+<rect class="ctl" x="56" y="539" width="166" height="28" rx="5"/><text class="t" x="139" y="558">RESET_N</text>
+</g>
+<g id="J4-4"><title>J4 pin 4, GNSS_TX</title>
+<path class="l" d="M457.74,642.86 V626 Q457.74,621 452.74,621 H320 Q315,621 315,616 V596 Q315,591 310,591 H281"/>
+<circle class="d" cx="457.74" cy="642.86" r="3.4"/>
+<rect class="pin" x="228" y="577" width="53" height="28" rx="5"/><text class="t" x="254.5" y="596">4</text>
+<rect class="uart" x="56" y="577" width="166" height="28" rx="5"/><text class="t" x="139" y="596">GNSS_TX</text>
+</g>
+<g id="J4-2"><title>J4 pin 2, +5V_IN</title>
+<path class="l" d="M421.44,642.86 V634 Q421.44,629 416.44,629 H281"/>
+<circle class="d" cx="421.44" cy="642.86" r="3.4"/>
+<rect class="pin" x="228" y="615" width="53" height="28" rx="5"/><text class="t" x="254.5" y="634">2</text>
+<rect class="pwr" x="56" y="615" width="166" height="28" rx="5"/><text class="t" x="139" y="634">+5V_IN</text>
+</g>
+<g id="J4-10"><title>J4 pin 10, JTAG_TDO</title>
+<path class="l" d="M566.63,642.86 V618 Q566.63,613 571.63,613 H704 Q709,613 709,608 V558 Q709,553 714,553 H759"/>
+<circle class="d" cx="566.63" cy="642.86" r="3.4"/>
+<rect class="pin" x="759" y="539" width="53" height="28" rx="5"/><text class="t" x="785.5" y="558">10</text>
+<rect class="dbg" x="818" y="539" width="166" height="28" rx="5"/><text class="t" x="901" y="558">JTAG_TDO</text>
+</g>
+<g id="J4-12"><title>J4 pin 12, MODULE_RX</title>
+<path class="l" d="M602.93,642.86 V626 Q602.93,621 607.93,621 H719 Q724,621 724,616 V596 Q724,591 729,591 H759"/>
+<circle class="d" cx="602.93" cy="642.86" r="3.4"/>
+<rect class="pin" x="759" y="577" width="53" height="28" rx="5"/><text class="t" x="785.5" y="596">12</text>
+<rect class="uart" x="818" y="577" width="166" height="28" rx="5"/><text class="t" x="901" y="596">MODULE_RX</text>
+</g>
+<g id="J4-14"><title>J4 pin 14, SYNC</title>
+<path class="l" d="M639.22,642.86 V634 Q639.22,629 644.22,629 H759"/>
+<circle class="d" cx="639.22" cy="642.86" r="3.4"/>
+<rect class="pin" x="759" y="615" width="53" height="28" rx="5"/><text class="t" x="785.5" y="634">14</text>
+<rect class="ctl" x="818" y="615" width="166" height="28" rx="5"/><text class="t" x="901" y="634">SYNC</text>
+</g>
+<g id="J4-1"><title>J4 pin 1, GND</title>
+<path class="l" d="M421.44,679.16 V688 Q421.44,693 416.44,693 H281"/>
+<circle class="d" cx="421.44" cy="679.16" r="3.4"/>
+<rect class="pin" x="228" y="679" width="53" height="28" rx="5"/><text class="t" x="254.5" y="698">1</text>
+<rect class="gnd" x="56" y="679" width="166" height="28" rx="5"/><text class="t" x="139" y="698">GND</text>
+</g>
+<g id="J4-3"><title>J4 pin 3, GNSS_RX</title>
+<path class="l" d="M457.74,679.16 V726 Q457.74,731 452.74,731 H281"/>
+<circle class="d" cx="457.74" cy="679.16" r="3.4"/>
+<rect class="pin" x="228" y="717" width="53" height="28" rx="5"/><text class="t" x="254.5" y="736">3</text>
+<rect class="uart" x="56" y="717" width="166" height="28" rx="5"/><text class="t" x="139" y="736">GNSS_RX</text>
+</g>
+<g id="J4-5"><title>J4 pin 5, GNSS_PPS</title>
+<path class="l" d="M494.04,679.16 V764 Q494.04,769 489.04,769 H281"/>
+<circle class="d" cx="494.04" cy="679.16" r="3.4"/>
+<rect class="pin" x="228" y="755" width="53" height="28" rx="5"/><text class="t" x="254.5" y="774">5</text>
+<rect class="tim" x="56" y="755" width="166" height="28" rx="5"/><text class="t" x="139" y="774">GNSS_PPS</text>
+</g>
+<g id="J4-7"><title>J4 pin 7, JTAG_TMSC</title>
+<path class="l" d="M530.33,679.16 V802 Q530.33,807 525.33,807 H281"/>
+<circle class="d" cx="530.33" cy="679.16" r="3.4"/>
+<rect class="pin" x="228" y="793" width="53" height="28" rx="5"/><text class="t" x="254.5" y="812">7</text>
+<rect class="dbg" x="56" y="793" width="166" height="28" rx="5"/><text class="t" x="139" y="812">JTAG_TMSC</text>
+</g>
+<g id="J4-9"><title>J4 pin 9, JTAG_TDI</title>
+<path class="l" d="M566.63,679.16 V764 Q566.63,769 571.63,769 H759"/>
+<circle class="d" cx="566.63" cy="679.16" r="3.4"/>
+<rect class="pin" x="759" y="755" width="53" height="28" rx="5"/><text class="t" x="785.5" y="774">9</text>
+<rect class="dbg" x="818" y="755" width="166" height="28" rx="5"/><text class="t" x="901" y="774">JTAG_TDI</text>
+</g>
+<g id="J4-11"><title>J4 pin 11, MODULE_TX</title>
+<path class="l" d="M602.93,679.16 V726 Q602.93,731 607.93,731 H759"/>
+<circle class="d" cx="602.93" cy="679.16" r="3.4"/>
+<rect class="pin" x="759" y="717" width="53" height="28" rx="5"/><text class="t" x="785.5" y="736">11</text>
+<rect class="uart" x="818" y="717" width="166" height="28" rx="5"/><text class="t" x="901" y="736">MODULE_TX</text>
+</g>
+<g id="J4-13"><title>J4 pin 13, GNSS_3V3</title>
+<path class="l" d="M639.22,679.16 V688 Q639.22,693 644.22,693 H759"/>
+<circle class="d" cx="639.22" cy="679.16" r="3.4"/>
+<rect class="pin" x="759" y="679" width="53" height="28" rx="5"/><text class="t" x="785.5" y="698">13</text>
+<rect class="pwr" x="818" y="679" width="166" height="28" rx="5"/><text class="t" x="901" y="698">GNSS_3V3</text>
+</g>
+
+<g id="J1"><title>J1, RF_1090</title>
+<path class="l" d="M481.33,141.81 H281"/><circle class="d" cx="481.33" cy="141.81" r="3.4"/>
+<rect class="rf" x="91" y="133" width="190" height="28" rx="5"/><text class="t" x="186" y="152">J1   1090 MHz</text>
+</g>
+<g id="J2"><title>J2, RF_SUBG</title>
+<path class="l" d="M559.37,141.90 H759"/><circle class="d" cx="559.37" cy="141.90" r="3.4"/>
+<rect class="rf" x="759" y="133" width="190" height="28" rx="5"/><text class="t" x="854" y="152">J2   SUB-G</text>
+</g>
+
+<g id="legend">
+<rect class="pwr" x="40" y="858" width="125" height="28" rx="5"/><text class="t" x="102.5" y="877">POWER</text>
+<rect class="gnd" x="178" y="858" width="125" height="28" rx="5"/><text class="t" x="240.5" y="877">GND</text>
+<rect class="uart" x="316" y="858" width="125" height="28" rx="5"/><text class="t" x="378.5" y="877">UART</text>
+<rect class="tim" x="454" y="858" width="125" height="28" rx="5"/><text class="t" x="516.5" y="877">TIMING</text>
+<rect class="dbg" x="592" y="858" width="125" height="28" rx="5"/><text class="t" x="654.5" y="877">DEBUG</text>
+<rect class="ctl" x="730" y="858" width="125" height="28" rx="5"/><text class="t" x="792.5" y="877">CONTROL</text>
+<rect class="rf" x="868" y="858" width="125" height="28" rx="5"/><text class="t" x="930.5" y="877">RF</text>
+</g>
+</svg>

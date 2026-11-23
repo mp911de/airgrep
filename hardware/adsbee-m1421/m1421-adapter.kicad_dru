@@ -1,0 +1,115 @@
+(version 1)
+
+# JLCPCB multilayer FR4, 1 oz copper. Project stackup: JLC04161H-7628.
+# KiCad 10 is required for solder_mask_expansion.
+# Global limits and drawing defaults live in Board Setup.
+# Later rules override earlier rules for the same constraint, except assertions.
+
+(rule "PTH pad drill 8 mil and annular ring 6 mil"
+  (condition "A.Pad_Type == 'Through-hole'")
+  (constraint hole_size (min 8mil))
+  (constraint annular_width (min 6mil)))
+
+(rule "pad hole to hole 18 mil"
+  (condition "A.Type == 'Pad' && (B.Type == 'Pad' || B.Type == 'Via')")
+  (constraint hole_to_hole (min 18mil)))
+
+(rule "via hole to track 10 mil"
+  (condition "A.Type == 'Via' && (B.Type == 'Track' || B.Type == 'Arc')")
+  (constraint hole_clearance (min 10mil)))
+
+# Round holes use physical clearance. Oval holes use Board Setup edge clearance.
+(rule "NPTH hole to track 10 mil"
+  (condition "A.Pad_Type == 'NPTH, mechanical' && (B.Type == 'Track' || B.Type == 'Arc')")
+  (constraint physical_hole_clearance (min 10mil)))
+
+(rule "PTH hole to track 12 mil"
+  (condition "A.Pad_Type == 'Through-hole' && (B.Type == 'Track' || B.Type == 'Arc')")
+  (constraint hole_clearance (min 12mil)))
+
+(rule "inner via hole to copper 10 mil"
+  (layer inner)
+  (condition "A.Type == 'Via'")
+  (constraint hole_clearance (min 10mil)))
+
+(rule "inner PTH hole to copper 12 mil"
+  (layer inner)
+  (condition "A.Pad_Type == 'Through-hole'")
+  (constraint hole_clearance (min 12mil)))
+
+(rule "NPTH hole 20 mil"
+  (condition "A.Pad_Type == 'NPTH, mechanical'")
+  (constraint hole_size (min 20mil)))
+
+# JLCPCB's NPTH copper ring is a recommendation, not an absolute minimum.
+# KiCad skips NPTH annular-width checks. Inspect offset/custom pads manually.
+(rule "NPTH copper ring recommendation 18 mil"
+  (severity warning)
+  (condition "A.Pad_Type == 'NPTH, mechanical' && A.Pad_Shape != 'Custom' && (A.existsOnLayer('F.Cu') || A.existsOnLayer('B.Cu')) && (A.Size_X > A.Hole_Size_X || A.Size_Y > A.Hole_Size_Y)")
+  (constraint assertion "A.Size_X >= A.Hole_Size_X + 36mil && A.Size_Y >= A.Hole_Size_Y + 36mil"))
+
+(rule "plated slot width 14 mil and length at least twice its width"
+  (condition "A.Pad_Type == 'Through-hole' && A.Hole_Size_X != A.Hole_Size_Y")
+  (constraint hole_size (min 14mil))
+  (constraint assertion "A.Hole_Size_X >= A.Hole_Size_Y + A.Hole_Size_Y || A.Hole_Size_Y >= A.Hole_Size_X + A.Hole_Size_X"))
+
+(rule "NPTH slot width 40 mil"
+  (condition "A.Pad_Type == 'NPTH, mechanical' && A.Hole_Size_X != A.Hole_Size_Y")
+  (constraint hole_size (min 40mil)))
+
+(rule "SMD pad to pad 6 mil"
+  (condition "A.Pad_Type == 'SMD' && B.Pad_Type == 'SMD' && A.Net != B.Net")
+  (constraint clearance (min 6mil)))
+
+# Custom pad dimensions describe the anchor, not the full copper shape.
+# Assertions accumulate, so the normal and excluded conditions are disjoint.
+(rule "SMD pad size 10 mil"
+  (condition "A.Pad_Type == 'SMD' && A.Pad_Shape != 'Custom' && A.Fabrication_Property != 'BGA pad' && !((A.Reference == 'U4' && A.intersectsArea('FINE_U4')) || (A.Reference == 'U6' && A.intersectsArea('FINE_U6')) || A.Reference == 'U15')")
+  (constraint assertion "A.Size_X >= 10mil && A.Size_Y >= 10mil"))
+
+# Existing project exception, not a JLCPCB capability.
+(rule "QFN pad size 10 mil"
+  (severity exclusion)
+  (condition "A.Pad_Type == 'SMD' && A.Pad_Shape != 'Custom' && A.Fabrication_Property != 'BGA pad' && ((A.Reference == 'U4' && A.intersectsArea('FINE_U4')) || (A.Reference == 'U6' && A.intersectsArea('FINE_U6')) || A.Reference == 'U15')")
+  (constraint assertion "A.Size_X >= 10mil && A.Size_Y >= 10mil"))
+
+# These smaller pads require ENIG.
+(rule "BGA pad size 8 mil"
+  (condition "A.Pad_Type == 'SMD' && A.Pad_Shape != 'Custom' && A.Fabrication_Property == 'BGA pad'")
+  (constraint assertion "A.Size_X >= 8mil && A.Size_Y >= 8mil"))
+
+# Group coil tracks as COIL_*. KiCad cannot recognize coil geometry.
+(rule "masked coil width and clearance 6 mil"
+  (condition "(A.Type == 'Track' || A.Type == 'Arc') && A.memberOfGroup('COIL_*')")
+  (constraint track_width (min 6mil))
+  (constraint clearance (min 6mil)))
+
+(rule "exposed coil width and clearance 10 mil"
+  (layer outer)
+  (condition "(A.Type == 'Track' || A.Type == 'Arc') && A.Soldermask && A.memberOfGroup('COIL_*')")
+  (constraint track_width (min 10mil))
+  (constraint clearance (min 10mil)))
+
+# Text constraints do not check graphic strokes. Zero-width outlines have no stroke.
+(rule "board silkscreen graphic stroke 6 mil"
+  (condition "A.Type == 'Graphic' && !A.memberOfFootprint('*') && A.Layer == '?.Silkscreen' && A.Line_Width > 0mil")
+  (constraint assertion "A.Line_Width >= 6mil"))
+
+# Existing fiducial opening intent: about 80 mil on a 40 mil pad.
+(rule "fiducial mask expansion 20 mil"
+  (condition "A.Type == 'Pad' && A.memberOfFootprint('FID*')")
+  (constraint solder_mask_expansion (opt 20mil)))
+
+(rule "J14 shell pads at the edge 12 mil"
+  (condition "A.Reference == 'J14'")
+  (constraint edge_clearance (min 12mil)))
+
+# 50 ohm coplanar single ended on L1 over L2, JLC04161H-7628, per the JLCPCB impedance calculator.
+# Width 12.04 mil with 8 mil trace-to-copper gap.
+(rule "RF 50 ohm width"
+  (condition "A.NetClass == 'RF'")
+  (constraint track_width (min 0.296mm) (opt 0.306mm) (max 0.316mm)))
+
+(rule "RF to GND pour 8 mil"
+  (condition "A.NetClass == 'RF' && B.Type == 'Zone'")
+  (constraint clearance (min 8mil)))

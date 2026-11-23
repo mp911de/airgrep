@@ -1,0 +1,189 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2080" height="1610" viewBox="0 0 1040 805">
+<title>ADSBee m1421 adapter, back pinout</title>
+<style>
+text{font-family:Montserrat,"Avenir Next","Helvetica Neue",Arial,sans-serif;font-weight:700}
+.t{font-size:15px;fill:#fff;text-anchor:middle}
+.silk{font-size:14px;font-weight:600;fill:#f2f3f3}
+.l{fill:none;stroke:#9aa5ab;stroke-width:1.4}
+.d{fill:#fff;stroke:#7d898f;stroke-width:1}
+.pin{fill:#7a564a}.pwr{fill:#e5484d}.gnd{fill:#2f3437}.uart{fill:#1fa598}.tim{fill:#2196d9}.dbg{fill:#a24bbf}.ctl{fill:#7890a0}.rf{fill:#0b4a6b}
+.gold{fill:#e2b34a;stroke:#b98a25;stroke-width:.08}
+.hole{fill:#fff;stroke:#8a6a1c;stroke-width:.06}
+</style>
+<defs>
+<filter id="shadow" x="-20%" y="-10%" width="140%" height="120%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#000" flood-opacity=".25"/></filter>
+<g id="pad"><circle class="gold" r=".85"/><circle class="hole" r=".5"/></g>
+</defs>
+<rect width="1040" height="805" fill="#fff"/>
+<text x="40" y="48" font-size="32" fill="#1c2529">ADSBee m1421 adapter</text>
+<text x="40" y="77" font-size="19" fill="#7b878d">Back view  /  J3 Molex SlimStack</text>
+<text x="998" y="48" text-anchor="end" font-size="16" fill="#7b878d">REV A</text>
+
+<!-- Board art uses KiCad board coordinates in mm, mirrored in x for the back view. -->
+<g filter="url(#shadow)">
+<g transform="translate(672 102) scale(-14.29 14.29) translate(-26.924 -59.696)">
+<rect x="26.924" y="59.696" width="21.336" height="43.18" rx="1.016" fill="#1b1c1e"/>
+<rect x="27.074" y="59.846" width="21.036" height="42.88" rx=".9" fill="none" stroke="#34363a" stroke-width=".1"/>
+<circle cx="29.337" cy="62.107" r="1.35" fill="#fff" stroke="#3d4044" stroke-width=".15"/>
+<circle cx="45.847" cy="62.107" r="1.35" fill="#fff" stroke="#3d4044" stroke-width=".15"/>
+<g id="J3" transform="translate(1.371 0)">
+<path d="M34.43 72.438h4.8M34.43 77.938h4.8" stroke="#e2b34a" stroke-width="1.1" stroke-dasharray=".3 .2"/>
+<rect x="33.03" y="72.688" width="7.6" height="5" rx=".25" fill="#ece6d6" stroke="#b9b19c" stroke-width=".08"/>
+<rect x="33.7" y="73.35" width="6.26" height="3.68" rx=".15" fill="#2a2b2e"/>
+<rect x="34.3" y="74.55" width="5.06" height="1.28" rx=".12" fill="#ece6d6"/>
+<path d="M34.47 73.72h4.72M34.47 76.66h4.72" stroke="#e2b34a" stroke-width=".5" stroke-dasharray=".22 .28"/>
+<circle cx="33.8" cy="78.2" r=".2" fill="#f2f3f3"/>
+</g>
+<g id="JP1" transform="translate(28.844 89.412)">
+<rect class="gold" x="-.6" y="-.3" width=".5" height=".6" rx=".02"/>
+<rect class="gold" x=".1" y="-.3" width=".5" height=".6" rx=".02"/>
+</g>
+<g id="J4" transform="translate(0.508 0)">
+<rect class="gold" x="29.376" y="99.235" width="1.7" height="1.7" rx=".12"/><circle class="hole" cx="30.226" cy="100.085" r=".5"/>
+<use xlink:href="#pad" x="30.226" y="97.545"/>
+<use xlink:href="#pad" x="32.766" y="100.085"/><use xlink:href="#pad" x="32.766" y="97.545"/>
+<use xlink:href="#pad" x="35.306" y="100.085"/><use xlink:href="#pad" x="35.306" y="97.545"/>
+<use xlink:href="#pad" x="37.846" y="100.085"/><use xlink:href="#pad" x="37.846" y="97.545"/>
+<use xlink:href="#pad" x="40.386" y="100.085"/><use xlink:href="#pad" x="40.386" y="97.545"/>
+<use xlink:href="#pad" x="42.926" y="100.085"/><use xlink:href="#pad" x="42.926" y="97.545"/>
+<use xlink:href="#pad" x="45.466" y="100.085"/><use xlink:href="#pad" x="45.466" y="97.545"/>
+</g>
+</g>
+</g>
+<g id="silkscreen">
+<text class="silk" x="478" y="190">ADSBee m1421</text>
+<text class="silk" x="478" y="210">Adapter</text>
+<text class="silk" x="478" y="230">Rev A</text>
+</g>
+
+<g id="J3-12"><title>J3 pin 12, +3V3</title>
+<path class="l" d="M507.28,284.08 V254 Q507.28,249 502.28,249 H357 Q352,249 352,244 V123 Q352,118 347,118 H281"/>
+<circle class="d" cx="507.28" cy="284.08" r="2.4"/>
+<rect class="pin" x="228" y="104" width="53" height="28" rx="5"/><text class="t" x="254.5" y="123">12</text>
+<rect class="pwr" x="56" y="104" width="166" height="28" rx="5"/><text class="t" x="139" y="123">+3V3</text>
+</g>
+<g id="J3-14"><title>J3 pin 14, MODULE_TX</title>
+<path class="l" d="M500.13,284.08 V261 Q500.13,256 495.13,256 H345 Q340,256 340,251 V161 Q340,156 335,156 H281"/>
+<circle class="d" cx="500.13" cy="284.08" r="2.4"/>
+<rect class="pin" x="228" y="142" width="53" height="28" rx="5"/><text class="t" x="254.5" y="161">14</text>
+<rect class="uart" x="56" y="142" width="166" height="28" rx="5"/><text class="t" x="139" y="161">MODULE_TX</text>
+</g>
+<g id="J3-16"><title>J3 pin 16, MODULE_RX</title>
+<path class="l" d="M492.99,284.08 V268 Q492.99,263 487.99,263 H333 Q328,263 328,258 V199 Q328,194 323,194 H281"/>
+<circle class="d" cx="492.99" cy="284.08" r="2.4"/>
+<rect class="pin" x="228" y="180" width="53" height="28" rx="5"/><text class="t" x="254.5" y="199">16</text>
+<rect class="uart" x="56" y="180" width="166" height="28" rx="5"/><text class="t" x="139" y="199">MODULE_RX</text>
+</g>
+<g id="J3-18"><title>J3 pin 18, SYNC</title>
+<path class="l" d="M485.84,284.08 V275 Q485.84,270 480.84,270 H321 Q316,270 316,265 V237 Q316,232 311,232 H281"/>
+<circle class="d" cx="485.84" cy="284.08" r="2.4"/>
+<rect class="pin" x="228" y="218" width="53" height="28" rx="5"/><text class="t" x="254.5" y="237">18</text>
+<rect class="ctl" x="56" y="218" width="166" height="28" rx="5"/><text class="t" x="139" y="237">SYNC</text>
+</g>
+<g id="J3-20"><title>J3 pin 20, GNSS_3V3</title>
+<path class="l" d="M478.70,284.08 V281 Q478.70,277 474.70,277 H312 C300,277 300,270 288,270 H281"/>
+<circle class="d" cx="478.70" cy="284.08" r="2.4"/>
+<rect class="pin" x="228" y="256" width="53" height="28" rx="5"/><text class="t" x="254.5" y="275">20</text>
+<rect class="pwr" x="56" y="256" width="166" height="28" rx="5"/><text class="t" x="139" y="275">GNSS_3V3</text>
+</g>
+<g id="J3-10"><title>J3 pin 10, GNSS_PPS</title>
+<path class="l" d="M514.42,284.08 V254 Q514.42,249 519.42,249 H682 Q687,249 687,244 V123 Q687,118 692,118 H759"/>
+<circle class="d" cx="514.42" cy="284.08" r="2.4"/>
+<rect class="pin" x="759" y="104" width="53" height="28" rx="5"/><text class="t" x="785.5" y="123">10</text>
+<rect class="tim" x="818" y="104" width="166" height="28" rx="5"/><text class="t" x="901" y="123">GNSS_PPS</text>
+</g>
+<g id="J3-8"><title>J3 pin 8, GNSS_TX</title>
+<path class="l" d="M521.57,284.08 V261 Q521.57,256 526.57,256 H694 Q699,256 699,251 V161 Q699,156 704,156 H759"/>
+<circle class="d" cx="521.57" cy="284.08" r="2.4"/>
+<rect class="pin" x="759" y="142" width="53" height="28" rx="5"/><text class="t" x="785.5" y="161">8</text>
+<rect class="uart" x="818" y="142" width="166" height="28" rx="5"/><text class="t" x="901" y="161">GNSS_TX</text>
+</g>
+<g id="J3-6"><title>J3 pin 6, GNSS_RX</title>
+<path class="l" d="M528.71,284.08 V268 Q528.71,263 533.71,263 H706 Q711,263 711,258 V199 Q711,194 716,194 H759"/>
+<circle class="d" cx="528.71" cy="284.08" r="2.4"/>
+<rect class="pin" x="759" y="180" width="53" height="28" rx="5"/><text class="t" x="785.5" y="199">6</text>
+<rect class="uart" x="818" y="180" width="166" height="28" rx="5"/><text class="t" x="901" y="199">GNSS_RX</text>
+</g>
+<g id="J3-4"><title>J3 pin 4, +5V_IN</title>
+<path class="l" d="M535.86,284.08 V275 Q535.86,270 540.86,270 H718 Q723,270 723,265 V237 Q723,232 728,232 H759"/>
+<circle class="d" cx="535.86" cy="284.08" r="2.4"/>
+<rect class="pin" x="759" y="218" width="53" height="28" rx="5"/><text class="t" x="785.5" y="237">4</text>
+<rect class="pwr" x="818" y="218" width="166" height="28" rx="5"/><text class="t" x="901" y="237">+5V_IN</text>
+</g>
+<g id="J3-2"><title>J3 pin 2, +5V_IN</title>
+<path class="l" d="M543.00,284.08 V281 Q543.00,277 547.00,277 H728 C740,277 740,270 752,270 H759"/>
+<circle class="d" cx="543.00" cy="284.08" r="2.4"/>
+<rect class="pin" x="759" y="256" width="53" height="28" rx="5"/><text class="t" x="785.5" y="275">2</text>
+<rect class="pwr" x="818" y="256" width="166" height="28" rx="5"/><text class="t" x="901" y="275">+5V_IN</text>
+</g>
+<g id="J3-19"><title>J3 pin 19, GND</title>
+<path class="l" d="M478.70,362.68 V372 Q478.70,377 473.70,377 H281"/>
+<circle class="d" cx="478.70" cy="362.68" r="2.4"/>
+<rect class="pin" x="228" y="363" width="53" height="28" rx="5"/><text class="t" x="254.5" y="382">19</text>
+<rect class="gnd" x="56" y="363" width="166" height="28" rx="5"/><text class="t" x="139" y="382">GND</text>
+</g>
+<g id="J3-17"><title>J3 pin 17, GND</title>
+<path class="l" d="M485.84,362.68 V410 Q485.84,415 480.84,415 H281"/>
+<circle class="d" cx="485.84" cy="362.68" r="2.4"/>
+<rect class="pin" x="228" y="401" width="53" height="28" rx="5"/><text class="t" x="254.5" y="420">17</text>
+<rect class="gnd" x="56" y="401" width="166" height="28" rx="5"/><text class="t" x="139" y="420">GND</text>
+</g>
+<g id="J3-15"><title>J3 pin 15, GND</title>
+<path class="l" d="M492.99,362.68 V448 Q492.99,453 487.99,453 H281"/>
+<circle class="d" cx="492.99" cy="362.68" r="2.4"/>
+<rect class="pin" x="228" y="439" width="53" height="28" rx="5"/><text class="t" x="254.5" y="458">15</text>
+<rect class="gnd" x="56" y="439" width="166" height="28" rx="5"/><text class="t" x="139" y="458">GND</text>
+</g>
+<g id="J3-13"><title>J3 pin 13, JTAG_TDO</title>
+<path class="l" d="M500.13,362.68 V486 Q500.13,491 495.13,491 H281"/>
+<circle class="d" cx="500.13" cy="362.68" r="2.4"/>
+<rect class="pin" x="228" y="477" width="53" height="28" rx="5"/><text class="t" x="254.5" y="496">13</text>
+<rect class="dbg" x="56" y="477" width="166" height="28" rx="5"/><text class="t" x="139" y="496">JTAG_TDO</text>
+</g>
+<g id="J3-11"><title>J3 pin 11, JTAG_TDI</title>
+<path class="l" d="M507.28,362.68 V524 Q507.28,529 502.28,529 H281"/>
+<circle class="d" cx="507.28" cy="362.68" r="2.4"/>
+<rect class="pin" x="228" y="515" width="53" height="28" rx="5"/><text class="t" x="254.5" y="534">11</text>
+<rect class="dbg" x="56" y="515" width="166" height="28" rx="5"/><text class="t" x="139" y="534">JTAG_TDI</text>
+</g>
+<g id="J3-9"><title>J3 pin 9, JTAG_TCKC</title>
+<path class="l" d="M514.42,362.68 V524 Q514.42,529 519.42,529 H759"/>
+<circle class="d" cx="514.42" cy="362.68" r="2.4"/>
+<rect class="pin" x="759" y="515" width="53" height="28" rx="5"/><text class="t" x="785.5" y="534">9</text>
+<rect class="dbg" x="818" y="515" width="166" height="28" rx="5"/><text class="t" x="901" y="534">JTAG_TCKC</text>
+</g>
+<g id="J3-7"><title>J3 pin 7, JTAG_TMSC</title>
+<path class="l" d="M521.57,362.68 V486 Q521.57,491 526.57,491 H759"/>
+<circle class="d" cx="521.57" cy="362.68" r="2.4"/>
+<rect class="pin" x="759" y="477" width="53" height="28" rx="5"/><text class="t" x="785.5" y="496">7</text>
+<rect class="dbg" x="818" y="477" width="166" height="28" rx="5"/><text class="t" x="901" y="496">JTAG_TMSC</text>
+</g>
+<g id="J3-5"><title>J3 pin 5, RESET_N</title>
+<path class="l" d="M528.71,362.68 V448 Q528.71,453 533.71,453 H759"/>
+<circle class="d" cx="528.71" cy="362.68" r="2.4"/>
+<rect class="pin" x="759" y="439" width="53" height="28" rx="5"/><text class="t" x="785.5" y="458">5</text>
+<rect class="ctl" x="818" y="439" width="166" height="28" rx="5"/><text class="t" x="901" y="458">RESET_N</text>
+</g>
+<g id="J3-3"><title>J3 pin 3, GND</title>
+<path class="l" d="M535.86,362.68 V410 Q535.86,415 540.86,415 H759"/>
+<circle class="d" cx="535.86" cy="362.68" r="2.4"/>
+<rect class="pin" x="759" y="401" width="53" height="28" rx="5"/><text class="t" x="785.5" y="420">3</text>
+<rect class="gnd" x="818" y="401" width="166" height="28" rx="5"/><text class="t" x="901" y="420">GND</text>
+</g>
+<g id="J3-1"><title>J3 pin 1, GND</title>
+<path class="l" d="M543.00,362.68 V372 Q543.00,377 548.00,377 H759"/>
+<circle class="d" cx="543.00" cy="362.68" r="2.4"/>
+<rect class="pin" x="759" y="363" width="53" height="28" rx="5"/><text class="t" x="785.5" y="382">1</text>
+<rect class="gnd" x="818" y="363" width="166" height="28" rx="5"/><text class="t" x="901" y="382">GND</text>
+</g>
+
+<g id="legend">
+<rect class="pwr" x="40" y="756" width="125" height="28" rx="5"/><text class="t" x="102.5" y="775">POWER</text>
+<rect class="gnd" x="178" y="756" width="125" height="28" rx="5"/><text class="t" x="240.5" y="775">GND</text>
+<rect class="uart" x="316" y="756" width="125" height="28" rx="5"/><text class="t" x="378.5" y="775">UART</text>
+<rect class="tim" x="454" y="756" width="125" height="28" rx="5"/><text class="t" x="516.5" y="775">TIMING</text>
+<rect class="dbg" x="592" y="756" width="125" height="28" rx="5"/><text class="t" x="654.5" y="775">DEBUG</text>
+<rect class="ctl" x="730" y="756" width="125" height="28" rx="5"/><text class="t" x="792.5" y="775">CONTROL</text>
+<rect class="rf" x="868" y="756" width="125" height="28" rx="5"/><text class="t" x="930.5" y="775">RF</text>
+</g>
+</svg>
