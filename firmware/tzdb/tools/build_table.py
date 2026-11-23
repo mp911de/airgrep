@@ -3,6 +3,7 @@ import argparse
 import json
 import struct
 import time
+from pathlib import Path
 import numpy as np
 import shapely
 from source import ROOT, Source, YEAR
@@ -138,13 +139,14 @@ if __name__ == '__main__':
     p.add_argument('--cell', type=float, nargs='+', default=[.01])
     p.add_argument('--release', default='2026f')
     p.add_argument('--dataset', default='timezones')
+    p.add_argument('--output', type=Path, default=ROOT / 'build')
     args = p.parse_args()
     for step in args.cell:
         if step <= 0 or abs(step * 1000000 - round(step * 1000000)) > 1e-6 or abs(180 / step - round(180 / step)) > 1e-6 or 360 / step > 65535:
             p.error('cell must divide 180 degrees, use integer microdegrees, and fit 65535 columns')
     source = Source(args.release, args.dataset)
-    out = ROOT / 'build'
-    out.mkdir(exist_ok=True)
+    out = args.output
+    out.mkdir(parents=True, exist_ok=True)
     results = [build(source, step, out) for step in args.cell]
     (out / 'sizes.json').write_text(json.dumps(results, indent=2) + '\n')
     (out / 'zones.json').write_text(json.dumps(source.zones, indent=2) + '\n')

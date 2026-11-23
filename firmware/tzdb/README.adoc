@@ -1,0 +1,75 @@
+= WGS84 position to time zone
+
+airgrep uses a GNSS position to look up the local IANA time zone and display local time offline.
+The table uses the unmerged boundaries from https://github.com/evansiroky/timezone-boundary-builder[Timezone Boundary Builder].
+
+== Build and install
+
+Allow several GB of RAM and disk space for the default build.
+Run from `firmware/tzdb`:
+
+[source,sh]
+----
+cmake -S . -B build
+cmake --build build
+ctest --test-dir build --output-on-failure
+----
+
+To try a lookup before installing, run `build/test_lookup build/tzdata.bin 38.72 -9.14`.
+It returns `Europe/Lisbon`.
+
+In airgrep Utility, connect to the device and choose *Time Zone Data…* under *Maintenance* to install `build/tzdata.bin`.
+For a command-line install, use link:../tools/flash-tzdata.sh[flash-tzdata.sh].
+
+== Choosing a resolution
+
+Flash is a limited resource on an MCU, the unaltered table would require approximately several megabytes.
+Therefore, we recompute and simplify polygons to a smaller grid resolution at 0.01°.
+
+.Resolution Comparison
+[cols="2,1,2,1",options="header"]
+|===
+| Grid
+| Cell width
+| Max. distance to cell center
+| Table size
+
+| Original Data
+| N/A
+| N/A
+| 83.57 MB with lossless compression
+
+| 0.01°
+| 1.11 km
+| 0.79 km
+| 1.75 MB
+
+| 0.02°
+| 2.23 km
+| 1.57 km
+| 0.83 MB
+
+|===
+
+Set `-DCELL=0.02` when configuring CMake to use the coarser grid.
+
+* Each cell takes the zone at its center.
+* Near a border, the center can fall in the neighboring zone.
+* A narrow region can fall between cell centers altogether.
+* Default grid matched exact polygon lookups at 44 of 50 test points chosen to emphasize borders, with all six misses within 550 m of a zone boundary.
+
+Over open water outside the mapped zones, automatic detection keeps the last known zone.
+
+== Clock rules
+
+The boundary release determines where a zone applies.
+The POSIX rules in this table describe clock changes for 2026.
+For a different year, regenerate and check the rules against IANA tzdata.
+`Africa/Casablanca` and `Africa/El_Aaiun` have three offset changes in 2026, more than one POSIX rule can express.
+The table retains both names and airgrep displays UTC in those zones.
+
+== Attribution
+
+Boundary data from Timezone Boundary Builder and © OpenStreetMap contributors.
+The data and the derived table are licensed under https://opendatacommons.org/licenses/odbl/1-0/[ODbL 1.0].
+Include this attribution and license when distributing `tzdata.bin`.
