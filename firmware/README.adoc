@@ -41,7 +41,7 @@ The utility is a macOS application, so Linux builds the firmware and runs the fo
 | ESP-IDF v6.1, which brings CMake, Ninja and Python, and the esp-clang of its tools, which has the compiler and clang-tidy. Git and clang-format.
 
 | Utility
-| CMake 3.27, Ninja, the Xcode Command Line Tools, libusb, pkg-config, Python, clang-format and clang-tidy from LLVM.
+| ESP-IDF v6.1 Component Manager for LVGL, CMake 3.27, Ninja, the Xcode Command Line Tools, libusb, pkg-config, Python, clang-format and clang-tidy from LLVM.
 
 | Checks
 | Ruff, ShellCheck, a C and C++ compiler for the host tests. On macOS also Pillow for the display checks.

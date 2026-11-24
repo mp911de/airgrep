@@ -1,5 +1,5 @@
 # What runs on a computer: the airgrep Utility application and the C++ tools that talk to a device.
-# Needs Ninja, the Xcode Command Line Tools and, from Homebrew, libusb, clang-format and llvm. No IDF.
+# Uses ESP-IDF's Component Manager for LVGL and the native macOS toolchain for the application.
 #
 #   cmake -S utility -B utility/build -G Ninja && cmake --build utility/build
 #
@@ -35,7 +35,7 @@ get_filename_component(FIRMWARE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLUTE)
 set(DISPLAY_DIR "${FIRMWARE_DIR}/components/display")
 set(AIRGREP_DIR "${FIRMWARE_DIR}/components/airgrep")
 set(warnings -Wall -Wextra -Wshadow -Wshorten-64-to-32 -Werror)
-# The Editor's templates declare what a file may not use, and carry a number through a pointer. Its
+# The LVGL Editor's templates declare what a file may not use, and carry a number through a pointer. Its
 # files are held to every other warning.
 set(generated_warnings -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-function
         -Wno-shorten-64-to-32)
@@ -46,23 +46,32 @@ set(APP "airgrep Utility")
 set(APP_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 set(APP_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/${APP}.app/Contents/Frameworks")
 
-# The firmware's component manifest names the LVGL version for both builds. A tag can move, so the
-# commit of that version is fetched, and LVGL says which version it is.
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${DISPLAY_DIR}/idf_component.yml"
+        "${FIRMWARE_DIR}/dependencies.lock" "${CMAKE_CURRENT_SOURCE_DIR}/lvgl_source.py")
 file(STRINGS "${DISPLAY_DIR}/idf_component.yml" lvgl_version REGEX "version:")
 string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" lvgl_version "${lvgl_version}")
-include(FetchContent)
 set(LV_BUILD_CONF_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lv_conf.h" CACHE STRING "" FORCE)
 set(CONFIG_LV_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(CONFIG_LV_BUILD_DEMOS OFF CACHE BOOL "" FORCE)
 set(CONFIG_LV_USE_THORVG OFF CACHE BOOL "" FORCE)
-FetchContent_Declare(lvgl
-        GIT_REPOSITORY https://github.com/lvgl/lvgl.git
-        GIT_TAG 80ca777e37a2b176770726a02e07a6fb79ef0b39)
-FetchContent_MakeAvailable(lvgl)
+set(lvgl_SOURCE_DIR "${FETCHCONTENT_SOURCE_DIR_LVGL}")
+# Older builds saved the automatically selected cache entry as a FetchContent override.
+if (NOT lvgl_SOURCE_DIR OR lvgl_SOURCE_DIR MATCHES "/(service_[^/]+/lvgl__lvgl_[^/]+|airgrep/lvgl-[0-9a-f]+)$")
+    find_program(IDF_PYTHON NAMES python3 HINTS "$ENV{IDF_PYTHON_ENV_PATH}/bin"
+            "$ENV{HOME}/.espressif/tools/python/v6.1/venv/bin" NO_DEFAULT_PATH REQUIRED)
+    set(offline)
+    if (FETCHCONTENT_FULLY_DISCONNECTED)
+        set(offline --offline)
+    endif ()
+    execute_process(COMMAND "${IDF_PYTHON}" "${CMAKE_CURRENT_SOURCE_DIR}/lvgl_source.py"
+            "${FIRMWARE_DIR}/dependencies.lock" "${lvgl_version}" ${offline}
+            OUTPUT_VARIABLE lvgl_SOURCE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+endif ()
+message(STATUS "LVGL sources: ${lvgl_SOURCE_DIR}")
+add_subdirectory("${lvgl_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/_deps/lvgl-build")
 if (NOT "$ENV{LVGL_VERSION}" STREQUAL "${lvgl_version}")
-    message(FATAL_ERROR "components/display/idf_component.yml names LVGL ${lvgl_version}, the commit that "
-            "utility/CMakeLists.txt fetches is LVGL $ENV{LVGL_VERSION}. Set GIT_TAG to the commit of tag "
-            "v${lvgl_version}: git ls-remote https://github.com/lvgl/lvgl.git v${lvgl_version}")
+    message(FATAL_ERROR "components/display/idf_component.yml requires LVGL ${lvgl_version}, "
+            "but ${lvgl_SOURCE_DIR} provides $ENV{LVGL_VERSION}.")
 endif ()
 # A Debug build is for stepping through the application. LVGL draws in software and stays fast.
 target_compile_options(lvgl PRIVATE $<$<CONFIG:Debug>:-O2>)
