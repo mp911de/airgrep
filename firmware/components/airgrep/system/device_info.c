@@ -26,6 +26,8 @@ const char* device_board_name(void) {
 	return board_description + sizeof("airgrep-board:") - 1;
 }
 
+const char* device_variant(void) { return AIRGREP_VARIANT; }
+
 const char* device_reset_reason(void) {
 	switch (esp_reset_reason()) {
 		case ESP_RST_POWERON:
@@ -148,6 +150,7 @@ void device_info_print(int width) {
 	char row[128];
 	device_firmware_format(row, sizeof row);
 	printf("%-*s %s\n", width, "Firmware", row);
+	printf("%-*s %s\n", width, "Variant", device_variant());
 	printf("%-*s %s\n", width, "IDF", app->idf_ver);
 	printf("%-*s %s\n", width, "Board", device_board_name());
 	device_chip_format(row, sizeof row);

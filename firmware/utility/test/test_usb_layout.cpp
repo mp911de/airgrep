@@ -28,6 +28,7 @@ void wire_layout() {
 	FixtureTransport transport;
 	device::Session session(transport);
 	const Hello sent{.uptime_seconds = 0x01020304,
+					 .variant = "Variant",
 					 .internal_free = 1300,
 					 .internal_minimum = 1100,
 					 .internal_total = 1500,
@@ -47,6 +48,7 @@ void wire_layout() {
 	encode_hello(sent, transport.response);
 	const auto hello = session.hello();
 	CHECK_EQUAL(0x01020304ULL, hello.uptime_seconds);
+	CHECK_EQUAL(std::string("Variant"), hello.variant);
 	CHECK_EQUAL(1300u, hello.internal_free);
 	CHECK_EQUAL(1100u, hello.internal_minimum);
 	CHECK_EQUAL(1500u, hello.internal_total);

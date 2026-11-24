@@ -110,6 +110,8 @@ protocol::Hello hello() {
 	result.uptime_seconds = now / 1000000;
 	(void)std::snprintf(result.firmware_version, sizeof result.firmware_version,
 						"%s", esp_app_get_description()->version);
+	(void)std::snprintf(result.variant, sizeof result.variant, "%s",
+						device_variant());
 	device_firmware_format(result.firmware_description,
 						   sizeof result.firmware_description);
 	(void)std::snprintf(result.board, sizeof result.board, "%s",
@@ -407,8 +409,8 @@ esp_err_t start() {
 	}
 	ESP_ERROR_CHECK(
 		esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "usb", &sleep_lock));
-	if (xTaskCreate(control, "usb-control", 4096, nullptr, 5, &control_task) !=
-		pdPASS) {
+	if (xTaskCreatePinnedToCore(control, "usb-control", 4096, nullptr, 5,
+								&control_task, 0) != pdPASS) {
 		return ESP_ERR_NO_MEM;
 	}
 	static const char language[] = {0x09, 0x04};
@@ -420,6 +422,7 @@ esp_err_t start() {
 									CONFIG_TINYUSB_DESC_CDC_STRING,
 									"airgrep Data"};
 	auto config = TINYUSB_DEFAULT_CONFIG(device_event);
+	config.task.xCoreID = 0;
 	config.descriptor.string = strings;
 	config.descriptor.string_count = sizeof strings / sizeof strings[0];
 	// The ROM's USB download keeps the USB controller out of reset across a

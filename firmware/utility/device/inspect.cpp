@@ -195,6 +195,7 @@ void inspect(Report& report, const Hello& state) {
 	report.number(FIELD(uptime_seconds), 0, int64_t{10} * 365 * 86400,
 				  Severity::invalid);
 	report.text(FIELD(firmware_version));
+	report.text(FIELD(variant));
 	report.number(FIELD(internal_free), 0, state.internal_total);
 	report.number(FIELD(internal_minimum), 0, state.internal_free);
 	report.number(FIELD(internal_total), 1, UINT32_MAX);

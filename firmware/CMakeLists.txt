@@ -22,6 +22,18 @@ idf_build_set_property(MINIMAL_BUILD ON)
 idf_build_set_property(AIRGREP_TEST "${AIRGREP_TEST}")
 project(airgrep)
 
+# The variant is the build directory name, the preset's binaryDir: s3+800x480-touch. Each build also
+# leaves its image in build/images, named for the variant and the version the image reports.
+get_filename_component(AIRGREP_VARIANT "${CMAKE_BINARY_DIR}" NAME)
+idf_component_get_property(airgrep_lib airgrep COMPONENT_LIB)
+target_compile_definitions(${airgrep_lib} PRIVATE "AIRGREP_VARIANT=\"${AIRGREP_VARIANT}\"")
+set(AIRGREP_IMAGES "${CMAKE_SOURCE_DIR}/build/images")
+add_custom_command(TARGET app POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${AIRGREP_IMAGES}"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin"
+                "${AIRGREP_IMAGES}/${CMAKE_PROJECT_NAME}-${AIRGREP_VARIANT}-${PROJECT_VER}.bin"
+        VERBATIM)
+
 find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format REQUIRED)
 file(GLOB_RECURSE AIRGREP_FORMAT_SOURCES CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/main/*.c"

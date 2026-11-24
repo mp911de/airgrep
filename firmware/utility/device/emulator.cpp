@@ -245,6 +245,7 @@ EmulatedDevice make_booted_service_device() {
 	hello.cpu_core0 = hello.cpu_core1 = hello.cpu_overall =
 		AIRGREP_CPU_UNAVAILABLE;
 	put(hello.firmware_version, "0.0.0-emulated");
+	put(hello.variant, "emulated");
 	put(hello.firmware_description, "airgrep emulated");
 	put(hello.board, "Emulated");
 	put(hello.chip, "This computer");

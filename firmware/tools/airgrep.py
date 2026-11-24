@@ -51,11 +51,9 @@ STATUS_NAMES = (
     "OK", "CRC_MISMATCH", "VERSION_MISMATCH", "UNKNOWN_COMMAND",
     "UNKNOWN_COMPONENT", "INVALID_LENGTH", "INVALID_RANGE", "INTERNAL_ERROR",
 )
-HELLO = struct.Struct("<Q32s6IH5Bx128s128s128s")
+HELLO = struct.Struct("<Q32s32s6IH5Bx128s128s128s")
 # Whether READ and WRITE exist. Firmware that predates the field reports the first.
 SERVICE_NAMES = ("UNKNOWN, firmware predates the field", "UNAVAILABLE", "AVAILABLE")
-# Firmware that predates the board and chip fields stops after the description.
-HELLO_WITHOUT_BOARD = 200
 HEALTH_NAMES = (
     "i2c", "adsbee", "gnss", "antenna_short", "charger_overvoltage", "charger_overheated",
     "battery_overheated", "antenna_open", "backup_battery", "barometer", "gauge", "usb_c",
@@ -122,7 +120,7 @@ def decode_response(frame, command):
     if device_version != VERSION:
         raise ProtocolError(f"Protocol version mismatch: device {device_version}, client {VERSION}")
     if command == COMMANDS["hello"]:
-        if response != command or len(frame) - 7 not in (HELLO_WITHOUT_BOARD, HELLO.size):
+        if response != command or len(frame) - 7 != HELLO.size:
             raise ProtocolError(f"HELLO response is missing its {HELLO.size}-byte payload")
     elif command == COMMANDS["read"]:
         if response != command or len(frame) == 7:
@@ -489,14 +487,13 @@ def select_port(ports, interfaces, serial_number=None):
 
 
 def decode_hello(payload):
-    """Board and chip are empty for firmware that predates them."""
-    uptime, _firmware_version, *values = HELLO.unpack(bytes(payload).ljust(HELLO.size, b"\0"))
-    firmware, board, chip = (value.split(b"\0", 1)[0].decode("utf-8", errors="replace")
-                             for value in values[12:15])
+    uptime, _firmware_version, variant, *values = HELLO.unpack(bytes(payload))
+    variant, firmware, board, chip = (value.split(b"\0", 1)[0].decode("utf-8", errors="replace")
+                                      for value in (variant, *values[12:15]))
     health, mode, core0, core1, overall, service = values[6:12]
     return SimpleNamespace(uptime=uptime, internal=values[:3], psram=values[3:6], health=health,
                            mode=mode, load=(core0, core1, overall), service=service, firmware=firmware,
-                           board=board, chip=chip)
+                           variant=variant, board=board, chip=chip)
 
 
 def require_picocom():
@@ -518,9 +515,9 @@ def print_hello(payload, serial_number=None):
     percent = lambda n: "UNAVAILABLE" if n == 0xFF else f"{n} %"
     failures = [name for bit, name in enumerate(HEALTH_NAMES) if health & (1 << bit)]
     print(f"{'Firmware':20} {hello.firmware}")
-    if hello.board:
-        print(f"{'Board':20} {hello.board}")
-        print(f"{'Chip':20} {hello.chip}")
+    print(f"{'Variant':20} {hello.variant}")
+    print(f"{'Board':20} {hello.board}")
+    print(f"{'Chip':20} {hello.chip}")
     print(f"{'Protocol':20} {VERSION}")
     mac = identity(serial_number)
     if mac:

@@ -26,6 +26,8 @@ typedef struct {
 const device_info_t* device_info(void);
 const char* device_serial(void);
 const char* device_board_name(void);
+// The build directory name, e.g. s3+800x480-touch.
+const char* device_variant(void);
 const char* device_reset_reason(void);
 // Formats airgrep-<mac lower case hex>. Exposed for the host test.
 void device_id_format(const uint8_t mac[6], char out[21]);

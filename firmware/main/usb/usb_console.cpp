@@ -110,6 +110,12 @@ ssize_t read_console(void*, int fd, void* output, size_t size) {
 	// IDF's console expects LF for Enter, while serial terminals send CR.
 	auto* bytes = static_cast<char*>(output);
 	std::replace(bytes, bytes + received, '\r', '\n');
+	// A disconnected REPL write leaves an error on its stdio stream.
+	// Newlib discards the tail of each printf until that error is cleared.
+	if (std::memchr(bytes, '\n', received)) {
+		std::clearerr(stdout);
+		std::clearerr(stderr);
+	}
 	return static_cast<ssize_t>(received);
 }
 

@@ -21,6 +21,16 @@
 			}
 		},
 		{
+			"name": "s3-800x480-touch",
+			"displayName": "XIAO ESP32-S3 Plus, headless 800x480 rendering",
+			"inherits": "s3",
+			"binaryDir": "build/s3+800x480-touch",
+			"cacheVariables": {
+				"SDKCONFIG": "build/s3+800x480-touch/sdkconfig",
+				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.s3;components/display/variants/800x480-touch/sdkconfig;components/display/variants/800x480-touch/sdkconfig.s3"
+			}
+		},
+		{
 			"name": "s3-debug",
 			"displayName": "airgrep on XIAO ESP32-S3 Plus, USB service commands",
 			"inherits": "s3",
@@ -89,6 +99,10 @@
 		{
 			"name": "s3",
 			"configurePreset": "s3"
+		},
+		{
+			"name": "s3-800x480-touch",
+			"configurePreset": "s3-800x480-touch"
 		},
 		{
 			"name": "s3-debug",

@@ -226,7 +226,11 @@ def main(argv=None):
     try:
         fragments = {name: path for name, path in FRAGMENTS.items() if getattr(args, name.replace("-", "_"))}
         if args.display:
-            fragments[args.display] = f"components/display/variants/{args.display}/sdkconfig"
+            variant = Path("components/display/variants") / args.display
+            fragments[args.display] = str(variant / "sdkconfig")
+            board_config = variant / "sdkconfig.s3"
+            if args.profile in ("s3", "s3-debug") and (FIRMWARE / board_config).is_file():
+                fragments[args.display] += ";" + str(board_config)
         command = [*idf_command(), *variation(args.profile, fragments)]
         usb = dependencies()
         build_flash(command, usb, args.profile, args.serial, args.timeout)

@@ -12,7 +12,7 @@ namespace usb::protocol {
 inline constexpr uint8_t kVersion = 1;
 inline constexpr int64_t kTimeoutUs = 3000000;
 inline constexpr size_t kStatusSize = 7;
-inline constexpr size_t kHelloSize = 463;
+inline constexpr size_t kHelloSize = 495;
 inline constexpr size_t kListCountsSize = 4, kListPresentOffset = 0,
 						kListReturnedOffset = 2;
 // A settings key travels as this many bytes: its characters, its end and
@@ -66,6 +66,7 @@ enum class Service : uint8_t { unknown, absent, present };
 struct Hello {
 	uint64_t uptime_seconds;
 	char firmware_version[32];
+	char variant[32];
 	uint32_t internal_free, internal_minimum, internal_total;
 	uint32_t psram_free, psram_minimum, psram_total;
 	uint16_t health;
@@ -77,26 +78,27 @@ struct Hello {
 	char chip[128];
 };
 
-static_assert(sizeof(Hello) == 456);
+static_assert(sizeof(Hello) == 488);
 static_assert(kHelloSize == kStatusSize + sizeof(Hello));
 static_assert(offsetof(Hello, uptime_seconds) == 0);
 static_assert(offsetof(Hello, firmware_version) == 8);
-static_assert(offsetof(Hello, internal_free) == 40);
-static_assert(offsetof(Hello, internal_minimum) == 44);
-static_assert(offsetof(Hello, internal_total) == 48);
-static_assert(offsetof(Hello, psram_free) == 52);
-static_assert(offsetof(Hello, psram_minimum) == 56);
-static_assert(offsetof(Hello, psram_total) == 60);
-static_assert(offsetof(Hello, health) == 64);
-static_assert(offsetof(Hello, mode) == 66);
-static_assert(offsetof(Hello, cpu_core0) == 67);
-static_assert(offsetof(Hello, cpu_core1) == 68);
-static_assert(offsetof(Hello, cpu_overall) == 69);
-static_assert(offsetof(Hello, service) == 70);
-static_assert(offsetof(Hello, reserved) == 71);
-static_assert(offsetof(Hello, firmware_description) == 72);
-static_assert(offsetof(Hello, board) == 200);
-static_assert(offsetof(Hello, chip) == 328);
+static_assert(offsetof(Hello, variant) == 40);
+static_assert(offsetof(Hello, internal_free) == 72);
+static_assert(offsetof(Hello, internal_minimum) == 76);
+static_assert(offsetof(Hello, internal_total) == 80);
+static_assert(offsetof(Hello, psram_free) == 84);
+static_assert(offsetof(Hello, psram_minimum) == 88);
+static_assert(offsetof(Hello, psram_total) == 92);
+static_assert(offsetof(Hello, health) == 96);
+static_assert(offsetof(Hello, mode) == 98);
+static_assert(offsetof(Hello, cpu_core0) == 99);
+static_assert(offsetof(Hello, cpu_core1) == 100);
+static_assert(offsetof(Hello, cpu_overall) == 101);
+static_assert(offsetof(Hello, service) == 102);
+static_assert(offsetof(Hello, reserved) == 103);
+static_assert(offsetof(Hello, firmware_description) == 104);
+static_assert(offsetof(Hello, board) == 232);
+static_assert(offsetof(Hello, chip) == 360);
 
 uint16_t crc16(const uint8_t* bytes, size_t size, uint16_t seed = 0xffff);
 

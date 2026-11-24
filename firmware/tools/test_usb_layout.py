@@ -7,15 +7,18 @@ import airgrep
 
 class UsbLayout(unittest.TestCase):
     def test_hello(self):
-        payload = bytearray(456)
+        payload = bytearray(488)
         struct.pack_into("<Q", payload, 0, 0x01020304)
-        struct.pack_into("<6I", payload, 40, 1300, 1100, 1500, 2300, 2100, 2500)
-        payload[64:71] = bytes.fromhex("02 41 01 11 3f 28 02")
-        payload[72:80] = b"Firmware"
-        payload[200:205] = b"Board"
-        payload[328:332] = b"Chip"
-        frame = bytes.fromhex("01 cf 01 01 34 cd 00") + payload
-        hello = airgrep.decode_hello(airgrep.decode_response(frame, airgrep.COMMANDS["hello"]))
+        payload[40:47] = b"Variant"
+        struct.pack_into("<6I", payload, 72, 1300, 1100, 1500, 2300, 2100, 2500)
+        payload[96:103] = bytes.fromhex("02 41 01 11 3f 28 02")
+        payload[104:112] = b"Firmware"
+        payload[232:237] = b"Board"
+        payload[360:364] = b"Chip"
+        frame = bytearray(bytes.fromhex("01 ef 01 01 00 00 00") + payload)
+        struct.pack_into("<H", frame, 4, airgrep.crc(frame))
+        hello = airgrep.decode_hello(airgrep.decode_response(bytes(frame), airgrep.COMMANDS["hello"]))
+        self.assertEqual(hello.variant, "Variant")
         self.assertEqual(hello.uptime, 0x01020304)
         self.assertEqual(hello.internal, [1300, 1100, 1500])
         self.assertEqual(hello.psram, [2300, 2100, 2500])
