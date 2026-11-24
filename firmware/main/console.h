@@ -16,6 +16,7 @@ esp_err_t console_start(void);
 esp_err_t console_register(const esp_console_cmd_t* command);
 void console_banner(void);
 esp_err_t console_register_uptime(void);
+esp_err_t console_register_panic(void);
 esp_err_t console_register_tasks(void);
 esp_err_t console_register_reboot(void);
 esp_err_t console_register_exp(void);

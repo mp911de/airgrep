@@ -91,6 +91,11 @@ esp_err_t console_start(void) {
 	if (err == ESP_OK) {
 		err = console_register_uptime();
 	}
+#if CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH
+	if (err == ESP_OK) {
+		err = console_register_panic();
+	}
+#endif
 	if (err == ESP_OK) {
 		err = console_register_tasks();
 	}
