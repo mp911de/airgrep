@@ -1,6 +1,6 @@
 <screen>
 	<!-- Charger mode: the device is off and charges. The battery of the header, large, with the charge inside it.
-	     The application sets the width of the fill, the texts and where the second percentage lies. -->
+	     Both percentage labels share the battery subject. The application aligns them across the fill edge. -->
 	<view
 		extends="lv_obj"
 		scrollable="false"
@@ -28,7 +28,7 @@
 				     its own off at its edge, so each part of a digit has the colour that reads on what is below it. -->
 				<lv_obj name="percent" width="content" height="content" align="center" flex_flow="row" scrollable="false" style_pad_column="16" style_translate_y="-1">
 					<remove_theme selector="main" />
-					<lv_label name="number" text="" />
+					<lv_label name="number" bind_text="subject_battery" bind_text-fmt="%d" />
 					<lv_label text="%" />
 				</lv_obj>
 				<lv_obj
@@ -43,7 +43,7 @@
 					<remove_theme selector="main" />
 					<lv_obj name="percent_on" width="content" height="content" align="left_mid" flex_flow="row" scrollable="false" style_pad_column="16" style_translate_y="-1">
 						<remove_theme selector="main" />
-						<lv_label name="number_on" text="" />
+						<lv_label name="number_on" bind_text="subject_battery" bind_text-fmt="%d" />
 						<lv_label text="%" />
 					</lv_obj>
 				</lv_obj>
@@ -67,7 +67,7 @@
 			style_text_color="{color_label_2}"
 		>
 			<remove_theme selector="main" />
-			<lv_image name="bolt" src="icon_bolt_line" style_image_recolor="{color_label_2}" style_image_recolor_opa="100%" />
+			<lv_image name="bolt" src="icon_bolt_line" hidden="{subject_battery_state NE 2}" style_image_recolor="{color_label_2}" style_image_recolor_opa="100%" />
 			<lv_label name="text" text="" />
 		</lv_obj>
 	</view>

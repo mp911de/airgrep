@@ -46,6 +46,9 @@ void radar_xml_apply(lv_xml_parser_state_t * state, const char ** attrs)
         const char * value = attrs[i + 1];
 
         if(lv_streq("range_nm", name)) radar_set_range_nm(item, atoi(value));
+        if(lv_streq("tracks", name)) radar_set_tracks(item, lv_xml_to_bool(value));
+        if(lv_streq("simple", name)) radar_set_simple(item, lv_xml_to_bool(value));
+        if(lv_streq("indicator", name)) radar_set_indicator(item, lv_xml_to_bool(value));
     }
 }
 

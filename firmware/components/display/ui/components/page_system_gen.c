@@ -5,6 +5,7 @@ static void page_system_time_zone_automatic_checked_binding_cb(lv_observer_t * o
 static void page_system_time_zone_automatic_style_bg_color_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void page_system_time_zone_automatic_style_bg_color_binding_cb_2(lv_observer_t * observer, lv_subject_t * subject);
 static void page_system_set_subject_cb(lv_event_t * e);
+static void page_system_time_zone_clickable_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void page_system_lv_label_0_text_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void page_system_lv_label_0_style_text_color_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void page_system_time_zone_chevron_hidden_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
@@ -118,6 +119,7 @@ lv_obj_t * page_system_create(lv_obj_t * parent)
 
         lv_obj_t * time_zone = list_row_create(list_group_0_rows, "time_zone", false);
         lv_obj_set_name(time_zone, "time_zone");
+        lv_subject_add_observer_obj(subject_time_zone_automatic, page_system_time_zone_clickable_binding_cb, time_zone, NULL);
         lv_obj_t * time_zone_value = list_row_get_value(time_zone);
         if (time_zone_value) {
         lv_obj_t * lv_label_0 = lv_label_create(time_zone_value);
@@ -468,6 +470,13 @@ static void page_system_set_subject_cb(lv_event_t * e)
 {
     LV_UNUSED(e);
     lv_subject_set_int(subject_time_zone_automatic, !lv_subject_get_int(subject_time_zone_automatic));
+}
+
+static void page_system_time_zone_clickable_binding_cb(lv_observer_t * observer, lv_subject_t * subject)
+{
+    LV_UNUSED(subject);
+    lv_obj_t * obj = lv_observer_get_target_obj(observer);
+    lv_obj_set_clickable(obj, lv_subject_get_int(subject_time_zone_automatic) == 0);
 }
 
 static void page_system_lv_label_0_text_binding_cb(lv_observer_t * observer, lv_subject_t * subject)

@@ -111,9 +111,9 @@ void radar_set_range_nm(lv_obj_t * radar, int32_t range_nm)
     lv_obj_invalidate(radar);
 }
 
-void radar_set_tracks(lv_obj_t * radar, bool shown)
+void radar_set_tracks(lv_obj_t * radar, bool tracks)
 {
-    ((radar_t *)radar)->tracks = shown;
+    ((radar_t *)radar)->tracks = tracks;
     lv_obj_invalidate(radar);
 }
 
@@ -123,9 +123,9 @@ void radar_set_simple(lv_obj_t * radar, bool simple)
     lv_obj_invalidate(radar);
 }
 
-void radar_set_indicator(lv_obj_t * radar, bool shown)
+void radar_set_indicator(lv_obj_t * radar, bool indicator)
 {
-    ((radar_t *)radar)->indicator = shown;
+    ((radar_t *)radar)->indicator = indicator;
     lv_obj_invalidate(radar);
 }
 

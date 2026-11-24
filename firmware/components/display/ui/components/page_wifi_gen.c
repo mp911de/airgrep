@@ -13,6 +13,7 @@ static void page_wifi_lv_label_3_style_text_color_binding_cb(lv_observer_t * obs
 static void page_wifi_lv_label_4_text_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void page_wifi_lv_label_4_style_text_color_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void page_wifi_qr_box_hidden_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
+static void page_wifi_wifi_qr_data_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void page_wifi_lv_label_5_hidden_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void page_wifi_lv_label_5_style_text_color_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void page_wifi_qr_off_hidden_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
@@ -150,6 +151,7 @@ lv_obj_t * page_wifi_create(lv_obj_t * parent)
         lv_qrcode_set_dark_color(wifi_qr, lv_color_hex(0x000000));
         lv_qrcode_set_light_color(wifi_qr, lv_color_hex(0xffffff));
         lv_qrcode_set_quiet_zone(wifi_qr, false);
+        lv_subject_add_observer_obj(subject_wifi_join, page_wifi_wifi_qr_data_binding_cb, wifi_qr, NULL);
 
         lv_obj_t * lv_label_5 = lv_label_create(join);
         lv_label_set_translation_tag(lv_label_5, "scan_to_join");
@@ -284,6 +286,13 @@ static void page_wifi_qr_box_hidden_binding_cb(lv_observer_t * observer, lv_subj
     LV_UNUSED(subject);
     lv_obj_t * obj = lv_observer_get_target_obj(observer);
     lv_obj_set_hidden(obj, lv_subject_get_int(subject_wifi) == 0);
+}
+
+static void page_wifi_wifi_qr_data_binding_cb(lv_observer_t * observer, lv_subject_t * subject)
+{
+    LV_UNUSED(subject);
+    lv_obj_t * obj = lv_observer_get_target_obj(observer);
+    lv_qrcode_set_data(obj, lv_subject_get_string(subject_wifi_join));
 }
 
 static void page_wifi_lv_label_5_hidden_binding_cb(lv_observer_t * observer, lv_subject_t * subject)

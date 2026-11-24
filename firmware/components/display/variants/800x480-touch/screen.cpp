@@ -69,7 +69,6 @@ constexpr PageSettings page_settings(Page page) {
 Actions actions;
 lv_obj_t* radar;
 lv_obj_t* table;
-lv_obj_t* wifi_qr;
 lv_obj_t* transient_mode_screen;
 Mode shown_mode = Mode::on;
 // The least the fill of the charger screen shows, so that 0 % is not nothing.
@@ -345,8 +344,6 @@ void show_time_zone(const ViewState& model) {
 	const std::string_view active =
 		*model.zone ? std::string_view(model.zone) : UTC;
 	lv_subject_copy_string(subject_zone, place(active).c_str());
-	lv_obj_set_clickable(find("page_system", "time_zone"),
-						 !model.time_zone_automatic);
 	const bool known = same(choice.zones, model.zones);
 	if (known && choice.in_use == active &&
 		choice.detected == model.zone_detected &&
@@ -676,21 +673,16 @@ void show_charger(const ViewState& model) {
 	const lv_obj_t* well = lv_obj_find_by_name(transient_mode_screen, "well");
 	lv_obj_t* fill = lv_obj_find_by_name(well, "fill");
 	const lv_obj_t* percent = lv_obj_find_by_name(well, "percent");
-	lv_label_set_text_fmt(lv_obj_find_by_name(well, "number"), "%u",
-						  model.battery_percent);
-	lv_label_set_text_fmt(lv_obj_find_by_name(well, "number_on"), "%u",
-						  model.battery_percent);
 	lv_obj_update_layout(well);
+	const int32_t charge = lv_subject_get_int(subject_battery);
 	const int32_t charged =
-		(lv_obj_get_content_width(well) * model.battery_percent + 50) / 100;
+		(lv_obj_get_content_width(well) * charge + 50) / 100;
 	lv_obj_set_width(fill, std::max(charged, CHARGER_FILL_MIN));
 	lv_obj_set_x(lv_obj_find_by_name(fill, "percent_on"),
 				 lv_obj_get_x(percent));
 
 	const lv_obj_t* line = lv_obj_find_by_name(transient_mode_screen, "line");
 	lv_obj_t* text = lv_obj_find_by_name(line, "text");
-	lv_obj_set_hidden(lv_obj_find_by_name(line, "bolt"),
-					  model.battery != Battery::charging);
 	if (model.battery == Battery::full) {
 		lv_label_set_text(text, lv_tr("fully_charged"));
 	} else if (model.battery_to_full_min == NO_ESTIMATE) {
@@ -848,11 +840,8 @@ traffic_level_t level(conflicts::Level value) {
 void show_wifi(const ViewState& model) {
 	lv_subject_copy_string(subject_wifi_network, model.wifi_network);
 	lv_subject_copy_string(subject_wifi_password, model.wifi_password);
-	char join[160];
-	const int length =
-		std::snprintf(join, sizeof(join), "WIFI:T:WPA;S:%s;P:%s;;",
-					  model.wifi_network, model.wifi_password);
-	lv_qrcode_update(wifi_qr, join, static_cast<uint32_t>(length));
+	lv_subject_snprintf(subject_wifi_join, "WIFI:T:WPA;S:%s;P:%s;;",
+						model.wifi_network, model.wifi_password);
 }
 
 void show_battery(const ViewState& model) {
@@ -919,8 +908,8 @@ void to_radar(const Target& target, radar_target_t& out) {
 	}
 }
 
-void show_radar(std::span<const Target> inside, std::span<const Target> beyond,
-				const ViewState& model) {
+void show_radar(std::span<const Target> inside,
+				std::span<const Target> beyond) {
 	// With their tails the targets are too large for the stack of a task.
 	static std::array<radar_target_t, RADAR_MAX_TARGETS> targets;
 	std::array<int16_t, RADAR_MAX_TARGETS> bearings{};
@@ -936,9 +925,6 @@ void show_radar(std::span<const Target> inside, std::span<const Target> beyond,
 			bearings[marked++] = static_cast<int16_t>(target.bearing_deg);
 		}
 	}
-	radar_set_range_nm(radar, model.radar_range_nm);
-	radar_set_tracks(radar, model.track_history);
-	radar_set_simple(radar, model.simple_symbols);
 	radar_set_targets(radar, targets.data(),
 					  static_cast<uint32_t>(inside.size()));
 	radar_set_beyond(radar, bearings.data(), levels.data(),
@@ -981,7 +967,6 @@ void show_bands(const ViewState& model) {
 			 std::min(model.track_bands.size(), bands.size()))) {
 		bands[count++] = {band.from, band.to, radar_region(band.region)};
 	}
-	radar_set_indicator(radar, model.conflict_indicator);
 	radar_set_track_bands(radar, bands.data(), static_cast<uint32_t>(count));
 	show_tape(RADAR_TAPE_ALTITUDE, model.altitude_bands,
 			  conflicts::kAltitudeBandSpanFt);
@@ -1038,12 +1023,11 @@ void show_table(std::span<const Target> targets, size_t inside,
 void show_traffic(const ViewState& model) {
 	const size_t inside = std::min(model.traffic_inside, model.traffic.size());
 	if (model.fix == Fix::none) {
-		show_radar({}, {}, model);
+		show_radar({}, {});
 		show_table(model.traffic, model.traffic.size(), model);
 		return;
 	}
-	show_radar(model.traffic.first(inside), model.traffic.subspan(inside),
-			   model);
+	show_radar(model.traffic.first(inside), model.traffic.subspan(inside));
 	const size_t rows =
 		std::min(inside + MAX_BEYOND_ROWS, model.traffic.size());
 	show_table(model.traffic.first(rows), inside, model);
@@ -1082,7 +1066,6 @@ void variant::build(lv_obj_t*, const Actions& handlers) {
 		LV_EVENT_CLICKED, nullptr);
 	radar = lv_obj_find_by_name(home, "radar");
 	table = lv_obj_find_by_name(home, "traffic");
-	wifi_qr = lv_obj_find_by_name(home, "wifi_qr");
 	traffic_table_set_action_cb(table, target_action);
 	lv_obj_t* to_licenses = find("page_system", "licenses");
 	lv_obj_set_clickable(to_licenses, true);
@@ -1138,9 +1121,9 @@ void update(const ViewState& model) {
 	lv_subject_copy_string(subject_version, model.version);
 	show_language(model);
 	show_health(model);
+	show_battery(model);
 	show_mode(model);
 	show_wifi(model);
-	show_battery(model);
 	show_own_ship(model);
 	show_filter(model);
 	show_licenses(model);

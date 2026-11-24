@@ -54,16 +54,10 @@ void radar_set_targets(lv_obj_t * radar, const radar_target_t * targets, uint32_
  */
 void radar_set_beyond(lv_obj_t * radar, const int16_t * bearings_deg, const traffic_level_t * levels, uint32_t count);
 
-void radar_set_tracks(lv_obj_t * radar, bool shown);
-
-void radar_set_simple(lv_obj_t * radar, bool simple);
-
 typedef enum {
     RADAR_TAPE_SPEED,
     RADAR_TAPE_ALTITUDE,
 } radar_tape_t;
-
-void radar_set_indicator(lv_obj_t * radar, bool shown);
 
 /**
  * Replace the Bands of the own track. The radar keeps what it draws of them.
@@ -87,12 +81,9 @@ void radar_set_tape(lv_obj_t * radar, radar_tape_t tape, const radar_tape_band_t
     uint32_t section_counts[RADAR_SECTION_LEVELS]; \
     char inner_label[RADAR_LABEL_CAPACITY]; \
     char outer_label[RADAR_LABEL_CAPACITY]; \
-    bool tracks; \
-    bool simple; \
     radar_track_bands_t track_bands; \
     radar_tape_band_t tapes[2][RADAR_MAX_BANDS]; \
-    uint32_t tape_counts[2]; \
-    bool indicator;
+    uint32_t tape_counts[2];
 
 /* The Editor's radar_gen.c calls these. */
 void radar_constructor_hook(lv_obj_t * obj);

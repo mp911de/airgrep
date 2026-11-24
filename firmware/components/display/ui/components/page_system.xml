@@ -43,8 +43,7 @@
 								</lv_switch>
 							</list_row-value>
 						</list_row>
-						<!-- With Automatic on the row only shows the zone. Off, the application makes it open the choice. -->
-						<list_row name="time_zone" label="time_zone" separator="false">
+						<list_row name="time_zone" label="time_zone" separator="false" clickable="{subject_time_zone_automatic EQ 0}">
 							<list_row-value>
 								<lv_label
 									text="{subject_zone}"

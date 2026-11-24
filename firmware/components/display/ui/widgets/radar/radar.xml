@@ -2,6 +2,9 @@
 	<!-- Draws rings, own ship and targets in C. Targets are set from C, a subject cannot hold a list. -->
 	<api>
 		<prop name="range_nm" type="int" default="4" help="Distance of the outer ring in NM" />
+		<prop name="tracks" type="bool" default="false" help="Show target track history" />
+		<prop name="simple" type="bool" default="false" help="Use simple target symbols" />
+		<prop name="indicator" type="bool" default="false" help="Show the conflict indicator" />
 	</api>
 	<view extends="lv_obj" width="400" height="416" scrollable="false">
 		<remove_theme selector="main" />

@@ -205,6 +205,7 @@ extern lv_subject_t * subject_page_closing;
 extern lv_subject_t * subject_time_zone;
 extern lv_subject_t * subject_wifi_network;
 extern lv_subject_t * subject_wifi_password;
+extern lv_subject_t * subject_wifi_join;
 extern lv_subject_t * subject_battery_remaining;
 extern lv_subject_t * subject_satellites;
 extern lv_subject_t * subject_signal;

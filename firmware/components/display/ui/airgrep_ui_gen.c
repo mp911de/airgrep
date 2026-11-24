@@ -230,6 +230,7 @@ lv_subject_t * subject_page_closing;
 lv_subject_t * subject_time_zone;
 lv_subject_t * subject_wifi_network;
 lv_subject_t * subject_wifi_password;
+lv_subject_t * subject_wifi_join;
 lv_subject_t * subject_battery_remaining;
 lv_subject_t * subject_satellites;
 lv_subject_t * subject_signal;
@@ -541,6 +542,11 @@ void airgrep_ui_init_gen(const char * asset_path)
     subject_wifi_password = lv_subject_create(LV_SUBJECT_TYPE_STRING);
     lv_subject_set_string_buffer_static(subject_wifi_password, subject_wifi_password_buf, subject_wifi_password_prev_buf, UI_SUBJECT_STRING_LENGTH);
     lv_subject_set_string(subject_wifi_password, "");
+    static char subject_wifi_join_buf[UI_SUBJECT_STRING_LENGTH];
+    static char subject_wifi_join_prev_buf[UI_SUBJECT_STRING_LENGTH];
+    subject_wifi_join = lv_subject_create(LV_SUBJECT_TYPE_STRING);
+    lv_subject_set_string_buffer_static(subject_wifi_join, subject_wifi_join_buf, subject_wifi_join_prev_buf, UI_SUBJECT_STRING_LENGTH);
+    lv_subject_set_string(subject_wifi_join, "WIFI:T:WPA;S:;P:;;");
     static char subject_battery_remaining_buf[UI_SUBJECT_STRING_LENGTH];
     static char subject_battery_remaining_prev_buf[UI_SUBJECT_STRING_LENGTH];
     subject_battery_remaining = lv_subject_create(LV_SUBJECT_TYPE_STRING);
@@ -681,6 +687,7 @@ void airgrep_ui_init_gen(const char * asset_path)
     lv_xml_register_subject(NULL, "subject_time_zone", subject_time_zone);
     lv_xml_register_subject(NULL, "subject_wifi_network", subject_wifi_network);
     lv_xml_register_subject(NULL, "subject_wifi_password", subject_wifi_password);
+    lv_xml_register_subject(NULL, "subject_wifi_join", subject_wifi_join);
     lv_xml_register_subject(NULL, "subject_battery_remaining", subject_battery_remaining);
     lv_xml_register_subject(NULL, "subject_satellites", subject_satellites);
     lv_xml_register_subject(NULL, "subject_signal", subject_signal);

@@ -4,6 +4,10 @@
 static void home_lv_obj_0_style_bg_color_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void home_lv_obj_0_style_text_color_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void home_radar_area_style_border_color_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
+static void home_radar_range_nm_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
+static void home_radar_tracks_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
+static void home_radar_simple_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
+static void home_radar_indicator_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void home_bar_left_hidden_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void home_bar_left_style_bg_color_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void home_bar_right_hidden_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
@@ -62,7 +66,10 @@ lv_obj_t * home_create(void)
         lv_obj_remove_theme(radar_area, LV_PART_MAIN);
         lv_obj_t * radar = radar_create(radar_area);
         lv_obj_set_name(radar, "radar");
-        radar_set_range_nm(radar, 4);
+        lv_subject_add_observer_obj(subject_radar_range, home_radar_range_nm_binding_cb, radar, NULL);
+        lv_subject_add_observer_obj(subject_track_history, home_radar_tracks_binding_cb, radar, NULL);
+        lv_subject_add_observer_obj(subject_simple_symbols, home_radar_simple_binding_cb, radar, NULL);
+        lv_subject_add_observer_obj(subject_conflict_indicator, home_radar_indicator_binding_cb, radar, NULL);
 
         lv_obj_t * bar_left = lv_obj_create(radar_area);
         lv_obj_set_name(bar_left, "bar_left");
@@ -249,6 +256,34 @@ static void home_radar_area_style_border_color_binding_cb(lv_observer_t * observ
     LV_UNUSED(subject);
     lv_obj_t * obj = lv_observer_get_target_obj(observer);
     lv_obj_set_style_border_color(obj, lv_subject_get_color(color_separator), 0);
+}
+
+static void home_radar_range_nm_binding_cb(lv_observer_t * observer, lv_subject_t * subject)
+{
+    LV_UNUSED(subject);
+    lv_obj_t * obj = lv_observer_get_target_obj(observer);
+    radar_set_range_nm(obj, lv_subject_get_int(subject_radar_range));
+}
+
+static void home_radar_tracks_binding_cb(lv_observer_t * observer, lv_subject_t * subject)
+{
+    LV_UNUSED(subject);
+    lv_obj_t * obj = lv_observer_get_target_obj(observer);
+    radar_set_tracks(obj, lv_subject_get_int(subject_track_history) == 1);
+}
+
+static void home_radar_simple_binding_cb(lv_observer_t * observer, lv_subject_t * subject)
+{
+    LV_UNUSED(subject);
+    lv_obj_t * obj = lv_observer_get_target_obj(observer);
+    radar_set_simple(obj, lv_subject_get_int(subject_simple_symbols) == 1);
+}
+
+static void home_radar_indicator_binding_cb(lv_observer_t * observer, lv_subject_t * subject)
+{
+    LV_UNUSED(subject);
+    lv_obj_t * obj = lv_observer_get_target_obj(observer);
+    radar_set_indicator(obj, lv_subject_get_int(subject_conflict_indicator) == 1);
 }
 
 static void home_bar_left_hidden_binding_cb(lv_observer_t * observer, lv_subject_t * subject)

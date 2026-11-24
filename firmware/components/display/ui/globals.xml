@@ -183,6 +183,7 @@
 		<string name="subject_time_zone" value="" help="Name of the chosen time zone, in the header and on System" />
 		<string name="subject_wifi_network" value="" />
 		<string name="subject_wifi_password" value="" />
+		<string name="subject_wifi_join" value="WIFI:T:WPA;S:;P:;;" />
 		<string name="subject_battery_remaining" value="" />
 		<int name="subject_satellites" value="0" min_value="0" max_value="99" />
 		<int name="subject_signal" value="0" min_value="-1" max_value="3" help="Level of the strongest satellite, -1 without a receiver" />

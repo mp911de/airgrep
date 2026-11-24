@@ -70,7 +70,7 @@ target_compile_options(lvgl PRIVATE $<$<CONFIG:Debug>:-O2>)
 # The conflict engine of the display: NASA's DAIDALUS, the firmware component, as the firmware builds it without files.
 set(DAIDALUS_FILE_IO OFF)
 set(DAIDALUS_BUILD_EXAMPLES OFF)
-set(DAIDALUS_BUILD_TESTS OFF)
+set(DAIDALUS_BUILD_TESTS ON)
 add_subdirectory("${FIRMWARE_DIR}/components/daidalus" daidalus EXCLUDE_FROM_ALL)
 target_compile_options(daidalus PRIVATE $<$<CONFIG:Debug>:-O2>)
 

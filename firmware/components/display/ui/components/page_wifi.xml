@@ -68,7 +68,7 @@
 					<remove_theme selector="main" />
 					<!-- 165 px is 5 px for each of the 33 modules of a version 4 code. The white box around it is the
 					     quiet zone: a QR code needs four modules of it on every side, this leaves more than six. -->
-					<lv_qrcode name="wifi_qr" size="165" align="center" dark_color="0x000000" light_color="0xffffff" quiet_zone="false" />
+					<lv_qrcode name="wifi_qr" size="165" align="center" dark_color="0x000000" light_color="0xffffff" quiet_zone="false" data="{subject_wifi_join}" />
 				</lv_obj>
 				<lv_label
 					translation_tag="scan_to_join"

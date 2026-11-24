@@ -24,6 +24,9 @@ lv_obj_t * radar_create(lv_obj_t * parent);
  * @param range_nm  Distance of the outer ring in NM
  */
 void radar_set_range_nm(lv_obj_t * radar, int32_t range_nm);
+void radar_set_tracks(lv_obj_t * radar, bool tracks);
+void radar_set_simple(lv_obj_t * radar, bool simple);
+void radar_set_indicator(lv_obj_t * radar, bool indicator);
 
 #ifdef __cplusplus
 }

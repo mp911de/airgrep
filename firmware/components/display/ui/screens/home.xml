@@ -22,7 +22,13 @@
 			style_border_side="right"
 		>
 			<remove_theme selector="main" />
-			<radar name="radar" range_nm="4" />
+			<radar
+				name="radar"
+				range_nm="{subject_radar_range}"
+				tracks="{subject_track_history EQ 1}"
+				simple="{subject_simple_symbols EQ 1}"
+				indicator="{subject_conflict_indicator EQ 1}"
+			/>
 			<lv_obj
 				name="bar_left"
 				width="{alert_strip_width}"

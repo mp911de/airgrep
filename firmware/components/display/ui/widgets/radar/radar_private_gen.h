@@ -19,6 +19,9 @@ extern "C" {
 typedef struct {
     lv_obj_t obj;
     int32_t range_nm;
+    bool tracks;
+    bool simple;
+    bool indicator;
     RADAR_USER_DATA
 } radar_t;
 

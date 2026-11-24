@@ -8,6 +8,7 @@ static void charger_fill_style_bg_color_binding_cb(lv_observer_t * observer, lv_
 static void charger_fill_style_text_color_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void charger_terminal_style_bg_color_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void charger_line_style_text_color_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
+static void charger_bolt_hidden_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 static void charger_bolt_style_image_recolor_binding_cb(lv_observer_t * observer, lv_subject_t * subject);
 
 lv_obj_t * charger_create(void)
@@ -59,7 +60,7 @@ lv_obj_t * charger_create(void)
         lv_obj_remove_theme(percent, LV_PART_MAIN);
         lv_obj_t * number = lv_label_create(percent);
         lv_obj_set_name(number, "number");
-        lv_label_set_text(number, "");
+        lv_label_bind_text(number, subject_battery, "%d");
 
         lv_obj_t * lv_label_0 = lv_label_create(percent);
         lv_label_set_text(lv_label_0, "%");
@@ -85,7 +86,7 @@ lv_obj_t * charger_create(void)
         lv_obj_remove_theme(percent_on, LV_PART_MAIN);
         lv_obj_t * number_on = lv_label_create(percent_on);
         lv_obj_set_name(number_on, "number_on");
-        lv_label_set_text(number_on, "");
+        lv_label_bind_text(number_on, subject_battery, "%d");
 
         lv_obj_t * lv_label_1 = lv_label_create(percent_on);
         lv_label_set_text(lv_label_1, "%");
@@ -117,6 +118,7 @@ lv_obj_t * charger_create(void)
         lv_obj_t * bolt = lv_image_create(line);
         lv_obj_set_name(bolt, "bolt");
         lv_image_set_src(bolt, icon_bolt_line);
+        lv_subject_add_observer_obj(subject_battery_state, charger_bolt_hidden_binding_cb, bolt, NULL);
         lv_subject_add_observer_obj(color_label_2, charger_bolt_style_image_recolor_binding_cb, bolt, NULL);
         lv_obj_set_style_image_recolor_opa(bolt, (255 * 100 / 100), 0);
 
@@ -180,6 +182,13 @@ static void charger_line_style_text_color_binding_cb(lv_observer_t * observer, l
     LV_UNUSED(subject);
     lv_obj_t * obj = lv_observer_get_target_obj(observer);
     lv_obj_set_style_text_color(obj, lv_subject_get_color(color_label_2), 0);
+}
+
+static void charger_bolt_hidden_binding_cb(lv_observer_t * observer, lv_subject_t * subject)
+{
+    LV_UNUSED(subject);
+    lv_obj_t * obj = lv_observer_get_target_obj(observer);
+    lv_obj_set_hidden(obj, lv_subject_get_int(subject_battery_state) != 2);
 }
 
 static void charger_bolt_style_image_recolor_binding_cb(lv_observer_t * observer, lv_subject_t * subject)
