@@ -211,8 +211,8 @@ struct TerminalFont: Equatable {
     }
 }
 
-/// A scroll view that stays at the end of its text while it is there, also when it is resized.
-/// The text follows the output unless the user scrolled up to read.
+/// A scroll view that stays at the end of its text, where the cursor is, also when it is resized.
+/// Only the user's own scrolling stops it: scrolling up to read stops it, scrolling to the end or typing resumes it.
 final class FollowingScrollView: NSScrollView {
     private var follows = true
     private var size = NSSize.zero
@@ -226,6 +226,10 @@ final class FollowingScrollView: NSScrollView {
         contentView.postsBoundsChangedNotifications = true
         documentView.postsFrameChangedNotifications = true
         changes = [
+            // Posted for every scroll the user makes, and for no scroll of the program.
+            NotificationCenter.default.addObserver(forName: NSScrollView.didLiveScrollNotification, object: self, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.userScrolled() }
+            },
             NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: contentView, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated { self?.clipChanged() }
             },
@@ -235,20 +239,28 @@ final class FollowingScrollView: NSScrollView {
         ]
     }
 
-    /// Scrolls to the end if the text was there before it or the view changed.
+    /// Scrolls to the end unless the user scrolled up or is selecting text.
     func follow() {
         if follows, let text = documentView as? ConsoleTextView, !text.trackingSelection, text.selectedRange().length == 0 {
             documentView?.scrollToEndOfDocument(nil)
         }
     }
 
+    /// Typing is about the cursor: the view goes back to it and follows again.
+    func resume() {
+        follows = true
+        documentView?.scrollToEndOfDocument(nil)
+    }
+
+    private func userScrolled() {
+        guard let documentView else { return }
+        follows = contentView.bounds.maxY >= documentView.frame.maxY - 1
+    }
+
     private func clipChanged() {
         if contentView.bounds.size != size {
-            // Resized: the place that was shown says nothing about what the user wants to see.
             size = contentView.bounds.size
             follow()
-        } else if let documentView {
-            follows = contentView.bounds.maxY >= documentView.frame.height - 20
         }
     }
 }
@@ -422,6 +434,7 @@ private struct TerminalView: NSViewRepresentable {
             guard !event.modifierFlags.contains(.command), let characters = event.characters else {
                 return super.keyDown(with: event)
             }
+            (enclosingScrollView as? FollowingScrollView)?.resume()
             console.send(characters.unicodeScalars.flatMap { scalar -> [UInt8] in
                 switch Int(scalar.value) {
                 case NSUpArrowFunctionKey: Array("\u{1B}[A".utf8)
@@ -440,6 +453,7 @@ private struct TerminalView: NSViewRepresentable {
 
         override func paste(_ sender: Any?) {
             if let text = NSPasteboard.general.string(forType: .string) {
+                (enclosingScrollView as? FollowingScrollView)?.resume()
                 console.send(Array(text.replacingOccurrences(of: "\n", with: "\r").utf8))
             }
         }
