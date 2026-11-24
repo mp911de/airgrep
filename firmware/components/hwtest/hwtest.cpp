@@ -23,6 +23,10 @@
 #include "benchmark.hpp"
 #include "conflicts/conflicts.hpp"
 #endif
+#ifdef HWTEST_RENDER
+#include "display/display.hpp"
+#include "render_benchmark.hpp"
+#endif
 
 namespace hwtest {
 void Output::print(const char* format, ...) {
@@ -229,6 +233,81 @@ void cycle(Output& output) {
 }
 #endif
 
+#ifdef HWTEST_RENDER
+void render_memory(Output& output, const char* phase) {
+	multi_heap_info_t internal{};
+	heap_caps_get_info(&internal, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+	output.print(
+		"%s: internal free %u B, largest block %u B, low %u B, "
+		"PSRAM free %u B, hwtest stack low %u B\n",
+		phase, (unsigned)internal.total_free_bytes,
+		(unsigned)internal.largest_free_block,
+		(unsigned)internal.minimum_free_bytes,
+		(unsigned)heap_caps_get_free_size(MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT),
+		(unsigned)uxTaskGetStackHighWaterMark(nullptr));
+	if (lv_is_initialized()) {
+		lv_mem_monitor_t heap{};
+		lv_mem_monitor(&heap);
+		output.print(
+			"LVGL heap free %u B, largest block %u B, peak used %u B\n",
+			(unsigned)heap.free_size, (unsigned)heap.free_biggest_size,
+			(unsigned)heap.max_used);
+	}
+}
+
+lv_display_t* render_panel(Output& output) {
+	render_memory(output, "Before render setup");
+	static lv_display_t* panel = nullptr;
+	if (panel) {
+		return panel;
+	}
+	constexpr size_t bytes =
+		display::WIDTH * display::HEIGHT * sizeof(uint16_t);
+	void* pixels = heap_caps_aligned_alloc(LV_DRAW_BUF_ALIGN, bytes,
+										   MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+	if (!pixels) {
+		return nullptr;
+	}
+	lv_init();
+	lv_tick_set_cb(
+		[] { return static_cast<uint32_t>(esp_timer_get_time() / 1000); });
+	panel = lv_display_create(display::WIDTH, display::HEIGHT);
+	if (!panel) {
+		heap_caps_free(pixels);
+		return nullptr;
+	}
+	lv_display_set_color_format(panel, LV_COLOR_FORMAT_RGB565);
+	lv_display_set_buffers(panel, pixels, nullptr, bytes,
+						   LV_DISPLAY_RENDER_MODE_DIRECT);
+	lv_display_set_flush_cb(
+		panel, [](lv_display_t* display, const lv_area_t*, uint8_t*) {
+			lv_display_flush_ready(display);
+		});
+	render_memory(output, "Before UI creation");
+	display::create(panel, {});
+	render_memory(output, "After UI creation");
+	return panel;
+}
+
+void render_periodic(Output& output) {
+	if (lv_display_t* panel = render_panel(output)) {
+		render::periodic(output, panel, [] { vTaskDelay(1); });
+		render_memory(output, "After periodic run");
+	} else {
+		output.report("render_periodic", false, "panel allocation failed");
+	}
+}
+
+void render_single(Output& output) {
+	if (lv_display_t* panel = render_panel(output)) {
+		render::single(output, panel);
+		render_memory(output, "After single render");
+	} else {
+		output.report("render_single", false, "panel allocation failed");
+	}
+}
+#endif
+
 constexpr Entry kEntries[] = {
 	{"charger_identity", "The charger names itself", false, charger_identity},
 	{"battery_identity", "The fuel gauge names itself", false,
@@ -251,6 +330,13 @@ constexpr Entry kEntries[] = {
 	 stages},
 	{"cycle", "Five detection and guidance cycles with 200 aircraft", true,
 	 cycle},
+#endif
+#ifdef HWTEST_RENDER
+	{"render_periodic", "Time periodic LVGL rendering, then stop", true,
+	 render_periodic},
+	{"render_single",
+	 "Render one full traffic frame with the LVGL timer stopped", true,
+	 render_single},
 #endif
 };
 
@@ -288,6 +374,12 @@ RunResult run(const Entry& entry, std::FILE* stream) {
 								tskIDLE_PRIORITY + 1, nullptr, 1);
 	if (created == pdPASS) {
 		xSemaphoreTake(request.done, portMAX_DELAY);
+	} else {
+		request.output.print(
+			"hwtest needs a %u B stack, largest internal block %u B\n",
+			(unsigned)kStackBytes,
+			(unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL |
+													   MALLOC_CAP_8BIT));
 	}
 	vSemaphoreDelete(request.done);
 	running.clear();

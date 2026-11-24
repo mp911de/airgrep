@@ -1,0 +1,8 @@
+[scheme:lvgl_heap]
+entries:
+    bss -> extern_ram
+
+[mapping:lvgl_heap]
+archive: liblvgl__lvgl.a
+entries:
+    lv_mem_core_builtin (lvgl_heap)
