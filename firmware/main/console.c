@@ -78,6 +78,7 @@ esp_err_t console_start(void) {
 		err = gpio_sleep_sel_dis(CONFIG_ESP_CONSOLE_UART_TX_GPIO);
 	}
 #elif CONFIG_TINYUSB_CDC_ENABLED
+	repl_config.task_core_id = 0;
 	esp_err_t err = esp_console_new_repl_stdio(&repl_config, &repl);
 #else
 	esp_console_dev_usb_serial_jtag_config_t dev_config =
