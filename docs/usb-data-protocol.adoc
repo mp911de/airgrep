@@ -1,0 +1,610 @@
+== AIRGREP USB data protocol
+
+Status: implemented firmware protocol, pending hardware verification.
+
+The firmware implements all commands below. The USB product is
+`airgrep-++<++factory MAC++>++`, the serial is the factory MAC alone.
+One CDC console uses the `airgrep Console` string, and the
+vendor-specific bulk interface uses `airgrep Data`. The Python client,
+`firmware/tools/airgrep.py`, provides device discovery, HELLO, reboot,
+bootloader entry and console access. It has no READ, WRITE or injection
+commands yet.
+
+The vendor-specific USB bulk interface exchanges binary requests and
+responses between a desktop program and AIRGREP. It supports direct
+copies of component States, injected Traffic and GNSS data, device
+information, restart and bootloader entry. The CDC interface remains the
+interactive console. The data interface does not enumerate as a serial
+port.
+
+The behavior below records the design decisions from the discussion.
+Numeric IDs and status values, the CRC variant, widths of command
+fields, the exact HELLO payload layout and the session reset mechanism
+are implementation assignments. They were not individually selected
+during the discussion.
+
+USB VID/PID is `fa00:fa01`. Console CDC uses interfaces 0 and 1. Vendor
+interface 2 has class 0xff, bulk OUT endpoint 0x03 and bulk IN endpoint
+0x83, with 64-byte full-speed packets. Desktop software discovers and
+claims only the vendor interface through libusb, without resetting the
+device or reconfiguring the active composite device. USB reads use
+buffers of at least one full endpoint packet, accumulating bytes before
+parsing the frame length.
+
+=== Transaction rules
+
+* The desktop sends requests. AIRGREP replies to each complete request
+with either its command response or a generic STATUS response.
+* Only one request may be outstanding. There is no pipelining, request
+identifier or unsolicited data frame.
+* HELLO obtains information. It does not enable commands or establish an
+authorization state. A client may start with any supported command.
+* All commands require the current protocol version. A mismatching HELLO
+also receives STATUS with VERSION++_++MISMATCH, not a HELLO payload.
+* Every response carries AIRGREP’s current protocol version, including
+version mismatch responses.
+* A successful command with response data uses the request’s command ID
+and status OK. A failure, or a successful command without response data,
+uses STATUS.
+* Replies contain a one-byte status code. Errors have no text or
+additional payload.
+
+Here, a protocol command means a request on the data port. It is
+separate from a console Command. State, Target, Source, Traffic and
+Health bit retain their project glossary meanings.
+
+=== Common wire format
+
+Byte offsets are zero based. All multibyte header and command fields are
+little-endian. The decoder reads individual fields, without inserting C
+or C{plus}{plus} alignment padding into the header.
+
+==== Request
+
+[width="99%",cols="24%,>30%,23%,23%",options="header",]
+|===
+|Offset |Bytes |Field |Meaning
+|0 |1 |version |Version of the entire protocol and shared data layouts.
+
+|1 |2 |frame++_++length |Total frame length, including every header byte
+and the payload.
+
+|3 |1 |command |Command ID.
+
+|4 |2 |crc |CRC of the frame, excluding these two bytes.
+
+|6 |variable |payload |Command-specific request bytes.
+|===
+
+A request has at least 6 bytes. The largest frame is 65,535 bytes. There
+is no delimiter, escaping, COBS encoding or magic prefix.
+
+==== Response
+
+[width="99%",cols="24%,>30%,23%,23%",options="header",]
+|===
+|Offset |Bytes |Field |Meaning
+|0 |1 |version |AIRGREP’s current protocol and data layout version.
+
+|1 |2 |frame++_++length |Total frame length, including the status byte.
+
+|3 |1 |command |Original command ID for data responses, otherwise
+STATUS.
+
+|4 |2 |crc |CRC of the frame, excluding these two bytes.
+
+|6 |1 |status |Result code.
+
+|7 |variable |payload |Command-specific response bytes, if any.
+|===
+
+A STATUS response is exactly 7 bytes. It does not repeat the original
+command ID. The one outstanding request identifies which operation it
+answers.
+
+==== CRC
+
+This draft assigns CRC-16/IBM-3740, also called CRC-16/CCITT-FALSE:
+
+[cols=",",options="header",]
+|===
+|Parameter |Value
+|Polynomial |0x1021
+|Initial value |0xFFFF
+|Reflect input and output |false
+|Final XOR |0x0000
+|Check value for ASCII `123456789` |0x29B1
+|===
+
+Calculate over bytes 0 through 3, followed by bytes 6 through the end of
+the frame. Exclude bytes 4 and 5 rather than replacing them with zeros.
+Store the result little-endian. The response status byte is covered by
+the CRC.
+
+With this draft’s assignments, a version 1 HELLO request is
+`01 06 00 01 F5 50`. A STATUS VERSION++_++MISMATCH response from a
+version 1 device is `01 07 00 80 AA D1 02`.
+
+==== Version and shared layouts
+
+This draft assigns initial protocol version 1. That one version covers
+the frame contract, command payloads and the State layouts of all
+exposed components. It is independent of the firmware version string.
+
+A change to a shared field’s position, size, type, unit or meaning
+requires a protocol version change. Component ID changes and
+incompatible command changes also require a version change. No separate
+component layout version, layout fingerprint or `sizeof` field is
+transmitted.
+
+State payloads are the existing C or C{plus}{plus} object bytes,
+including their layout padding. They are not a second serialization
+model. Desktop and firmware builds must agree on field offsets, sizes,
+enum and boolean representations, integer byte order and floating-point
+representation. The shared layout uses the ESP32-S3 representation.
+Build-time checks must establish compatibility instead of assuming that
+sharing a header alone makes two compiler layouts identical.
+
+Do not pack or reorder existing component States just to make the
+protocol header convenient. The header is encoded separately from State
+payloads. Static methods and static synchronization members are not part
+of a State’s object bytes.
+
+=== Commands
+
+[width="100%",cols="25%,25%,25%,25%",options="header",]
+|===
+|ID |Command |Request payload |Successful response
+|0x01 |HELLO |Empty. |HELLO, OK, Hello response structure.
+
+|0x02 |READ |component++_++id. |READ, OK, complete component State.
+
+|0x03 |WRITE |component++_++id, offset, length, complete component
+State. |STATUS, OK.
+
+|0x04 |UPDATE++_++TRAFFIC |1 to 32 consecutive Target objects. |STATUS,
+OK.
+
+|0x05 |UPDATE++_++GNSS |One complete Gnss object. |STATUS, OK.
+
+|0x06 |REBOOT |Empty. |STATUS, OK, then restart.
+
+|0x07 |ENTER++_++BOOTLOADER |Empty. |STATUS, OK, then enter ROM download
+mode.
+
+|0x80 |STATUS |Response only. |Status byte only, with no payload.
+|===
+
+There is no SET++_++SOURCE command. Ingestion selection is changed by
+WRITE to the ADSBee State.
+
+=== Status codes
+
+[width="100%",cols="34%,33%,33%",options="header",]
+|===
+|Value |Name |Meaning
+|0x00 |OK |Operation completed, or restart/bootloader entry accepted for
+execution after the reply.
+
+|0x01 |CRC++_++MISMATCH |A complete declared frame failed its CRC check.
+
+|0x02 |VERSION++_++MISMATCH |Request version differs from AIRGREP’s
+current version.
+
+|0x03 |UNKNOWN++_++COMMAND |Command ID is unsupported, including STATUS
+sent as a request.
+
+|0x04 |UNKNOWN++_++COMPONENT |Component ID is not registered.
+
+|0x05 |INVALID++_++LENGTH |Frame or command payload has the wrong byte
+count.
+
+|0x06 |INVALID++_++RANGE |WRITE offset or length lies outside the
+selected State.
+
+|0x07 |INTERNAL++_++ERROR |AIRGREP cannot complete the operation.
+|===
+
+For a complete frame, check CRC before interpreting its command payload.
+Then check version, command and command-specific shape. A CRC error
+always returns STATUS, even if the received command byte appeared to be
+HELLO.
+
+A response is usable only when its length and CRC are valid and its
+command is either the expected data response or STATUS. Interpret a
+command-specific payload only when its version matches the client. A
+generic OK response is not a substitute for missing HELLO or READ data.
+A client with an older or newer version can still read
+VERSION++_++MISMATCH and the device version from the fixed response
+header without interpreting a State payload.
+
+=== HELLO
+
+The request has no payload and is 6 bytes long. With a matching version,
+the response contains the following 72-byte structure after the 7-byte
+response header. The complete response is 79 bytes.
+
+[width="99%",cols="24%,>30%,23%,23%",options="header",]
+|===
+|Payload offset |Bytes |Field |Meaning
+|0 |8 |uptime++_++seconds |Seconds since AIRGREP started.
+
+|8 |32 |firmware++_++version |NUL-terminated firmware version string,
+zero-filled remainder.
+
+|40 |4 |internal++_++free |Current free internal RAM bytes.
+
+|44 |4 |internal++_++minimum |Minimum free internal RAM bytes since
+boot.
+
+|48 |4 |internal++_++total |Total internal RAM bytes.
+
+|52 |4 |psram++_++free |Current free PSRAM bytes.
+
+|56 |4 |psram++_++minimum |Minimum free PSRAM bytes since boot.
+
+|60 |4 |psram++_++total |Total PSRAM bytes.
+
+|64 |2 |health |Existing system Health bit mask, unchanged.
+
+|66 |1 |mode |0 UNKNOWN, 1 ON, 2 CHARGER, 3 OFF.
+
+|67 |1 |cpu++_++core0 |Core 0 usage percent, or 0xFF if unavailable.
+
+|68 |1 |cpu++_++core1 |Core 1 usage percent, or 0xFF if unavailable.
+
+|69 |1 |cpu++_++overall |Mean core usage percent, or 0xFF if
+unavailable.
+
+|70 |2 |reserved |Zero. Explicit bytes keep this structure 72 bytes
+long.
+|===
+
+The version in the response header denotes the data structure version
+across all components. It is not repeated in this payload. A mismatching
+version returns the 7-byte STATUS VERSION++_++MISMATCH response instead
+of this structure.
+
+CPU and memory measurements follow `cmd++_++uptime`. CPU usage is
+calculated from elapsed time and idle runtime counters, not from the
+periodic poller’s CPU overload flag. For HELLO, use the interval since
+the previous HELLO sample, or since boot for the first sample. Keep that
+baseline separate from console calls. Memory fields use the same
+internal RAM and PSRAM categories and return byte counts, not formatted
+text.
+
+Return the existing `system++_++health()` result without changing its
+mode or stale-data rules. Bits 0 through 9 identify expander, charger,
+gauge, USB-C, barometer, ADSBee, GNSS, battery, memory and CPU. A Health
+bit names the component to inspect, not the failure reason. There is no
+separate CPU overload field in HELLO. The existing CPU Health bit
+remains part of the unchanged mask.
+
+=== Components and direct State access
+
+Component IDs are one byte. They select component States inside AIRGREP.
+The desktop sends no memory address, and AIRGREP returns no address
+catalogue.
+
+The initial draft catalogue is:
+
+[width="100%",cols="24%,23%,23%,>30%",options="header",]
+|===
+|ID |Component |Bytes selected by READ and WRITE |Version 1 byte count
+|0x01 |ADSBEE |ADSBee State, including GNSS data and the two ingestion
+flags. |240
+
+|0x02 |TRAFFIC |Existing fixed array of 512 Target slots, including
+empty slots. |61,440
+
+|0x03 |BAROMETER |Barometer State. |88
+
+|0x04 |BATTERY |Battery gauge State. |72
+
+|0x05 |CHARGER |Charger State. |288
+
+|0x06 |EXPANDER |I2C expander State. |64
+
+|0x07 |USB++_++C |FUSB303 State. |72
+
+|0x08 |WIFI |Wi-Fi State. |144
+
+|0x09 |ADSBEE++_++CLOCK |ADSBee clock synchronization State. |56
+|===
+
+Each component supplies access to its existing State and its existing
+synchronization. One generic implementation performs the byte copy.
+Components do not implement separate wire formats or duplicate State
+structures.
+
+Firmware compile-time assertions pin the native sizes, alignment and key
+offsets. The battery State includes `std::optional++<++float++>++` with
+an eight-byte representation in this ABI. Desktop clients must match
+that representation too, not just the surrounding State size. No desktop
+State client is implemented by this change.
+
+TRAFFIC selects the Target array, not the Table control object that
+contains its storage pointer and bookkeeping. It has no count field,
+active-target filtering or pagination. The existing layout uses
+`seen++_++us == 0` for an empty slot. At 120 bytes per Target, the array
+is 61,440 bytes, the READ response is 61,447 bytes and a WRITE request
+is 61,451 bytes. These sizes must remain within the 16-bit frame limit
+for the selected protocol version.
+
+==== READ
+
+Request payload: `component++_++id:u8`. Total request length: 7 bytes.
+
+Copy the entire selected State into a response snapshot under the
+component’s synchronization, then transmit the snapshot after releasing
+that synchronization. The response payload contains only those State
+bytes. Its total length is `7 {plus} State size`.
+
+There is no offset, requested length, count, component ID echo or State
+size field in the response. The client knows the component from its
+outstanding request and its layout from the protocol version.
+
+==== WRITE
+
+[cols=",>,",options="header",]
+|===
+|Request offset |Bytes |Field
+|6 |1 |component++_++id
+|7 |2 |offset, measured in bytes from the beginning of the State
+|9 |2 |length, number of bytes to copy
+|11 |State size |Complete State bytes
+|===
+
+Total request length is `11 {plus} State size`. There is no `sizeof`
+field. The complete State is sent even when only a subset is written.
+
+Receive the complete frame before touching the State. Check frame
+integrity, protocol version, component ID, payload size and copy bounds.
+For a State of size S, require `offset ++<++= S` and
+`length ++<++= S - offset`. A zero-length copy is a successful no-op.
+
+Copy `length` bytes from the supplied State at `offset` to the live
+State at the same offset, under its existing synchronization. The range
+is `++[++offset, offset {plus} length)`. Leave all other live State
+bytes unchanged. Return STATUS OK only after the copy completes. A
+failed or incomplete request performs no copy.
+
+This is deliberately a generic memory operation. Any byte within a
+selected State may be written. There are no per-field permissions,
+semantic value checks or additional simulation-mode guards. WRITE does
+not implicitly configure hardware, save NVS or invoke the
+UPDATE++_++TRAFFIC or UPDATE++_++GNSS behavior. Polls and existing State
+consumers continue to operate normally and can subsequently replace
+written values. The caller owns the meaning of the bytes it writes.
+
+=== Ingestion and injected data
+
+Append two fields to the ADSBee State, `traffic++_++ingestion` and
+`gnss++_++ingestion`, each with a one-byte READ or IGNORE value. The
+latter name avoids colliding with the existing `gnss` report member.
+This draft assigns READ = 0 and IGNORE = 1. Here READ means accept live
+input, not execute the READ protocol command.
+
+In version 1, these fields occupy State byte offsets 232 and 233
+respectively. The existing Gnss object used by UPDATE++_++GNSS is 168
+bytes.
+
+* Both fields are RAM-only and default to READ after reboot.
+* WRITE changes the fields through the same generic State copy used for
+other data.
+* `traffic++_++ingestion = IGNORE` suppresses live Traffic ingestion
+from ADSBee. `gnss++_++ingestion = IGNORE` suppresses live GNSS
+ingestion from ADSBee. Continue consuming the UART stream and handling
+other link work.
+* Closing or resetting the data-port connection restores both fields to
+READ.
+* UPDATE++_++TRAFFIC and UPDATE++_++GNSS work with either flag value.
+There is no requirement to select IGNORE first. With READ selected, live
+and injected updates can both arrive.
+
+==== UPDATE++_++TRAFFIC
+
+The payload contains 1 to 32 complete existing Target objects, placed
+consecutively, with no count field. Derive the number from
+`(frame++_++length - 6) / Target size`. Reject a zero, fractional or
+greater-than-32 batch with STATUS INVALID++_++LENGTH.
+
+Receive and validate the complete frame before changing Traffic. Update
+or insert each Target by its address and Source, using the existing
+Traffic table behavior. Leave unmentioned Targets unchanged except for
+the existing capacity eviction rules. Apply the batch as one operation
+under Traffic synchronization. Either the whole batch is applied or none
+of it is applied.
+
+Assign AIRGREP’s local receipt timestamp to the injected Targets. Do not
+use the desktop’s monotonic timestamp for freshness or expiry. Preserve
+the supplied report data. After the batch is applied, send STATUS OK.
+
+==== UPDATE++_++GNSS
+
+The payload contains exactly one existing Gnss object. Total request
+length is `6 {plus} Gnss size`.
+
+Apply it through the same GNSS publication path used by decoded live
+input. Update the ADSBee State, assign AIRGREP’s local receipt timestamp
+and retain the supplied GNSS UTC time. Preserve the existing subscribers
+and Events produced by that path. Send STATUS OK after application
+completes.
+
+The event bus is an internal integration mechanism. It does not add wire
+messages or change generic READ and WRITE into domain operations. UPDATE
+commands use the current ingestion behavior rather than reconstructing
+ADSBee UART text.
+
+Data commands execute on the event loop. The transport retains separate
+65,535-byte request and response buffers in PSRAM, so a complete WRITE
+is validated before any copy and a READ snapshot remains stable
+throughout transmission. Responses stream in bounded USB transfers
+without changing the wire frame. The three-second response deadline
+includes time queued on the event loop and all response transfers.
+
+=== Restart and bootloader entry
+
+REBOOT and ENTER++_++BOOTLOADER have empty request payloads. Both send
+STATUS OK and wait for response transmission to complete before
+resetting. Here OK acknowledges acceptance of the reset operation. It
+cannot prove that the next boot has completed.
+
+ENTER++_++BOOTLOADER targets the ESP32-S3 ROM download mode used by
+`idf.py flash` and esptool. It does not add a USB DFU class to the
+composite application device. The USB port path can change when ROM
+download mode replaces the application USB interfaces.
+
+A later small Python helper can open the data port, send
+ENTER++_++BOOTLOADER with the selected protocol version, receive and
+validate STATUS OK within the deadline, then close the port. A version
+mismatch reports the version from the response header. The helper needs
+no application State layout and does not need to send HELLO first.
+
+=== Timeouts and connection reset
+
+The receive loop runs continuously and accumulates bytes until the total
+declared frame length is present. A USB read may contain part of a frame
+or several buffered portions. USB transfer boundaries do not define
+protocol frames.
+
+The timeout is an absolute deadline of three seconds. Arriving bytes
+never extend it.
+
+[width="100%",cols="34%,33%,33%",options="header",]
+|===
+|Side |Deadline starts |Required completion
+|AIRGREP request decoder |First byte of a new request. |Complete request
+within three seconds.
+
+|Desktop transaction |Completion of sending the request. |Complete,
+valid response within three seconds.
+|===
+
+AIRGREP must finish processing and transmitting in time for the
+desktop’s response deadline. Partial response bytes do not satisfy that
+deadline. An idle connection with no pending frame or request does not
+time out.
+
+On timeout, discard accumulated input and reset the data-port connection
+before another request. Both ends clear their decoder state and queued
+input. AIRGREP cancels unapplied work and pending replies, then restores
+both ingestion flags to READ. An old reply must not cross that
+connection reset and satisfy a later request. No request is
+automatically retried.
+
+The client resets the data session with a vendor control OUT request
+directed to interface 2: `bmRequestType=0x41`, `bRequest=0x01`,
+`wValue=0`, `wIndex=2`, `wLength=0`. AIRGREP clears its pending receive
+and transmit work and restores ingestion flags to READ. This resets the
+data protocol without resetting the MCU or console. The client issues
+this request before a transaction and after an error, then drains stale
+bulk IN data before sending another request.
+
+The TinyUSB integration clears software queues on session reset and
+quarantines an in-flight endpoint transfer until completion. Clearing
+the vendor FIFO does not cancel that transfer. The Python client drains
+input until it observes 100 ms of silence before sending, bounded by
+three seconds. This is best-effort cleanup, not proof that arbitrarily
+late USB transfers cannot cross a reset. That boundary remains a
+hardware verification item.
+
+A timed-out WRITE or UPDATE has an unknown outcome. Discarding its reply
+or cancelling pending transport work does not undo an operation already
+applied. After resetting the connection, use READ to inspect the State
+before deciding whether to repeat the write.
+
+As best-effort cleanup, discard stale buffered input before sending a
+new request and before sending a reply. Do this only at transaction
+boundaries, after preserving the current complete request. Never clear
+bytes from a frame being assembled. Buffer clearing does not replace the
+connection reset required after a timeout.
+
+==== Damaged frames
+
+* A complete declared frame with an incorrect CRC receives STATUS
+CRC++_++MISMATCH. Do not execute its command.
+* A complete frame with an unsupported version receives STATUS
+VERSION++_++MISMATCH, including for HELLO.
+* A complete frame with an invalid command payload receives the
+applicable STATUS error.
+* A frame length smaller than the common header is invalid. Return
+STATUS INVALID++_++LENGTH if a complete common header is available. A
+client receiving INVALID++_++LENGTH resets the data connection before
+another request because the frame boundary may be wrong.
+* An incomplete or unusable header cannot always receive a reply. The
+fixed deadline and connection reset handle that case.
+* A client that receives a damaged or unexpected response resets the
+connection before sending another command. It must not treat that
+response as confirmation.
+
+No scanning for a new frame boundary is required. Loss of recovery
+within the existing byte stream is an accepted tradeoff of length-based
+framing.
+
+=== Verification plan
+
+Implementation and builds require review clearance. The following checks
+define the intended evidence, not completed verification.
+
+Use one hardware-independent protocol engine as the primary test
+boundary: feed received bytes and time into it, provide component State
+access, and inspect response bytes and resulting State. Prefer the
+existing decoder and protocol test approach, which runs on the host and
+through Unity. Reuse the existing Traffic table and GNSS
+decoding/publication behavior rather than creating simulated hardware
+drivers.
+
+[width="100%",cols="50%,50%",options="header",]
+|===
+|Area |Required behavior
+|Framing and CRC |Known request and response byte vectors, little-endian
+total lengths, CRC check vector, all split positions, corrupt
+header/payload/status, incomplete header, undersized and maximum frames.
+
+|Responses and version |Each command’s success shape, generic failures,
+matching HELLO data, mismatching HELLO status, current device version on
+errors, no handshake prerequisite.
+
+|READ and WRITE |Complete raw State read, fixed Traffic slots including
+empty slots, exact partial copy, unchanged bytes outside the range, no
+size field, wrong sizes and bounds, no mutation before complete
+validation.
+
+|Shared layouts |Firmware and desktop agreement on sizes, field offsets
+and representations for every exposed State, Target and Gnss object. No
+runtime layout metadata is added.
+
+|Injection |Batches of 1 and 32, rejection of malformed batches,
+all-or-none application, matching by address and Source, local receipt
+timestamps, preserved GNSS UTC, existing notifications, acceptance with
+READ or IGNORE selected.
+
+|Connection behavior |Fixed deadlines despite byte trickles, incomplete
+responses at three seconds, buffer clearing only at boundaries, stale
+replies blocked after reset, ingestion flags restored, timed-out writes
+not automatically repeated.
+
+|HELLO measurements |CPU calculation and memory categories match uptime
+behavior, unavailable CPU value, mode values, unchanged Health bit mask.
+
+|Reset commands |Reply emitted before reset action, no reset after a
+rejected frame.
+|===
+
+After host verification, use the actual ESP32-S3 and desktop to verify
+one serial port plus a vendor bulk interface, console operation
+alongside binary traffic, maximum Traffic reads within the deadline,
+disconnect/reconnect behavior, session reset, and reception of STATUS
+before restart or ROM download entry. Verify firmware flashing and the
+new application port after bootloader entry. Host tests and builds do
+not establish these USB or hardware results.
+
+=== Scope boundaries
+
+Final USB VID/PID allocation and manufacturer identity remain separate
+from this protocol. It does not implement the desktop LVGL simulator,
+define a simulation scenario format or add persistent ingestion
+settings. It adds no request IDs, subscriptions, pagination,
+structure-size fields, raw addresses, SET++_++SOURCE command or
+additional restrictions on writing component State bytes.
