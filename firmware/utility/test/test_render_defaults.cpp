@@ -278,6 +278,19 @@ void home_with_recovery() {
 	auto* radar =
 		reinterpret_cast<radar_t*>(lv_obj_find_by_name(home, "radar"));
 	CHECK(radar->recovery_sectors != nullptr);
+	// Vary both edges across octants and all seven dash phases.
+	uLong recovery_crc = 0;
+	for (int i = 0; i < 46; ++i) {
+		const float start = static_cast<float>((47 * i) % 360);
+		const radar_track_band_t band{start, start + static_cast<float>(1 + i),
+									  RADAR_BAND_RECOVERY};
+		radar_set_track_bands(reinterpret_cast<lv_obj_t*>(radar), &band, 1);
+		lv_refr_now(panel);
+		recovery_crc =
+			crc32_z(recovery_crc, reinterpret_cast<const Bytef*>(pixels.data()),
+					sizeof(pixels));
+	}
+	CHECK_EQUAL(0UL, recovery_crc);
 	default_grid(panel, pixels);
 	covered_home(panel, pixels, model);
 	lv_deinit();

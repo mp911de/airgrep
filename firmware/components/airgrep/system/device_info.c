@@ -74,10 +74,54 @@ const char* device_serial(void) {
 	return device_info()->device_id + sizeof("airgrep-") - 1;
 }
 
+// The names of an eFuse field's values. A target without the field reads 0
+// and names it unknown.
+typedef struct {
+	const char* const* names;
+	size_t count;
+} efuse_names_t;
+
+#define EFUSE_NAMES(names) {(names), sizeof(names) / sizeof((names)[0])}
+
+#if CONFIG_IDF_TARGET_ESP32S3
+#define CHIP_NAME "ESP32-S3"
 static uint8_t efuse_bits(const esp_efuse_desc_t* field[], size_t bits) {
 	uint8_t value = 0;
 	esp_efuse_read_field_blob(field, &value, bits);
 	return value;
+}
+
+// esptool's package names by PKG_VERSION, the in-package memory by the value
+// tables of esp_efuse_table.csv.
+static const char* const packages[] = {"QFN56", "PICO-1 LGA56"};
+static const char* const flash_caps[] = {"none", "8 MB", "4 MB"};
+static const char* const psram_caps[] = {"none", "8 MB", "2 MB", "16 MB",
+										 "4 MB"};
+static const char* const psram_vendors[] = {"", "AP 3.3 V", "AP 1.8 V"};
+static const efuse_names_t package_names = EFUSE_NAMES(packages);
+static const efuse_names_t flash_cap_names = EFUSE_NAMES(flash_caps);
+static const efuse_names_t psram_cap_names = EFUSE_NAMES(psram_caps);
+static const efuse_names_t psram_vendor_names = EFUSE_NAMES(psram_vendors);
+
+static void efuse_read_package(device_info_t* info) {
+	info->package = efuse_bits(ESP_EFUSE_PKG_VERSION, 3);
+	info->flash_cap = efuse_bits(ESP_EFUSE_FLASH_CAP, 3);
+	info->psram_cap = efuse_bits(ESP_EFUSE_PSRAM_CAP, 3);
+	info->psram_vendor = efuse_bits(ESP_EFUSE_PSRAM_VENDOR, 2);
+}
+#else
+#define CHIP_NAME CONFIG_IDF_TARGET
+static const efuse_names_t package_names = {0};
+static const efuse_names_t flash_cap_names = {0};
+static const efuse_names_t psram_cap_names = {0};
+static const efuse_names_t psram_vendor_names = {0};
+
+static void efuse_read_package(device_info_t* info) { (void)info; }
+#endif
+
+static const char* efuse_name(const efuse_names_t* names, uint8_t value,
+							  const char* unknown) {
+	return value < names->count ? names->names[value] : unknown;
 }
 
 const device_info_t* device_info(void) {
@@ -90,10 +134,7 @@ const device_info_t* device_info(void) {
 	esp_chip_info(&chip);
 	info.revision = chip.revision;
 	info.cores = chip.cores;
-	info.package = efuse_bits(ESP_EFUSE_PKG_VERSION, 3);
-	info.flash_cap = efuse_bits(ESP_EFUSE_FLASH_CAP, 3);
-	info.psram_cap = efuse_bits(ESP_EFUSE_PSRAM_CAP, 3);
-	info.psram_vendor = efuse_bits(ESP_EFUSE_PSRAM_VENDOR, 2);
+	efuse_read_package(&info);
 	esp_flash_read_id(NULL, &info.flash_jedec_id);
 	esp_flash_get_physical_size(NULL, &info.detected_flash_bytes);
 #if CONFIG_SPIRAM
@@ -115,10 +156,8 @@ void device_firmware_format(char* out, size_t size) {
 
 void device_chip_format(char* out, size_t size) {
 	const device_info_t* info = device_info();
-	// esptool's ESP32-S3 package names by PKG_VERSION.
-	static const char* packages[] = {"QFN56", "PICO-1 LGA56"};
 	const char* package =
-		info->package < 2 ? packages[info->package] : "unknown package";
+		efuse_name(&package_names, info->package, "unknown package");
 	esp_pm_config_t clock = {
 		.max_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ,
 		.min_freq_mhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ,
@@ -128,7 +167,7 @@ void device_chip_format(char* out, size_t size) {
 	if (clock.min_freq_mhz != clock.max_freq_mhz) {
 		(void)snprintf(scaling, sizeof scaling, "%d to ", clock.min_freq_mhz);
 	}
-	(void)snprintf(out, size, "ESP32-S3 (%s) rev v%u.%u, %u cores @ %s%d MHz",
+	(void)snprintf(out, size, CHIP_NAME " (%s) rev v%u.%u, %u cores @ %s%d MHz",
 				   package, info->revision / 100, info->revision % 100,
 				   info->cores, scaling, clock.max_freq_mhz);
 }
@@ -136,17 +175,10 @@ void device_chip_format(char* out, size_t size) {
 void device_info_print(int width) {
 	const device_info_t* info = device_info();
 	const esp_app_desc_t* app = esp_app_get_description();
-	// Efuse FLASH_CAP, PSRAM_CAP and PSRAM_VENDOR value tables from
-	// esp_efuse_table.csv.
-	static const char* flash_caps[] = {"none", "8 MB", "4 MB"};
-	static const char* psram_caps[] = {"none", "8 MB", "2 MB", "16 MB", "4 MB"};
-	static const char* psram_vendors[] = {"", "AP 3.3 V", "AP 1.8 V"};
-	const char* flash_cap =
-		info->flash_cap < 3 ? flash_caps[info->flash_cap] : "?";
-	const char* psram_cap =
-		info->psram_cap < 5 ? psram_caps[info->psram_cap] : "?";
+	const char* flash_cap = efuse_name(&flash_cap_names, info->flash_cap, "?");
+	const char* psram_cap = efuse_name(&psram_cap_names, info->psram_cap, "?");
 	const char* psram_vendor =
-		info->psram_vendor < 3 ? psram_vendors[info->psram_vendor] : "?";
+		efuse_name(&psram_vendor_names, info->psram_vendor, "?");
 	char row[128];
 	device_firmware_format(row, sizeof row);
 	printf("%-*s %s\n", width, "Firmware", row);

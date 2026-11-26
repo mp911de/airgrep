@@ -4,6 +4,7 @@
 #include "console.h"
 #include "esp_core_dump.h"
 #include "esp_partition.h"
+#include "sdkconfig.h"
 
 static int panic_command(int argc, char** argv) {
 	(void)argv;
@@ -35,6 +36,9 @@ static int panic_command(int argc, char** argv) {
 	if (esp_core_dump_get_panic_reason(reason, sizeof reason) == ESP_OK) {
 		printf("Panic: %s\n", reason);
 	}
+	// Xtensa unwinds the backtrace on the device. RISC-V saves a stack dump
+	// that GDB unwinds with the ELF.
+#if CONFIG_IDF_TARGET_ARCH_XTENSA
 	printf("Task: %.16s  PC: 0x%08" PRIx32 "  EXCCAUSE: 0x%" PRIx32
 		   "  EXCVADDR: 0x%08" PRIx32 "\nELF SHA256: %.*s\nBacktrace:",
 		   summary.exc_task, summary.exc_pc, summary.ex_info.exc_cause,
@@ -47,6 +51,15 @@ static int panic_command(int argc, char** argv) {
 		printf(" 0x%08" PRIx32, summary.exc_bt_info.bt[i]);
 	}
 	puts(summary.exc_bt_info.corrupted ? " (incomplete)" : "");
+#else
+	printf("Task: %.16s  PC: 0x%08" PRIx32 "  MCAUSE: 0x%" PRIx32
+		   "  MTVAL: 0x%08" PRIx32 "  RA: 0x%08" PRIx32 "  SP: 0x%08" PRIx32
+		   "\nELF SHA256: %.*s\nStack dump: %" PRIu32 " B\n",
+		   summary.exc_task, summary.exc_pc, summary.ex_info.mcause,
+		   summary.ex_info.mtval, summary.ex_info.ra, summary.ex_info.sp,
+		   (int)sizeof summary.app_elf_sha256,
+		   (const char*)summary.app_elf_sha256, summary.exc_bt_info.dump_size);
+#endif
 	return 0;
 }
 

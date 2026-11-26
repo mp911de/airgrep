@@ -15,9 +15,11 @@
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "i2c_expander/tca9534.hpp"
-#include "soc/extmem_reg.h"
 #include "soc/soc.h"
 #include "usb/fusb303.hpp"
+#if CONFIG_IDF_TARGET_ESP32S3
+#include "soc/extmem_reg.h"
+#endif
 
 #ifdef HWTEST_BENCHMARKS
 #include "benchmark.hpp"
@@ -30,7 +32,7 @@
 
 namespace hwtest {
 void Output::print(const char* format, ...) {
-	va_list arguments;
+	va_list arguments{};
 	va_start(arguments, format);
 	(void)std::vfprintf(stream_, format, arguments);
 	va_end(arguments);
@@ -143,6 +145,7 @@ void engine(Output& output) {
 constexpr size_t kSkyAircraft = 200;
 constexpr int kCycles = 5;
 
+#if CONFIG_IDF_TARGET_ESP32S3
 // The counters of the caches that both cores reach flash and external RAM
 // through. What another task fetches meanwhile counts too.
 benchmark::Cache caches() {
@@ -152,6 +155,10 @@ benchmark::Cache caches() {
 			REG_READ(EXTMEM_DBUS_ACS_FLASH_MISS_CNT_REG),
 			REG_READ(EXTMEM_DBUS_ACS_SPIRAM_MISS_CNT_REG)};
 }
+constexpr benchmark::Cache (*kCaches)() = caches;
+#else
+constexpr benchmark::Cache (*kCaches)() = nullptr;
+#endif
 
 void stages(Output& output) {
 	struct Stage {
@@ -169,7 +176,7 @@ void stages(Output& output) {
 				  &benchmark::Cycle::track_cache},
 				 {"speed band", &benchmark::Cycle::speed_us,
 				  &benchmark::Cycle::speed_cache}};
-	benchmark::Cycles cycles(kSkyAircraft, caches);
+	benchmark::Cycles cycles(kSkyAircraft, kCaches);
 	benchmark::Cycle cycle;
 	for (int i = 0; i < kCycles; i++) {
 		vTaskDelay(1);
@@ -194,7 +201,7 @@ void stages(Output& output) {
 		output.print("%-14s least %6.1f  mean %6.1f  most %6.1f", part.name,
 					 part.least / 1000.0, part.total / 1000.0 / kCycles,
 					 part.most / 1000.0);
-		if (part.cache) {
+		if (kCaches != nullptr && part.cache) {
 			output.print("  fetches %7.0f k  misses %6.0f  %.2f %%",
 						 static_cast<double>(part.accesses) / 1000.0 / kCycles,
 						 static_cast<double>(part.misses) / kCycles,

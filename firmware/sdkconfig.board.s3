@@ -1,2 +1,18 @@
+CONFIG_IDF_TARGET="esp32s3"
 CONFIG_AIRGREP_BOARD_PLUS=y
 CONFIG_AIRGREP_USB_SERVICE_COMMANDS=y
+
+#################################
+# PS RAM
+#################################
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_SPEED_80M=y
+
+#################################
+# Performance Tuning
+#################################
+# The conflict engine runs through more code than 16 KB of instruction cache hold
+CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB=y
+CONFIG_ESP32S3_DATA_CACHE_64KB=y
+CONFIG_ESP32S3_DATA_CACHE_LINE_64B=y
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
