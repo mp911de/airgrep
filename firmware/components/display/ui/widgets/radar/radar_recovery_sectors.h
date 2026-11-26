@@ -78,8 +78,15 @@ static void recovery_store_pixels(void * user, int32_t x, int32_t y, int32_t len
     x += pen->x;
     y += pen->y;
     if(pen->spoke) {
+        if(y < pen->spoke->top || y > pen->spoke->bottom) {
+            return;
+        }
         recovery_row_t * row = &pen->spoke->rows[y - pen->spoke->top];
-        memset(row->alpha[0] + (x - row->x), alpha, (size_t)length);
+        int32_t start = LV_MAX(0, x - row->x);
+        int32_t end = LV_MIN(SPOKE_ROW_WIDTH, x - row->x + length);
+        if(start < end) {
+            lv_memset(row->alpha[0] + start, alpha, (size_t)(end - start));
+        }
         return;
     }
     for(int32_t end = x + length; x < end && !pen->failed; x++) {
@@ -301,7 +308,7 @@ static bool recovery_compose(struct recovery_sectors * cache, const radar_track_
         }
     }
     lv_draw_buf_flush_cache(cache->mask, NULL);
-    memcpy(cache->visible, visible, sizeof(cache->visible));
+    lv_memcpy(cache->visible, visible, sizeof(cache->visible));
     cache->prepared = true;
     return true;
 }
@@ -318,8 +325,8 @@ static bool recovery_sectors_draw(struct recovery_sectors ** owner, lv_layer_t *
         }
         any = true;
         int32_t first = LV_MIN(wedge->sweep_deg, 360 - wedge->start_deg);
-        memset(visible + wedge->start_deg, 1, (size_t)first);
-        memset(visible, 1, (size_t)(wedge->sweep_deg - first));
+        lv_memset(visible + wedge->start_deg, 1, (size_t)first);
+        lv_memset(visible, 1, (size_t)(wedge->sweep_deg - first));
     }
     if(!any) {
         return true;
@@ -328,7 +335,7 @@ static bool recovery_sectors_draw(struct recovery_sectors ** owner, lv_layer_t *
     if(!cache) {
         return false;
     }
-    bool changed = !cache->prepared || memcmp(visible, cache->visible, sizeof(visible));
+    bool changed = !cache->prepared || lv_memcmp(visible, cache->visible, sizeof(visible));
     if(changed && !recovery_compose(cache, bands, visible)) {
         recovery_sectors_release(owner);
         return false;

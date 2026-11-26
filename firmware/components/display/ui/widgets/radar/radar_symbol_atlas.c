@@ -1,7 +1,6 @@
 #include "radar_outline.h"
 #include "airgrep_ui.h"
 #include <stdlib.h>
-#include <string.h>
 
 #ifdef ESP_PLATFORM
     #include "esp_heap_caps.h"
@@ -107,7 +106,7 @@ static bool attach(lv_display_t * display)
         if(!groups) {
             return false;
         }
-        memset(groups, 0, bytes);
+        lv_memset(groups, 0, bytes);
     }
     return true;
 }
@@ -160,7 +159,7 @@ static bool rasterize(atlas_mask_t * entry, const lv_draw_image_dsc_t * transfor
         return false;
     }
     for(uint32_t y = 0; y < height; y++) {
-        memcpy(pixels + (size_t)y * stride, scratch + ((size_t)y + (size_t)ink.y1) * (size_t)w + (size_t)ink.x1, width);
+        lv_memcpy(pixels + (size_t)y * stride, scratch + ((size_t)y + (size_t)ink.y1) * (size_t)w + (size_t)ink.x1, width);
     }
     free(scratch);
     entry->origin = (lv_point_t){bounds.x1 + ink.x1, bounds.y1 + ink.y1};
@@ -198,12 +197,16 @@ static atlas_mask_t * get_mask(const lv_draw_image_dsc_t * transform)
 
 bool radar_symbol_atlas_draw(lv_layer_t * layer, lv_draw_image_dsc_t * image, const lv_area_t * area)
 {
-    int32_t angle = (image->rotation % 3600 + 3600) % 3600;
-    image->rotation = ((angle + STEP_TENTHS / 2) / STEP_TENTHS % DIRECTIONS) * STEP_TENTHS;
-    if(!attach(lv_refr_get_disp_refreshing())) {
+    const lv_image_dsc_t * src = image->src;
+    if(!src || image->scale_y != image->scale_x ||
+       image->pivot.x != (int32_t)(src->header.w / 2) || image->pivot.y != (int32_t)(src->header.h / 2) ||
+       !attach(lv_refr_get_disp_refreshing())) {
         return false;
     }
-    atlas_mask_t * entry = get_mask(image);
+    int32_t angle = (image->rotation % 3600 + 3600) % 3600;
+    lv_draw_image_dsc_t lookup = *image;
+    lookup.rotation = ((angle + STEP_TENTHS / 2) / STEP_TENTHS % DIRECTIONS) * STEP_TENTHS;
+    atlas_mask_t * entry = get_mask(&lookup);
     if(!entry) {
         return false;
     }

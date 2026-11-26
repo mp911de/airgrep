@@ -50,6 +50,7 @@ void keyboard_event_hook(lv_event_t * e)
 void keyboard_set_layout(lv_obj_t * keyboard, const char * layout)
 {
     lv_obj_clean(keyboard);
+    ((keyboard_t *)keyboard)->save = NULL;
     ((keyboard_t *)keyboard)->hint_line = NULL;
     if(lv_streq(layout, "hex") || lv_streq(layout, "digits")) {
         build_pad(keyboard, lv_streq(layout, "hex"));
@@ -75,9 +76,15 @@ void keyboard_set_cb(lv_obj_t * keyboard, keyboard_cb_t cb)
 void keyboard_set_save_active(lv_obj_t * keyboard, bool active)
 {
     lv_obj_t * save = ((keyboard_t *)keyboard)->save;
+    if(!save) {
+        return;
+    }
     lv_obj_set_state(save, LV_STATE_DISABLED, !active);
     /* A recolour is not inherited, so the check follows by its own state. */
-    lv_obj_set_state(lv_obj_get_child(save, 0), LV_STATE_DISABLED, !active);
+    lv_obj_t * icon = lv_obj_get_child(save, 0);
+    if(icon) {
+        lv_obj_set_state(icon, LV_STATE_DISABLED, !active);
+    }
 }
 
 static void build_pad(lv_obj_t * keyboard, bool letters)

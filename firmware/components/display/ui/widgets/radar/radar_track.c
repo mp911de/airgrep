@@ -1,4 +1,5 @@
 #include "radar_track.h"
+#include "radar_math.h"
 #include <math.h>
 #include "navigation/units.h"
 #include <stdbool.h>
@@ -133,24 +134,14 @@ uint32_t radar_track_tail(radar_point_t * path, uint32_t count, radar_tail_part_
     return part_count;
 }
 
-static int32_t larger(int32_t a, int32_t b)
-{
-    return a > b ? a : b;
-}
-
-static int32_t smaller(int32_t a, int32_t b)
-{
-    return a < b ? a : b;
-}
-
 /* Scan-convert the three-pixel ribbon into one cleared A8 mask per trail. */
 void radar_track_ribbon(uint8_t * data, int stride, int left, int top, int right, int bottom,
                         const radar_tail_part_t * parts, unsigned count)
 {
     enum { limit = RADAR_MAX_TAIL_LENGTH_PX + (RADAR_STROKE_WIDTH_PX + 1) / 2 + 1 };
     _Static_assert(RADAR_STROKE_WIDTH_PX == 3, "ribbon has one opaque and one antialias pixel per side");
-    const int xmin = left > -limit ? left : -limit, xmax = right < limit ? right : limit - 1;
-    const int ymin = top > -limit ? top : -limit, ymax = bottom < limit ? bottom : limit - 1;
+    const int xmin = radar_max_i32(left, -limit), xmax = radar_min_i32(right, limit - 1);
+    const int ymin = radar_max_i32(top, -limit), ymax = radar_min_i32(bottom, limit - 1);
     for(unsigned i = 0; i < count; ++i) {
         const radar_tail_part_t * part = &parts[i];
         float dx = part->to.x - part->from.x, dy = part->to.y - part->from.y;
@@ -165,28 +156,17 @@ void radar_track_ribbon(uint8_t * data, int stride, int left, int top, int right
         float half_span = 2.0f / normal;
         float low = fminf(u0, u1), high = fmaxf(u0, u1);
         /* Centers lie at n + 0.5. Expand the two-pixel reach by 0.001 for float roundoff. */
-        int first = (int)ceilf(low - 2.501f), last = (int)floorf(high + 1.501f);
         int umin = vertical ? ymin : xmin, umax = vertical ? ymax : xmax;
         int vmin = vertical ? xmin : ymin, vmax = vertical ? xmax : ymax;
-        if(first < umin) {
-            first = umin;
-        }
-        if(last > umax) {
-            last = umax;
-        }
+        int first = radar_max_i32((int)ceilf(low - 2.501f), umin);
+        int last = radar_min_i32((int)floorf(high + 1.501f), umax);
         int opacity = 255 * (RADAR_TAIL_STEPS - part->step) / RADAR_TAIL_STEPS;
         for(int u = first; u <= last; ++u) {
             float uc = (float)u + 0.5f, offset = uc - u0;
             /* The quad edges are parallel. Pixel centers in this interval span the entire strip. */
             float center = v0 + offset * slope;
-            int start = (int)ceilf(center - half_span - 0.501f);
-            int end = (int)floorf(center + half_span - 0.499f);
-            if(start < vmin) {
-                start = vmin;
-            }
-            if(end > vmax) {
-                end = vmax;
-            }
+            int start = radar_max_i32((int)ceilf(center - half_span - 0.501f), vmin);
+            int end = radar_min_i32((int)floorf(center + half_span - 0.499f), vmax);
             bool near_cap = uc < low + 2.001f || uc > high - 2.001f;
             for(int v = start; v <= end; ++v) {
                 float vc = (float)v + 0.5f;
@@ -241,31 +221,31 @@ void radar_track_tail_runs(const radar_tail_part_t * parts, uint32_t count, floa
     int32_t left = REACH, right = -REACH, top = REACH, bottom = -REACH;
     for(uint32_t i = 0; i < count; i++) {
         const radar_tail_part_t * p = &parts[i];
-        left = smaller(left, (int32_t)floorf(fminf(p->from.x, p->to.x) - reach));
-        right = larger(right, (int32_t)ceilf(fmaxf(p->from.x, p->to.x) + reach));
-        top = smaller(top, (int32_t)floorf(fminf(p->from.y, p->to.y) - reach));
-        bottom = larger(bottom, (int32_t)ceilf(fmaxf(p->from.y, p->to.y) + reach));
+        left = radar_min_i32(left, (int32_t)floorf(fminf(p->from.x, p->to.x) - reach));
+        right = radar_max_i32(right, (int32_t)ceilf(fmaxf(p->from.x, p->to.x) + reach));
+        top = radar_min_i32(top, (int32_t)floorf(fminf(p->from.y, p->to.y) - reach));
+        bottom = radar_max_i32(bottom, (int32_t)ceilf(fmaxf(p->from.y, p->to.y) + reach));
     }
-    top = larger(top, -REACH);
-    bottom = smaller(bottom, REACH - 1);
-    left = larger(left, -REACH);
-    right = smaller(right, REACH - 1);
+    top = radar_max_i32(top, -REACH);
+    bottom = radar_min_i32(bottom, REACH - 1);
+    left = radar_max_i32(left, -REACH);
+    right = radar_min_i32(right, REACH - 1);
     if(right < left) {
         return;
     }
     int32_t stride = right - left + 1;
     for(int32_t y0 = top; y0 <= bottom; y0 += ROWS) {
-        int32_t y1 = smaller(y0 + ROWS - 1, bottom);
+        int32_t y1 = radar_min_i32(y0 + ROWS - 1, bottom);
         memset(pixels, 0, (size_t)((y1 - y0 + 1) * stride));
         for(uint32_t i = 0; i < count; ++i) {
             const radar_tail_part_t * p = &parts[i];
-            int32_t first = larger(y0, (int32_t)ceilf(fminf(p->from.y, p->to.y) - reach - 0.5f));
-            int32_t last = smaller(y1, (int32_t)floorf(fmaxf(p->from.y, p->to.y) + reach - 0.5f));
+            int32_t first = radar_max_i32(y0, (int32_t)ceilf(fminf(p->from.y, p->to.y) - reach - 0.5f));
+            int32_t last = radar_min_i32(y1, (int32_t)floorf(fmaxf(p->from.y, p->to.y) + reach - 0.5f));
             if(last < first) {
                 continue;
             }
-            int32_t x0 = larger(left, (int32_t)floorf(fminf(p->from.x, p->to.x) - reach));
-            int32_t x1 = smaller(right, (int32_t)ceilf(fmaxf(p->from.x, p->to.x) + reach));
+            int32_t x0 = radar_max_i32(left, (int32_t)floorf(fminf(p->from.x, p->to.x) - reach));
+            int32_t x1 = radar_min_i32(right, (int32_t)ceilf(fmaxf(p->from.x, p->to.x) + reach));
             float dx = p->to.x - p->from.x, dy = p->to.y - p->from.y;
             float len2 = dx * dx + dy * dy;
             float opa = 255.0f * (float)(RADAR_TAIL_STEPS - p->step) / RADAR_TAIL_STEPS;

@@ -1,7 +1,9 @@
 #include "radar_labels.h"
+#include "radar_math.h"
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdlib.h>
 #ifdef ESP_PLATFORM
 #include "sdkconfig.h"
 #endif
@@ -15,21 +17,6 @@
 #define COVERS 8
 #define CROSSES_RING 3
 
-static int32_t clamp(int32_t value, int32_t low, int32_t high)
-{
-    return value < low ? low : value > high ? high : value;
-}
-
-static int32_t larger(int32_t a, int32_t b)
-{
-    return a > b ? a : b;
-}
-
-static int32_t magnitude(int32_t value)
-{
-    return value < 0 ? -value : value;
-}
-
 static bool overlap(const radar_box_t * a, const radar_box_t * b)
 {
     return a->x1 <= b->x2 && b->x1 <= a->x2 && a->y1 <= b->y2 && b->y1 <= a->y2;
@@ -42,12 +29,12 @@ static bool inside(const radar_box_t * box, const radar_box_t * bounds)
 
 static bool crosses(const radar_box_t * box, radar_spot_t center, int32_t radius)
 {
-    int32_t near_x = clamp(center.x, box->x1, box->x2) - center.x;
-    int32_t near_y = clamp(center.y, box->y1, box->y2) - center.y;
-    int32_t far_x = larger(magnitude(box->x1 - center.x), magnitude(box->x2 - center.x));
-    int32_t far_y = larger(magnitude(box->y1 - center.y), magnitude(box->y2 - center.y));
+    int32_t near_x = radar_clamp_i32(center.x, box->x1, box->x2) - center.x;
+    int32_t near_y = radar_clamp_i32(center.y, box->y1, box->y2) - center.y;
+    int32_t far_x = radar_max_i32(abs(box->x1 - center.x), abs(box->x2 - center.x));
+    int32_t far_y = radar_max_i32(abs(box->y1 - center.y), abs(box->y2 - center.y));
     int32_t reach = radius + RING_CLEARANCE_PX;
-    int32_t hole = larger(radius - RING_CLEARANCE_PX, 0);
+    int32_t hole = radar_max_i32(radius - RING_CLEARANCE_PX, 0);
     return near_x * near_x + near_y * near_y <= reach * reach && far_x * far_x + far_y * far_y >= hole * hole;
 }
 
@@ -81,6 +68,7 @@ static radar_box_t beside(radar_spot_t symbol, radar_spot_t size, side_t side)
     return box;
 }
 
+#ifdef CONFIG_IDF_TARGET_ESP32S3
 /* Each block has eight left edges, then eight right, top and bottom edges.
  * The radar has 32 symbols, 32 placed labels, at most 160 dots, the own ship and two ring labels. */
 enum { LANES = 8, RIGHT_EDGES = LANES, TOP_EDGES = 2 * LANES, BOTTOM_EDGES = 3 * LANES,
@@ -97,7 +85,6 @@ static void store_box(int16_t * blocks, size_t index, radar_box_t box)
 
 static const radar_box_t unused_box = {INT16_MAX, INT16_MAX, INT16_MIN, INT16_MIN};
 
-#ifdef CONFIG_IDF_TARGET_ESP32S3
 static bool compact(int32_t value)
 {
     /* A label origin, dimension, clearance and gap must fit together in a signed 16-bit lane. */
@@ -151,17 +138,8 @@ static unsigned packed_intersections(const int16_t * blocks, uint32_t used, cons
 #endif
 
 static unsigned intersections(const radar_field_t * field, const radar_spot_t * symbols, uint32_t count,
-                              const radar_box_t * labels, uint32_t index, const radar_box_t * padded,
-                              const int16_t * blocks, uint32_t used)
+                              const radar_box_t * labels, uint32_t index, const radar_box_t * padded)
 {
-#ifdef CONFIG_IDF_TARGET_ESP32S3
-    if(used) {
-        return packed_intersections(blocks, used, padded);
-    }
-#else
-    (void)blocks;
-    (void)used;
-#endif
     radar_box_t own = around(field->center, RADAR_SYMBOL_RADIUS_PX);
     unsigned hits = overlap(padded, &own);
     for(uint32_t i = 0; i < count; i++) {
@@ -206,14 +184,13 @@ void radar_labels(const radar_field_t * field, const radar_spot_t * symbols, con
     __asm__ volatile("" : "+r"(address));
     int16_t * blocks = (int16_t *)((address + 15u) & ~(uintptr_t)15u);
     uint32_t used = pack(blocks, field, symbols, sizes, count);
-#else
-    int16_t * blocks = NULL;
-    uint32_t used = 0;
 #endif
     for(uint32_t i = 0; i < count; i++) {
+#ifdef CONFIG_IDF_TARGET_ESP32S3
         if(used) {
             store_box(blocks, i, unused_box);
         }
+#endif
         int8_t mirror = symbols[i].x > field->center.x + field->prefer_left_after_x_px ? -1 : 1;
         uint32_t least = UINT32_MAX;
         for(uint32_t tried = 0; tried < SIDES && least > 0; tried++) {
@@ -221,16 +198,23 @@ void radar_labels(const radar_field_t * field, const radar_spot_t * symbols, con
             radar_box_t label = beside(symbols[i], sizes[i], side);
             radar_box_t padded = {label.x1 - LABEL_CLEARANCE_PX, label.y1 - LABEL_CLEARANCE_PX,
                                   label.x2 + LABEL_CLEARANCE_PX, label.y2 + LABEL_CLEARANCE_PX};
-            unsigned hits = intersections(field, symbols, count, labels, i, &padded, blocks, used);
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+            unsigned hits = used ? packed_intersections(blocks, used, &padded)
+                                 : intersections(field, symbols, count, labels, i, &padded);
+#else
+            unsigned hits = intersections(field, symbols, count, labels, i, &padded);
+#endif
             uint32_t costs = cost(field, &label, hits);
             if(costs < least) {
                 least = costs;
                 labels[i] = label;
             }
         }
+#ifdef CONFIG_IDF_TARGET_ESP32S3
         if(used) {
             store_box(blocks, i, around(symbols[i], RADAR_SYMBOL_RADIUS_PX));
             store_box(blocks, used++, labels[i]);
         }
+#endif
     }
 }

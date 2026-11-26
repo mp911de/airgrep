@@ -101,6 +101,15 @@ foreach (name settings_store usb_commands)
             "${FIRMWARE}/components/daidalus")
 endforeach ()
 
+# Encounters in single precision when tests/host is the top-level build (Linux).
+if (NOT TARGET daidalus)
+    set(DAIDALUS_FILE_IO OFF)
+    set(DAIDALUS_BUILD_EXAMPLES OFF)
+    set(DAIDALUS_BUILD_TESTS ON)
+    set(DAIDALUS_SINGLE_PRECISION ON)
+    add_subdirectory("${FIRMWARE}/components/daidalus" daidalus)
+endif ()
+
 # Every tag the test build runs at boot names at least one TEST_CASE.
 add_test(NAME firmware.tags COMMAND "${CMAKE_COMMAND}" "-DFIRMWARE=${FIRMWARE}" -P "${CMAKE_CURRENT_LIST_DIR}/tags.cmake")
 # No hand-written source includes "../".
@@ -115,7 +124,7 @@ file(GLOB_RECURSE scripts CONFIGURE_DEPENDS
         "${FIRMWARE}/tzdb/*.sh")
 list(FILTER scripts EXCLUDE REGEX "${not_ours}")
 add_test(NAME lint.ruff
-        COMMAND ruff check --no-cache --select F --extend-exclude "daidalus,build,managed_components,cmake-build-*,venv"
+        COMMAND ruff check --no-cache --select F --extend-exclude "build,managed_components,cmake-build-*,venv"
                 main components tools utility tzdb
         WORKING_DIRECTORY "${FIRMWARE}")
 add_test(NAME lint.shellcheck COMMAND shellcheck ${scripts})

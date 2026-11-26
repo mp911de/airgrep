@@ -11,14 +11,9 @@ char radar_wedge_tag;
 void radar_wedge_mix_blocks(uint16_t *dest, int blocks, const uint16_t *constants, uint32_t background_pair);
 
 /* LVGL RGB565 mixes three packed channels at five bits of opacity precision. */
-static uint32_t expand565(uint16_t color)
-{
-    return (color | ((uint32_t)color << 16)) & 0x07e0f81fu;
-}
-
 static uint16_t mix565(uint32_t foreground, uint16_t background, unsigned weight)
 {
-    uint32_t bg = expand565(background);
+    uint32_t bg = LV_COLOR_MIX_16_PREPARE(background);
     uint32_t mixed = ((((foreground - bg) * weight) >> 5) + bg) & 0x07e0f81fu;
     return (uint16_t)(mixed | (mixed >> 16));
 }
@@ -72,7 +67,7 @@ static void blend_span(uint16_t *dest, int length, uint16_t color, uint32_t fore
 void radar_wedge_blend_rows(uint16_t *dest, int dest_stride, const uint8_t *mask, int mask_stride,
                             int width, int height, uint16_t color, uint8_t opacity)
 {
-    uint32_t foreground = expand565(color);
+    uint32_t foreground = LV_COLOR_MIX_16_PREPARE(color);
     /* A covered byte inside a partial mask uses LV_OPA_MIX2. An unmasked row uses opacity directly. */
     unsigned full_weight = ((mask ? LV_OPA_MIX2(255u, opacity) : opacity) + 4u) >> 3;
     for(int y = 0; y < height; ++y) {

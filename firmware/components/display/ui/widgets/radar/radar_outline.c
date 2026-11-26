@@ -29,6 +29,44 @@ static struct {
     lv_draw_buf_t * mask;
 } symbol_cache[SYMBOL_MASK_CAPACITY];
 
+static lv_display_t * owner;
+
+static void release_caches(lv_event_t * e)
+{
+    if(lv_event_get_code(e) != LV_EVENT_DELETE) {
+        return;
+    }
+    for(size_t i = 0; i < GLYPH_MASK_CAPACITY; i++) {
+        if(glyph_cache[i].mask) {
+            lv_image_cache_drop(glyph_cache[i].mask);
+            lv_draw_buf_destroy(glyph_cache[i].mask);
+        }
+    }
+    for(size_t i = 0; i < SYMBOL_MASK_CAPACITY; i++) {
+        if(symbol_cache[i].mask) {
+            lv_image_cache_drop(symbol_cache[i].mask);
+            lv_draw_buf_destroy(symbol_cache[i].mask);
+        }
+    }
+    lv_memset(glyph_cache, 0, sizeof(glyph_cache));
+    lv_memset(symbol_cache, 0, sizeof(symbol_cache));
+    owner = NULL;
+}
+
+static void attach_display(void)
+{
+    if(owner) {
+        return;
+    }
+    lv_display_t * display = lv_refr_get_disp_refreshing();
+    if(!display) {
+        display = lv_display_get_default();
+    }
+    if(display && lv_display_add_event_cb(display, release_caches, LV_EVENT_DELETE, NULL)) {
+        owner = display;
+    }
+}
+
 void radar_draw_symbol_image(lv_layer_t * layer, lv_draw_image_dsc_t * image, const lv_area_t * area)
 {
     if(!radar_symbol_atlas_draw(layer, image, area)) {
@@ -39,10 +77,12 @@ void radar_draw_symbol_image(lv_layer_t * layer, lv_draw_image_dsc_t * image, co
 static lv_draw_buf_t * grow(const uint8_t * mask, uint32_t width, uint32_t height,
                             uint32_t stride, uint32_t radius)
 {
+    attach_display();
     lv_draw_buf_t * grown =
         lv_draw_buf_create(width + 2 * radius, height + 2 * radius, LV_COLOR_FORMAT_A8, LV_STRIDE_AUTO);
     if(grown) {
         radar_grow(mask, width, height, stride, grown->data, grown->header.stride, radius);
+        lv_draw_buf_flush_cache(grown, NULL);
     }
     return grown;
 }

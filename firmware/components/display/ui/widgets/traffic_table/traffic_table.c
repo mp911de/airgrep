@@ -94,14 +94,6 @@ void traffic_table_event_hook(lv_event_t * e)
     }
 }
 
-void traffic_table_set_rows(lv_obj_t * table, const traffic_row_t * rows, uint32_t count, uint32_t inside)
-{
-    traffic_table_begin_rows(table, count, inside);
-    for(uint32_t i = 0; i < LV_MIN(count, TRAFFIC_TABLE_MAX_ROWS); i++) {
-        traffic_table_set_row(table, i, &rows[i]);
-    }
-}
-
 void traffic_table_begin_rows(lv_obj_t * table, uint32_t count, uint32_t inside)
 {
     traffic_table_t * widget = (traffic_table_t *)table;
@@ -439,7 +431,9 @@ static void style_changed(lv_observer_t * observer, lv_subject_t * subject)
             [TRAFFIC_ADSB] = "ADS-B", [TRAFFIC_ADSR] = "ADS-R", [TRAFFIC_TISB] = "TIS-B",
             [TRAFFIC_FLARM] = "FLARM", [TRAFFIC_UNKNOWN_SOURCE] = "?"
         };
-        lv_label_set_text_static(pill, source_labels[source]);
+        const size_t source_count = sizeof(source_labels) / sizeof(source_labels[0]);
+        const size_t source_index = (size_t)source < source_count ? (size_t)source : TRAFFIC_UNKNOWN_SOURCE;
+        lv_label_set_text_static(pill, source_labels[source_index]);
         lv_obj_align_to(bell, pill, LV_ALIGN_OUT_RIGHT_MID, 6, 0);
         lv_obj_align_to(lv_obj_get_child(content, CONTENT_CONFLICT_TIME), pill, LV_ALIGN_OUT_RIGHT_MID, CONFLICT_TIME_GAP_PX, 0);
     }
@@ -472,17 +466,20 @@ static void update_row(lv_obj_t * row, const traffic_row_t * data)
     const char * title = data->title ? data->title : "";
     if(!state->title_buffers || lv_strcmp(state->title_buffers, title) != 0) {
         const size_t length = lv_strlen(title) + 1;
-        if(length > state->title_capacity) {
+        bool ready = length <= state->title_capacity;
+        if(!ready) {
             const size_t capacity = LV_MAX(length, 9u);
             char * buffers = lv_realloc(state->title_buffers, 2 * capacity);
-            if(!buffers) {
-                return;
+            if(buffers) {
+                state->title_buffers = buffers;
+                state->title_capacity = capacity;
+                lv_subject_set_string_buffer_static(state->subjects[ROW_TITLE], buffers, buffers + capacity, capacity);
+                ready = true;
             }
-            state->title_buffers = buffers;
-            state->title_capacity = capacity;
-            lv_subject_set_string_buffer_static(state->subjects[ROW_TITLE], buffers, buffers + capacity, capacity);
         }
-        lv_subject_set_string(state->subjects[ROW_TITLE], title);
+        if(ready) {
+            lv_subject_set_string(state->subjects[ROW_TITLE], title);
+        }
     }
     state->target_id = data->target_id;
     lv_subject_set_int(state->subjects[ROW_SOURCE], data->source);

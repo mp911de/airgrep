@@ -39,15 +39,12 @@ typedef enum {
 typedef void (*traffic_action_cb_t)(traffic_action_t action, uint32_t target_id);
 
 /**
- * Replace the rows, in the order given. Texts are copied. Up to TRAFFIC_TABLE_MAX_ROWS.
+ * Replace the rows, in the order given, one row at a time. Texts are copied. Up to TRAFFIC_TABLE_MAX_ROWS.
  * While a row or the table is pressed, the table moves or a row is open, the rows keep their targets and
  * their order and only take the new values.
  * @param inside    the first rows, those of targets inside the outer ring of the radar. The band
  *                  lies between them and the rest. All rows inside: no band.
  */
-void traffic_table_set_rows(lv_obj_t * table, const traffic_row_t * rows, uint32_t count, uint32_t inside);
-
-/* A caller with a different row representation can publish one row at a time. */
 void traffic_table_begin_rows(lv_obj_t * table, uint32_t count, uint32_t inside);
 void traffic_table_set_row(lv_obj_t * table, uint32_t index, const traffic_row_t * data);
 

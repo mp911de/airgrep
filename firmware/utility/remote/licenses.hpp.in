@@ -2,8 +2,8 @@
 
 #include "display/view_state.hpp"
 
-// The components of the firmware image and their notices, read from the notice
-// files when the build is configured.
+// The software the device ships and its notices, read from the notice files
+// when the build is configured.
 namespace remote {
 inline constexpr char kApacheNotice[] = R"NOTICE(@APACHE_NOTICE@)NOTICE";
 inline constexpr display::License kLicenses[] = {
@@ -13,6 +13,7 @@ inline constexpr display::License kLicenses[] = {
 	{"TinyUSB", "MIT", R"NOTICE(@TINYUSB_NOTICE@)NOTICE"},
 	{"mbed TLS", "Apache-2.0", kApacheNotice},
 	{"DAIDALUS", "NASA-1.3", R"NOTICE(@DAIDALUS_NOTICE@)NOTICE"},
+	{"ADSBee firmware", "GPL-3.0", R"NOTICE(@ADSBEE_NOTICE@)NOTICE"},
 	{"Icons", "to be decided",
 	 "Design preview. The placeholder icons are not licensed for distribution "
 	 "with the device."},

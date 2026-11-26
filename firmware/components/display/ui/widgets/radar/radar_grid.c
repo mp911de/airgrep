@@ -155,7 +155,7 @@ bool radar_grid_draw(radar_grid_cache_t **cache, lv_layer_t *layer, const lv_are
                      radar_grid_capture_t capture)
 {
     int32_t width = lv_area_get_width(area);
-    if(width > 1024 || !layer_ready(layer)) {
+    if(width <= 0 || width > 1024 || width != lv_area_get_height(area) || !layer_ready(layer)) {
         return false;
     }
     lv_area_t clip;

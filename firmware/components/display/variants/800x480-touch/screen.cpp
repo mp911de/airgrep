@@ -127,6 +127,7 @@ std::optional<bool> applied_dark_theme;
 lv_obj_t* license_rows;
 lv_obj_t* transient_mode_screen;
 Mode shown_mode = Mode::on;
+std::optional<int32_t> charger_fill_percent;
 // The least the fill of the charger screen shows, so that 0 % is not nothing.
 constexpr int32_t CHARGER_FILL_MIN = 8;
 std::span<const License> licenses;
@@ -162,9 +163,10 @@ lv_obj_t* find(const char* page, const char* name) {
 // see elastic_diff() in lv_indev_scroll.c. This takes it back.
 void keep_inside(lv_event_t* event) {
 	lv_obj_t* sheet = lv_event_get_current_target_obj(event);
-	const int32_t over = std::min<int32_t>(lv_obj_get_scroll_bottom(sheet), 0);
-	if (over < 0) {
-		lv_obj_scroll_by(sheet, 0, -over, LV_ANIM_OFF);
+	const int32_t y = std::min<int32_t>(lv_obj_get_scroll_top(sheet), 0) -
+					  std::min<int32_t>(lv_obj_get_scroll_bottom(sheet), 0);
+	if (y != 0) {
+		lv_obj_scroll_by(sheet, 0, y, LV_ANIM_OFF);
 	}
 }
 
@@ -217,8 +219,12 @@ std::string zone_display_name(std::string_view name) {
 }
 
 std::string place(std::string_view zone) {
-	return zone == UTC ? "UTC"
-					   : zone_display_name(zone.substr(zone.rfind('/') + 1));
+	if (zone == UTC) {
+		return "UTC";
+	}
+	const size_t slash = zone.rfind('/');
+	return zone_display_name(
+		slash == std::string_view::npos ? zone : zone.substr(slash + 1));
 }
 
 std::string offset(int16_t minutes) {
@@ -282,11 +288,14 @@ void fill_zones(bool again) {
 			continue;
 		}
 		const std::string_view name = listed.zones[index]->iana_name;
+		const std::string_view local =
+			name.size() > choice.shown_region.size() &&
+					name[choice.shown_region.size()] == '/'
+				? name.substr(choice.shown_region.size() + 1)
+				: name;
 		lv_obj_set_y(row, index * ROW);
-		lv_label_set_text(
-			lv_obj_find_by_name(row, "label"),
-			zone_display_name(name.substr(choice.shown_region.size() + 1))
-				.c_str());
+		lv_label_set_text(lv_obj_find_by_name(row, "label"),
+						  zone_display_name(local).c_str());
 		lv_label_set_text(lv_obj_find_by_name(row, "note"),
 						  offset(listed.zones[index]->offset_min).c_str());
 		lv_obj_set_style_border_width(lv_obj_find_by_name(row, "line"),
@@ -307,10 +316,11 @@ void show_zones(bool scroll_to_selection) {
 			lv_obj_add_event_cb(
 				row,
 				[](lv_event_t* event) {
-					pick(static_cast<const Zone*>(
-							 lv_obj_get_user_data(
-								 lv_event_get_current_target_obj(event)))
-							 ->iana_name);
+					if (const auto* zone =
+							static_cast<const Zone*>(lv_obj_get_user_data(
+								lv_event_get_current_target_obj(event)))) {
+						pick(zone->iana_name);
+					}
 				},
 				LV_EVENT_CLICKED, nullptr);
 		}
@@ -418,9 +428,22 @@ void show_time_zone(const ViewState& model) {
 				choice.regions.emplace_back(name);
 			}
 		}
+		listed.zones.clear();
+		listed.first_bound_zone_index.reset();
+		for (lv_obj_t* row : listed.rows) {
+			if (row) {
+				lv_obj_set_user_data(row, nullptr);
+			}
+		}
+		if (!choice.shown_region.empty() &&
+			std::ranges::find(choice.regions, choice.shown_region) ==
+				choice.regions.end()) {
+			choice.shown_region.clear();
+		}
 	}
 	choice.rows_current = false;
-	if (lv_subject_get_int(subject_page) >= TIME_ZONE) {
+	const auto page = static_cast<Page>(lv_subject_get_int(subject_page));
+	if (page == TIME_ZONE || page == ZONES) {
 		draw_choice();
 	}
 }
@@ -609,25 +632,26 @@ bool case_insensitive_less(const char* left, const char* right) {
 	return !*left && *right;
 }
 
+struct {
+	bool drawn = false;
+	uint16_t causes{};
+	std::optional<uint8_t> cpu_percent;
+	std::string language;
+	std::vector<lv_obj_t*> rows;
+} health_shown;
+
 void show_health(const ViewState& model) {
-	static struct {
-		bool drawn = false;
-		uint16_t causes{};
-		std::optional<uint8_t> cpu_percent;
-		std::string language;
-		std::vector<lv_obj_t*> rows;
-	} shown;
 	const char* language = lv_translation_get_language();
 	const bool cpu = model.causes & bit(Cause::cpu);
-	if (shown.drawn && shown.causes == model.causes &&
-		shown.language == language &&
-		(!cpu || shown.cpu_percent == model.busiest_core_percent)) {
+	if (health_shown.drawn && health_shown.causes == model.causes &&
+		health_shown.language == language &&
+		(!cpu || health_shown.cpu_percent == model.busiest_core_percent)) {
 		return;
 	}
-	shown.drawn = true;
-	shown.causes = model.causes;
-	shown.cpu_percent = model.busiest_core_percent;
-	shown.language = language;
+	health_shown.drawn = true;
+	health_shown.causes = model.causes;
+	health_shown.cpu_percent = model.busiest_core_percent;
+	health_shown.language = language;
 
 	std::vector<const Wording*> found;
 	for (const auto& message : health_messages_by_priority) {
@@ -646,11 +670,11 @@ void show_health(const ViewState& model) {
 	lv_obj_t* rows =
 		lv_obj_find_by_name(find("page_system", "health_list"), "rows");
 	lv_obj_set_hidden(lv_obj_find_by_name(rows, "all_systems"), !found.empty());
-	while (shown.rows.size() < found.size()) {
-		shown.rows.push_back(cause_row_create(rows, "", "", true));
+	while (health_shown.rows.size() < found.size()) {
+		health_shown.rows.push_back(cause_row_create(rows, "", "", true));
 	}
-	for (size_t i = 0; i < shown.rows.size(); i++) {
-		lv_obj_t* row = shown.rows[i];
+	for (size_t i = 0; i < health_shown.rows.size(); i++) {
+		lv_obj_t* row = health_shown.rows[i];
 		lv_obj_set_hidden(row, i >= found.size());
 		if (i >= found.size()) {
 			continue;
@@ -827,16 +851,20 @@ void show_startup(const ViewState& model) {
 // The fill is as wide as the charge. The percentage in it lies exactly on the
 // one below, so the fill's edge is where the colour of the digits changes.
 void show_charger(const ViewState& model) {
-	const lv_obj_t* well = lv_obj_find_by_name(transient_mode_screen, "well");
-	lv_obj_t* fill = lv_obj_find_by_name(well, "fill");
-	const lv_obj_t* percent = lv_obj_find_by_name(well, "percent");
-	lv_obj_update_layout(well);
 	const int32_t charge = lv_subject_get_int(subject_battery);
-	const int32_t charged =
-		(lv_obj_get_content_width(well) * charge + 50) / 100;
-	lv_obj_set_width(fill, std::max(charged, CHARGER_FILL_MIN));
-	lv_obj_set_x(lv_obj_find_by_name(fill, "percent_on"),
-				 lv_obj_get_x(percent));
+	if (charger_fill_percent != charge) {
+		charger_fill_percent = charge;
+		const lv_obj_t* well =
+			lv_obj_find_by_name(transient_mode_screen, "well");
+		lv_obj_t* fill = lv_obj_find_by_name(well, "fill");
+		const lv_obj_t* percent = lv_obj_find_by_name(well, "percent");
+		lv_obj_update_layout(well);
+		const int32_t charged =
+			(lv_obj_get_content_width(well) * charge + 50) / 100;
+		lv_obj_set_width(fill, std::max(charged, CHARGER_FILL_MIN));
+		lv_obj_set_x(lv_obj_find_by_name(fill, "percent_on"),
+					 lv_obj_get_x(percent));
+	}
 
 	const lv_obj_t* line = lv_obj_find_by_name(transient_mode_screen, "line");
 	lv_obj_t* text = lv_obj_find_by_name(line, "text");
@@ -867,6 +895,7 @@ void show_mode(const ViewState& model) {
 			lv_obj_add_event_cb(transient_mode_screen, welcome_event,
 								LV_EVENT_ALL, nullptr);
 		}
+		charger_fill_percent.reset();
 		shown_mode = model.mode;
 	}
 	if (model.mode == Mode::starting) {
@@ -1004,14 +1033,28 @@ traffic_level_t level(conflicts::Level value) {
 	return TRAFFIC_LEVEL_OTHER;
 }
 
+std::string wifi_qr_escape(std::string_view text) {
+	std::string escaped;
+	escaped.reserve(text.size());
+	for (const char c : text) {
+		if (c == '\\' || c == ';' || c == ',' || c == ':' || c == '"') {
+			escaped.push_back('\\');
+		}
+		escaped.push_back(c);
+	}
+	return escaped;
+}
+
 void show_wifi(const ViewState& model) {
 	const char* network = model.wifi_network ? model.wifi_network : "";
 	const char* password = model.wifi_password ? model.wifi_password : "";
 	const bool changed_network = publish_text(subject_wifi_network, network);
 	const bool changed_password = publish_text(subject_wifi_password, password);
 	if (changed_network || changed_password) {
+		const std::string escaped_network = wifi_qr_escape(network);
+		const std::string escaped_password = wifi_qr_escape(password);
 		lv_subject_snprintf(subject_wifi_join, "WIFI:T:WPA;S:%s;P:%s;;",
-							network, password);
+							escaped_network.c_str(), escaped_password.c_str());
 	}
 }
 
@@ -1143,19 +1186,20 @@ void show_bands(const ViewState& model) {
 	show_tape(RADAR_TAPE_SPEED, model.speed_bands, conflicts::kSpeedBandSpanKt);
 }
 
+conflicts::Level table_highest_level = conflicts::Level::other;
+
 void show_table(std::span<const Target> targets, size_t inside,
 				const ViewState& model) {
-	static conflicts::Level shown = conflicts::Level::other;
 	conflicts::Level highest = conflicts::Level::other;
 	for (const Target& target : targets) {
 		highest = std::max(highest, attention(target));
 	}
 	const bool scroll_on_escalation =
-		highest > shown && highest >= conflicts::Level::advisory;
+		highest > table_highest_level && highest >= conflicts::Level::advisory;
 	if (scroll_on_escalation) {
 		traffic_table_scroll_to_top(table);
 	}
-	shown = highest;
+	table_highest_level = highest;
 
 	targets =
 		targets.first(std::min<size_t>(targets.size(), TRAFFIC_TABLE_MAX_ROWS));
@@ -1235,7 +1279,6 @@ void show_traffic(const ViewState& model) {
 	show_table(model.traffic.first(rows), inside, model);
 	if (refresh_radar) {
 		show_bands(model);
-		lv_obj_invalidate(radar);
 	}
 }
 }
@@ -1247,7 +1290,19 @@ void variant::build(lv_obj_t*, const Actions& handlers) {
 	presented_radar.reset();
 	applied_dark_theme.reset();
 	licenses = {};
-	choice.in_use.clear();
+	choice = {};
+	listed = {};
+	welcome = {};
+	shown_mode = Mode::on;
+	transient_mode_screen = nullptr;
+	charger_fill_percent.reset();
+	health_shown = {};
+	table_highest_level = conflicts::Level::other;
+	for (Entry* entry : ENTRIES) {
+		entry->stored[0] = '\0';
+		entry->draft[0] = '\0';
+		entry->typed = false;
+	}
 	airgrep_ui_init(nullptr);
 	bind_choice<&Actions::set_dark_theme>(find("page_system", "light"),
 										  subject_theme_dark);

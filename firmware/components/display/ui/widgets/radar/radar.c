@@ -191,8 +191,8 @@ void radar_set_track_bands(lv_obj_t * radar, const radar_track_band_t * bands, u
     }
     shown->wedge_count = next.wedge_count;
     shown->limit_count = next.limit_count;
-    memcpy(shown->wedges, next.wedges, next.wedge_count * sizeof(*next.wedges));
-    memcpy(shown->limits, next.limits, next.limit_count * sizeof(*next.limits));
+    lv_memcpy(shown->wedges, next.wedges, next.wedge_count * sizeof(*next.wedges));
+    lv_memcpy(shown->limits, next.limits, next.limit_count * sizeof(*next.limits));
     lv_obj_invalidate(radar);
 }
 
@@ -201,12 +201,30 @@ void radar_set_tape(lv_obj_t * radar, radar_tape_t tape, const radar_tape_band_t
     radar_t * widget = (radar_t *)radar;
     count = LV_MIN(count, RADAR_MAX_BANDS);
     if(count == widget->tape_counts[tape] &&
-       (!count || !memcmp(bands, widget->tapes[tape], count * sizeof(*bands)))) {
+       (!count || !lv_memcmp(bands, widget->tapes[tape], count * sizeof(*bands)))) {
         return;
     }
     widget->tape_counts[tape] = count;
     lv_memcpy(widget->tapes[tape], bands, widget->tape_counts[tape] * sizeof(radar_tape_band_t));
     lv_obj_invalidate(radar);
+}
+
+static bool target_equal(const radar_target_t * a, const radar_target_t * b, uint8_t samples)
+{
+    if(a->symbol != b->symbol || a->level != b->level || a->muted != b->muted || a->track_valid != b->track_valid ||
+       a->bearing_deg != b->bearing_deg || a->track_deg != b->track_deg ||
+       a->relative_altitude_ft != b->relative_altitude_ft ||
+       a->relative_altitude_unknown != b->relative_altitude_unknown || a->vertical_trend != b->vertical_trend ||
+       a->distance_nm != b->distance_nm || a->predicted != b->predicted || a->speed_kt != b->speed_kt ||
+       a->turn_dps != b->turn_dps || a->tail_count != samples) {
+        return false;
+    }
+    for(uint8_t i = 0; i < samples; i++) {
+        if(a->tail[i].right_nm != b->tail[i].right_nm || a->tail[i].ahead_nm != b->tail[i].ahead_nm) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void radar_set_targets(lv_obj_t * radar, const radar_target_t * targets, uint32_t count)
@@ -217,10 +235,10 @@ void radar_set_targets(lv_obj_t * radar, const radar_target_t * targets, uint32_
     for(uint32_t i = 0; i < count; i++) {
         const radar_target_t * target = &targets[i];
         uint8_t samples = LV_MIN(target->tail_count, RADAR_TAIL_HISTORY_S);
-        size_t used = offsetof(radar_target_t, tail) + samples * sizeof(*target->tail);
-        if(i < widget->target_count && !memcmp(&widget->targets[i], target, used)) {
+        if(i < widget->target_count && target_equal(&widget->targets[i], target, samples)) {
             continue;
         }
+        size_t used = offsetof(radar_target_t, tail) + samples * sizeof(*target->tail);
         lv_memcpy(&widget->targets[i], target, used);
         widget->targets[i].tail_count = samples;
         traffic_format_altitude(widget->labels[i], sizeof(widget->labels[i]), target->relative_altitude_ft, target->relative_altitude_unknown);
@@ -252,8 +270,8 @@ void radar_set_beyond(lv_obj_t * radar, const int16_t * bearings_deg, const traf
         else {
             radar_section_t next[RADAR_MAX_SECTIONS];
             uint32_t used = radar_sections(turned, members, next);
-            if(used != widget->section_counts[group] || memcmp(next, widget->sections[group], used * sizeof(*next))) {
-                memcpy(widget->sections[group], next, used * sizeof(*next));
+            if(used != widget->section_counts[group] || lv_memcmp(next, widget->sections[group], used * sizeof(*next))) {
+                lv_memcpy(widget->sections[group], next, used * sizeof(*next));
                 widget->section_counts[group] = used;
                 changed = true;
             }

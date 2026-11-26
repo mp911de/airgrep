@@ -4,7 +4,8 @@
 		{ "name": "utility-macos", "displayName": "airgrep Utility for macOS", "generator": "Ninja", "binaryDir": "build" }
 	],
 	"buildPresets": [
-		{ "name": "utility-macos", "configurePreset": "utility-macos" }
+		{ "name": "utility-macos", "configurePreset": "utility-macos" },
+		{ "name": "utility-macos-dmg", "configurePreset": "utility-macos", "targets": ["utility-dmg"] }
 	],
 	"testPresets": [
 		{ "name": "utility-macos", "configurePreset": "utility-macos", "output": { "outputOnFailure": true }, "execution": { "noTestsAction": "error" } }
@@ -16,6 +17,15 @@
 				{ "type": "configure", "name": "utility-macos" },
 				{ "type": "build", "name": "utility-macos" },
 				{ "type": "test", "name": "utility-macos" }
+			]
+		},
+		{
+			"name": "utility-macos-dmg",
+			"steps": [
+				{ "type": "configure", "name": "utility-macos" },
+				{ "type": "build", "name": "utility-macos" },
+				{ "type": "test", "name": "utility-macos" },
+				{ "type": "build", "name": "utility-macos-dmg" }
 			]
 		}
 	]

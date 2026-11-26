@@ -100,6 +100,9 @@ endif ()
 set(CMAKE_C_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE}" -p "${CMAKE_BINARY_DIR}")
 set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE}" -p "${CMAKE_BINARY_DIR}")
 set(CMAKE_OBJCXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE}" -p "${CMAKE_BINARY_DIR}")
+if (TARGET encounter)
+    set_target_properties(encounter PROPERTIES CXX_CLANG_TIDY "${CMAKE_CXX_CLANG_TIDY}")
+endif ()
 
 add_library(conflict STATIC "${FIRMWARE_DIR}/components/daidalus/conflicts/engine.cpp"
         "${FIRMWARE_DIR}/components/daidalus/conflicts/traffic_filter.cpp")
@@ -168,6 +171,7 @@ read_notice(APACHE_NOTICE "${notices}/Apache-2.0.txt")
 read_notice(FREERTOS_NOTICE "${notices}/FreeRTOS-MIT.txt")
 read_notice(TINYUSB_NOTICE "${notices}/TinyUSB-MIT.txt")
 read_notice(DAIDALUS_NOTICE "${notices}/DAIDALUS2-NOSA.txt")
+read_notice(ADSBEE_NOTICE "${notices}/ADSBee-GPL-3.0.txt")
 configure_file(remote/licenses.hpp.in licenses.hpp @ONLY)
 
 # The directories of components/display/variants.
@@ -310,10 +314,42 @@ add_custom_command(OUTPUT "${signed}"
         VERBATIM)
 add_custom_target(utility-macos ALL DEPENDS "${signed}")
 
+# Installer disk image with Retina Cockpit Dark background and Applications link. Built on demand
+# via utility-dmg (or the utility-macos-dmg preset) so regular dev builds stay fast.
+set(dmg_background "${CMAKE_CURRENT_BINARY_DIR}/dmg-background.tiff")
+set(logo_dark "${FIRMWARE_DIR}/../assets/logo-dark-1280.png")
+add_custom_command(OUTPUT "${dmg_background}"
+        COMMAND xcrun swift "${CMAKE_CURRENT_SOURCE_DIR}/app/dmg_background.swift" "${logo_dark}" "${dmg_background}"
+        DEPENDS app/dmg_background.swift "${logo_dark}"
+        VERBATIM)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+find_program(DMGBUILD_EXECUTABLE NAMES dmgbuild)
+set(dmg_depends "${signed}" "${dmg_background}" "${icon}" app/dmg_settings.py)
+if (DMGBUILD_EXECUTABLE)
+    set(dmgbuild_cmd "${DMGBUILD_EXECUTABLE}")
+else ()
+    set(dmg_venv "${CMAKE_CURRENT_BINARY_DIR}/dmg-venv")
+    set(dmgbuild_cmd "${dmg_venv}/bin/dmgbuild")
+    add_custom_command(OUTPUT "${dmgbuild_cmd}"
+            COMMAND "${Python3_EXECUTABLE}" -m venv "${dmg_venv}"
+            COMMAND "${dmg_venv}/bin/pip" install --quiet dmgbuild
+            VERBATIM)
+    list(APPEND dmg_depends "${dmgbuild_cmd}")
+endif ()
+set(dmg_file "${CMAKE_CURRENT_BINARY_DIR}/airgrep-utility-${PROJECT_VERSION}.dmg")
+add_custom_command(OUTPUT "${dmg_file}"
+        COMMAND "${dmgbuild_cmd}" -s "${CMAKE_CURRENT_SOURCE_DIR}/app/dmg_settings.py"
+                -D "app=$<TARGET_BUNDLE_DIR:airgrep-utility>"
+                -D "background=${dmg_background}"
+                -D "icon=${icon}"
+                "${APP}" "${dmg_file}"
+        DEPENDS ${dmg_depends}
+        VERBATIM)
+add_custom_target(utility-dmg DEPENDS "${dmg_file}")
+
 enable_testing()
 # The firmware's host tests and the rules of the sources, which need no utility.
 add_subdirectory("${FIRMWARE_DIR}/tests/host" host)
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_test(NAME usb_layout_python COMMAND "${Python3_EXECUTABLE}" "${FIRMWARE_DIR}/tests/host/test_usb_layout.py")
 set_tests_properties(usb_layout_python PROPERTIES ENVIRONMENT "PYTHONPATH=${FIRMWARE_DIR}/tools")
 foreach (test display_mapping device usb_layout remote remote_conflicts flight)
@@ -420,6 +456,9 @@ set_tests_properties(usb_layout_python usb_layout device remote remote_conflicts
 # own form, and so does DAIDALUS.
 find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format REQUIRED)
 file(GLOB format_sources CONFIGURE_DEPENDS "*.h" "*.hpp" "app/*.h" "app/*.hpp" "device/*.hpp" "remote/*.hpp" "test/*.hpp")
+if (TARGET encounter)
+    list(APPEND format_sources "${FIRMWARE_DIR}/components/daidalus/tests/encounter.cpp")
+endif ()
 get_property(targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
 foreach (target ${targets})
     get_target_property(sources ${target} SOURCES)
