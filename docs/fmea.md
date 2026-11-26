@@ -2,7 +2,7 @@
 
 Scope: `hardware/carrier-ti-charger/`, including its pack and harness. PCB and schematic connectivity were checked through a fresh netlist on 2026-10-18. This is a design risk register, not physical acceptance. The frozen MAX board's failure analysis and RPN scores remain in git; its IFAST, THM and six-hour timer conclusions do not apply here.
 
-Sources: [specs](specs.md), [decisions](decisions.md), [pin maps](interfaces.md), local component datasheets and recorded TI simulation results. Proposed firmware mitigations are requirements, not implemented protection. Model results must be checked against their recorded inputs before use. Likelihood and detectability have not been requalified for this revision, so no current RPN ranking is claimed.
+Sources: [specs and design decisions](specs.adoc), [pin maps](interfaces.md), local component datasheets and recorded TI simulation results. Firmware mitigations named here are requirements. Several are implemented, none is verified on hardware. Model results must be checked against their recorded inputs before use. Likelihood and detectability have not been requalified for this revision, so no current RPN ranking is claimed.
 
 ## Battery and harness
 
@@ -29,7 +29,7 @@ Sources: [specs](specs.md), [decisions](decisions.md), [pin maps](interfaces.md)
 | TI1, TI2 | Host absent or watchdog expires | Defaults are 1 A, 4.20 V, TREG 120 °C and 12 h. Only watchdog-reset registers revert; EN_EXTILIM survives. Firmware must handle source changes independently and reapply the profile on WD_STAT. |
 | TI4 | TS divider wrong or pack too hot | R59 82 kΩ / R60 768 kΩ give nominal 2.7 to 42.6 °C cut-offs. Sweep NTC resistance, including open/short, and verify hot leakage. |
 | TI5 | PROG R56 wrong, open or short | Wrong startup configuration can affect cell count and switching frequency. Verify VREG and VSYSMIN before connecting a pack. |
-| TI6, TI8 | ILIM_HIZ network or CC handling fails | R57 120 kΩ / R58 100 kΩ set about 1.5 A before host override. Firmware must initialize U15 and follow the lower of CC and BC1.2. Test weak sources, detach and replug. |
+| TI6, TI8 | ILIM_HIZ network or CC handling fails | R57 120 kΩ / R58 100 kΩ set about 1.5 A before host override. Firmware initializes U15, a CC advertisement wins over BC1.2. Test weak sources, detach and replug. |
 | TI7 | Q2 leakage lifts CE into its undefined input region | R12 is 100 kΩ. The modeled 55 °C maximum leakage gives about 0.464 V, above guaranteed VIL. Measure hot behavior. |
 | C4, C5, C6 | Heat, a weak source or timer expiry leaves the pack partly charged | Charger status and ADC are readable. Show actual charging/fault state; do not treat USB present as evidence of net charging. |
 | C7, C8, C9, C10, C11 | Charger pin bridges, inductor/capacitor faults or SYS short | Native charger protections cover specified cases only. Inspect fine-pitch joints and check both battery-only and USB operation with a current-limited supply. |

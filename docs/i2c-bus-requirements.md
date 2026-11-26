@@ -36,6 +36,6 @@ Rise times:
 
 ## Bench acceptance
 
-Measure rise time and low level with the actual controller, display and wiring.
+Measure rise time and low level with the actual controller, display and wiring. The AXS5106L data sheet omits sink-current and pin-capacitance limits, so whole-bus compliance with the original display cannot be proven without measurement.
 
 Limits: [NXP UM10204](../datasheets/um10204.pdf), [FUSB303B](../datasheets/fusb303b.pdf).

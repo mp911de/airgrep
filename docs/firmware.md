@@ -1,6 +1,6 @@
 # Display firmware (ESP32-S3)
 
-Requirements the carrier puts on the display firmware. Pin maps and electrical connections are in [interfaces.md](interfaces.md).
+Requirements the carrier puts on the display firmware. Pin maps and electrical connections are in [interfaces.md](interfaces.md), implementation progress in [firmware-plan.md](firmware-plan.md), bench checks in [open-issues.md](open-issues.md).
 
 ## Operating modes
 
@@ -19,13 +19,13 @@ The display gets 5 V from two ideal diodes: U12 from the 5 V rail (POWER slider 
 
 ## ADSBee UART
 
-- Display: D12 RX, D13 TX. Alternative XIAO Plus: GPIO7 RX (J2.6), GPIO44 TX (J2.7); use UART1 and route its pins through the GPIO matrix. Both use 115200 baud, 8E1, no RTS/CTS. ESP-IDF: `UART_DATA_8_BITS`, `UART_PARITY_EVEN`, `UART_STOP_BITS_1`, `UART_HW_FLOWCTRL_DISABLE`.
-- The Plus uses GPIO8 (J2.5) for buzzer PWM and retains GPIO5/GPIO6 (J3.5/J3.6) for SDA/SCL. Its firmware profile must omit initialization of the original display, touch controller and IMU. Firmware implementation and physical validation remain open.
+- 115200 baud, 8E1, no RTS/CTS, on the pins in [interfaces.md](interfaces.md). On the Plus, UART1 is routed through the GPIO matrix. ESP-IDF: `UART_DATA_8_BITS`, `UART_PARITY_EVEN`, `UART_STOP_BITS_1`, `UART_HW_FLOWCTRL_DISABLE`.
+- The Plus profile omits initialization of the original display, touch controller and IMU.
 - Provision ADSBee through USB: `AT+BAUD_RATE=COMMS_UART,115200`, `AT+PROTOCOL_OUT=COMMS_UART,CSBEE`, `AT+SETTINGS=SAVE`. Existing saved baud rates survive firmware updates.
 - Send AT commands with LF or CRLF. Keep one command outstanding. Separate CSBEE lines (`#` prefix) from AT replies and verify CSBEE CRC16.
 - On parity, framing or buffer-overrun errors, discard through a clean LF. For a missing/corrupt reply, query state before retrying a state change. Parity cannot detect every corruption.
 - The link carries at most 10472 bytes/s. Check dense-traffic load on hardware before accepting the reporting rate.
-- Build the local ADSBee fork with `ADSBEE_PROFILE=airgrep bash firmware/build.sh adsbee_1090`. Default builds use 8N1 without UART commands. Deployment, display integration and physical UART verification remain open.
+- Build the local ADSBee fork with `ADSBEE_PROFILE=airgrep bash firmware/build.sh adsbee_1090`. Default builds use 8N1 without UART commands.
 
 ## Physical controls
 
@@ -42,21 +42,9 @@ The display gets 5 V from two ideal diodes: U12 from the 5 V rail (POWER slider 
 - Safeboot recovery: hold P3 low while releasing P2, then release P3. Keep P3 an input during normal operation; it cannot read TIMEPULSE through D12. PPS uses its dedicated line.
 
 
-## Firmware
-
-- [ ] Charger mode and host control: see [firmware.md](firmware.md).
-- [ ] **ADSBee GNSS UART power sequencing.** `GNSSReceiver::Init()` in ADSBee `pico/application/peripherals/gnss/gnss_receiver.cc` switches GNSS power off, enables UART TX, then restores power; `SetEnable(false)` also leaves TX driven. Keep TX high impedance while GNSS V_IO is off, including shutdown, and enable UART only after the receiver supply is valid. Verify cold start, disable/re-enable and host reset. Backfeed or failed startup has not been measured.
-
-- [ ] Verify FLARM 868 MHz reception on the ADSBee hardware; software progress is in [firmware-plan.md](firmware-plan.md).
-- [ ] Display firmware: gauge readout, traffic input and buzzer PWM on display D11 or Plus GPIO8; poll and debounce U13 at 0x20. Apply both sliders at startup, keep PWM silent until mute is read, and retain both last known states on read failure. Show the shared failure icon for expander, gauge or BMP faults.
-- [ ] Deploy and bench-test the custom ADSBee UART console: 115200 8E1, CSBEE plus AT replies. Verify Wi-Fi control, CRC/parity error recovery and dense-traffic throughput with the display. Source support is implemented in the local ADSBee checkout.
-- [ ] BMP580: verify polled initialization with INT intentionally unconnected; configure INT_CONFIG.int_en=1 and int_od=0 per Bosch section 6.2.
-- [ ] Low state of charge: warning and optional backlight dimming. Do not override the Wi-Fi slider.
-
-
 ## Charger host control (BQ25798, I2C 0x6B)
 
-- Set REG14 bit 7 (`SFET_PRESENT`) using read-modify-write during initialization and after register reset. Q13 is populated; the POR default is zero and disables ship-FET features. Read back the bit before treating the QON reset button as available. Firmware implementation remains required.
+- Set REG14 bit 7 (`SFET_PRESENT`) using read-modify-write during initialization and after register reset. Q13 is populated; the POR default is zero and disables ship-FET features. Read back the bit before treating the QON reset button as available.
 - SW4 held for about 10 s requests the charger's hardware system power reset, about 350 ms off. D6 holds the USB/PMID display feed off until release. Reinitialize peripherals after boot; the charger and MAX17048 stay powered and retain state.
 
 - Without a host the charger runs its defaults: 1 A, TREG 120 °C, watchdog 40 s. The hardware TS window is 3 to 43 °C.
@@ -64,8 +52,7 @@ The display gets 5 V from two ideal diodes: U12 from the 5 V rail (POWER slider 
 - INT is not wired to the ESP (TP8 only). Poll STAT, faults, the ADC (VBUS, IBUS, IBAT, VBAT, VSYS, TS, TDIE) and the limits and controls REG03 to REG16 every 250 ms while awake, the watchdog write last. The status read stays before the watchdog write, because the write clears WD_STAT. Flag registers clear on read (WD_FLAG, data sheet 7.4.1), so the Poll reads no further flag registers.
 - Input current: the display load on PMID counts inside IINDPM. Keep IINDPM at the detected source limit (500 mA on a standard USB port).
 - USB-C initialization: wait 100 ms after U15 (FUSB303B, 0x21) has VDD valid and EN_N low before its first I2C access (`tEN`, datasheet page 9), then set `CONTROL1.ENABLE` (register 0x05 bit 3). Poll `STATUS.ATTACH`, `STATUS.BC_LVL` and `STATUS.VBUSOK`; require attached, VBUS valid and `TYPE.SINK` before using the advertised current.
-- USB source current: explicit CC advertisements of 1.5 A or 3 A take precedence over BC1.2; set IINDPM accordingly. With default CC current, use the completed BQ25798 D+/D- detection result instead: 500 mA for SDP or unknown sources, 1.5 A for CDP/DCP, and the detected non-standard adapter limit capped at 1.5 A. Default CC on an A-to-C cable does not cap a detected charger at 500 mA. Clear EN_EXTILIM only for a valid 3 A CC advertisement; otherwise retain the ILIM_HIZ 1.5 A set. On detach, invalid status/type or a lower advertisement, set EN_EXTILIM = 1 first, then update IINDPM. A replug reruns BC1.2 and overwrites IINDPM; reapply this policy after detection completes. EN_EXTILIM survives the watchdog, only REG_RST resets it. Current precedence follows [USB-IF section 4.6](https://usb.org/sites/default/files/USB%20Type%20C%20Functional%20Test%20Specification%202019%2004%2030.pdf); D+/D- results are in BQ25798 table 7-4.
-- Adaptive current: lower ICHG when TDIE approaches TREG or the pack approaches the 43 °C stop; charger mode with the modules off allows the full 1.8 A in the closed case (heat model, device-off case). Charge control below replaces the TDIE rule with TREG 100 °C.
+- USB source current follows Charge control below. Default CC on an A-to-C cable does not cap a detected charger at 500 mA. A replug reruns BC1.2 and overwrites IINDPM, so the policy is reapplied after detection completes. EN_EXTILIM survives the watchdog, only REG_RST resets it. Current precedence follows [USB-IF section 4.6](https://usb.org/sites/default/files/USB%20Type%20C%20Functional%20Test%20Specification%202019%2004%2030.pdf); D+/D- results are in BQ25798 table 7-4.
 
 ### Charge control
 
@@ -89,13 +76,12 @@ Charge control in the system component sets IINDPM, ICHG, EN_CHG, TREG and EN_EX
 
 Use a 3.3 V bus at up to 400 kHz. Pull-up configuration, electrical limits and bench acceptance are in [I2C bus requirements](i2c-bus-requirements.md). Rules the parts impose:
 
-- The 200 pF design envelope gives a 233 ns worst-case rise time against the FUSB303B 250 ns limit. The AXS5106L data sheet omits sink-current and pin-capacitance limits, so whole-bus compliance cannot be proven without measurement.
 - Never address 0x7E. It is the I3C broadcast address and locks the BMP580 into I3C mode until power-off. Bus scans run 0x08 to 0x77 only.
 - MAX17048: 16-bit words only, both bytes in one transaction. Keep MODE.EnSleep at 0 (default); with it set, the bus at 0 V while the display is off puts the gauge to sleep after 2.5 s. Check STATUS.RI at each power-up; set means the gauge lost power, reload the config.
 - No ACK is normal for the MAX17048 POR command (0x5400 to 0xFE) and the BMP580 soft reset (0xB6 to 0x7E). Do not treat it as a bus error.
 - BQ25798: a transaction not finished within 1.5 s is dropped and the chip returns to idle. WD_FLAG clears on read. Thresholds are absolute (VIH 1.3 V, VIL 0.4 V), fine at 3.3 V. I2C works on battery only, in HIZ and in ship mode, not in shutdown.
 - BMP580: wait 2 ms after ESP_3V3 before the first access, then check CHIP_ID = 0x50 and STATUS.nvm_rdy. INT is intentionally unconnected. Follow Bosch section 6.2: set INT_CONFIG.int_en=1 and int_od=0 (push-pull); poll measurement/status registers. The local datasheet leaves the recommended pad_int_drv value blank, so retain its reset value.
-- FUSB303B: address 0x21 from the ADDR low strap. Fast mode is limited to 400 kHz, 250 ns rise time and 400 pF; its SDA/SCL pin capacitance is 5 pF. Powered from ESP_3V3, so it is never unpowered on a live bus.
+- FUSB303B: address 0x21 from the ADDR low strap. Powered from ESP_3V3, so it is never unpowered on a live bus.
 - TCA9534: reads NACK until the first command byte has been written after power-up.
 
 ## Charger-mode display
@@ -106,7 +92,7 @@ Use a 3.3 V bus at up to 400 kHz. Pull-up configuration, electrical limits and b
 
 ## Sleep
 
-- In charger mode the ESP may deep-sleep between updates. Wake on touch, and on a timer short enough to reset the charger watchdog (below 40 s, for example every 30 s); after a missed wake the charger falls back to the 1 A default, which is safe.
+- In charger mode the ESP may deep-sleep between updates. Wake on touch, and on a timer short enough to reset the charger watchdog, which the firmware sets to 20 s (for example every 15 s); after a missed wake the charger falls back to the 1 A default, which is safe.
 - On wake, re-check VBUS_STAT, WD_STAT and the faults before re-applying the profile.
 
 ## USB unplug and plug

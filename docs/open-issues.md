@@ -1,8 +1,8 @@
 # Open issues
 
-Open work only, ordered by what blocks the next step. The design itself is described in [specs.md](specs.md), [decisions.md](decisions.md), [mechanical.md](mechanical.md) and [interfaces.md](interfaces.md); closed items are in git.
+Open work only, ordered by what blocks the next step. The design itself is described in [specs.adoc](specs.adoc), [mechanical.md](mechanical.md) and [interfaces.md](interfaces.md); closed items are in git.
 
-The GNSS and ADSBee modules have arrived. The display is ordered. The carrier board is not.
+The carrier board is assembled. The display and the ADSBee have arrived.
 
 ## Before ordering the board
 
@@ -40,6 +40,18 @@ The simulations rest on these. Each one changes a result if it is far off.
     - Red LED with USB present, green LED on STAT.
     - Conducted emission at 750 kHz with the real adapter. 1.5 MHz needs L1 = 1 µH and is not an option on this board.
 
+- [ ] **Firmware on the device.** Software is in place, see [firmware-plan.md](firmware-plan.md).
+    - On-device Unity tests and the HWTEST run.
+    - Boot with PSRAM enabled.
+    - `logs debug i2c` shows only i2c lines at debug, prompt clean afterwards.
+    - `reboot` message reaches the terminal, the USB link stays connected across the restart.
+    - `beep --sweep` audible, the mute slider silences `beep --short`.
+    - Gauge readout, traffic input, buzzer PWM, the U13 poll and startup mute.
+    - BMP580 polled initialization with INT unconnected.
+    - ADSBee UART console with the display: Wi-Fi control, CRC and parity error recovery, dense-traffic throughput.
+    - ADSBee GNSS UART: cold start, disable and re-enable, host reset. No backfeed.
+    - FLARM 868 MHz reception on the ADSBee.
+
 - [ ] **Thermal cut-off.**
     - Sweep the resistance at J12 through all TS transitions.
     - NTC open and shorted.
@@ -54,6 +66,6 @@ The simulations rest on these. Each one changes a result if it is far off.
 
 - [x] **GNSS reception next to the charger.** Read the current U16-to-converter separation from the PCB. Compare reception with and without charging, and with SW5 on and off with each antenna type.
 
-- [x] **Shutdown sound on battery.** Mark reports that switching the POWER slider off on battery alone browns the ESP out before the shutdown sound plays. The slider removes the 5 V rail, so the ESP learns of the switch-off from the event that takes its supply. With USB present the ESP stays powered and the sound plays. No approach chosen yet.
+- [ ] **Shutdown sound on battery.** Mark reports that switching the POWER slider off on battery alone browns the ESP out before the shutdown sound plays. The slider removes the 5 V rail, so the ESP learns of the switch-off from the event that takes its supply. With USB present the ESP stays powered and the sound plays. No approach chosen yet.
 
 

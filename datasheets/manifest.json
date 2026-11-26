@@ -252,7 +252,7 @@
   },
   {
     "file": "AKKU_SOLD333288_DB-EN.pdf",
-    "note": "Battery pack 5 Ah option (runtime tables in docs/specs.md), via reichelt"
+    "note": "Battery pack 5 Ah option (runtime tables in docs/specs.adoc), via reichelt"
   },
   {
     "file": "datasheet_adsbee_1090.pdf",

@@ -74,7 +74,7 @@ Data sheets for the parts on the carrier and the parts fitted to it by hand. Cov
 
 | Part | Ref |
 |---|---|
-| Reichelt BL 1X20G8 sockets, SL 1X40G headers and jumpers ([BOM](../docs/bom-hand-sourced.md)); the Samtec SSQ and SNT sheets describe the alternative parts with the same pitch and height | J1, J4-J6, J8-J10, JP1, JP3 |
+| Reichelt BL 1X20G8 sockets, SL 1X40G headers and jumpers ([BOM](../docs/bom-hand-sourced.adoc)); the Samtec SSQ and SNT sheets describe the alternative parts with the same pitch and height | J1, J4-J6, J8-J10, JP1, JP3 |
 
 New data sheets go into this directory, with an entry in the manifest and a text extraction in `pdf2text/`.
 

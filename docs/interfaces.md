@@ -1,6 +1,6 @@
 # Module interfaces
 
-Connectors on the carrier and what each pin carries. Positions and mounting are in [mechanical.md](mechanical.md), the hand-fitted parts in [bom-hand-sourced.md](bom-hand-sourced.md).
+Connectors on the carrier and what each pin carries. Positions and mounting are in [mechanical.md](mechanical.md), the hand-fitted parts in [bom-hand-sourced.adoc](bom-hand-sourced.adoc).
 
 All module sockets are 2.54 mm single-row female headers. Their height is given in [mechanical.md](mechanical.md#assembly-split).
 
@@ -35,7 +35,7 @@ Designators run by physical rows, top to bottom and left to right. The four adja
 
 Notes:
 
-- J11 carries the full battery current. JST rates the PH series at 2 A per contact with AWG 24 wire ([data sheet](../datasheets/jst-ph-series.pdf)). The battery currents are in [specs.md](specs.md); the peaks above 2 A are an open item in [open-issues.md](open-issues.md).
+- J11 carries the full battery current. JST rates the PH series at 2 A per contact with AWG 24 wire ([data sheet](../datasheets/jst-ph-series.pdf)). The battery currents are in [specs.adoc](specs.adoc); the peaks above 2 A are an open item in [open-issues.md](open-issues.md).
 - JP1 and JP3 connect RAIL_5V to ESP_5V and ADS_5V. Remove the jumper before powering that module from its own USB port.
 - SW4 is the hand-fitted RESET button below BZ1: QON to GND, about 10 s hold. It power-cycles the system rails after firmware enables SFET_PRESENT; the charger and gauge stay powered.
 - SW1 switches SW_EN between THERM_OK and GND. SW2 and SW3 are logic inputs; neither carries buzzer or radio power.
@@ -131,11 +131,11 @@ U13 is TI TCA9534PWR (C783615), powered by ESP_3V3 with C40, 100 nF. A0, A1 and 
 | P6      | LCD_LED         | J10 pin 4                | backlight off        | backlight on                             |
 | P7      | SW_ON_N         | POWER slider through Q11 | slider on            | slider off                               |
 
-J10 pin 1 is GND; pins 2-4 are RST_1, RST_2 and LCD_LED. R48, R49 and R52 to R55 remain 100 kΩ pull-ups to ESP_3V3 for P0, P1 and P4 to P7. Thus the three display-control signals default high while U13's pins are inputs. R88 and R89 pull P2 and P3 up to ESP_3V3 on the expander side; D15 and D16 block that bias from U16, which pulls RESET_N and SAFEBOOT_N up internally to +GNSS_3V3. Each grounded input draws 33 µA nominal at 3.3 V. SW2 and SW3 connect common to GND through pin 3; pin 1 is unconnected. Both maintained positions are therefore defined without switching directly between power rails. The switch footprint numbers are our convention; the manufacturer drawing does not number the terminals.
+J10 pin 1 is GND; pins 2-4 are RST_1, RST_2 and LCD_LED. R48, R49 and R52 to R55 remain 100 kΩ pull-ups to ESP_3V3 for P0, P1 and P4 to P7. Thus the three display-control signals default high while U13's pins are inputs. R88 and R89 pull P2 and P3 up to ESP_3V3 on the expander side; D11 and D12 block that bias from U16, which pulls RESET_N and SAFEBOOT_N up internally to +GNSS_3V3. Each grounded input draws 33 µA nominal at 3.3 V. SW2 and SW3 connect common to GND through pin 3; pin 1 is unconnected. Both maintained positions are therefore defined without switching directly between power rails. The switch footprint numbers are our convention; the manufacturer drawing does not number the terminals.
 
 J10 carries 3.3 V logic for short enclosure wiring to an external display's reset and backlight-control inputs; it does not supply display power or LED current. LCD_LED provides on/off control, not hardware PWM dimming. Fit the header by hand; it is DNP and excluded from JLCPCB assembly exports. Leave P4-P6 as inputs when no external display is fitted.
 
-D11/D12 isolate the expander pull-ups from the switched GNSS rail. Firmware must pull reset and safeboot low or release them, as specified in [GNSS control](firmware.md#gnss-control). Slider behavior is specified in [physical controls](firmware.md#physical-controls).
+Firmware must pull reset and safeboot low or release them, as specified in [GNSS control](firmware.md#gnss-control). Slider behavior is specified in [physical controls](firmware.md#physical-controls).
 
 ## GNSS: MAX-M10S (U16)
 
@@ -161,7 +161,7 @@ The receiver is on the carrier, sheet `gnss.kicad_sch`. +GNSS_3V3 comes from the
 
 ## ADSBee 1090U
 
-Pin names follow the manufacturer's Rev D schematic. Header positions use the delivered module's caliper measurements, see [adsbee-estimate.md](../mechanical/adsbee-estimate.md).
+Pin names follow the manufacturer's Rev D schematic. Header positions use the delivered module's caliper measurements.
 
 Main header (module J5, 1x13) on carrier socket J6:
 
