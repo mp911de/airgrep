@@ -1,20 +1,10 @@
 #!/usr/bin/env python3
 """AIRGREP USB control via PyUSB/libusb, console via pyserial and picocom.
-
-Without a command the tool lists the devices it finds, each with its --serial value, console path and
-bulk interface. It finds them by USB identity and interface number, and sends the console no binary
-data. --serial takes the factory MAC with or without colons or the airgrep- prefix. Binary commands
-claim only the vendor interface. The protocol is in docs/usb-data-protocol.md.
-
-dfu makes the device enter the ROM serial download mode for idf.py flash or esptool, it is no USB DFU
-class. The ROM port has Espressif's identity and may have another path than the console, so find the
-console again with the console command after flashing. For the old dual-CDC firmware dfu uses that
-device's second CDC port, no other command works there. An application that does not run leaves BOOT
-plus RESET as the way into ROM download.
 """
 
 import argparse
 import binascii
+from contextlib import contextmanager
 import math
 import os
 from pathlib import Path
@@ -24,6 +14,7 @@ import shutil
 import struct
 import subprocess
 import sys
+import tempfile
 import time
 from types import SimpleNamespace
 
@@ -36,20 +27,32 @@ LEGACY_USB = (0x303A, 0x4002)
 conversation_ns = 0
 COMMANDS = {"hello": 0x01, "read": 0x02, "write": 0x03, "reboot": 0x06, "dfu": 0x07}
 STATUS = 0x80
-# A component's ID and the size of its State in protocol version 1, see docs/usb-data-protocol.md.
+# A component's ID and the size of its State in protocol version 1.
 COMPONENTS = {
     "adsbee": (0x01, 240), "traffic": (0x02, 61440), "barometer": (0x03, 88), "battery": (0x04, 72),
     "charger": (0x05, 288), "expander": (0x06, 64), "usb_c": (0x07, 72), "wifi": (0x08, 144),
     "adsbee_clock": (0x09, 56),
 }
 WRITE = struct.Struct("<BHH")
-GREEN = "\033[32m"
-ORANGE = "\033[38;5;208m"
-BLUE = "\033[38;2;146;179;244m"
-RESET = "\033[0m"
+
+
+def colors(file=sys.stdout):
+    """The rule of the private _colorize of Python 3.13: NO_COLOR, FORCE_COLOR, a dumb terminal, a pipe."""
+    if os.environ.get("NO_COLOR"):
+        return False
+    if os.environ.get("FORCE_COLOR"):
+        return True
+    return os.environ.get("TERM") != "dumb" and file.isatty()
+
+
+# PROG and OPTION are the program and long option colors of the argparse help in Python 3.14.
+GREEN, ORANGE, BLUE, PROG, OPTION, RESET = (("\033[32m", "\033[38;5;208m", "\033[38;2;146;179;244m", "\033[1;35m",
+                                             "\033[1;36m", "\033[0m") if colors()
+                                            else ("",) * 6)
 STATUS_NAMES = (
     "OK", "CRC_MISMATCH", "VERSION_MISMATCH", "UNKNOWN_COMMAND",
     "UNKNOWN_COMPONENT", "INVALID_LENGTH", "INVALID_RANGE", "INTERNAL_ERROR",
+    "UNKNOWN_SETTINGS",
 )
 HELLO = struct.Struct("<Q32s32s6IH5Bx128s128s128s")
 # Whether READ and WRITE exist. Firmware that predates the field reports the first.
@@ -89,7 +92,7 @@ def patched(component, state, offset, data):
     size = COMPONENTS[component][1]
     if len(state) != size:
         raise ProtocolError(f"{component} State has {len(state)} bytes, this client expects {size}. Not writing")
-    if offset + len(data) > size:
+    if offset < 0 or offset + len(data) > size:
         raise ProtocolError(f"{len(data)} bytes at offset {offset} lie outside the {size} bytes of {component}")
     return state[:offset] + data + state[offset + len(data):]
 
@@ -140,9 +143,10 @@ def read_response(port, command, deadline, started_ns=None):
         if remaining <= 0:
             raise timed_out
         port.timeout = remaining
-        frame.extend(port.read(expected - len(frame)))
-        if time.monotonic() >= deadline:
+        chunk = port.read(expected - len(frame))
+        if not chunk and time.monotonic() >= deadline:
             raise timed_out
+        frame.extend(chunk)
         if len(frame) >= 3:
             expected = struct.unpack_from("<H", frame, 1)[0]
             if expected < 7:
@@ -203,12 +207,6 @@ def converse(port, command, payload=b""):
     if port.write(frame) != len(frame):
         raise ProtocolError("Incomplete request write, command outcome unknown")
     return read_response(port, command, time.monotonic() + TIMEOUT, started_ns)
-
-
-def transact(port, command, reset, payload=b""):
-    reset()
-    drain_stale(port)
-    return converse(port, command, payload)
 
 
 def session(core, util, record, work):
@@ -284,6 +282,9 @@ def selects(selector, serial_number):
     return identity(selector) is not None and identity(selector) == identity(serial_number)
 
 
+LIBUSB_MISSING = "libusb is required. Install it with brew install libusb or your package manager"
+
+
 def load_backend(libusb1):
     backend = libusb1.get_backend()
     if backend is None and sys.platform == "darwin":
@@ -293,8 +294,27 @@ def load_backend(libusb1):
                 if backend is not None:
                     break
     if backend is None:
-        raise ProtocolError("libusb is required. Install it with brew install libusb or your package manager")
+        raise ProtocolError(LIBUSB_MISSING)
     return backend
+
+
+def load_usb(error="PyUSB is required. Install it in your Python environment with python3 -m pip install pyusb"):
+    try:
+        import usb.core
+        import usb.util
+        import usb.backend.libusb1
+    except ImportError:
+        raise ProtocolError(error) from None
+    return SimpleNamespace(core=usb.core, util=usb.util, backend=load_backend(usb.backend.libusb1))
+
+
+def load_serial(error="pyserial is required. Install it in your Python environment with python3 -m pip install pyserial"):
+    try:
+        import serial
+        from serial.tools import list_ports
+    except ImportError:
+        raise ProtocolError(error) from None
+    return serial, list_ports
 
 
 def usb_devices(core, backend=None):
@@ -325,7 +345,7 @@ def usb_devices(core, backend=None):
             records.append(SimpleNamespace(device=device, product=product,
                                            serial_number=serial_number, vendor=vendor, error=error))
     except core.NoBackendError:
-        raise ProtocolError("libusb is required. Install it with brew install libusb or your package manager") from None
+        raise ProtocolError(LIBUSB_MISSING) from None
     return records
 
 
@@ -357,11 +377,8 @@ def legacy_data_port(record, ports, interfaces):
 
 def legacy_dfu(record):
     """Enter the bootloader on firmware that predates the vendor bulk interface."""
-    try:
-        import serial
-        from serial.tools import list_ports
-    except ImportError:
-        raise ProtocolError("Legacy CDC upgrade requires pyserial. Install it with python3 -m pip install pyserial") from None
+    serial, list_ports = load_serial(
+        "Legacy CDC upgrade requires pyserial. Install it with python3 -m pip install pyserial")
     ports = list(list_ports.comports())
     device = legacy_data_port(record, ports, interface_numbers(ports))
     port = serial.Serial(port=None, baudrate=115200, timeout=TIMEOUT, write_timeout=TIMEOUT)
@@ -374,13 +391,12 @@ def legacy_dfu(record):
         port.reset_input_buffer()
         port.reset_output_buffer()
 
-    def start():
-        reset()
-        port.dtr = True
-
     try:
         port.open()
-        return transact(port, COMMANDS["dfu"], start)
+        reset()
+        port.dtr = True
+        drain_stale(port)
+        return converse(port, COMMANDS["dfu"])
     except (ProtocolError, OSError, KeyboardInterrupt):
         if port.is_open:
             try:
@@ -393,6 +409,13 @@ def legacy_dfu(record):
             port.close()
         except OSError:
             pass
+
+
+def send_dfu(core, util, record):
+    if is_legacy_cdc(record):
+        util.dispose_resources(record.device)
+        return legacy_dfu(record)
+    return exchange(core, util, record, COMMANDS["dfu"])
 
 
 def macos_interfaces(roots):
@@ -445,6 +468,11 @@ def port_role(interface):
     return "console" if interface in (0, 1) else "unknown role"
 
 
+def console_ports(ports, interfaces, serial_number=None):
+    return [port for port in airgrep_ports(ports, serial_number)
+            if port_role(interfaces.get(port.device)) == "console"]
+
+
 def print_devices(records, ports, interfaces, serial_number=None):
     records = [record for record in records if selects(serial_number, record.serial_number)]
     if not records:
@@ -456,11 +484,10 @@ def print_devices(records, ports, interfaces, serial_number=None):
 
 def print_device(record, ports, interfaces, selector=None):
     print(f"Device    {record.product}" + (f"  {selector}" if selector else ""))
-    console_ports = [port for port in airgrep_ports(ports) if record.serial_number
-                     and port.serial_number == record.serial_number]
-    if not console_ports:
+    matched_ports = airgrep_ports(ports, record.serial_number) if record.serial_number else []
+    if not matched_ports:
         print("  Console Path unavailable")
-    for port in sorted(console_ports, key=lambda p: p.device):
+    for port in sorted(matched_ports, key=lambda p: p.device):
         interface = interfaces.get(port.device)
         role = port_role(interface).capitalize()
         detail = f"Interface {interface}" if interface is not None else "Interface unavailable"
@@ -474,7 +501,7 @@ def print_device(record, ports, interfaces, selector=None):
 
 def select_port(ports, interfaces, serial_number=None):
     devices = airgrep_ports(ports, serial_number)
-    matches = [port for port in devices if port_role(interfaces.get(port.device)) == "console"]
+    matches = console_ports(devices, interfaces)
     if len(matches) == 1:
         return matches[0].device
     if len(matches) > 1:
@@ -534,6 +561,7 @@ def print_hello(payload, serial_number=None):
     print(f"{'Load':20} core0 {percent(core0)}, core1 {percent(core1)}, overall {percent(overall)}")
     for label, memory in (("Internal RAM", hello.internal), ("PSRAM", hello.psram)):
         print(f"{label:20} {memory[0] // 1024} KB free, {memory[1] // 1024} KB minimum, {memory[2] // 1024} KB total")
+    return hello
 
 
 def read_state(send, component):
@@ -557,6 +585,14 @@ def write_state(send, component, offset, data):
 
 def service_arguments(command, arguments):
     """What a service command does with a way to send, or None for another command. ValueError names a misuse."""
+    if command == "flash":
+        if len(arguments) != 1:
+            raise ValueError("flash takes an image file")
+        return None
+    if command == "flash-tzdata":
+        if len(arguments) != 1:
+            raise ValueError("flash-tzdata takes a table file")
+        return None
     if command not in ("read", "write"):
         if arguments:
             raise ValueError(f"{command or 'listing devices'} takes no arguments")
@@ -571,22 +607,296 @@ def service_arguments(command, arguments):
     if len(arguments) < 3:
         raise ValueError("write needs a component, an offset and the bytes as hex")
     offset, data = int(arguments[1], 0), bytes.fromhex("".join(arguments[2:]))
+    if offset < 0:
+        raise ValueError("write offset must be non-negative")
     if not data:
         raise ValueError("write needs at least one byte")
     return lambda send: write_state(send, component, offset, data)
+
+
+# Espressif's identity, shared by the ROM download port and the USB Serial/JTAG console of a build
+# without TinyUSB.
+ESPRESSIF_USB = (0x303A, 0x1001)
+FLASH_TIMEOUT = 15
+# An Espressif port this long after the reset, with no AIRGREP console, is the console of a build without TinyUSB.
+USJ_CONSOLE_AFTER = 3
+FIRMWARE = Path(__file__).resolve().parents[1]
+TZDATA_HEADER = 128
+
+
+def flash_usb():
+    install = "Install pyusb and pyserial in the ESP-IDF Python environment"
+    usb = load_usb(install)
+    _, list_ports = load_serial(install)
+    return SimpleNamespace(core=usb.core, util=usb.util, backend=usb.backend, ports=list_ports.comports)
+
+
+@contextmanager
+def usb_snapshot(core, util, backend):
+    records = usb_devices(core, backend)
+    try:
+        yield records
+    finally:
+        for record in records:
+            util.dispose_resources(record.device)
+
+
+@contextmanager
+def snapshot(usb):
+    with usb_snapshot(usb.core, usb.util, usb.backend) as records:
+        yield records, list(usb.ports())
+
+
+def is_espressif(port):
+    return (port.vid, port.pid) == ESPRESSIF_USB
+
+
+def flash_target(usb, selector, board, force):
+    """The first matching device, or None when nothing enumerates.
+
+    A confirmed device is flashed without asking: an AIRGREP whose HELLO reports the image's board,
+    legacy AIRGREP firmware, an Espressif port named by the selector, or with force any device that
+    gives no HELLO, an empty one or one in its ROM. A board mismatch against HELLO stays an error.
+    """
+    selected = identity(selector) if selector else None
+    if selector and selected is None:
+        raise ProtocolError("--serial must be a factory MAC, with optional airgrep- prefix or colons")
+    with snapshot(usb) as (records, ports):
+        candidates = [(identity(record.serial_number), record, True) for record in records]
+        candidates.extend((identity(port.serial_number), port, False) for port in ports if is_espressif(port))
+        if selector:
+            candidates = [candidate for candidate in candidates if candidate[0] == selected]
+        if not candidates:
+            return None
+        mac, record, is_usb = candidates[0]
+        if mac is None:
+            raise ProtocolError("The first device has no recognized factory MAC serial number")
+        others = sorted({other for other, _, _ in candidates[1:] if other not in (mac, None)})
+        if others:
+            print(f"Using the first of {len(others) + 1} devices. Others: {', '.join(others)}. Select --serial")
+        if not is_usb:
+            print(f"Device    ESP32-S3 {mac}\n  {'Port':7} {record.device} (ROM or USB Serial/JTAG)\n", flush=True)
+            return SimpleNamespace(mac=mac, confirmed=bool(selector) or force)
+        print_device(record, ports, interface_numbers(ports))
+        print(flush=True)
+        if is_legacy_cdc(record):
+            return SimpleNamespace(mac=mac, confirmed=True)
+        try:
+            payload = exchange(usb.core, usb.util, record, COMMANDS["hello"])
+        except (ProtocolError, OSError) as error:
+            print(f"No HELLO reply: {error}\n", flush=True)
+            return SimpleNamespace(mac=mac, confirmed=force)
+        hello = print_hello(payload, record.serial_number)
+        print(flush=True)
+        if board and hello.board and hello.board != board:
+            raise ProtocolError(
+                f"Device reports board {hello.board}, the image is for {board}. "
+                "To flash regardless, hold BOOT while connecting for ROM download mode")
+        return SimpleNamespace(mac=mac, confirmed=True)
+
+
+def confirm(question):
+    if not sys.stdin.isatty():
+        print(f"{question} Not asked without a terminal.")
+        return False
+    return input(f"{question} [y/N] ").strip().lower() in ("y", "yes")
+
+
+def enter_bootloader(usb, selected):
+    """Sends an AIRGREP into its ROM. An Espressif port needs nothing, esptool resets it into the ROM."""
+    with snapshot(usb) as (records, ports):
+        espressif = [port for port in ports if is_espressif(port) and identity(port.serial_number) == selected]
+        if len(espressif) > 1:
+            raise ProtocolError("Multiple Espressif ports report the selected factory MAC")
+        if espressif:
+            return
+        matches = [record for record in records if identity(record.serial_number) == selected]
+        if len(matches) != 1:
+            raise ProtocolError("Selected AIRGREP device disappeared or has ambiguous USB identity")
+        print(f"Entering bootloader on {selected}.", flush=True)
+        send_dfu(usb.core, usb.util, matches[0])
+
+
+def wait_rom_port(usb, selected):
+    """The Espressif ROM port of the selected device, once it enumerates."""
+    deadline = time.monotonic() + FLASH_TIMEOUT
+    while True:
+        ports = list(usb.ports())
+        matches = [port.device for port in ports if is_espressif(port)
+                   and identity(port.serial_number) == selected]
+        if len(matches) > 1:
+            raise ProtocolError("Multiple ports report the selected factory MAC")
+        if matches:
+            return matches[0]
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise ProtocolError(f"Timed out waiting for {selected} Espressif port")
+        time.sleep(min(0.2, remaining))
+
+
+def into_rom(usb, selector, board, image, force):
+    """The MAC and ROM port of the device to flash with image, or None when the user declines."""
+    target = flash_target(usb, selector, board, force)
+    if target is None:
+        raise ProtocolError("Not flashed. Connect the device, or hold BOOT while connecting for ROM download mode")
+    if not target.confirmed and not confirm(f"Flash {target.mac} with {image}?"):
+        print("Not flashed.")
+        return None
+    enter_bootloader(usb, target.mac)
+    return target.mac, wait_rom_port(usb, target.mac)
+
+
+def esptool(port, *arguments):
+    subprocess.run([sys.executable, "-m", "esptool", "--chip", "esp32s3", "-p", port,
+                    "--before=default-reset", *arguments], check=True)
+
+
+def partition(name):
+    """Offset and size of a partition in partitions.csv, the same table the Utility reads."""
+    for line in (FIRMWARE / "partitions.csv").read_text().splitlines():
+        fields = [field.strip() for field in line.split(",")]
+        if fields[0] == name:
+            return int(fields[3], 0), int(fields[4], 0)
+    raise ProtocolError(f"partitions.csv has no {name} partition")
+
+
+def image_board(image, data):
+    """The board an application image declares, after the checks of the Utility's Maintenance.Image."""
+    if len(data) < 112 or data[0] != 0xE9 or data[32:36] != bytes((0x32, 0x54, 0xCD, 0xAB)):
+        raise ProtocolError(f"{image} is no ESP application image")
+    project = data[80:112].split(b"\0")[0].decode(errors="replace")
+    if project != "airgrep":
+        raise ProtocolError(f"{image} is firmware of another project, {project}")
+    if data[12:14] != bytes((9, 0)):
+        raise ProtocolError(f"{image} is firmware for another chip")
+    # device_info.c places "airgrep-board:" BOARD_NAME at the start of the first segment's data.
+    descriptor = b"airgrep-board:"
+    if not data[288:].startswith(descriptor):
+        raise ProtocolError(f"{image} declares no board")
+    board = data[288 + len(descriptor):].split(b"\0")[0].decode(errors="replace")
+    if not board:
+        raise ProtocolError(f"{image} declares no board")
+    return board
+
+
+def wait_console(usb, selected):
+    """The console after a reset: the AIRGREP console, or the USB Serial/JTAG port of a build without TinyUSB."""
+    started = time.monotonic()
+    while True:
+        ports = list(usb.ports())
+        interfaces = interface_numbers(ports)
+        mine = [port for port in ports if identity(port.serial_number) == selected]
+        airgrep = [port.device for port in console_ports(mine, interfaces)]
+        espressif = [port.device for port in mine if is_espressif(port)]
+        if len(airgrep) > 1 or len(espressif) > 1:
+            raise ProtocolError("Multiple ports report the selected factory MAC")
+        if airgrep:
+            return airgrep[0]
+        elapsed = time.monotonic() - started
+        if espressif and elapsed > USJ_CONSOLE_AFTER:
+            return espressif[0]
+        if elapsed > FLASH_TIMEOUT:
+            raise ProtocolError(f"Timed out waiting for the console of {selected}")
+        time.sleep(0.2)
+
+
+def flash(image, selector, force):
+    """Writes an application image into the factory partition, then opens the console."""
+    offset, size = partition("factory")
+    data = image.read_bytes()
+    if len(data) > size:
+        raise ProtocolError(f"{image} has {len(data)} bytes, the factory partition {size}")
+    board = image_board(image, data)
+    require_picocom()
+    usb = flash_usb()
+    target = into_rom(usb, selector, board, image.name, force)
+    if target is None:
+        return
+    mac, port = target
+    esptool(port, "--after=hard-reset", "write-flash", hex(offset), str(image))
+    console = wait_console(usb, mac)
+    print(f"Console on {console}. Ctrl+A then Ctrl+X exits.", flush=True)
+    open_console(console)
+
+
+def flash_tzdata(table, selector, force):
+    """Writes a time zone table into the tzdata partition unless the device holds the same one.
+
+    The TZL2 header names release, dataset, cell size and length, so an equal header is an equal table.
+    """
+    offset, size = partition("tzdata")
+    data = table.read_bytes()
+    if len(data) < TZDATA_HEADER or data[:4] != b"TZL2":
+        raise ProtocolError(f"{table} is no TZL2 time zone table")
+    if len(data) > size:
+        raise ProtocolError(f"{table} has {len(data)} bytes, the tzdata partition {size}")
+    usb = flash_usb()
+    target = into_rom(usb, selector, None, table.name, force)
+    if target is None:
+        return
+    _, port = target
+    if not force:
+        with tempfile.TemporaryDirectory() as folder:
+            header = Path(folder) / "header.bin"
+            esptool(port, "--after=no-reset", "read-flash", hex(offset), str(TZDATA_HEADER), str(header))
+            if header.read_bytes() == data[:TZDATA_HEADER]:
+                # Any command leaves the ROM with the reset after it.
+                esptool(port, "--after=hard-reset", "read-mac")
+                print(f"The device holds this table already, {table} not written.")
+                return
+    esptool(port, "--after=hard-reset", "write-flash", hex(offset), str(table))
+    print(f"Time zone table written, {len(data)} bytes at {hex(offset)}.")
+
+
+# Orange needs your hands or deletes data, blue is yours to adapt, the rest is copied as it stands.
+def command(line):
+    """A command colored as the argparse help: options in OPTION, the rest in PROG, ${VERSION} to fill in."""
+    def word(text):
+        color = OPTION if text.startswith("--") else PROG
+        return color + text.replace("${VERSION}", f"{ORANGE}${{VERSION}}{color}") + RESET if text else text
+    return " ".join(word(text) for text in line.split(" "))
+
+
+BRICKED = f"""\
+
+🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱
+My device is 🧱. What now?
+🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱🧱
+
+    0. Activate ESP-IDF ({command("source ~/.espressif/tools/activate_idf_….sh")})
+       Also, build the images as per README.adoc or download them.
+
+    1. Hold {ORANGE}BOOT{RESET} while connecting the device
+
+    2. $ {command("python -m esptool --chip esp32s3 --after no-reset erase-flash")}
+
+    3. $ {command("python -m esptool --chip esp32s3 --after no-reset write-flash \\")}
+         {command("  0x0 build/s3/bootloader/bootloader.bin 0x8000 build/s3/partition_table/partition-table.bin")}
+
+    4. $ {command("tools/airgrep.py flash build/images/airgrep-s3-${VERSION}.bin --force")}
+
+    5. $ {command("tools/airgrep.py flash-tzdata tzdb/build/tzdata.bin --force")}
+
+    6. {GREEN}Done{RESET} 🛩️
+
+ ℹ️ {ORANGE}erase-flash{RESET} also clears the stored settings, skip it when only the image is broken.
+"""
 
 
 def main(argv=None):
     global conversation_ns
     conversation_ns = 0
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", nargs="?", choices=(*COMMANDS, "console"),
+    parser.add_argument("command", nargs="?", choices=(*COMMANDS, "console", "flash", "flash-tzdata", "bricked"),
                         help="Command to execute, or omit to list connected devices")
     parser.add_argument("arguments", nargs="*", metavar="ARGUMENT",
                         help="read COMPONENT prints a State as hex. write COMPONENT OFFSET HEX replaces bytes of it. "
                              f"Components: {', '.join(COMPONENTS)}. Both need firmware with service commands")
     parser.add_argument("--port", help="Explicit console serial device, only for console")
     parser.add_argument("--serial", help="Select an AIRGREP device by its USB serial number")
+    parser.add_argument("--force", action="store_true",
+                        help="flash and flash-tzdata write without asking a device that gives no HELLO, empty or in its "
+                             "ROM. flash-tzdata also writes a table the device holds already")
     args = parser.parse_args(argv)
     try:
         service = service_arguments(args.command, args.arguments)
@@ -596,59 +906,66 @@ def main(argv=None):
         parser.error("Use either --port or --serial")
     if args.port and args.command != "console":
         parser.error("--port is only supported for console")
+    if args.force and args.command not in ("flash", "flash-tzdata"):
+        parser.error("--force is only supported for flash and flash-tzdata")
+    if args.serial and args.command == "bricked":
+        parser.error("--serial is not supported for bricked")
+    if args.command == "bricked":
+        print(BRICKED)
+        return 0
+    selector = args.serial or os.environ.get("AIRGREP_SERIAL") or None
     if args.command is None:
         parser.print_usage()
     try:
+        if args.command == "flash":
+            flash(Path(args.arguments[0]), selector, args.force)
+            return 0
+        if args.command == "flash-tzdata":
+            flash_tzdata(Path(args.arguments[0]), selector, args.force)
+            return 0
         if args.command == "console":
             require_picocom()
         ports, interfaces = [], {}
         if not args.port:
             try:
-                from serial.tools import list_ports
-            except ImportError:
+                _, list_ports = load_serial()
+            except ProtocolError:
                 if args.command in (None, "console"):
-                    raise ProtocolError("pyserial is required. Install it in your Python environment with python3 -m pip install pyserial") from None
+                    raise
             else:
                 ports = list(list_ports.comports())
                 interfaces = interface_numbers(ports)
         if args.command == "console":
-            device = args.port or select_port(ports, interfaces, args.serial)
+            device = args.port or select_port(ports, interfaces, selector)
             open_console(device)
-        try:
-            import usb.core
-            import usb.util
-            import usb.backend.libusb1
-        except ImportError:
-            raise ProtocolError("PyUSB is required. Install it in your Python environment with python3 -m pip install pyusb") from None
-        records = usb_devices(usb.core, load_backend(usb.backend.libusb1))
-        if args.command is None:
-            try:
-                print_devices(records, ports, interfaces, args.serial)
-            finally:
-                for record in records:
-                    usb.util.dispose_resources(record.device)
-            return 0
-        record = select_usb(records, args.serial)
-        print_device(record, ports, interfaces)
-        print(flush=True)
-        if args.command == "dfu" and is_legacy_cdc(record):
-            usb.util.dispose_resources(record.device)
-            payload = legacy_dfu(record)
-        elif service:
-            print(session(usb.core, usb.util, record, service))
-            return 0
-        else:
-            payload = exchange(usb.core, usb.util, record, COMMANDS[args.command])
-        if args.command == "hello":
-            print_hello(payload, record.serial_number)
-        elif args.command == "dfu":
-            print("Bootloader entry acknowledged. The ROM download port may have a different path.")
-        else:
-            print("Reboot acknowledged.")
+        usb = load_usb()
+        with usb_snapshot(usb.core, usb.util, usb.backend) as records:
+            if args.command is None:
+                print_devices(records, ports, interfaces, args.serial or None)
+                return 0
+            record = select_usb(records, selector)
+            print_device(record, ports, interfaces)
+            print(flush=True)
+            if args.command == "dfu":
+                payload = send_dfu(usb.core, usb.util, record)
+            elif service:
+                print(session(usb.core, usb.util, record, service))
+                return 0
+            else:
+                payload = exchange(usb.core, usb.util, record, COMMANDS[args.command])
+            if args.command == "hello":
+                print_hello(payload, record.serial_number)
+            elif args.command == "dfu":
+                print("Bootloader entry acknowledged. The ROM download port may have a different path.")
+            else:
+                print("Reboot acknowledged.")
         return 0
     except (ProtocolError, OSError) as error:
         print(f"airgrep: {error}", file=sys.stderr)
         return 1
+    except subprocess.CalledProcessError as error:
+        print(f"airgrep: esptool failed with exit code {error.returncode}", file=sys.stderr)
+        return error.returncode if error.returncode > 0 else 1
     except KeyboardInterrupt:
         return 130
     finally:
