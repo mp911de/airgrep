@@ -1,6 +1,10 @@
 #include "radar_labels.h"
 
 #include <stdbool.h>
+#include <stddef.h>
+#ifdef ESP_PLATFORM
+#include "sdkconfig.h"
+#endif
 
 #define SIDES 8
 #define DIAGONAL_LABEL_GAP_PX 14
@@ -77,36 +81,107 @@ static radar_box_t beside(radar_spot_t symbol, radar_spot_t size, side_t side)
     return box;
 }
 
-static uint32_t cost(const radar_field_t * field, const radar_spot_t * symbols, uint32_t count,
-                     const radar_box_t * labels, uint32_t index, const radar_box_t * label)
-{
-    radar_box_t padded = {label->x1 - LABEL_CLEARANCE_PX, label->y1 - LABEL_CLEARANCE_PX, label->x2 + LABEL_CLEARANCE_PX, label->y2 + LABEL_CLEARANCE_PX};
-    uint32_t sum = inside(label, &field->bounds) ? 0 : COVERS;
+/* Each block has eight left edges, then eight right, top and bottom edges.
+ * The radar has 32 symbols, 32 placed labels, at most 160 dots, the own ship and two ring labels. */
+enum { LANES = 8, RIGHT_EDGES = LANES, TOP_EDGES = 2 * LANES, BOTTOM_EDGES = 3 * LANES,
+       BLOCK_WORDS = 4 * LANES, BLOCKS = 29 };
 
-    radar_box_t own = around(field->center, RADAR_SYMBOL_RADIUS_PX);
-    if(overlap(&padded, &own)) {
-        sum += COVERS;
+static void store_box(int16_t * blocks, size_t index, radar_box_t box)
+{
+    int16_t * lane = blocks + index / LANES * BLOCK_WORDS + index % LANES;
+    lane[0] = (int16_t)box.x1;
+    lane[RIGHT_EDGES] = (int16_t)box.x2;
+    lane[TOP_EDGES] = (int16_t)box.y1;
+    lane[BOTTOM_EDGES] = (int16_t)box.y2;
+}
+
+static const radar_box_t unused_box = {INT16_MAX, INT16_MAX, INT16_MIN, INT16_MIN};
+
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+static bool compact(int32_t value)
+{
+    /* A label origin, dimension, clearance and gap must fit together in a signed 16-bit lane. */
+    return value >= -8192 && value <= 8192;
+}
+
+static uint32_t pack(int16_t * blocks, const radar_field_t * field, const radar_spot_t * symbols,
+                     const radar_spot_t * sizes, uint32_t count)
+{
+    const unsigned capacity = BLOCKS * LANES;
+    if(count > (capacity - 3) / 2 || field->dot_count > capacity - 3 - 2 * count ||
+       !compact(field->center.x) || !compact(field->center.y)) {
+        return 0;
     }
+    for(uint32_t i = 0; i < count; ++i) {
+        if(!compact(symbols[i].x) || !compact(symbols[i].y) || !compact(sizes[i].x) || !compact(sizes[i].y)) {
+            return 0;
+        }
+        store_box(blocks, i, around(symbols[i], RADAR_SYMBOL_RADIUS_PX));
+    }
+    uint32_t used = count;
+    store_box(blocks, used++, around(field->center, RADAR_SYMBOL_RADIUS_PX));
+    for(unsigned i = 0; i < 2; ++i) {
+        radar_box_t r = field->ring_labels[i];
+        if(!compact(r.x1) || !compact(r.y1) || !compact(r.x2) || !compact(r.y2)) {
+            return 0;
+        }
+        store_box(blocks, used++, r);
+    }
+    for(uint32_t i = 0; i < field->dot_count; ++i) {
+        if(!compact(field->dots[i].x) || !compact(field->dots[i].y)) {
+            return 0;
+        }
+        store_box(blocks, used++, around(field->dots[i], RADAR_DOT_RADIUS_PX));
+    }
+    uint32_t end = (used + count + LANES - 1) / LANES * LANES;
+    for(uint32_t i = used; i < end; ++i) {
+        store_box(blocks, i, unused_box);
+    }
+    return used;
+}
+
+extern unsigned radar_label_intersections_s3(const int16_t * blocks, const int16_t * query, unsigned count);
+
+static unsigned packed_intersections(const int16_t * blocks, uint32_t used, const radar_box_t * padded)
+{
+    const int16_t query[] = {(int16_t)padded->x1, (int16_t)padded->x2, (int16_t)padded->y1, (int16_t)padded->y2};
+    unsigned count = (used + LANES - 1) / LANES;
+    return radar_label_intersections_s3(blocks, query, count);
+}
+#endif
+
+static unsigned intersections(const radar_field_t * field, const radar_spot_t * symbols, uint32_t count,
+                              const radar_box_t * labels, uint32_t index, const radar_box_t * padded,
+                              const int16_t * blocks, uint32_t used)
+{
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+    if(used) {
+        return packed_intersections(blocks, used, padded);
+    }
+#else
+    (void)blocks;
+    (void)used;
+#endif
+    radar_box_t own = around(field->center, RADAR_SYMBOL_RADIUS_PX);
+    unsigned hits = overlap(padded, &own);
     for(uint32_t i = 0; i < count; i++) {
         radar_box_t symbol = around(symbols[i], RADAR_SYMBOL_RADIUS_PX);
-        if(i != index && overlap(&padded, &symbol)) {
-            sum += COVERS;
-        }
-        if(i < index && overlap(&padded, &labels[i])) {
-            sum += COVERS;
-        }
+        hits += i != index && overlap(padded, &symbol);
+        hits += i < index && overlap(padded, &labels[i]);
     }
     for(uint32_t i = 0; i < 2; i++) {
-        if(overlap(&padded, &field->ring_labels[i])) {
-            sum += COVERS;
-        }
+        hits += overlap(padded, &field->ring_labels[i]);
     }
     for(uint32_t i = 0; i < field->dot_count; i++) {
         radar_box_t dot = around(field->dots[i], RADAR_DOT_RADIUS_PX);
-        if(overlap(&padded, &dot)) {
-            sum += COVERS;
-        }
+        hits += overlap(padded, &dot);
     }
+    return hits;
+}
+
+static uint32_t cost(const radar_field_t * field, const radar_box_t * label, unsigned hits)
+{
+    uint32_t sum = (hits + !inside(label, &field->bounds)) * COVERS;
     if(crosses(label, field->center, field->inner)) {
         sum += CROSSES_RING;
     }
@@ -121,17 +196,41 @@ void radar_labels(const radar_field_t * field, const radar_spot_t * symbols, con
 {
     static const side_t ORDER[SIDES] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
 
+    if(!count) {
+        return;
+    }
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+    int16_t storage[BLOCKS * BLOCK_WORDS + LANES - 1];
+    uintptr_t address = (uintptr_t)storage;
+    /* The vector load rounds down. Keep alignment relative to the actual stack address. */
+    __asm__ volatile("" : "+r"(address));
+    int16_t * blocks = (int16_t *)((address + 15u) & ~(uintptr_t)15u);
+    uint32_t used = pack(blocks, field, symbols, sizes, count);
+#else
+    int16_t * blocks = NULL;
+    uint32_t used = 0;
+#endif
     for(uint32_t i = 0; i < count; i++) {
+        if(used) {
+            store_box(blocks, i, unused_box);
+        }
         int8_t mirror = symbols[i].x > field->center.x + field->prefer_left_after_x_px ? -1 : 1;
         uint32_t least = UINT32_MAX;
         for(uint32_t tried = 0; tried < SIDES && least > 0; tried++) {
             side_t side = {(int8_t)(ORDER[tried].horizontal_direction * mirror), ORDER[tried].vertical_direction};
             radar_box_t label = beside(symbols[i], sizes[i], side);
-            uint32_t costs = cost(field, symbols, count, labels, i, &label);
+            radar_box_t padded = {label.x1 - LABEL_CLEARANCE_PX, label.y1 - LABEL_CLEARANCE_PX,
+                                  label.x2 + LABEL_CLEARANCE_PX, label.y2 + LABEL_CLEARANCE_PX};
+            unsigned hits = intersections(field, symbols, count, labels, i, &padded, blocks, used);
+            uint32_t costs = cost(field, &label, hits);
             if(costs < least) {
                 least = costs;
                 labels[i] = label;
             }
+        }
+        if(used) {
+            store_box(blocks, i, around(symbols[i], RADAR_SYMBOL_RADIUS_PX));
+            store_box(blocks, used++, labels[i]);
         }
     }
 }

@@ -1,4 +1,5 @@
 #include "radar_outline.h"
+#include "radar.h"
 #include "radar_grow.h"
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
@@ -27,6 +28,13 @@ static struct {
     int32_t source_radius_px;
     lv_draw_buf_t * mask;
 } symbol_cache[SYMBOL_MASK_CAPACITY];
+
+void radar_draw_symbol_image(lv_layer_t * layer, lv_draw_image_dsc_t * image, const lv_area_t * area)
+{
+    if(!radar_symbol_atlas_draw(layer, image, area)) {
+        lv_draw_image(layer, image, area);
+    }
+}
 
 static lv_draw_buf_t * grow(const uint8_t * mask, uint32_t width, uint32_t height,
                             uint32_t stride, uint32_t radius)
@@ -103,10 +111,8 @@ void radar_outline_text(lv_layer_t * layer, const char * text, const lv_font_t *
     }
 }
 
-void radar_outline_symbol(lv_layer_t * layer, const void * symbol, lv_point_t at, lv_color_t color, int32_t scale,
-                          int32_t rotation_deg)
+const lv_draw_buf_t * radar_symbol_outline_mask(const lv_image_dsc_t * plain, int32_t scale)
 {
-    const lv_image_dsc_t * plain = symbol;
     int32_t source_radius_px = (RADAR_OUTLINE_WIDTH_PX * LV_SCALE_NONE + scale / 2) / scale;
     size_t slot = 0;
     while(slot < SYMBOL_MASK_CAPACITY && symbol_cache[slot].mask) {
@@ -116,20 +122,30 @@ void radar_outline_symbol(lv_layer_t * layer, const void * symbol, lv_point_t at
         slot++;
     }
     if(slot == SYMBOL_MASK_CAPACITY) {
-        return;
+        return NULL;
     }
     lv_draw_buf_t * grown = symbol_cache[slot].mask;
     if(!grown) {
         grown = grow(plain->data, plain->header.w, plain->header.h, plain->header.stride, source_radius_px);
         if(!grown) {
-            return;
+            return NULL;
         }
         symbol_cache[slot].image = plain;
         symbol_cache[slot].source_radius_px = source_radius_px;
         symbol_cache[slot].mask = grown;
     }
 
-    int32_t size = plain->header.w + 2 * source_radius_px;
+    return grown;
+}
+
+void radar_outline_symbol(lv_layer_t * layer, const void * symbol, lv_point_t at, lv_color_t color, int32_t scale,
+                          int32_t rotation_deg)
+{
+    const lv_draw_buf_t * grown = radar_symbol_outline_mask(symbol, scale);
+    if(!grown) {
+        return;
+    }
+    int32_t size = (int32_t)grown->header.w;
     lv_draw_image_dsc_t image;
     lv_draw_image_dsc_init(&image);
     image.src = grown;
@@ -141,5 +157,5 @@ void radar_outline_symbol(lv_layer_t * layer, const void * symbol, lv_point_t at
     image.pivot.x = size / 2;
     image.pivot.y = size / 2;
     lv_area_t area = {at.x - size / 2, at.y - size / 2, at.x + size / 2 - 1, at.y + size / 2 - 1};
-    lv_draw_image(layer, &image, &area);
+    radar_draw_symbol_image(layer, &image, &area);
 }

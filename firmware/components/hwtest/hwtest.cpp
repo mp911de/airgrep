@@ -306,6 +306,15 @@ void render_single(Output& output) {
 		output.report("render_single", false, "panel allocation failed");
 	}
 }
+#ifdef CONFIG_AIRGREP_PROFILER
+void render_profile(Output& output) {
+	if (lv_display_t* panel = render_panel(output)) {
+		render::profile(output, panel, [] { vTaskDelay(1); });
+	} else {
+		output.report("render_profile", false, "panel allocation failed");
+	}
+}
+#endif
 #endif
 
 constexpr Entry kEntries[] = {
@@ -337,6 +346,10 @@ constexpr Entry kEntries[] = {
 	{"render_single",
 	 "Render one full traffic frame with the LVGL timer stopped", true,
 	 render_single},
+#ifdef CONFIG_AIRGREP_PROFILER
+	{"render_profile", "Profile LVGL drawing costs for three full frames", true,
+	 render_profile},
+#endif
 #endif
 };
 

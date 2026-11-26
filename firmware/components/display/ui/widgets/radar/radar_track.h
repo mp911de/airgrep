@@ -42,6 +42,11 @@ typedef struct {
  */
 uint32_t radar_track_tail(radar_point_t * path, uint32_t count, radar_tail_part_t * parts);
 
+/* Draw the five fade levels into a cleared A8 buffer. Pixel (left, top) is the buffer origin,
+ * right and bottom are inclusive, and stride is the number of bytes between rows. */
+void radar_track_ribbon(uint8_t * data, int stride, int left, int top, int right, int bottom,
+                        const radar_tail_part_t * parts, unsigned count);
+
 typedef void (*radar_tail_run_cb_t)(void * user, int32_t x, int32_t y, int32_t length, uint8_t opa);
 
 /**

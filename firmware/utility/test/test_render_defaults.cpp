@@ -1,3 +1,5 @@
+#include <zlib.h>
+
 #include <algorithm>
 #include <array>
 #include <vector>
@@ -5,10 +7,8 @@
 #include "airgrep_ui.h"
 #include "check.hpp"
 #include "display/display.hpp"
-#include "display/render_study.h"
 #include "widgets/radar/radar_outline.h"
 #include "widgets/radar/radar_private_gen.h"
-#include "widgets/radar/radar_recovery_study.h"
 
 namespace {
 unsigned flushes;
@@ -219,9 +219,7 @@ bool has_direct_digit(const lv_font_t* font) {
 void default_grid(lv_display_t* panel, std::span<const uint16_t> pixels) {
 	auto* radar =
 		reinterpret_cast<radar_t*>(lv_obj_find_by_name(home, "radar"));
-	const unsigned defaults = airgrep_render_study_flags;
-	CHECK((defaults & RENDER_STUDY_SPARSE_GRID) != 0);
-	CHECK(radar->sparse_grid != nullptr && radar->grid_mask == nullptr);
+	CHECK(radar->sparse_grid != nullptr);
 	display::Target target{};
 	target.address = 0xabc001;
 	target.kind = display::Kind::light;
@@ -236,17 +234,14 @@ void default_grid(lv_display_t* panel, std::span<const uint16_t> pixels) {
 	model.track_history = true;
 	model.traffic = std::span(&target, 1);
 	model.traffic_inside = 1;
-	airgrep_render_study_flags &= ~RENDER_STUDY_SPARSE_GRID;
 	display::update(model);
 	lv_obj_invalidate(home);
 	lv_refr_now(panel);
-	CHECK(radar->sparse_grid == nullptr);
-	const std::vector<uint16_t> expected(pixels.begin(), pixels.end());
-	airgrep_render_study_flags = defaults;
-	lv_obj_invalidate(home);
-	lv_refr_now(panel);
 	CHECK(radar->sparse_grid != nullptr);
-	CHECK(std::ranges::equal(pixels, expected));
+	// Full RGB565 frame from the original LVGL line and circle renderer.
+	CHECK_EQUAL(0x12b61a01UL,
+				crc32_z(0, reinterpret_cast<const Bytef*>(pixels.data()),
+						pixels.size_bytes()));
 }
 
 void home_with_recovery() {
@@ -270,8 +265,6 @@ void home_with_recovery() {
 	CHECK(has_direct_digit(font_stored));
 	startup_symbols(panel, pixels);
 
-	CHECK((airgrep_render_study_flags & RENDER_STUDY_RECOVERY_VARIANTS) ==
-		  RENDER_STUDY_RECOVERY_RETURN_BANKS);
 	const conflicts::Band recovery[] = {
 		{0, 360, conflicts::BandRegion::recovery}};
 	display::ViewState model;
@@ -282,7 +275,9 @@ void home_with_recovery() {
 	model.track_bands = recovery;
 	display::update(model);
 	lv_refr_now(panel);
-	CHECK(radar_recovery_study_bytes() > 0);
+	auto* radar =
+		reinterpret_cast<radar_t*>(lv_obj_find_by_name(home, "radar"));
+	CHECK(radar->recovery_sectors != nullptr);
 	default_grid(panel, pixels);
 	covered_home(panel, pixels, model);
 	lv_deinit();

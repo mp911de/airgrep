@@ -39,7 +39,9 @@ void entry_field_set(lv_obj_t * field, uint32_t places, const char * text, bool 
         lv_obj_t * place = lv_obj_get_child(field, (int32_t)i);
         lv_obj_t * character = lv_obj_get_child(place, 0);
         char shown[2] = {i < length ? text[i] : '\0', '\0'};
-        lv_label_set_text(character, shown);
+        if(lv_strcmp(lv_label_get_text(character), shown) != 0) {
+            lv_label_set_text(character, shown);
+        }
         lv_obj_set_state(place, STATE_NEXT, i == next);
         lv_obj_set_state(character, STATE_STORED, stored);
     }

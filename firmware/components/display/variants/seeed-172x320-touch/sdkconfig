@@ -1,0 +1,4 @@
+CONFIG_AIRGREP_DISPLAY="seeed-172x320-touch"
+# The conflict engine of the display, DAIDALUS, reports what it cannot compute by exceptions.
+CONFIG_COMPILER_CXX_EXCEPTIONS=y
+CONFIG_COMPILER_CXX_EXCEPTIONS_EMG_POOL_SIZE=1024

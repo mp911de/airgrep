@@ -1,6 +1,9 @@
 <widget>
-	<!-- Scrolling list of targets. Rows are created and filled in C, a subject cannot hold a list. -->
-	<view extends="lv_obj" width="400" height="384">
+	<!-- Each live target row binds its labels and arrows to row subjects in C. -->
+	<view extends="lv_obj" width="400" height="384" flex_flow="column" scroll_dir="ver"
+		scroll_elastic="false" scrollbar_mode="active" style_width-scrollbar="4"
+		style_radius-scrollbar="2" style_pad_right-scrollbar="2" style_bg_opa-scrollbar="100%"
+		style_bg_color-scrollbar="{color_grid}">
 		<remove_theme selector="main" />
 	</view>
 </widget>

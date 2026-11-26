@@ -1,6 +1,5 @@
 build/
-sdkconfig
-sdkconfig.old
+/sdkconfig
 managed_components/
 
 venv/

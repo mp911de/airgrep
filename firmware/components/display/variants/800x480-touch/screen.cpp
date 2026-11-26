@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <initializer_list>
 #include <ranges>
 #include <span>
 #include <string>
@@ -18,6 +19,7 @@
 #include "widgets/entry_field/entry_field.h"
 #include "widgets/keyboard/keyboard.h"
 #include "widgets/radar/radar.h"
+#include "widgets/radar/radar_outline.h"
 #include "widgets/traffic_table/traffic_table.h"
 
 namespace display {
@@ -69,6 +71,60 @@ constexpr PageSettings page_settings(Page page) {
 Actions actions;
 lv_obj_t* radar;
 lv_obj_t* table;
+lv_obj_t* radar_area;
+lv_obj_t* traffic_header;
+bool home_body_covered;
+
+// Pages slide above Home in sibling order. Keep every exposed layer visible
+// until an opaque page covers the whole body, including the traffic header.
+void page_moved(lv_event_t* event) {
+	auto* child = static_cast<lv_obj_t*>(lv_event_get_param(event));
+	if (!child || lv_obj_get_parent(child) != home) {
+		return;
+	}
+	const int32_t first_page = lv_obj_get_index(table) + 1;
+	if (lv_obj_get_index(child) < first_page) {
+		return;
+	}
+	lv_area_t body;
+	lv_obj_get_coords(home, &body);
+	body.y1 += TOUCH;
+	bool covered = false;
+	for (auto i = static_cast<int32_t>(lv_obj_get_child_count(home));
+		 i > first_page; --i) {
+		auto* page = lv_obj_get_child(home, i - 1);
+		lv_obj_set_hidden(page, covered);
+		if (!covered) {
+			lv_area_t area;
+			lv_obj_get_coords(page, &area);
+			covered = area.x1 <= body.x1 && area.x2 >= body.x2 &&
+					  area.y1 <= body.y1 && area.y2 >= body.y2;
+		}
+	}
+	for (auto* part : {radar_area, traffic_header, table}) {
+		lv_obj_set_hidden(part, covered);
+	}
+	home_body_covered = covered;
+}
+
+void home_draw_main(lv_event_t* event) {
+	// The opaque status header and page paint every Home pixel. Keep Home's
+	// cover check so LVGL can also skip the display's bottom layer.
+	if (home_body_covered && lv_event_get_target_obj(event) == home) {
+		lv_event_stop_processing(event);
+	}
+}
+struct RadarPresentation {
+	std::array<uint8_t, 3> generations;
+	uint32_t own_address;
+	uint16_t altitude_filter;
+	uint8_t range;
+	bool has_fix, dark, tracks, simple, indicator, alert;
+	bool operator==(const RadarPresentation&) const = default;
+};
+std::optional<RadarPresentation> presented_radar;
+std::optional<bool> applied_dark_theme;
+lv_obj_t* license_rows;
 lv_obj_t* transient_mode_screen;
 Mode shown_mode = Mode::on;
 // The least the fill of the charger screen shows, so that 0 % is not nothing.
@@ -123,17 +179,16 @@ void license_chosen(lv_event_t* event) {
 }
 
 void show_licenses(const ViewState& model) {
-	lv_obj_t* rows =
-		lv_obj_find_by_name(find("page_licenses", "license_list"), "rows");
-	if (lv_obj_get_child_count(rows) == model.licenses.size()) {
+	if (licenses.data() == model.licenses.data() &&
+		lv_obj_get_child_count(license_rows) == model.licenses.size()) {
 		return;
 	}
 	licenses = model.licenses;
-	lv_obj_clean(rows);
+	lv_obj_clean(license_rows);
 	for (size_t i = 0; i < licenses.size(); i++) {
 		lv_obj_t* row =
-			license_row_create(rows, licenses[i].component, licenses[i].spdx_id,
-							   i + 1 < licenses.size());
+			license_row_create(license_rows, licenses[i].component,
+							   licenses[i].spdx_id, i + 1 < licenses.size());
 		lv_obj_add_event_cb(row, license_chosen, LV_EVENT_CLICKED,
 							reinterpret_cast<void*>(i));
 	}
@@ -343,13 +398,13 @@ bool same(std::span<const Zone> a, std::span<const Zone> b) {
 void show_time_zone(const ViewState& model) {
 	const std::string_view active =
 		*model.zone ? std::string_view(model.zone) : UTC;
-	lv_subject_copy_string(subject_zone, place(active).c_str());
 	const bool known = same(choice.zones, model.zones);
 	if (known && choice.in_use == active &&
 		choice.detected == model.zone_detected &&
 		choice.language == model.language) {
 		return;
 	}
+	lv_subject_copy_string(subject_zone, place(active).c_str());
 	choice.in_use = active;
 	choice.detected = model.zone_detected;
 	choice.language = model.language;
@@ -442,6 +497,24 @@ void show_entry(const Entry& entry) {
 								  (length == 0 && entry.empty_clears_setting)));
 }
 
+bool update_stored_entry(Entry& entry, const char* value) {
+	if (lv_obj_get_child_count(entry.field) != 0 &&
+		std::strncmp(entry.stored, value, sizeof(entry.stored) - 1) == 0) {
+		return false;
+	}
+	(void)std::snprintf(entry.stored, sizeof(entry.stored), "%s", value);
+	show_entry(entry);
+	return true;
+}
+
+bool publish_text(lv_subject_t* subject, const char* value) {
+	if (std::strcmp(lv_subject_get_string(subject), value) == 0) {
+		return false;
+	}
+	lv_subject_copy_string(subject, value);
+	return true;
+}
+
 void open_entry(lv_event_t* event) {
 	Entry& entry = *static_cast<Entry*>(lv_event_get_user_data(event));
 	entry.typed = false;
@@ -479,30 +552,25 @@ void key_tapped(lv_obj_t* keys, int key) {
 }
 
 void show_own_ship(const ViewState& model) {
-	icao_address.stored[0] = '\0';
+	char address[7]{};
 	if (model.own_address != NO_ADDRESS) {
 		(void)std::snprintf(
-			icao_address.stored, sizeof(icao_address.stored), "%06X",
+			address, sizeof(address), "%06X",
 			static_cast<unsigned>(model.own_address & 0xFFFFFFU));
 	}
-	(void)std::snprintf(callsign.stored, sizeof(callsign.stored), "%s",
-						model.own_callsign);
-	lv_subject_copy_string(subject_icao, icao_address.stored[0]
-											 ? icao_address.stored
-											 : lv_tr("not_set"));
-	lv_subject_copy_string(subject_callsign, callsign.stored[0]
-												 ? callsign.stored
-												 : lv_tr("not_set"));
-	show_entry(icao_address);
-	show_entry(callsign);
+	update_stored_entry(icao_address, address);
+	update_stored_entry(callsign, model.own_callsign);
+	publish_text(subject_icao, address[0] ? address : lv_tr("not_set"));
+	publish_text(subject_callsign,
+				 callsign.stored[0] ? callsign.stored : lv_tr("not_set"));
 }
 
 void show_filter(const ViewState& model) {
-	(void)std::snprintf(altitude_filter.stored, sizeof(altitude_filter.stored),
-						"%u", model.altitude_filter_ft);
-	lv_subject_snprintf(subject_altitude_filter, "%s ft",
-						altitude_filter.stored);
-	show_entry(altitude_filter);
+	char value[sizeof(altitude_filter.stored)];
+	(void)std::snprintf(value, sizeof(value), "%u", model.altitude_filter_ft);
+	if (update_stored_entry(altitude_filter, value)) {
+		lv_subject_snprintf(subject_altitude_filter, "%s ft", value);
+	}
 }
 
 struct Wording {
@@ -629,12 +697,13 @@ void show_language(const ViewState& model) {
 	if (std::strcmp(lv_translation_get_language(), model.language) != 0) {
 		lv_translation_set_language(model.language);
 		keyboard_set_layout(callsign.keys, model.language);
+		show_entry(callsign);
 	}
 }
 
 // One greeting of the language. One that names the callsign needs a callsign.
 // The build has made sure that each fits the screen with any callsign.
-std::string greeting(const ViewState& model) {
+std::string_view greeting(const ViewState& model) {
 	const greetings::Language* language = &greetings::LANGUAGES[0];
 	for (const greetings::Language& candidate : greetings::LANGUAGES) {
 		if (std::strcmp(candidate.code, model.language) == 0) {
@@ -651,20 +720,98 @@ std::string greeting(const ViewState& model) {
 	if (count == 0) {
 		return {};
 	}
-	std::string text = *std::ranges::next(
-		usable.begin(),
-		static_cast<std::ptrdiff_t>(model.greeting_seed % count));
-	if (const size_t at = text.find(placeholder); at != std::string::npos) {
-		text.replace(at, placeholder.size(), model.own_callsign);
+	return *std::ranges::next(usable.begin(), static_cast<std::ptrdiff_t>(
+												  model.greeting_seed % count));
+}
+
+void set_text_if_changed(lv_obj_t* label,
+						 std::initializer_list<std::string_view> parts) {
+	if (std::ranges::equal(std::string_view(lv_label_get_text(label)),
+						   parts | std::views::join)) {
+		return;
 	}
-	return text;
+	std::string text;
+	for (const std::string_view part : parts) {
+		text.append(part);
+	}
+	lv_label_set_text(label, text.c_str());
+}
+
+struct WelcomeWarmup {
+	lv_timer_t* timer{};
+	uint32_t started{};
+	unsigned bucket{};
+	bool simple{};
+};
+WelcomeWarmup welcome;
+constexpr uint32_t WELCOME_WARMUP_MS = 2000;
+constexpr uint32_t WELCOME_SLICE_MS = 18;
+
+void warm_symbols(lv_timer_t* timer) {
+	auto* panel = static_cast<lv_display_t*>(lv_timer_get_user_data(timer));
+	const uint32_t slice_start = lv_tick_get();
+	// The host LVGL clock advances between timer calls, so also bound the work
+	// by count.
+	for (unsigned i = 0; i < 12; ++i) {
+		if (lv_tick_elaps(welcome.started) >= WELCOME_WARMUP_MS ||
+			!radar_symbol_atlas_warm_next(panel, welcome.simple,
+										  welcome.bucket++)) {
+			lv_timer_pause(timer);
+			return;
+		}
+		if (lv_tick_elaps(slice_start) >= WELCOME_SLICE_MS) {
+			return;
+		}
+	}
+}
+
+void welcome_event(lv_event_t* event) {
+	auto* screen = lv_event_get_current_target_obj(event);
+	if (lv_event_get_target_obj(event) != screen) {
+		return;
+	}
+	switch (lv_event_get_code(event)) {
+		case LV_EVENT_DRAW_POST:
+			// The timer first runs after LVGL returns from drawing the welcome
+			// frame.
+			if (!welcome.timer) {
+				welcome.started = lv_tick_get();
+				welcome.timer = lv_timer_create(warm_symbols, 5,
+												lv_obj_get_display(screen));
+			}
+			break;
+		case LV_EVENT_DELETE:
+			if (welcome.timer) {
+				lv_timer_delete(welcome.timer);
+			}
+			welcome = {};
+			break;
+		default:
+			break;
+	}
 }
 
 void show_startup(const ViewState& model) {
-	lv_label_set_text_fmt(lv_obj_find_by_name(transient_mode_screen, "unit"),
-						  "%s · %s", model.device_name, model.version);
-	lv_label_set_text(lv_obj_find_by_name(transient_mode_screen, "greeting"),
-					  greeting(model).c_str());
+	if (welcome.simple != model.simple_symbols) {
+		welcome.simple = model.simple_symbols;
+		welcome.bucket = 0;
+		if (welcome.timer &&
+			lv_tick_elaps(welcome.started) < WELCOME_WARMUP_MS) {
+			lv_timer_resume(welcome.timer);
+		}
+	}
+	set_text_if_changed(lv_obj_find_by_name(transient_mode_screen, "unit"),
+						{model.device_name, " · ", model.version});
+	lv_obj_t* label = lv_obj_find_by_name(transient_mode_screen, "greeting");
+	const std::string_view text = greeting(model);
+	const std::string_view placeholder = greetings::PLACEHOLDER;
+	if (const size_t at = text.find(placeholder);
+		at != std::string_view::npos) {
+		set_text_if_changed(label, {text.substr(0, at), model.own_callsign,
+									text.substr(at + placeholder.size())});
+	} else {
+		set_text_if_changed(label, {text});
+	}
 }
 
 // The fill is as wide as the charge. The percentage in it lies exactly on the
@@ -684,13 +831,15 @@ void show_charger(const ViewState& model) {
 	const lv_obj_t* line = lv_obj_find_by_name(transient_mode_screen, "line");
 	lv_obj_t* text = lv_obj_find_by_name(line, "text");
 	if (model.battery == Battery::full) {
-		lv_label_set_text(text, lv_tr("fully_charged"));
+		set_text_if_changed(text, {lv_tr("fully_charged")});
 	} else if (model.battery_to_full_min == NO_ESTIMATE) {
-		lv_label_set_text(text, lv_tr("charging"));
+		set_text_if_changed(text, {lv_tr("charging")});
 	} else {
-		lv_label_set_text_fmt(
-			text, "%u:%02u %s", model.battery_to_full_min / 60u,
-			model.battery_to_full_min % 60u, lv_tr("until_full"));
+		char duration[16];
+		(void)std::snprintf(duration, sizeof(duration), "%u:%02u ",
+							model.battery_to_full_min / 60u,
+							model.battery_to_full_min % 60u);
+		set_text_if_changed(text, {duration, lv_tr("until_full")});
 	}
 }
 
@@ -703,6 +852,10 @@ void show_mode(const ViewState& model) {
 		lv_screen_load(transient_mode_screen ? transient_mode_screen : home);
 		if (left) {
 			lv_obj_delete(left);
+		}
+		if (model.mode == Mode::starting) {
+			lv_obj_add_event_cb(transient_mode_screen, welcome_event,
+								LV_EVENT_ALL, nullptr);
 		}
 		shown_mode = model.mode;
 	}
@@ -744,6 +897,10 @@ void zoom(int steps) {
 }
 
 void apply_theme(bool dark) {
+	if (applied_dark_theme == dark) {
+		return;
+	}
+	applied_dark_theme = dark;
 	const struct {
 		lv_subject_t* token;
 		lv_color_t light, dark;
@@ -838,10 +995,14 @@ traffic_level_t level(conflicts::Level value) {
 }
 
 void show_wifi(const ViewState& model) {
-	lv_subject_copy_string(subject_wifi_network, model.wifi_network);
-	lv_subject_copy_string(subject_wifi_password, model.wifi_password);
-	lv_subject_snprintf(subject_wifi_join, "WIFI:T:WPA;S:%s;P:%s;;",
-						model.wifi_network, model.wifi_password);
+	const char* network = model.wifi_network ? model.wifi_network : "";
+	const char* password = model.wifi_password ? model.wifi_password : "";
+	const bool changed_network = publish_text(subject_wifi_network, network);
+	const bool changed_password = publish_text(subject_wifi_password, password);
+	if (changed_network || changed_password) {
+		lv_subject_snprintf(subject_wifi_join, "WIFI:T:WPA;S:%s;P:%s;;",
+							network, password);
+	}
 }
 
 void show_battery(const ViewState& model) {
@@ -883,40 +1044,39 @@ conflicts::Level attention(const Target& target) {
 
 constexpr size_t MAX_BEYOND_ROWS = 10;
 
-void to_radar(const Target& target, radar_target_t& out) {
+void to_radar(const Target& target, bool tracks, radar_target_t& out) {
 	static_assert(RADAR_TAIL_HISTORY_S >= kTailSamples);
-	out = {
-		.symbol = symbol(target.kind),
-		.level = level(target.level),
-		.muted = target.muted,
-		.track_valid = target.track_valid,
-		.bearing_deg = static_cast<int16_t>(target.bearing_deg),
-		.track_deg = static_cast<int16_t>(target.track_deg),
-		.relative_altitude_ft = target.relative_altitude_ft.value_or(0),
-		.relative_altitude_unknown = !target.relative_altitude_ft,
-		.vertical_trend = static_cast<int8_t>(target.vertical_trend),
-		.distance_nm = target.distance_nm,
-		.predicted = target.predicted,
-		.speed_kt = target.speed_kt,
-		.turn_dps = target.turn_dps,
-		.tail_count = target.tail_count,
-		.tail = {},
-	};
-	for (size_t second = 0; second < target.tail_count; second++) {
+	out.symbol = symbol(target.kind);
+	out.level = level(target.level);
+	out.muted = target.muted;
+	out.track_valid = target.track_valid;
+	out.bearing_deg = static_cast<int16_t>(target.bearing_deg);
+	out.track_deg = static_cast<int16_t>(target.track_deg);
+	out.relative_altitude_ft = target.relative_altitude_ft.value_or(0);
+	out.relative_altitude_unknown = !target.relative_altitude_ft;
+	out.vertical_trend = static_cast<int8_t>(target.vertical_trend);
+	out.distance_nm = target.distance_nm;
+	const bool show_track = tracks && !target.muted;
+	out.predicted = show_track && target.predicted;
+	out.speed_kt = out.predicted ? target.speed_kt : 0;
+	out.turn_dps = out.predicted ? target.turn_dps : 0;
+	out.tail_count =
+		show_track ? std::min<size_t>(target.tail_count, kTailSamples) : 0;
+	for (size_t second = 0; second < out.tail_count; second++) {
 		out.tail[second] = {target.tail[second].right_nm,
 							target.tail[second].ahead_nm};
 	}
 }
 
-void show_radar(std::span<const Target> inside,
-				std::span<const Target> beyond) {
+void show_radar(std::span<const Target> inside, std::span<const Target> beyond,
+				bool tracks) {
 	// With their tails the targets are too large for the stack of a task.
 	static std::array<radar_target_t, RADAR_MAX_TARGETS> targets;
 	std::array<int16_t, RADAR_MAX_TARGETS> bearings{};
 	std::array<traffic_level_t, RADAR_MAX_TARGETS> levels{};
 	inside = inside.first(std::min(inside.size(), targets.size()));
 	for (size_t i = 0; i < inside.size(); i++) {
-		to_radar(inside[i], targets[i]);
+		to_radar(inside[i], tracks, targets[i]);
 	}
 	size_t marked = 0;
 	for (const Target& target : beyond) {
@@ -987,16 +1147,20 @@ void show_table(std::span<const Target> targets, size_t inside,
 	}
 	shown = highest;
 
-	std::array<traffic_row_t, TRAFFIC_TABLE_MAX_ROWS> rows{};
-	std::array<char[7], TRAFFIC_TABLE_MAX_ROWS> addresses{};
-	targets = targets.first(std::min(targets.size(), rows.size()));
+	targets =
+		targets.first(std::min<size_t>(targets.size(), TRAFFIC_TABLE_MAX_ROWS));
+	traffic_table_begin_rows(table, static_cast<uint32_t>(targets.size()),
+							 static_cast<uint32_t>(inside));
 	for (size_t i = 0; i < targets.size(); i++) {
 		const Target& target = targets[i];
-		(void)std::snprintf(addresses[i], sizeof(addresses[i]), "%06X",
-							static_cast<unsigned>(target.address));
-		rows[i] = {
+		char address[7]{};
+		if (!target.callsign[0]) {
+			(void)std::snprintf(address, sizeof(address), "%06X",
+								static_cast<unsigned>(target.address));
+		}
+		const traffic_row_t row{
 			.target_id = encode_row_id({target.address, target.source}),
-			.title = target.callsign[0] ? target.callsign : addresses[i],
+			.title = target.callsign[0] ? target.callsign : address,
 			.source = row_source(target.source),
 			.level = level(target.level),
 			.muted = target.muted,
@@ -1010,27 +1174,59 @@ void show_table(std::span<const Target> targets, size_t inside,
 			.distance_nm = target.distance_nm,
 			.conflict_in_s = target.conflict_in_s,
 		};
+		traffic_table_set_row(table, static_cast<uint32_t>(i), &row);
 	}
 	char band[TRAFFIC_TABLE_BAND_SIZE];
 	(void)std::snprintf(band, sizeof(band), "%s %u NM", lv_tr("beyond"),
 						model.radar_range_nm);
 	traffic_table_set_band(table, band);
-	traffic_table_set_rows(table, rows.data(),
-						   static_cast<uint32_t>(targets.size()),
-						   static_cast<uint32_t>(inside));
+}
+
+bool radar_changed(const ViewState& model) {
+	if (!model.radar_generations) {
+		presented_radar.reset();
+		return true;
+	}
+	const auto& generations = *model.radar_generations;
+	const RadarPresentation current{
+		{generations.traffic, generations.gnss, generations.daidalus},
+		model.own_address,
+		model.altitude_filter_ft,
+		model.radar_range_nm,
+		model.fix != Fix::none,
+		model.dark_theme,
+		model.track_history,
+		model.simple_symbols,
+		model.conflict_indicator,
+		model.alert};
+	if (!generations.resync && presented_radar == current) {
+		return false;
+	}
+	presented_radar = current;
+	return true;
 }
 
 void show_traffic(const ViewState& model) {
-	const size_t inside = std::min(model.traffic_inside, model.traffic.size());
-	if (model.fix == Fix::none) {
-		show_radar({}, {});
-		show_table(model.traffic, model.traffic.size(), model);
-		return;
+	const bool fix = model.fix != Fix::none;
+	const size_t inside =
+		fix ? std::min(model.traffic_inside, model.traffic.size())
+			: model.traffic.size();
+	const bool refresh_radar = radar_changed(model);
+	if (refresh_radar) {
+		if (fix) {
+			show_radar(model.traffic.first(inside),
+					   model.traffic.subspan(inside), model.track_history);
+		} else {
+			show_radar({}, {}, model.track_history);
+		}
 	}
-	show_radar(model.traffic.first(inside), model.traffic.subspan(inside));
 	const size_t rows =
 		std::min(inside + MAX_BEYOND_ROWS, model.traffic.size());
 	show_table(model.traffic.first(rows), inside, model);
+	if (refresh_radar) {
+		show_bands(model);
+		lv_obj_invalidate(radar);
+	}
 }
 }
 
@@ -1038,6 +1234,10 @@ void show_traffic(const ViewState& model) {
 // screens, the one LVGL created for the panel stays unused.
 void variant::build(lv_obj_t*, const Actions& handlers) {
 	actions = handlers;
+	presented_radar.reset();
+	applied_dark_theme.reset();
+	licenses = {};
+	choice.in_use.clear();
 	airgrep_ui_init(nullptr);
 	bind_choice<&Actions::set_dark_theme>(find("page_system", "light"),
 										  subject_theme_dark);
@@ -1066,6 +1266,16 @@ void variant::build(lv_obj_t*, const Actions& handlers) {
 		LV_EVENT_CLICKED, nullptr);
 	radar = lv_obj_find_by_name(home, "radar");
 	table = lv_obj_find_by_name(home, "traffic");
+	license_rows =
+		lv_obj_find_by_name(find("page_licenses", "license_list"), "rows");
+	radar_area = lv_obj_get_parent(radar);
+	traffic_header = lv_obj_find_by_name(home, "traffic_header");
+	home_body_covered = false;
+	lv_obj_add_event_cb(home, page_moved, LV_EVENT_CHILD_CHANGED, nullptr);
+	lv_obj_add_event_cb(
+		home, home_draw_main,
+		static_cast<lv_event_code_t>(LV_EVENT_DRAW_MAIN | LV_EVENT_PREPROCESS),
+		nullptr);
 	traffic_table_set_action_cb(table, target_action);
 	lv_obj_t* to_licenses = find("page_system", "licenses");
 	lv_obj_set_clickable(to_licenses, true);
@@ -1129,7 +1339,6 @@ void update(const ViewState& model) {
 	show_licenses(model);
 	show_time_zone(model);
 	show_traffic(model);
-	show_bands(model);
 }
 }
 

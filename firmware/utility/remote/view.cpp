@@ -12,7 +12,6 @@
 #include "device/inspect.hpp"
 #include "display/display.hpp"
 #include "display/display_mapping.hpp"
-#include "display/render_study.h"
 #include "display_settings.hpp"
 #include "licenses.hpp"
 #include "radar_publication.hpp"
@@ -90,12 +89,8 @@ State& state() {
 	return instance;
 }
 
-bool study_radar() {
-	if constexpr (std::string_view{AIRGREP_DISPLAY} == "800x480-touch") {
-		return (airgrep_render_study_flags & RENDER_STUDY_GENERATIONS) != 0;
-	}
-	return false;
-}
+constexpr bool use_radar_generations =
+	std::string_view{AIRGREP_DISPLAY} == "800x480-touch";
 
 void changed_picture(const device::DeviceState& before,
 					 const device::DeviceState& after) {
@@ -143,7 +138,7 @@ bool poll_conflicts(bool inputs_changed) {
 		s.conflicts->alert(sample, s.preferences.settings.conflict_indicator);
 	}
 	return s.conflicts->take_latest(
-		s.conflict_state, study_radar() ? changed_conflicts : nullptr);
+		s.conflict_state, use_radar_generations ? changed_conflicts : nullptr);
 }
 
 std::optional<uint8_t> busiest_core(const usb::protocol::Hello& hello) {
@@ -339,7 +334,7 @@ void refresh() {
 	for (const std::string& asked : state().asked) {
 		state().explained += "asked " + asked + "\n";
 	}
-	if (study_radar()) {
+	if (use_radar_generations) {
 		const auto id = [](const auto& target) {
 			return std::tie(target.address, target.source);
 		};
@@ -558,7 +553,7 @@ void follow(Connection& connection, const std::string& serial) {
 		state().preferences.edits.changed.reset();
 	}
 	const bool new_picture = connection.take_new_picture(
-		state().picture, study_radar() ? changed_picture : nullptr);
+		state().picture, use_radar_generations ? changed_picture : nullptr);
 	if (new_picture) {
 		state().starting = false;
 	}

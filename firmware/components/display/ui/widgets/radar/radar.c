@@ -1,9 +1,21 @@
 #include "radar_private_gen.h"
 #include <math.h>
+#include <stddef.h>
+#include <string.h>
 #include "navigation/units.h"
+#include "radar_grid.h"
 #include "radar_labels.h"
 #include "radar_outline.h"
 #include "radar_track.h"
+#ifdef ESP_PLATFORM
+#include "sdkconfig.h"
+#endif
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#include "radar_wedge.h"
+#define RADAR_WEDGE_TAG (&radar_wedge_tag)
+#else
+#define RADAR_WEDGE_TAG NULL
+#endif
 #include "widgets/traffic_trend.h"
 #include "airgrep_ui.h"
 
@@ -18,8 +30,6 @@ enum { OWN_TRACK_DEG = 0, RING_LABEL_DEG = 180 };
 #define SECTION_TICK_LENGTH 14
 #define SECTION_TICK_WIDTH 2
 #define SECTION_LABEL_GAP_PX 1
-#define SYMBOL_SCALE_256 167
-#define OWN_SCALE_256 211
 #define NO_FIX_OPACITY LV_OPA_30
 #define LABEL_OPTICAL_Y_PX (-2)
 #define LABEL_FLIP_X_PX 100
@@ -35,19 +45,25 @@ enum { OWN_TRACK_DEG = 0, RING_LABEL_DEG = 180 };
 #define TAPE_MARK_HEIGHT_PX 4
 #define TAPE_MARK_MARGIN_PX 2
 
+#include "radar_recovery_sectors.h"
+
 typedef struct {
     lv_point_t at;
     lv_area_t label;
+    radar_point_t dots[RADAR_DOT_COUNT];
+    uint32_t dot_count;
 } placed_t;
 
 static void draw(lv_event_t * e);
+static void draw_grid(radar_t * radar, lv_layer_t * layer, lv_point_t center, int32_t outer, int32_t label_width,
+                      lv_color_t color, lv_opa_t opa);
 static int32_t lvgl_arc_angle(int32_t bearing_deg)
 {
     return radar_bearing_deg(bearing_deg - 90);
 }
 
 static void draw_ring(lv_layer_t * layer, lv_point_t center, int32_t radius, int32_t width, int32_t from_deg,
-                      int32_t to_deg, lv_color_t color, lv_opa_t opa);
+                      int32_t to_deg, lv_color_t color, lv_opa_t opa, void * tag);
 static void draw_dashed_ring(lv_layer_t * layer, lv_point_t center, int32_t radius, int32_t label_width,
                              lv_color_t color, lv_opa_t opa);
 static void draw_spoke(lv_layer_t * layer, lv_point_t center, float deg, int32_t from, int32_t to, int32_t width,
@@ -56,11 +72,12 @@ static void draw_section(lv_layer_t * layer, lv_point_t center, int32_t outer, c
                          int32_t label_width, lv_color_t color);
 static void draw_symbol(lv_layer_t * layer, lv_point_t at, const void * symbol, lv_color_t color, lv_opa_t opa,
                         int32_t scale, int32_t rotation_deg);
-static void draw_track(lv_layer_t * layer, const radar_t * radar, lv_point_t at, const radar_target_t * target,
-                       int32_t outer);
+static void draw_track(lv_layer_t * layer, const radar_t * radar, const placed_t * placed,
+                       const radar_target_t * target, int32_t outer);
 static void draw_bands(lv_layer_t * layer, const radar_track_bands_t * bands, lv_point_t center, int32_t outer,
                        lv_color_t bg);
-static void draw_way_out(lv_layer_t * layer, const radar_track_bands_t * bands, lv_point_t center, int32_t outer);
+static void draw_way_out(radar_t * radar, lv_layer_t * layer, const radar_track_bands_t * bands,
+                         lv_point_t center, int32_t outer);
 static void draw_tape(lv_layer_t * layer, const radar_tape_band_t * bands, uint32_t count, int32_t x, lv_point_t center,
                       int32_t outer, lv_color_t bg);
 static void draw_box(lv_layer_t * layer, int32_t x1, int32_t y1, int32_t x2, int32_t y2, lv_color_t color);
@@ -92,7 +109,9 @@ void radar_constructor_hook(lv_obj_t * obj)
 
 void radar_destructor_hook(lv_obj_t * obj)
 {
-    LV_UNUSED(obj);
+    radar_t * radar = (radar_t *)obj;
+    radar_grid_release(&radar->sparse_grid);
+    recovery_sectors_release(&radar->recovery_sectors);
 }
 
 void radar_event_hook(lv_event_t * e)
@@ -131,14 +150,39 @@ void radar_set_indicator(lv_obj_t * radar, bool indicator)
 
 void radar_set_track_bands(lv_obj_t * radar, const radar_track_band_t * bands, uint32_t count)
 {
-    radar_bands_track(bands, LV_MIN(count, RADAR_MAX_BANDS), &((radar_t *)radar)->track_bands);
+    radar_track_bands_t * shown = &((radar_t *)radar)->track_bands;
+    if(!count && !shown->wedge_count && !shown->limit_count) {
+        return;
+    }
+    radar_track_bands_t next;
+    radar_bands_track(bands, LV_MIN(count, RADAR_MAX_BANDS), &next);
+    bool same = next.wedge_count == shown->wedge_count && next.limit_count == shown->limit_count;
+    for(uint32_t i = 0; same && i < next.wedge_count; i++) {
+        const radar_wedge_t * a = &next.wedges[i], * b = &shown->wedges[i];
+        same = a->start_deg == b->start_deg && a->sweep_deg == b->sweep_deg && a->level == b->level;
+    }
+    for(uint32_t i = 0; same && i < next.limit_count; i++) {
+        same = next.limits[i].deg == shown->limits[i].deg && next.limits[i].level == shown->limits[i].level;
+    }
+    if(same) {
+        return;
+    }
+    shown->wedge_count = next.wedge_count;
+    shown->limit_count = next.limit_count;
+    memcpy(shown->wedges, next.wedges, next.wedge_count * sizeof(*next.wedges));
+    memcpy(shown->limits, next.limits, next.limit_count * sizeof(*next.limits));
     lv_obj_invalidate(radar);
 }
 
 void radar_set_tape(lv_obj_t * radar, radar_tape_t tape, const radar_tape_band_t * bands, uint32_t count)
 {
     radar_t * widget = (radar_t *)radar;
-    widget->tape_counts[tape] = LV_MIN(count, RADAR_MAX_BANDS);
+    count = LV_MIN(count, RADAR_MAX_BANDS);
+    if(count == widget->tape_counts[tape] &&
+       (!count || !memcmp(bands, widget->tapes[tape], count * sizeof(*bands)))) {
+        return;
+    }
+    widget->tape_counts[tape] = count;
     lv_memcpy(widget->tapes[tape], bands, widget->tape_counts[tape] * sizeof(radar_tape_band_t));
     lv_obj_invalidate(radar);
 }
@@ -146,18 +190,31 @@ void radar_set_tape(lv_obj_t * radar, radar_tape_t tape, const radar_tape_band_t
 void radar_set_targets(lv_obj_t * radar, const radar_target_t * targets, uint32_t count)
 {
     radar_t * widget = (radar_t *)radar;
-    widget->target_count = LV_MIN(count, RADAR_MAX_TARGETS);
-    lv_memcpy(widget->targets, targets, widget->target_count * sizeof(radar_target_t));
-    for(uint32_t i = 0; i < widget->target_count; i++) {
-        traffic_format_altitude(widget->labels[i], sizeof(widget->labels[i]), targets[i].relative_altitude_ft, targets[i].relative_altitude_unknown);
+    count = LV_MIN(count, RADAR_MAX_TARGETS);
+    bool changed = count != widget->target_count;
+    for(uint32_t i = 0; i < count; i++) {
+        const radar_target_t * target = &targets[i];
+        uint8_t samples = LV_MIN(target->tail_count, RADAR_TAIL_HISTORY_S);
+        size_t used = offsetof(radar_target_t, tail) + samples * sizeof(*target->tail);
+        if(i < widget->target_count && !memcmp(&widget->targets[i], target, used)) {
+            continue;
+        }
+        lv_memcpy(&widget->targets[i], target, used);
+        widget->targets[i].tail_count = samples;
+        traffic_format_altitude(widget->labels[i], sizeof(widget->labels[i]), target->relative_altitude_ft, target->relative_altitude_unknown);
+        changed = true;
     }
-    lv_obj_invalidate(radar);
+    widget->target_count = count;
+    if(changed) {
+        lv_obj_invalidate(radar);
+    }
 }
 
 void radar_set_beyond(lv_obj_t * radar, const int16_t * bearings_deg, const traffic_level_t * levels, uint32_t count)
 {
     radar_t * widget = (radar_t *)radar;
     count = LV_MIN(count, RADAR_MAX_TARGETS);
+    bool changed = false;
     for(uint32_t group = 0; group < RADAR_SECTION_LEVELS; group++) {
         int16_t turned[RADAR_MAX_TARGETS];
         uint32_t members = 0;
@@ -167,9 +224,22 @@ void radar_set_beyond(lv_obj_t * radar, const int16_t * bearings_deg, const traf
                 turned[members++] = (int16_t)radar_bearing_deg(bearings_deg[i]);
             }
         }
-        widget->section_counts[group] = radar_sections(turned, members, widget->sections[group]);
+        if(changed) {
+            widget->section_counts[group] = radar_sections(turned, members, widget->sections[group]);
+        }
+        else {
+            radar_section_t next[RADAR_MAX_SECTIONS];
+            uint32_t used = radar_sections(turned, members, next);
+            if(used != widget->section_counts[group] || memcmp(next, widget->sections[group], used * sizeof(*next))) {
+                memcpy(widget->sections[group], next, used * sizeof(*next));
+                widget->section_counts[group] = used;
+                changed = true;
+            }
+        }
     }
-    lv_obj_invalidate(radar);
+    if(changed) {
+        lv_obj_invalidate(radar);
+    }
 }
 
 static void draw(lv_event_t * e)
@@ -218,15 +288,14 @@ static void draw(lv_event_t * e)
 
     for(uint32_t i = 0; radar->tracks && i < count; i++) {
         if(!radar->targets[i].muted) {
-            draw_track(layer, radar, placed[i].at, &radar->targets[i], outer);
+            draw_track(layer, radar, &placed[i], &radar->targets[i], outer);
         }
     }
 
-    draw_dashed_ring(layer, center, inner, lv_area_get_width(&inner_label), grid, opa);
-    draw_ring(layer, center, outer, RING_WIDTH, 0, 360, grid, opa);
+    draw_grid(radar, layer, center, outer, lv_area_get_width(&inner_label), grid, opa);
     draw_spoke(layer, center, OWN_TRACK_DEG, outer, outer + TICK_LENGTH, RING_WIDTH, grid, opa);
     if(indicator) {
-        draw_way_out(layer, &radar->track_bands, center, outer);
+        draw_way_out(radar, layer, &radar->track_bands, center, outer);
     }
     lv_subject_t * const colors[RADAR_SECTION_LEVELS] = {color_label, color_yellow, color_red};
     for(uint32_t group = 0; !lost && group < RADAR_SECTION_LEVELS; group++) {
@@ -248,27 +317,69 @@ static void draw(lv_event_t * e)
         const lv_area_t * label = &placed[i].label;
         lv_point_t trend = {label->x2 + 1 + TREND_GAP + TRAFFIC_TREND_SIZE / 2,
                             label->y1 + lv_area_get_height(label) / 2 - LABEL_OPTICAL_Y_PX + TREND_OPTICAL_Y_PX};
-        radar_outline_symbol(layer, symbol, placed[i].at, bg, SYMBOL_SCALE_256, heading(target));
+        radar_outline_symbol(layer, symbol, placed[i].at, bg, RADAR_SYMBOL_SCALE, heading(target));
         radar_outline_text(layer, radar->labels[i], font_label, bg, label);
         traffic_draw_trend(layer, trend, target->vertical_trend, bg, true);
-        draw_symbol(layer, placed[i].at, symbol, color, LV_OPA_COVER, SYMBOL_SCALE_256, heading(target));
+        draw_symbol(layer, placed[i].at, symbol, color, LV_OPA_COVER, RADAR_SYMBOL_SCALE, heading(target));
         draw_text(layer, radar->labels[i], font_label, color, &placed[i].label);
         traffic_draw_trend(layer, trend, target->vertical_trend, color, false);
     }
 
     const void * own = radar->simple ? symbol_paper_plane : symbol_light;
-    radar_outline_symbol(layer, own, center, bg, OWN_SCALE_256, 0);
-    draw_symbol(layer, center, own, lv_subject_get_color(color_green), opa, OWN_SCALE_256, 0);
+    radar_outline_symbol(layer, own, center, bg, RADAR_OWN_SYMBOL_SCALE, 0);
+    draw_symbol(layer, center, own, lv_subject_get_color(color_green), opa, RADAR_OWN_SYMBOL_SCALE, 0);
+}
+
+static void grid_shapes(lv_layer_t * layer, lv_point_t center, int32_t outer, int32_t label_width, lv_color_t color,
+                        lv_opa_t opa)
+{
+    draw_dashed_ring(layer, center, outer / 2, label_width, color, opa);
+    draw_ring(layer, center, outer, RING_WIDTH, 0, 360, color, opa, NULL);
+}
+
+static lv_draw_buf_t *capture_grid(lv_layer_t *layer, const lv_area_t *area, lv_point_t center, int32_t outer,
+                                   int32_t label_width, lv_opa_t opacity)
+{
+    lv_draw_buf_t *mask = lv_draw_buf_create((uint32_t)lv_area_get_width(area), (uint32_t)lv_area_get_height(area),
+                                             LV_COLOR_FORMAT_A8, LV_STRIDE_AUTO);
+    if(!mask) {
+        return NULL;
+    }
+    lv_draw_buf_clear(mask, NULL);
+    lv_layer_t capture;
+    lv_draw_layer_init(&capture, layer, LV_COLOR_FORMAT_A8, area);
+    capture.draw_buf = mask;
+    grid_shapes(&capture, center, outer, label_width, lv_color_white(), opacity);
+    while(capture.draw_task_head) {
+        if(!lv_draw_dispatch_layer(capture.display, &capture)) {
+            lv_draw_wait_for_finish();
+        }
+    }
+    lv_draw_layer_deinit(&capture);
+    lv_draw_buf_flush_cache(mask, NULL);
+    return mask;
+}
+
+static void draw_grid(radar_t * radar, lv_layer_t * layer, lv_point_t center, int32_t outer, int32_t label_width,
+                      lv_color_t color, lv_opa_t opa)
+{
+    int32_t extent = outer + RING_WIDTH;
+    lv_area_t area = {center.x - extent, center.y - extent, center.x + extent, center.y + extent};
+    if(outer <= RING_WIDTH ||
+       !radar_grid_draw(&radar->sparse_grid, layer, &area, center, outer, label_width, color, opa, capture_grid)) {
+        grid_shapes(layer, center, outer, label_width, color, opa);
+    }
 }
 
 static void draw_ring(lv_layer_t * layer, lv_point_t center, int32_t radius, int32_t width, int32_t from_deg,
-                      int32_t to_deg, lv_color_t color, lv_opa_t opa)
+                      int32_t to_deg, lv_color_t color, lv_opa_t opa, void * tag)
 {
     if(to_deg <= from_deg) {
         return;
     }
     lv_draw_arc_dsc_t arc;
     lv_draw_arc_dsc_init(&arc);
+    arc.base.user_data = tag;
     arc.color = color;
     arc.opa = opa;
     arc.width = width;
@@ -338,10 +449,10 @@ static void draw_section(lv_layer_t * layer, lv_point_t center, int32_t outer, c
         if(labels[i] + hidden <= start || labels[i] - hidden >= to) {
             continue;
         }
-        draw_ring(layer, center, outer, SECTION_WIDTH, start, labels[i] - hidden, color, LV_OPA_COVER);
+        draw_ring(layer, center, outer, SECTION_WIDTH, start, labels[i] - hidden, color, LV_OPA_COVER, NULL);
         start = labels[i] + hidden;
     }
-    draw_ring(layer, center, outer, SECTION_WIDTH, start, to, color, LV_OPA_COVER);
+    draw_ring(layer, center, outer, SECTION_WIDTH, start, to, color, LV_OPA_COVER, NULL);
 
     if(section->sweep_deg >= 360) {
         return;
@@ -375,7 +486,7 @@ static void draw_symbol(lv_layer_t * layer, lv_point_t at, const void * symbol, 
     lv_area_t area;
     lv_area_set(&area, at.x - image.pivot.x, at.y - image.pivot.y,
                 at.x - image.pivot.x + source->header.w - 1, at.y - image.pivot.y + source->header.h - 1);
-    lv_draw_image(layer, &image, &area);
+    radar_draw_symbol_image(layer, &image, &area);
 }
 
 /* The symbol is rounded to its pixel once, here: it must not sit a pixel off its place on a ring. */
@@ -401,11 +512,10 @@ static void place(const radar_t * radar, uint32_t count, const radar_field_t * f
         sizes[i].x = size.x + (target->vertical_trend ? TREND_GAP + TREND_SLOT_WIDTH : 0);
         sizes[i].y = size.y;
 
-        radar_point_t ahead[RADAR_DOT_COUNT];
-        uint32_t ahead_count = dots_of(radar, target, field->outer, ahead);
-        for(uint32_t dot = 0; dot < ahead_count; dot++) {
-            dots[with_dots.dot_count].x = symbols[i].x + (int32_t)lroundf(ahead[dot].x);
-            dots[with_dots.dot_count].y = symbols[i].y + (int32_t)lroundf(ahead[dot].y);
+        placed[i].dot_count = dots_of(radar, target, field->outer, placed[i].dots);
+        for(uint32_t dot = 0; dot < placed[i].dot_count; dot++) {
+            dots[with_dots.dot_count].x = symbols[i].x + (int32_t)lroundf(placed[i].dots[dot].x);
+            dots[with_dots.dot_count].y = symbols[i].y + (int32_t)lroundf(placed[i].dots[dot].y);
             with_dots.dot_count++;
         }
     }
@@ -467,8 +577,64 @@ static void draw_tail_run(void * user, int32_t x, int32_t y, int32_t length, uin
     lv_draw_rect(pen->layer, &run, &area);
 }
 
-static void draw_track(lv_layer_t * layer, const radar_t * radar, lv_point_t at, const radar_target_t * target,
-                       int32_t outer)
+static void draw_stroke_mask(lv_layer_t * layer, lv_point_t at, const radar_tail_part_t * parts, uint32_t count,
+                             lv_color_t color)
+{
+    if(!count) {
+        return;
+    }
+    float left = 0, right = 0, top = 0, bottom = 0;
+    for(uint32_t i = 0; i < count; i++) {
+        left = fminf(left, fminf(parts[i].from.x, parts[i].to.x));
+        right = fmaxf(right, fmaxf(parts[i].from.x, parts[i].to.x));
+        top = fminf(top, fminf(parts[i].from.y, parts[i].to.y));
+        bottom = fmaxf(bottom, fmaxf(parts[i].from.y, parts[i].to.y));
+    }
+    const float reach = RADAR_STROKE_WIDTH_PX / 2.0f + 0.5f;
+    lv_area_t bounds = {(int32_t)floorf(left - reach), (int32_t)floorf(top - reach),
+                        (int32_t)ceilf(right + reach), (int32_t)ceilf(bottom + reach)};
+    lv_area_t area = bounds;
+    lv_area_move(&area, at.x, at.y);
+    lv_layer_t * mask = lv_draw_layer_create(layer, LV_COLOR_FORMAT_A8, &area);
+    bool filled = mask && lv_draw_layer_alloc_buf(mask);
+    if(filled) {
+        radar_track_ribbon(mask->draw_buf->data, mask->draw_buf->header.stride,
+                           bounds.x1, bounds.y1, bounds.x2, bounds.y2, parts, count);
+        lv_draw_buf_flush_cache(mask->draw_buf, NULL);
+    }
+    if(mask) {
+        /* LVGL releases this layer when its parent consumes the draw task. */
+        lv_draw_image_dsc_t image;
+        lv_draw_image_dsc_init(&image);
+        image.src = mask;
+        image.recolor = color;
+        image.recolor_opa = LV_OPA_COVER;
+        lv_draw_layer(layer, &image, &area);
+    }
+    if(!filled) {
+        tail_pen_t pen = {layer, at, color};
+        radar_track_tail_runs(parts, count, RADAR_STROKE_WIDTH_PX, draw_tail_run, &pen);
+    }
+}
+
+/* The coverage of LVGL's six-pixel rounded rectangle. Tinting at draw time serves every level and theme. */
+static const LV_ATTRIBUTE_MEM_ALIGN uint8_t dot_alpha[6][LV_DRAW_BUF_STRIDE(6, LV_COLOR_FORMAT_A8)] = {
+    {0, 128, 240, 240, 128, 0},
+    {128, 255, 255, 255, 255, 128},
+    {240, 255, 255, 255, 255, 240},
+    {240, 255, 255, 255, 255, 240},
+    {128, 255, 255, 255, 255, 128},
+    {0, 128, 240, 240, 128, 0}
+};
+_Static_assert(DOT_SIZE == 6, "prediction dot mask has diameter six");
+static const lv_image_dsc_t dot_stamp = {
+    .header = {.magic = LV_IMAGE_HEADER_MAGIC, .cf = LV_COLOR_FORMAT_A8, .w = DOT_SIZE, .h = DOT_SIZE,
+               .stride = sizeof(dot_alpha[0])},
+    .data_size = sizeof(dot_alpha), .data = &dot_alpha[0][0],
+};
+
+static void draw_track(lv_layer_t * layer, const radar_t * radar, const placed_t * placed,
+                       const radar_target_t * target, int32_t outer)
 {
     float pixels_per_nm = (float)outer / (float)radar->range_nm;
     float bearing = (float)target->bearing_deg * radians_per_degree;
@@ -483,22 +649,23 @@ static void draw_track(lv_layer_t * layer, const radar_t * radar, lv_point_t at,
     radar_tail_part_t parts[RADAR_TAIL_HISTORY_S + RADAR_TAIL_STEPS];
     uint32_t part_count = radar_track_tail(path, target->tail_count + 1, parts);
 
-    tail_pen_t pen = {layer, at, TRAFFIC_COLOR_OTHER};
-    radar_track_tail_runs(parts, part_count, RADAR_STROKE_WIDTH_PX, draw_tail_run, &pen);
+    draw_stroke_mask(layer, placed->at, parts, part_count, TRAFFIC_COLOR_OTHER);
 
-    radar_point_t dots[RADAR_DOT_COUNT];
-    uint32_t dot_count = dots_of(radar, target, outer, dots);
-    lv_draw_rect_dsc_t dot;
-    lv_draw_rect_dsc_init(&dot);
-    dot.bg_color = level_color(target);
-    dot.radius = LV_RADIUS_CIRCLE;
-    for(uint32_t i = 0; i < dot_count; i++) {
+    if(!placed->dot_count) {
+        return;
+    }
+    lv_draw_image_dsc_t dot;
+    lv_draw_image_dsc_init(&dot);
+    dot.src = &dot_stamp;
+    dot.recolor = level_color(target);
+    dot.recolor_opa = LV_OPA_COVER;
+    for(uint32_t i = 0; i < placed->dot_count; i++) {
         lv_area_t area;
-        area.x1 = at.x + (int32_t)lroundf(dots[i].x - DOT_SIZE / 2.0f);
-        area.y1 = at.y + (int32_t)lroundf(dots[i].y - DOT_SIZE / 2.0f);
+        area.x1 = placed->at.x + (int32_t)lroundf(placed->dots[i].x - DOT_SIZE / 2.0f);
+        area.y1 = placed->at.y + (int32_t)lroundf(placed->dots[i].y - DOT_SIZE / 2.0f);
         area.x2 = area.x1 + DOT_SIZE - 1;
         area.y2 = area.y1 + DOT_SIZE - 1;
-        lv_draw_rect(layer, &dot, &area);
+        lv_draw_image(layer, &dot, &area);
     }
 }
 
@@ -547,7 +714,7 @@ static void draw_bands(lv_layer_t * layer, const radar_track_bands_t * bands, lv
         }
         draw_ring(layer, center, (WEDGE_INNER_RADIUS_PX + outer) / 2, outer - WEDGE_INNER_RADIUS_PX, wedge->start_deg,
                   wedge->start_deg + wedge->sweep_deg, band_color(wedge->level),
-                  (lv_opa_t)(LV_OPA_COVER * fill[wedge->level] / 100));
+                  (lv_opa_t)(LV_OPA_COVER * fill[wedge->level] / 100), RADAR_WEDGE_TAG);
     }
     for(uint32_t i = 0; i < bands->limit_count; i++) {
         draw_spoke(layer, center, bands->limits[i].deg, WEDGE_INNER_RADIUS_PX, outer, LIMIT_WIDTH,
@@ -556,8 +723,12 @@ static void draw_bands(lv_layer_t * layer, const radar_track_bands_t * bands, lv
 }
 
 /* The dashed edge of the way out lies on the rings, or the outer ring would hide the part that runs along it. */
-static void draw_way_out(lv_layer_t * layer, const radar_track_bands_t * bands, lv_point_t center, int32_t outer)
+static void draw_way_out(radar_t * radar, lv_layer_t * layer, const radar_track_bands_t * bands,
+                         lv_point_t center, int32_t outer)
 {
+    if(recovery_sectors_draw(&radar->recovery_sectors, layer, bands, center, outer, lv_subject_get_color(color_green))) {
+        return;
+    }
     for(uint32_t i = 0; i < bands->wedge_count; i++) {
         const radar_wedge_t * wedge = &bands->wedges[i];
         if(wedge->level != RADAR_BAND_RECOVERY) {
@@ -661,6 +832,9 @@ static lv_color_t level_color(const radar_target_t * target)
 
 static void theme_changed(lv_observer_t * observer, lv_subject_t * subject)
 {
-    LV_UNUSED(subject);
+    if(subject == subject_gps &&
+       (lv_subject_get_previous_int(subject) != 0) == (lv_subject_get_int(subject) != 0)) {
+        return;
+    }
     lv_obj_invalidate(lv_observer_get_target_obj(observer));
 }

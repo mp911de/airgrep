@@ -83,7 +83,9 @@ void radar_set_tape(lv_obj_t * radar, radar_tape_t tape, const radar_tape_band_t
     char outer_label[RADAR_LABEL_CAPACITY]; \
     radar_track_bands_t track_bands; \
     radar_tape_band_t tapes[2][RADAR_MAX_BANDS]; \
-    uint32_t tape_counts[2];
+    uint32_t tape_counts[2]; \
+    struct radar_grid_cache * sparse_grid; \
+    struct recovery_sectors * recovery_sectors;
 
 /* The Editor's radar_gen.c calls these. */
 void radar_constructor_hook(lv_obj_t * obj);

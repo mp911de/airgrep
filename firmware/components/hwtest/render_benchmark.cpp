@@ -9,6 +9,9 @@
 #include <utility>
 
 #include "display/display.hpp"
+#ifdef CONFIG_AIRGREP_PROFILER
+#include "render_profile.hpp"
+#endif
 
 namespace hwtest::render {
 namespace {
@@ -17,7 +20,7 @@ using Microseconds = std::chrono::microseconds;
 constexpr size_t kFrames = 20;
 enum class Scene { quiet, traffic, recovery };
 
-void update(Scene scene, unsigned step) {
+void update(Scene scene, unsigned step, bool history = true) {
 	display::ViewState model;
 	model.hour = 12;
 	model.minute = static_cast<uint8_t>(step % 60);
@@ -53,7 +56,7 @@ void update(Scene scene, unsigned step) {
 		}
 		model.traffic = targets;
 		model.traffic_inside = targets.size();
-		model.track_history = true;
+		model.track_history = history;
 	}
 	if (scene == Scene::recovery) {
 		static constexpr conflicts::Band bands[] = {
@@ -70,13 +73,26 @@ struct Measurement {
 	Clock::time_point start{};
 	Microseconds last{};
 	unsigned frames = 0;
+#ifdef CONFIG_AIRGREP_PROFILER
+	DrawProfile* profile{};
+#endif
 
 	static void event(lv_event_t* event) {
 		auto& sample =
 			*static_cast<Measurement*>(lv_event_get_user_data(event));
 		if (lv_event_get_code(event) == LV_EVENT_RENDER_START) {
 			sample.start = Clock::now();
+#ifdef CONFIG_AIRGREP_PROFILER
+			if (sample.profile) {
+				sample.profile->start();
+			}
+#endif
 		} else {
+#ifdef CONFIG_AIRGREP_PROFILER
+			if (sample.profile) {
+				DrawProfile::stop();
+			}
+#endif
 			sample.last = std::chrono::duration_cast<Microseconds>(
 				Clock::now() - sample.start);
 			++sample.frames;
@@ -107,6 +123,13 @@ class Run {
 	lv_display_t* panel_;
 	Measurement& sample_;
 };
+
+void full_frame(lv_display_t* panel) {
+	lv_obj_invalidate(lv_display_get_screen_active(panel));
+	lv_timer_t* timer = lv_display_get_refr_timer(panel);
+	lv_timer_pause(timer);
+	lv_display_refr_timer(timer);
+}
 
 bool measure(Output& output, lv_display_t* panel, Measurement& sample,
 			 Scene scene, const char* name, bool full,
@@ -149,6 +172,7 @@ bool measure(Output& output, lv_display_t* panel, Measurement& sample,
 void periodic(Output& output, lv_display_t* panel, void (*wait_one_tick)()) {
 	Measurement sample;
 	const Run run(panel, sample);
+	lv_timer_resume(lv_display_get_refr_timer(panel));
 	for (const auto& [scene, name] : {std::pair{Scene::quiet, "quiet"},
 									  {Scene::traffic, "traffic"},
 									  {Scene::recovery, "recovery"}}) {
@@ -168,12 +192,52 @@ void single(Output& output, lv_display_t* panel) {
 	Measurement sample;
 	const Run run(panel, sample);
 	update(Scene::traffic, 0);
-	lv_obj_invalidate(lv_display_get_screen_active(panel));
-	lv_timer_t* timer = lv_display_get_refr_timer(panel);
-	lv_timer_pause(timer);
-	lv_display_refr_timer(timer);
+	full_frame(panel);
 	output.print("traffic full  %u renders  draw %.2f ms\n", sample.frames,
 				 static_cast<double>(sample.last.count()) / 1000.0);
 	output.report("render_single", sample.frames == 1, "manual refresh");
 }
+
+#ifdef CONFIG_AIRGREP_PROFILER
+void profile(Output& output, lv_display_t* panel, void (*wait_one_tick)()) {
+	static_assert(LV_USE_OS == LV_OS_NONE,
+				  "Draw hooks and refresh must run on the same task");
+	using Milliseconds = std::chrono::duration<double, std::milli>;
+	Measurement sample;
+	const Run run(panel, sample);
+	struct Case {
+		const char* name;
+		Scene scene;
+		bool history;
+	};
+	for (const auto& test :
+		 {Case{"traffic", Scene::traffic, true},
+		  Case{"traffic without history", Scene::traffic, false},
+		  Case{"recovery", Scene::recovery, true}}) {
+		wait_one_tick();
+		update(test.scene, 0, test.history);
+		const auto before = sample.frames;
+		full_frame(panel);
+		full_frame(panel);
+		const auto baseline = sample.last;
+		DrawProfile profile;
+		sample.profile = &profile;
+		full_frame(panel);
+		sample.profile = nullptr;
+		output.print(
+			"%s full  baseline %.2f ms  profiled %.2f ms  delta %+.2f ms\n",
+			test.name, Milliseconds(baseline).count(),
+			Milliseconds(sample.last).count(),
+			Milliseconds(sample.last - baseline).count());
+		if (sample.frames != before + 3 ||
+			!profile.print(output, sample.last)) {
+			output.report("render_profile", false,
+						  "incomplete frame or draw profile");
+			return;
+		}
+	}
+	output.report("render_profile", true,
+				  "three matched full-frame comparisons");
+}
+#endif
 }

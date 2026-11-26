@@ -1,0 +1,9 @@
+CONFIG_AIRGREP_DISPLAY="800x480-touch"
+# The conflict engine of the display, DAIDALUS, reports what it cannot compute by exceptions.
+CONFIG_COMPILER_CXX_EXCEPTIONS=y
+CONFIG_COMPILER_CXX_EXCEPTIONS_EMG_POOL_SIZE=1024
+CONFIG_LV_USE_OBJ_NAME=y
+CONFIG_LV_USE_TRANSLATION=y
+CONFIG_LV_USE_QRCODE=y
+# The UI uses hundreds of KB. IDF malloc can use the board's PSRAM.
+CONFIG_LV_USE_CLIB_MALLOC=y

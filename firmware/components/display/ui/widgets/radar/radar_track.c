@@ -44,10 +44,38 @@ static float distance_to_segment(radar_point_t point, radar_point_t from, radar_
     return distance(point, between(from, to, fminf(fmaxf(fraction, 0), 1)));
 }
 
+/* With a monotone major coordinate and all samples within e of the final line, every
+ * intermediate sample is within 2e of its prefix chord. The old prefix search therefore
+ * keeps just the two ends. Leave room for float rounding at ordinary screen coordinates. */
+static bool straight_prefixes(const radar_point_t * path, uint32_t count)
+{
+    radar_point_t end = path[count - 1];
+    bool vertical = fabsf(end.y) > fabsf(end.x);
+    float major = vertical ? end.y : end.x;
+    if(path[0].x != 0 || path[0].y != 0 || major == 0 || fabsf(major) > 2048) {
+        return false;
+    }
+    float slope = (vertical ? end.x : end.y) / major;
+    float previous = 0;
+    for(uint32_t i = 1; i < count; ++i) {
+        float along = vertical ? path[i].y : path[i].x;
+        float across = vertical ? path[i].x : path[i].y;
+        if((major > 0 ? along < previous : along > previous) || fabsf(across - along * slope) > 0.1f) {
+            return false;
+        }
+        previous = along;
+    }
+    return true;
+}
+
 static uint32_t straighten(radar_point_t * path, uint32_t count)
 {
     if(count < 3) {
         return count;
+    }
+    if(straight_prefixes(path, count)) {
+        path[1] = path[count - 1];
+        return 2;
     }
     uint32_t kept = 1;
     uint32_t from = 0;
@@ -115,55 +143,172 @@ static int32_t smaller(int32_t a, int32_t b)
     return a < b ? a : b;
 }
 
-void radar_track_tail_runs(const radar_tail_part_t * parts, uint32_t count, float width, radar_tail_run_cb_t run,
-                           void * user)
+/* Scan-convert the three-pixel ribbon into one cleared A8 mask per trail. */
+void radar_track_ribbon(uint8_t * data, int stride, int left, int top, int right, int bottom,
+                        const radar_tail_part_t * parts, unsigned count)
 {
-    enum { REACH = RADAR_MAX_TAIL_LENGTH_PX + (RADAR_STROKE_WIDTH_PX + 1) / 2 + 1 };
-    uint8_t row[2 * REACH];
-    float reach = width / 2 + 0.5f;
-
-    float top = REACH;
-    float bottom = -REACH;
-    for(uint32_t i = 0; i < count; i++) {
-        top = fminf(top, fminf(parts[i].from.y, parts[i].to.y));
-        bottom = fmaxf(bottom, fmaxf(parts[i].from.y, parts[i].to.y));
-    }
-    int32_t first_row = larger((int32_t)floorf(top - reach), -REACH);
-    int32_t last_row = smaller((int32_t)ceilf(bottom + reach), REACH - 1);
-
-    for(int32_t y = first_row; y <= last_row; y++) {
-        float middle = (float)y + 0.5f;
-        memset(row, 0, sizeof(row));
-        for(uint32_t i = 0; i < count; i++) {
-            const radar_tail_part_t * part = &parts[i];
-            if(middle < fminf(part->from.y, part->to.y) - reach || middle > fmaxf(part->from.y, part->to.y) + reach) {
-                continue;
+    enum { limit = RADAR_MAX_TAIL_LENGTH_PX + (RADAR_STROKE_WIDTH_PX + 1) / 2 + 1 };
+    _Static_assert(RADAR_STROKE_WIDTH_PX == 3, "ribbon has one opaque and one antialias pixel per side");
+    const int xmin = left > -limit ? left : -limit, xmax = right < limit ? right : limit - 1;
+    const int ymin = top > -limit ? top : -limit, ymax = bottom < limit ? bottom : limit - 1;
+    for(unsigned i = 0; i < count; ++i) {
+        const radar_tail_part_t * part = &parts[i];
+        float dx = part->to.x - part->from.x, dy = part->to.y - part->from.y;
+        float length2 = dx * dx + dy * dy;
+        /* Scan across the short axis v. The two long quad edges then have slope at most one. */
+        bool vertical = fabsf(dy) > fabsf(dx);
+        float u0 = vertical ? part->from.y : part->from.x, v0 = vertical ? part->from.x : part->from.y;
+        float u1 = vertical ? part->to.y : part->to.x, v1 = vertical ? part->to.x : part->to.y;
+        float du = u1 - u0, dv = v1 - v0;
+        float slope = du != 0 ? dv / du : 0.0f;
+        float normal = length2 > 0 ? fabsf(du) / sqrtf(length2) : 1.0f;
+        float half_span = 2.0f / normal;
+        float low = fminf(u0, u1), high = fmaxf(u0, u1);
+        /* Centers lie at n + 0.5. Expand the two-pixel reach by 0.001 for float roundoff. */
+        int first = (int)ceilf(low - 2.501f), last = (int)floorf(high + 1.501f);
+        int umin = vertical ? ymin : xmin, umax = vertical ? ymax : xmax;
+        int vmin = vertical ? xmin : ymin, vmax = vertical ? xmax : ymax;
+        if(first < umin) {
+            first = umin;
+        }
+        if(last > umax) {
+            last = umax;
+        }
+        int opacity = 255 * (RADAR_TAIL_STEPS - part->step) / RADAR_TAIL_STEPS;
+        for(int u = first; u <= last; ++u) {
+            float uc = (float)u + 0.5f, offset = uc - u0;
+            /* The quad edges are parallel. Pixel centers in this interval span the entire strip. */
+            float center = v0 + offset * slope;
+            int start = (int)ceilf(center - half_span - 0.501f);
+            int end = (int)floorf(center + half_span - 0.499f);
+            if(start < vmin) {
+                start = vmin;
             }
-            int32_t from = larger((int32_t)floorf(fminf(part->from.x, part->to.x) - reach), -REACH);
-            int32_t to = smaller((int32_t)ceilf(fmaxf(part->from.x, part->to.x) + reach), REACH - 1);
-            float opa = 255.0f * (float)(RADAR_TAIL_STEPS - part->step) / RADAR_TAIL_STEPS;
-            for(int32_t x = from; x <= to; x++) {
-                radar_point_t pixel_center = {(float)x + 0.5f, middle};
-                float covered = fminf(reach - distance_to_segment(pixel_center, part->from, part->to), 1);
-                if(covered <= 0) {
+            if(end > vmax) {
+                end = vmax;
+            }
+            bool near_cap = uc < low + 2.001f || uc > high - 2.001f;
+            for(int v = start; v <= end; ++v) {
+                float vc = (float)v + 0.5f;
+                float distance = fabsf(vc - center) * normal;
+                if(near_cap) {
+                    float along = offset * du + (vc - v0) * dv;
+                    if(along <= 0.0f || along >= length2) {
+                        bool far = along > 0.0f;
+                        float eu = uc - (far ? u1 : u0), ev = vc - (far ? v1 : v0);
+                        float d2 = eu * eu + ev * ev;
+                        if(d2 >= 4.0f) {
+                            continue;
+                        }
+                        distance = d2 <= 1.0f ? 0.0f : sqrtf(d2);
+                    }
+                }
+                if(distance >= 2.0f) {
                     continue;
                 }
-                uint8_t value = (uint8_t)lroundf(covered * opa);
-                /* Where two parts meet the pixel is the more covered of the two, not their sum. */
-                if(value > row[x + REACH]) {
-                    row[x + REACH] = value;
+                unsigned value = (unsigned)opacity;
+                if(distance > 1.0f) {
+                    float rounded = (2.0f - distance) * (float)opacity + 0.5f;
+                    value = (unsigned)rounded;
+                    /* At a byte-rounding boundary, reproduce the original float operations. */
+                    float remainder = rounded - (float)value;
+                    if(remainder < 0.006f || remainder > 0.994f) {
+                        float cx = vertical ? vc : uc, cy = vertical ? uc : vc;
+                        float projection = (cx - part->from.x) * dx + (cy - part->from.y) * dy;
+                        float t = length2 > 0 ? fminf(fmaxf(projection / length2, 0), 1) : 0;
+                        float ex = part->from.x + dx * t - cx, ey = part->from.y + dy * t - cy;
+                        float coverage = fminf(fmaxf(2.0f - hypotf(ex, ey), 0), 1);
+                        value = (unsigned)lroundf(coverage * (float)opacity);
+                    }
+                }
+                int x = vertical ? v : u, y = vertical ? u : v;
+                uint8_t * pixel = data + (size_t)(y - top) * stride + (x - left);
+                /* Meeting caps and self-crossings share coverage, including at a change of fade level. */
+                if(value > *pixel) {
+                    *pixel = (uint8_t)value;
                 }
             }
         }
-        for(int32_t x = -REACH; x < REACH;) {
-            int32_t end = x + 1;
-            while(end < REACH && row[end + REACH] == row[x + REACH]) {
-                end++;
+    }
+}
+
+void radar_track_tail_runs(const radar_tail_part_t * parts, uint32_t count, float width, radar_tail_run_cb_t run,
+                          void * user)
+{
+    enum { REACH = RADAR_MAX_TAIL_LENGTH_PX + (RADAR_STROKE_WIDTH_PX + 1) / 2 + 1, ROWS = 4 };
+    uint8_t pixels[ROWS * 2 * REACH];
+    float reach = width * 0.5f + 0.5f;
+    int32_t left = REACH, right = -REACH, top = REACH, bottom = -REACH;
+    for(uint32_t i = 0; i < count; i++) {
+        const radar_tail_part_t * p = &parts[i];
+        left = smaller(left, (int32_t)floorf(fminf(p->from.x, p->to.x) - reach));
+        right = larger(right, (int32_t)ceilf(fmaxf(p->from.x, p->to.x) + reach));
+        top = smaller(top, (int32_t)floorf(fminf(p->from.y, p->to.y) - reach));
+        bottom = larger(bottom, (int32_t)ceilf(fmaxf(p->from.y, p->to.y) + reach));
+    }
+    top = larger(top, -REACH);
+    bottom = smaller(bottom, REACH - 1);
+    left = larger(left, -REACH);
+    right = smaller(right, REACH - 1);
+    if(right < left) {
+        return;
+    }
+    int32_t stride = right - left + 1;
+    for(int32_t y0 = top; y0 <= bottom; y0 += ROWS) {
+        int32_t y1 = smaller(y0 + ROWS - 1, bottom);
+        memset(pixels, 0, (size_t)((y1 - y0 + 1) * stride));
+        for(uint32_t i = 0; i < count; ++i) {
+            const radar_tail_part_t * p = &parts[i];
+            int32_t first = larger(y0, (int32_t)ceilf(fminf(p->from.y, p->to.y) - reach - 0.5f));
+            int32_t last = smaller(y1, (int32_t)floorf(fmaxf(p->from.y, p->to.y) + reach - 0.5f));
+            if(last < first) {
+                continue;
             }
-            if(row[x + REACH]) {
-                run(user, x, y, end - x, row[x + REACH]);
+            int32_t x0 = larger(left, (int32_t)floorf(fminf(p->from.x, p->to.x) - reach));
+            int32_t x1 = smaller(right, (int32_t)ceilf(fmaxf(p->from.x, p->to.x) + reach));
+            float dx = p->to.x - p->from.x, dy = p->to.y - p->from.y;
+            float len2 = dx * dx + dy * dy;
+            float opa = 255.0f * (float)(RADAR_TAIL_STEPS - p->step) / RADAR_TAIL_STEPS;
+            for(int32_t y = first; y <= last; ++y) {
+                uint8_t * row = pixels + (size_t)(y - y0) * (size_t)stride;
+                float cy = (float)y + 0.5f, py = cy - p->from.y;
+                for(int32_t x = x0; x <= x1; ++x) {
+                    float cx = (float)x + 0.5f, px = cx - p->from.x;
+                    float projection = px * dx + py * dy;
+                    radar_point_t q = p->from;
+                    if(len2 > 0) {
+                        q = between(p->from, p->to, fminf(fmaxf(projection / len2, 0), 1));
+                    }
+                    float ex = q.x - cx, ey = q.y - cy;
+                    float d2 = ex * ex + ey * ey;
+                    if(d2 > reach * reach + 0.0001f) {
+                        continue;
+                    }
+                    float inside = reach - 1;
+                    float distance_px = inside >= 0 && d2 < inside * inside - 0.0001f ? 0 : hypotf(ex, ey);
+                    float coverage = fminf(reach - distance_px, 1);
+                    if(coverage <= 0) {
+                        continue;
+                    }
+                    uint8_t value = (uint8_t)lroundf(coverage * opa);
+                    if(value > row[x - left]) {
+                        row[x - left] = value;
+                    }
+                }
             }
-            x = end;
+        }
+        for(int32_t y = y0; y <= y1; ++y) {
+            const uint8_t * row = pixels + (size_t)(y - y0) * (size_t)stride;
+            for(int32_t x = 0; x < stride;) {
+                int32_t end = x + 1;
+                while(end < stride && row[x] == row[end]) {
+                    ++end;
+                }
+                if(row[x]) {
+                    run(user, x + left, y, end - x, row[x]);
+                }
+                x = end;
+            }
         }
     }
 }

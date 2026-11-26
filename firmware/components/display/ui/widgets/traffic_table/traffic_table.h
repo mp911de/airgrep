@@ -30,14 +30,6 @@ typedef struct {
     uint16_t conflict_in_s;
 } traffic_row_t;
 
-typedef struct {
-    uint32_t target_id;
-    bool muted;
-    traffic_vertical_trend_t vertical_trend;
-    bool relative_position_available;
-    int16_t relative_bearing_deg;
-} traffic_row_state_t;
-
 typedef enum {
     TRAFFIC_ACTION_MUTE,
     TRAFFIC_ACTION_UNMUTE,
@@ -55,6 +47,10 @@ typedef void (*traffic_action_cb_t)(traffic_action_t action, uint32_t target_id)
  */
 void traffic_table_set_rows(lv_obj_t * table, const traffic_row_t * rows, uint32_t count, uint32_t inside);
 
+/* A caller with a different row representation can publish one row at a time. */
+void traffic_table_begin_rows(lv_obj_t * table, uint32_t count, uint32_t inside);
+void traffic_table_set_row(lv_obj_t * table, uint32_t index, const traffic_row_t * data);
+
 /**
  * What the band says, as "BEYOND 2 NM". The text is copied, up to TRAFFIC_TABLE_BAND_SIZE - 1 bytes.
  */
@@ -65,7 +61,7 @@ void traffic_table_set_action_cb(lv_obj_t * table, traffic_action_cb_t cb);
 void traffic_table_scroll_to_top(lv_obj_t * table);
 
 #define TRAFFIC_TABLE_USER_DATA \
-    traffic_row_state_t rows[TRAFFIC_TABLE_MAX_ROWS]; \
+    bool locked; \
     traffic_action_cb_t on_action; \
     lv_timer_t * close_timer; \
     uint32_t first_outside_row; \

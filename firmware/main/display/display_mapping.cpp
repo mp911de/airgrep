@@ -1,11 +1,12 @@
 #include "display_mapping.hpp"
 
 #include <algorithm>
-#include <array>
+#include <bit>
 #include <cmath>
 #include <cstring>
 #include <optional>
 #include <tuple>
+#include <vector>
 
 #include "device.h"
 #include "navigation/great_circle.hpp"
@@ -102,23 +103,38 @@ display::Fix fix_of(adsbee::Fix fix) {
 	}
 }
 
-display::Offset offset(const adsbee::Gnss& own, float latitude,
-					   float longitude) {
-	auto [distance, bearing] = navigation::great_circle(
-		own.latitude, own.longitude, latitude, longitude);
-	const float turned =
-		(bearing - own.track_deg) * units::radians_per_degree<float>;
-	return {distance * std::sin(turned), distance * std::cos(turned)};
+display::Offset offset(float own_track_deg, RelativePosition position) {
+	const float turned = (position.true_bearing_deg - own_track_deg) *
+						 units::radians_per_degree<float>;
+	return {position.distance_nm * std::sin(turned),
+			position.distance_nm * std::cos(turned)};
+}
+
+bool same_coordinate(float a, float b) {
+	return std::bit_cast<uint32_t>(a) == std::bit_cast<uint32_t>(b);
 }
 
 void track(const traffic::Tracked& tracked, const adsbee::Gnss& own,
-		   display::Target& out) {
+		   RelativePosition position, display::Target& out) {
 	static_assert(display::kTailSamples >= traffic::kHistorySeconds);
 	const traffic::Target& report = tracked.target;
+	float latitude = report.latitude, longitude = report.longitude;
+	display::Offset place{};
 	for (const traffic::Position& was : tracked.past) {
-		const display::Offset place = offset(own, was.latitude, was.longitude);
-		if (was.sample == traffic::Sample::none ||
-			!std::isfinite(place.right_nm) || !std::isfinite(place.ahead_nm)) {
+		if (was.sample == traffic::Sample::none) {
+			break;
+		}
+		if (!same_coordinate(latitude, was.latitude) ||
+			!same_coordinate(longitude, was.longitude)) {
+			latitude = was.latitude;
+			longitude = was.longitude;
+			const auto [distance, bearing] = navigation::great_circle(
+				own.latitude, own.longitude, latitude, longitude);
+			place = offset(own.track_deg, {distance, bearing});
+		} else if (out.tail_count == 0) {
+			place = offset(own.track_deg, position);
+		}
+		if (!std::isfinite(place.right_nm) || !std::isfinite(place.ahead_nm)) {
 			break;
 		}
 		out.tail[out.tail_count++] = place;
@@ -132,14 +148,12 @@ void track(const traffic::Tracked& tracked, const adsbee::Gnss& own,
 	}
 }
 
-display::Target build_display_target(const traffic::Tracked& tracked,
+display::Target build_display_target(const traffic::Target& report,
 									 const ViewInputs& sources,
-									 const TargetDetails& at) {
-	const traffic::Target& report = tracked.target;
-	const adsbee::Gnss& own = sources.adsbee.gnss_at(sources.monotonic_now_us);
+									 const TargetDetails& at,
+									 float own_track_deg) {
 	const Preferences& preferences = sources.preferences;
 	display::Source from = conflicts::source(report.source);
-	const bool inside = at.radar_position == RadarPosition::inside_ring;
 
 	std::optional<int32_t> above = at.above_ft;
 	display::Target out{};
@@ -162,17 +176,14 @@ display::Target build_display_target(const traffic::Tracked& tracked,
 	if (at.position) {
 		auto [distance, bearing] = *at.position;
 		out.distance_nm = distance;
-		out.bearing_deg = degrees(bearing - own.track_deg);
+		out.bearing_deg = degrees(bearing - own_track_deg);
 		out.track_valid = report.direction_valid;
-		out.track_deg = degrees(report.track_deg - own.track_deg);
+		out.track_deg = degrees(report.track_deg - own_track_deg);
 		out.own_ship_candidate =
 			above && conflicts::near_own_ship(distance, *above);
 		if (at.conflict) {
 			out.level = at.conflict->level;
 			out.conflict_in_s = at.conflict->within_s;
-		}
-		if (preferences.track_history && !out.muted && inside) {
-			track(tracked, own, out);
 		}
 	}
 	return out;
@@ -384,29 +395,58 @@ display::ViewState build_view_state(const ViewInputs& sources,
 	const adsbee::Gnss& gnss = sources.adsbee.gnss_at(sources.monotonic_now_us);
 	const Preferences& preferences = sources.preferences;
 	const bool fix = gnss.fix != adsbee::Fix::none;
+	const bool show_tracks = fix && preferences.track_history;
+	struct TrackInput {
+		const traffic::Tracked* tracked = nullptr;
+		RelativePosition position{};
+	};
+	// Only a shorter output can evict a previously admitted track.
+	std::vector<TrackInput> pending(
+		show_tracks && targets.size() < sources.traffic.size() ? targets.size()
+															   : 0);
 	size_t count = 0;
 	for (size_t i = 0; i < sources.traffic.size(); ++i) {
+		const bool list_closed =
+			count == targets.size() && (!fix || targets.empty());
+		if (list_closed && i >= details.size()) {
+			break;
+		}
 		const auto& tracked = sources.traffic[i];
 		const auto at = target_details(tracked, sources);
 		if (i < details.size()) {
 			details[i] = at;
 		}
-		if (at.exclusion_reason) {
+		if (at.exclusion_reason || list_closed) {
 			continue;
 		}
-		const auto target = build_display_target(tracked, sources, at);
+		const auto target =
+			build_display_target(tracked.target, sources, at, gnss.track_deg);
+		size_t slot = count;
 		if (count < targets.size()) {
-			targets[count++] = target;
-			continue;
+			++count;
+		} else {
+			const auto lowest_priority =
+				std::ranges::max_element(targets, before);
+			if (!before(target, *lowest_priority)) {
+				continue;
+			}
+			slot = static_cast<size_t>(lowest_priority - targets.begin());
 		}
-
-		if (!fix) {
-			continue;
+		targets[slot] = target;
+		if (show_tracks && !target.muted && at.position &&
+			at.radar_position == RadarPosition::inside_ring) {
+			if (pending.empty()) {
+				track(tracked, gnss, *at.position, targets[slot]);
+			} else {
+				pending[slot] = {&tracked, *at.position};
+			}
+		} else if (!pending.empty()) {
+			pending[slot] = {};
 		}
-		const auto lowest_priority = std::ranges::max_element(targets, before);
-		if (lowest_priority != targets.end() &&
-			before(target, *lowest_priority)) {
-			*lowest_priority = target;
+	}
+	for (size_t i = 0; i < pending.size(); ++i) {
+		if (pending[i].tracked) {
+			track(*pending[i].tracked, gnss, pending[i].position, targets[i]);
 		}
 	}
 	if (count == targets.size() && count < sources.traffic.size()) {

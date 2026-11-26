@@ -166,7 +166,25 @@ struct Zone {
 
 constexpr uint32_t NO_ADDRESS = 0xFFFFFFFF;
 
+struct RadarGenerations {
+	uint8_t traffic{}, gnss{}, daidalus{};
+	bool resync{};
+
+	// Keep a wrap visible until this producer has delivered a snapshot to its
+	// display.
+	void bump(uint8_t& counter) noexcept {
+		if (++counter == 0) {
+			resync = true;
+		}
+	}
+	void acknowledge() noexcept { resync = false; }
+	bool operator==(const RadarGenerations&) const = default;
+};
+static_assert(sizeof(RadarGenerations) == 4);
+
 struct ViewState {
+	// Producers without revisions request a complete radar update.
+	std::optional<RadarGenerations> radar_generations;
 	const char* language = "en";
 	Mode mode = Mode::on;
 	const char* device_name = "";

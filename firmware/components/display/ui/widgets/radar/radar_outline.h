@@ -8,6 +8,18 @@ extern "C" {
 #include "lvgl.h"
 
 #define RADAR_OUTLINE_WIDTH_PX 2
+#define RADAR_SYMBOL_SCALE 167
+#define RADAR_OWN_SYMBOL_SCALE 211
+
+const lv_draw_buf_t * radar_symbol_outline_mask(const lv_image_dsc_t * plain, int32_t scale);
+bool radar_symbol_atlas_draw(lv_layer_t * layer, lv_draw_image_dsc_t * image, const lv_area_t * area);
+/* Start at bucket zero. True means that another heading remains for this style. */
+bool radar_symbol_atlas_warm_next(lv_display_t * display, bool simple, unsigned bucket);
+void radar_symbol_atlas_release(void);
+void radar_symbol_atlas_usage(uint32_t * masks, uint32_t * pixel_bytes);
+void radar_symbol_atlas_lookups(uint32_t * hits, uint32_t * misses);
+
+void radar_draw_symbol_image(lv_layer_t * layer, lv_draw_image_dsc_t * image, const lv_area_t * area);
 
 void radar_outline_text(lv_layer_t * layer, const char * text, const lv_font_t * font, lv_color_t color,
                         const lv_area_t * area);
