@@ -1,4 +1,7 @@
+#include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstddef>
 #include <numbers>
 #include <tuple>
 #include <vector>
@@ -212,6 +215,30 @@ void tail_reversal_pixels() {
 	const Pixels drawn = pixels({{0, 0}, {10, 0}, {5, 0}});
 	CHECK(drawn.opacity[Pixels::kReach][Pixels::kReach + 9] > 0);
 }
+
+void clipped_ribbon_matches_reference() {
+	const std::vector<radar_point_t> path{
+		{0, 0}, {-13, -8}, {-4, 9}, {-10, -5}, {6, 2}};
+	const auto parts = tail(path);
+	constexpr int left = -11, top = -5, width = 15, height = 11;
+	constexpr std::ptrdiff_t stride = 19;
+	std::array<uint8_t, height * stride> mask{};
+	for (int y = 0; y < height; y++) {
+		std::fill_n(mask.data() + y * stride + width, stride - width, 0xa5);
+	}
+	auto expected = mask;
+	const Pixels reference = pixels(path);
+	for (int y = 0; y < height; y++) {
+		const auto* row = reference.opacity[Pixels::kReach + top + y];
+		std::copy_n(row + Pixels::kReach + left, width,
+					expected.data() + y * stride);
+	}
+
+	radar_track_ribbon(mask.data(), stride, left, top, left + width - 1,
+					   top + height - 1, parts.data(),
+					   static_cast<unsigned>(parts.size()));
+	CHECK(mask == expected);
+}
 }
 
 int main() {
@@ -223,5 +250,6 @@ int main() {
 		TEST(tail_shape),
 		TEST(tail_pixels),
 		TEST(tail_reversal_pixels),
+		TEST(clipped_ribbon_matches_reference),
 	});
 }

@@ -42,10 +42,14 @@ void Connection::watch(std::chrono::milliseconds interval) {
 	});
 }
 
-bool Connection::take_new_picture(device::DeviceState& picture) {
+bool Connection::take_new_picture(device::DeviceState& picture,
+								  PictureChange before_copy) {
 	const std::scoped_lock lock(mutex_);
 	if (!picture_ || taken_) {
 		return false;
+	}
+	if (before_copy) {
+		before_copy(picture, *picture_);
 	}
 	picture = *picture_;
 	taken_ = true;
@@ -165,6 +169,7 @@ void Connection::converse(Conversation& conversation) {
 		Conversation::Step step = conversation.step(began, std::move(asked));
 		{
 			const std::scoped_lock lock(mutex_);
+			status_.hello = conversation.hello();
 			if (step.settings && !pending_settings_key_) {
 				settings_read_ = std::move(step.settings);
 			}

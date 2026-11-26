@@ -61,15 +61,18 @@ final class FlashUtil {
     func connect() throws {
         var answered = false
         for _ in 0..<Self.syncAttempts where !answered {
+            try Task.checkCancellation()
             link.discardInput()
             received = []
             answered = (try? exchange(.sync, [0x07, 0x07, 0x12, 0x20] + [UInt8](repeating: 0x55, count: 32), within: Self.syncReply)) != nil
         }
+        try Task.checkCancellation()
         guard answered else {
             throw Failure("The bootloader does not answer.")
         }
         // The ROM answers a sync several times over.
         while (try? frame(within: timeLeft(Self.syncReply))) != nil {}
+        try Task.checkCancellation()
 
         // Over USB Serial/JTAG nothing feeds the watchdogs of the chip.
         if try readRegister(Register.port) & 0xFF == Register.portSerialJTAG {

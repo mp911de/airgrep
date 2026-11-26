@@ -28,11 +28,15 @@ struct TerminalText {
         lines = []
         line = []
         column = 0
+        state = .text
+        parameters = ""
+        partial = []
         drops += 1
     }
 
     /// Takes what the device sent and returns what a terminal answers, which is empty unless it was asked.
     mutating func feed(_ bytes: [UInt8], columns: Int = Self.defaultColumns) -> [UInt8] {
+        let columns = max(columns, 1)
         var answer: [UInt8] = []
         for byte in bytes {
             switch state {
@@ -40,7 +44,10 @@ struct TerminalText {
                 state = byte == UInt8(ascii: "[") ? .sequence : .text
                 parameters = ""
             case .sequence:
-                if (0x40...0x7E).contains(byte) {
+                if byte == 0x1B {
+                    state = .escape
+                    parameters = ""
+                } else if (0x40...0x7E).contains(byte) {
                     answer += control(Character(UnicodeScalar(byte)), columns: columns)
                     state = .text
                 } else if parameters.count < Self.parametersKept {
@@ -53,7 +60,16 @@ struct TerminalText {
         return answer
     }
 
+    private mutating func flushPartial() {
+        guard !partial.isEmpty else { return }
+        for character in String(decoding: partial, as: UTF8.self) { put(character) }
+        partial = []
+    }
+
     private mutating func plain(_ byte: UInt8) {
+        if byte < 0x20 {
+            flushPartial()
+        }
         switch byte {
         case 0x1B:
             state = .escape
@@ -102,8 +118,14 @@ struct TerminalText {
 
     /// A control sequence by its last character, with the numbers before it.
     private mutating func control(_ final: Character, columns: Int) -> [UInt8] {
-        // No number of a sequence means more than the width, and a larger one must not overflow.
-        let numbers = parameters.split(separator: ";").map { min(Int($0) ?? 0, columns) }
+        // Keep mode codes (such as 2K, 2J, 6n) intact at narrow widths while preventing overflow.
+        let limit = max(columns, 16)
+        let numbers = parameters.split(separator: ";").map { part -> Int in
+            if let value = Int(part) {
+                return min(max(value, 0), limit)
+            }
+            return !part.isEmpty && part.allSatisfy(\.isNumber) ? limit : 0
+        }
         let count = max(numbers.first ?? 1, 1)
         switch final {
         case "C": column = min(column + count, columns - 1)

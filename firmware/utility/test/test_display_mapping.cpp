@@ -835,6 +835,38 @@ void add_moving_target(Device& device) {
 	CHECK(shown.predicted);
 }
 
+void retained_targets_keep_their_own_history() {
+	Device device;
+	for (uint32_t i = 0; i < 6; ++i) {
+		const auto& target =
+			device.add("TRACK", i + 1, 6.0f - static_cast<float>(i), 3000);
+		auto& past = device.traffic.back().past;
+		for (size_t age = 0; age <= i; ++age) {
+			past[age].latitude = target.latitude;
+			past[age].longitude = target.longitude;
+			past[age].sample =
+				age ? traffic::Sample::held : traffic::Sample::fresh;
+		}
+	}
+	auto shown = device.map();
+	for (size_t i = 0; i < shown.traffic.size(); ++i) {
+		const auto& target = shown.traffic[i];
+		CHECK_EQUAL(6u - i, target.address);
+		CHECK_EQUAL(target.address, target.tail_count);
+		CHECK(near(-target.distance_nm, target.tail[0].right_nm));
+		for (size_t age = 1; age < target.tail_count; ++age) {
+			CHECK_EQUAL(target.tail[0].right_nm, target.tail[age].right_nm);
+			CHECK_EQUAL(target.tail[0].ahead_nm, target.tail[age].ahead_nm);
+		}
+	}
+	// A muted replacement must also drop the history queued for its old slot.
+	const conflicts::Id muted{6, display::Source::adsb};
+	device.sources.preferences.muted = {&muted, 1};
+	shown = device.map();
+	CHECK_EQUAL(6u, shown.traffic.front().address);
+	CHECK_EQUAL(0, shown.traffic.front().tail_count);
+}
+
 void track_history_off_hides_track() {
 	Device device;
 	add_moving_target(device);
@@ -922,6 +954,7 @@ int main() {
 		TEST(selection),
 		TEST(order),
 		TEST(tracks),
+		TEST(retained_targets_keep_their_own_history),
 		TEST(relative_altitude_uses_two_gnss_altitudes),
 		TEST(altitude_bands_use_gnss_without_barometer),
 		TEST(climbing_into_target),

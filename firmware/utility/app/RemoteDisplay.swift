@@ -12,6 +12,23 @@ final class DisplayLibrary {
     let api: airgrep_display_api
     var width: Int { Int(api.width) }
     var height: Int { Int(api.height) }
+    /// The session this library currently follows, so an older dismantled panel cannot stop a newer session.
+    private weak var follower: Session?
+
+    func follow(_ session: Session, connection: OpaquePointer) {
+        follower = session
+        session.device.serial.withCString { api.follow(connection, $0) }
+    }
+
+    func unfollow(_ session: Session) {
+        guard follower === session else { return }
+        follower = nil
+        api.follow(nil, nil)
+    }
+
+    func isFollowing(_ session: Session) -> Bool {
+        follower === session
+    }
 
     private static let prefix = "display-"
     private static var loaded: [String: DisplayLibrary] = [:]
@@ -23,7 +40,7 @@ final class DisplayLibrary {
         let files = (try? FileManager.default.contentsOfDirectory(atPath: folder)) ?? []
         return files.filter { $0.hasPrefix(prefix) && $0.hasSuffix(".dylib") }
             .map { String($0.dropFirst(prefix.count).dropLast(".dylib".count)) }
-            .sorted().reversed()
+            .sorted()
     }()
 
     static func load(_ variant: String) -> Result<DisplayLibrary, Failure> {
@@ -142,6 +159,7 @@ final class PanelView: NSView {
     /// The finger is down. It lifts on mouse up, when the pointer leaves or the window loses focus,
     /// and then stays up until the next mouse down, however the mouse is dragged on.
     private var pressed = false
+    private var lastTouch: (x: Int32, y: Int32) = (0, 0)
     private var image: CGImage?
     /// Whether a press sounds, as the user chose it for this computer.
     var clicks = true
@@ -188,16 +206,18 @@ final class PanelView: NSView {
         }
         resignation = nil
         lift()
+        session.unfollow(on: library)
     }
 
     @MainActor private func tick() {
         session.follow(on: library)
         let now = CACurrentMediaTime()
-        remainder += (now - last) * 1000
+        remainder += max(0, (now - last) * 1000)
         last = now
         let whole = remainder.rounded(.down)
         remainder -= whole
-        if library.api.step(UInt32(whole)) || image == nil {
+        let elapsedMs = whole >= Double(UInt32.max) ? UInt32.max : UInt32(whole)
+        if library.api.step(elapsedMs) || image == nil {
             capture()
         }
     }
@@ -231,15 +251,20 @@ final class PanelView: NSView {
     private func touch(at location: NSPoint, down: Bool) {
         guard bounds.width > 0, bounds.height > 0 else { return }
         let point = convert(location, from: nil)
-        library.api.touch(
-            Int32(point.x / bounds.width * CGFloat(library.width)),
-            Int32(point.y / bounds.height * CGFloat(library.height)), down)
+        let x = Int32(min(max((point.x / bounds.width * CGFloat(library.width)).rounded(.down), 0), CGFloat(library.width - 1)))
+        let y = Int32(min(max((point.y / bounds.height * CGFloat(library.height)).rounded(.down), 0), CGFloat(library.height - 1)))
+        lastTouch = (x, y)
+        library.api.touch(x, y, down)
     }
 
     private func lift() {
         guard pressed else { return }
         pressed = false
-        touch(at: window?.mouseLocationOutsideOfEventStream ?? .zero, down: false)
+        if let location = window?.mouseLocationOutsideOfEventStream {
+            touch(at: location, down: false)
+        } else {
+            library.api.touch(lastTouch.x, lastTouch.y, false)
+        }
     }
 
     override func mouseDown(with event: NSEvent) {

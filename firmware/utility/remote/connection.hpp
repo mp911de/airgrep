@@ -42,7 +42,13 @@ class Connection {
 	// A picture every interval, or none for a zero interval. A read that takes
 	// longer than the interval is followed by the next one at once.
 	void watch(std::chrono::milliseconds interval);
-	bool take_new_picture(device::DeviceState& picture);
+	// Runs under the publication lock on the reader's thread, before its
+	// previous picture is overwritten. The callback must not reenter
+	// Connection.
+	using PictureChange = void (*)(const device::DeviceState&,
+								   const device::DeviceState&);
+	bool take_new_picture(device::DeviceState& picture,
+						  PictureChange before_copy = nullptr);
 	bool copy_latest_picture(device::DeviceState& picture) const;
 	// Asks the device to restart, or to restart into its bootloader. The
 	// Connection ends with it.

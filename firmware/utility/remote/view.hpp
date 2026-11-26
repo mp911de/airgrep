@@ -12,6 +12,8 @@ display::Actions actions();
 // Shows what the connection read since the last call. A device with another
 // serial number starts from what a user has not chosen yet.
 void follow(Connection& connection, const std::string& serial);
+// Stops background conflict work while no window follows a connection.
+void unfollow();
 bool muted();
 // What the display made of the last picture, as text for a human: what the
 // user chose, for every report whether it shows and why not, and what the

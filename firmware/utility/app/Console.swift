@@ -11,8 +11,13 @@ final class Console: ObservableObject {
     @Published private(set) var ended: String?
 
     private var port: (any SerialLink & Sendable)?
+    /// Serializes writes off the main thread so a stalled port cannot freeze the UI.
+    private let writeQueue = DispatchQueue(label: "airgrep.console.write", qos: .userInitiated)
+    /// Signals when the previous reader thread has exited and dropped its port reference.
+    private var readerDone: DispatchGroup?
     /// Counts the ports opened, so a reader of an earlier one stops.
     private var generation = 0
+    private var opening = false
 
     /// Control+L. The line editor of the firmware clears the screen and writes its prompt again, so
     /// a console that opens shows a prompt and runs nothing.
@@ -25,50 +30,90 @@ final class Console: ObservableObject {
 
     func open() {
         close()
-        do {
-            let port: any SerialLink & Sendable =
-                device.isEmulated ? EmulatedConsole() : try SerialPort(path: device.console)
-            self.port = port
-            ended = nil
-            let generation = generation
-            Thread.detachNewThread { [weak self] in
-                var failure = "Closed."
-                while true {
-                    do {
-                        let bytes = try port.read(atMost: 4096, within: .milliseconds(200))
-                        let running = DispatchQueue.main.sync {
-                            MainActor.assumeIsolated { self?.received(bytes, from: generation) ?? false }
-                        }
-                        if !running { return }
-                    } catch {
-                        failure = error.localizedDescription
-                        break
+        ended = nil
+        opening = true
+        let generation = generation
+        let previousReader = readerDone
+        let done = DispatchGroup()
+        done.enter()
+        readerDone = done
+        let device = device
+        let writeQueue = writeQueue
+        Thread.detachNewThread { [weak self] in
+            defer { done.leave() }
+            // Wait for any prior reader and queued write to finish releasing the old fd before reopening.
+            previousReader?.wait()
+            writeQueue.sync {}
+            var failure: String?
+            // Inner scope ensures `opened` deallocates and closes its fd before `done.leave()`.
+            do {
+                let opened: any SerialLink & Sendable
+                if device.isEmulated {
+                    opened = EmulatedConsole()
+                } else {
+                    let path = SerialPort.path(
+                        vendor: Int(AIRGREP_USB_VENDOR), product: Int(AIRGREP_USB_PRODUCT), serial: device.serial
+                    ) ?? device.console
+                    guard !path.isEmpty else {
+                        throw Failure("This device shows no console port.")
                     }
+                    opened = try SerialPort(path: path)
                 }
+                let accepted = DispatchQueue.main.sync {
+                    MainActor.assumeIsolated { self?.attach(opened, for: generation) ?? false }
+                }
+                guard accepted else { return }
+                while true {
+                    let bytes = try opened.read(atMost: 4096, within: .milliseconds(200))
+                    let running = DispatchQueue.main.sync {
+                        MainActor.assumeIsolated { self?.received(bytes, from: generation) ?? false }
+                    }
+                    if !running { return }
+                }
+            } catch is CancellationError {
+                return
+            } catch {
+                failure = error.localizedDescription
+            }
+            if let failure {
                 DispatchQueue.main.async {
                     MainActor.assumeIsolated { self?.end(failure, of: generation) }
                 }
             }
-            send(Self.redraw)
-        } catch {
-            ended = error.localizedDescription
         }
     }
 
-    var isOpen: Bool { port != nil }
+    var isOpen: Bool { opening || port != nil }
 
     func close() {
         generation += 1
+        opening = false
+        port?.cancel()
         port = nil
     }
 
     func send(_ bytes: [UInt8]) {
         guard let port, !bytes.isEmpty else { return }
-        do {
-            try port.write(bytes)
-        } catch {
-            end(error.localizedDescription, of: generation)
+        let generation = generation
+        writeQueue.async { [weak self] in
+            do {
+                try port.write(bytes)
+            } catch is CancellationError {
+            } catch {
+                let message = error.localizedDescription
+                DispatchQueue.main.async {
+                    MainActor.assumeIsolated { self?.end(message, of: generation) }
+                }
+            }
         }
+    }
+
+    private func attach(_ opened: any SerialLink & Sendable, for generation: Int) -> Bool {
+        guard generation == self.generation else { return false }
+        opening = false
+        port = opened
+        send(Self.redraw)
+        return true
     }
 
     /// Forgets what was printed and has the line editor write its prompt again.
@@ -454,7 +499,10 @@ private struct TerminalView: NSViewRepresentable {
         override func paste(_ sender: Any?) {
             if let text = NSPasteboard.general.string(forType: .string) {
                 (enclosingScrollView as? FollowingScrollView)?.resume()
-                console.send(Array(text.replacingOccurrences(of: "\n", with: "\r").utf8))
+                let normalized = text
+                    .replacingOccurrences(of: "\r\n", with: "\r")
+                    .replacingOccurrences(of: "\n", with: "\r")
+                console.send(Array(normalized.utf8))
             }
         }
 

@@ -76,10 +76,12 @@ std::mutex serials_mutex;
 std::map<libusb_device*, DeviceReference> serials;
 
 std::string serial_of(libusb_device* device) {
-	const std::scoped_lock lock(serials_mutex);
-	const auto known = serials.find(device);
-	if (known != serials.end()) {
-		return known->second.serial;
+	{
+		const std::scoped_lock lock(serials_mutex);
+		const auto known = serials.find(device);
+		if (known != serials.end()) {
+			return known->second.serial;
+		}
 	}
 	libusb_device_descriptor descriptor{};
 	libusb_device_handle* handle = nullptr;
@@ -92,13 +94,14 @@ std::string serial_of(libusb_device* device) {
 		handle, descriptor.iSerialNumber, text, sizeof text);
 	libusb_close(handle);
 	std::string serial(reinterpret_cast<char*>(text), std::max(length, 0));
-	const bool ours =
+	const bool matches =
 		serial.size() == 12 && std::ranges::all_of(serial, [](unsigned char c) {
 			return std::isdigit(c) || (c >= 'a' && c <= 'f');
 		});
-	if (!ours) {
+	if (!matches) {
 		return "";
 	}
+	const std::scoped_lock lock(serials_mutex);
 	serials.try_emplace(device, device).first->second.serial = serial;
 	return serial;
 }
@@ -237,6 +240,9 @@ std::vector<Found> list() {
 
 std::unique_ptr<Transport> open(const std::string& serial) {
 	const DeviceList all;
+	if (all.count < 0) {
+		fail("Cannot list USB devices", static_cast<int>(all.count));
+	}
 	for (libusb_device* device : all.devices) {
 		if (!ours(device) || serial_of(device) != serial) {
 			continue;

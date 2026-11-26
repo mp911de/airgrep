@@ -72,13 +72,6 @@ constexpr Seen kSketchTraffic[] = {
 	 -400, kClimbFpm, 90, 55},
 };
 
-template <size_t Size>
-void put(char (&field)[Size], std::string_view text) {
-	const size_t count = std::min(text.size(), Size - 1);
-	text.copy(field, count);
-	field[count] = 0;
-}
-
 // What the Target reported this long ago, having kept its speed and its turn.
 traffic::Target reported(const Seen& seen, const adsbee::Gnss& own,
 						 double ago_s) {
@@ -365,12 +358,14 @@ struct Named {
 	std::string_view name;
 	EmulatedDevice (*device)();
 };
+EmulatedDevice quiet() { return among({}); }
+
 constexpr Named kFixtures[] = {
 	{"normal", normal},     {"advisory", advisory}, {"alert", alert},
 	{"no-fix", no_fix},     {"own-ship", own_ship}, {"busy", busy},
 	{"beyond", beyond},     {"conflict", conflict}, {"corrective", corrective},
 	{"charging", charging}, {"causes", causes},     {"preventive", preventive},
-	{"recovery", recovery}};
+	{"recovery", recovery}, {"quiet", quiet}};
 }
 
 EmulatedDevice normal() { return among(kSketchTraffic); }
@@ -539,6 +534,9 @@ std::unique_ptr<Transport> open(
 			return std::string_view(word);
 		});
 	auto word = words.begin();
+	if (word == words.end() || (*word).empty()) {
+		throw Error("No fixture name");
+	}
 	const Named* fixture = &named(*word);
 	EmulatedDevice device = fixture->device();
 	display::touch_800x480::Settings settings;

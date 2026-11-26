@@ -1,6 +1,7 @@
 import Foundation
 import IOKit
 import IOKit.serial
+import Synchronization
 
 /// Bytes to and from a device, and its modem control lines.
 protocol SerialLink: AnyObject {
@@ -9,16 +10,21 @@ protocol SerialLink: AnyObject {
     func read(atMost count: Int, within timeout: Duration) throws -> [UInt8]
     func discardInput()
     func setModemLines(dtr: Bool, rts: Bool) throws
+    /// Wakes any in-flight read or write so the link can be closed promptly.
+    func cancel()
+}
+
+extension SerialLink {
+    func cancel() {}
 }
 
 /// A serial port of this computer, open for as long as the object lives.
 final class SerialPort: SerialLink, @unchecked Sendable {
-    struct Failure: LocalizedError {
-        let errorDescription: String?
-    }
-
     let path: String
     private let descriptor: Int32
+    private let wakeRead: Int32
+    private let wakeWrite: Int32
+    private let cancelled = Atomic<Bool>(false)
 
     // TIOCMSET in <sys/ttycom.h> is a macro Swift does not import.
     private static let setModemBits: UInt = 0x8004_746D
@@ -29,33 +35,70 @@ final class SerialPort: SerialLink, @unchecked Sendable {
         // Without O_NONBLOCK opening waits for a carrier that a USB port never raises.
         descriptor = open(path, O_RDWR | O_NOCTTY | O_NONBLOCK)
         guard descriptor >= 0 else {
-            throw Failure(errorDescription: "\(path) cannot be opened: \(Self.reason()).")
+            throw Failure("\(path) cannot be opened: \(Self.reason(errno)).")
         }
         var settings = termios()
         guard tcgetattr(descriptor, &settings) == 0 else {
-            let reason = Self.reason()
+            let err = errno
             close(descriptor)
-            throw Failure(errorDescription: "\(path) is not a serial port: \(reason).")
+            throw Failure("\(path) is not a serial port: \(Self.reason(err)).")
         }
         cfmakeraw(&settings)
         cfsetspeed(&settings, speed_t(B115200))
         settings.c_cflag |= tcflag_t(CLOCAL | CREAD)
-        tcsetattr(descriptor, TCSANOW, &settings)
+        guard tcsetattr(descriptor, TCSANOW, &settings) == 0 else {
+            let err = errno
+            close(descriptor)
+            throw Failure("\(path) cannot be configured: \(Self.reason(err)).")
+        }
+        var pipeFds: [Int32] = [-1, -1]
+        guard pipe(&pipeFds) == 0 else {
+            let err = errno
+            close(descriptor)
+            throw Failure("\(path) cannot be initialized: \(Self.reason(err)).")
+        }
+        _ = fcntl(pipeFds[0], F_SETFL, O_NONBLOCK)
+        _ = fcntl(pipeFds[1], F_SETFL, O_NONBLOCK)
+        wakeRead = pipeFds[0]
+        wakeWrite = pipeFds[1]
     }
 
-    deinit { close(descriptor) }
+    deinit {
+        close(wakeRead)
+        close(wakeWrite)
+        close(descriptor)
+    }
+
+    func cancel() {
+        if cancelled.exchange(true, ordering: .acquiringAndReleasing) == false {
+            var byte: UInt8 = 0
+            _ = Darwin.write(wakeWrite, &byte, 1)
+        }
+    }
 
     func write(_ bytes: [UInt8]) throws {
         let deadline = ContinuousClock.now + Self.writeTimeout
         var sent = 0
         while sent < bytes.count {
-            let count = bytes[sent...].withUnsafeBytes { Darwin.write(descriptor, $0.baseAddress, $0.count) }
+            if cancelled.load(ordering: .acquiring) {
+                throw CancellationError()
+            }
+            let (count, err) = bytes[sent...].withUnsafeBytes { buffer -> (Int, Int32) in
+                let result = Darwin.write(descriptor, buffer.baseAddress, buffer.count)
+                return (result, errno)
+            }
             if count > 0 {
                 sent += count
-            } else if errno == EAGAIN, ContinuousClock.now < deadline {
-                try wait(for: Int16(POLLOUT), within: .milliseconds(100))
+            } else if err == EINTR {
+                continue
+            } else if err == EAGAIN {
+                let left = ContinuousClock.now.duration(to: deadline)
+                guard left > .zero else {
+                    throw Failure("Writing to \(path) timed out.")
+                }
+                try wait(for: Int16(POLLOUT), within: min(left, .milliseconds(100)))
             } else {
-                throw Failure(errorDescription: "Writing to \(path) failed: \(Self.reason()).")
+                throw Failure("Writing to \(path) failed: \(Self.reason(err)).")
             }
         }
     }
@@ -63,15 +106,24 @@ final class SerialPort: SerialLink, @unchecked Sendable {
     func read(atMost count: Int, within timeout: Duration) throws -> [UInt8] {
         guard try wait(for: Int16(POLLIN), within: timeout) else { return [] }
         var bytes = [UInt8](repeating: 0, count: count)
-        let received = Darwin.read(descriptor, &bytes, count)
-        if received > 0 {
-            return Array(bytes.prefix(received))
+        while true {
+            if cancelled.load(ordering: .acquiring) {
+                throw CancellationError()
+            }
+            let received = Darwin.read(descriptor, &bytes, count)
+            let err = errno
+            if received > 0 {
+                return Array(bytes.prefix(received))
+            }
+            if received < 0, err == EINTR {
+                continue
+            }
+            if received < 0, err == EAGAIN {
+                return []
+            }
+            // A port that is readable and has nothing is one whose device left.
+            throw Failure("\(path) closed: \(received == 0 ? "the device is gone" : Self.reason(err)).")
         }
-        if received < 0, errno == EAGAIN {
-            return []
-        }
-        // A port that is readable and has nothing is one whose device left.
-        throw Failure(errorDescription: "\(path) closed: \(received == 0 ? "the device is gone" : Self.reason()).")
     }
 
     func discardInput() {
@@ -81,29 +133,49 @@ final class SerialPort: SerialLink, @unchecked Sendable {
     func setModemLines(dtr: Bool, rts: Bool) throws {
         var bits = (dtr ? TIOCM_DTR : 0) | (rts ? TIOCM_RTS : 0)
         guard ioctl(descriptor, Self.setModemBits, &bits) == 0 else {
-            throw Failure(errorDescription: "\(path) does not take a reset: \(Self.reason()).")
+            throw Failure("\(path) does not take a reset: \(Self.reason(errno)).")
         }
     }
 
     @discardableResult
     private func wait(for events: Int16, within timeout: Duration) throws -> Bool {
-        var waiting = pollfd(fd: descriptor, events: events, revents: 0)
-        let ready = poll(&waiting, 1, Int32(clamping: timeout.milliseconds))
-        if ready < 0, errno != EINTR {
-            throw Failure(errorDescription: "\(path) failed: \(Self.reason()).")
+        let deadline = ContinuousClock.now + timeout
+        while true {
+            if cancelled.load(ordering: .acquiring) {
+                throw CancellationError()
+            }
+            let left = ContinuousClock.now.duration(to: deadline)
+            let waitMs = left > .zero ? max(Int64(1), left.milliseconds) : 0
+            var fds = [
+                pollfd(fd: descriptor, events: events, revents: 0),
+                pollfd(fd: wakeRead, events: Int16(POLLIN), revents: 0),
+            ]
+            let ready = poll(&fds, 2, Int32(clamping: waitMs))
+            let err = errno
+            if ready < 0 {
+                if err == EINTR {
+                    if ContinuousClock.now < deadline { continue }
+                    return false
+                }
+                throw Failure("\(path) failed: \(Self.reason(err)).")
+            }
+            if cancelled.load(ordering: .acquiring) || fds[1].revents != 0 {
+                throw CancellationError()
+            }
+            if fds[0].revents & Int16(POLLNVAL) != 0 {
+                throw Failure("\(path) closed: the device is gone.")
+            }
+            return ready > 0
         }
-        if waiting.revents & Int16(POLLNVAL) != 0 {
-            throw Failure(errorDescription: "\(path) closed: the device is gone.")
-        }
-        return ready > 0
     }
 
-    private static func reason() -> String { String(cString: strerror(errno)) }
+    private static func reason(_ code: Int32) -> String { String(cString: strerror(code)) }
 
     /// The serial port of the USB device with this identity, or nil while this computer shows none.
     /// macOS names the port of a bootloader after the place of the device on the bus, so the port is
     /// found by what the device says about itself.
     static func path(vendor: Int, product: Int, serial: String) -> String? {
+        let wanted = serial.lowercased()
         var ports: io_iterator_t = 0
         guard IOServiceGetMatchingServices(kIOMainPortDefault, IOServiceMatching(kIOSerialBSDServiceValue), &ports) == KERN_SUCCESS
         else { return nil }
@@ -116,7 +188,7 @@ final class SerialPort: SerialLink, @unchecked Sendable {
             }
             let number: String = property("USB Serial Number", ofParents: true) ?? ""
             if property("idVendor", ofParents: true) == vendor, property("idProduct", ofParents: true) == product,
-               number.lowercased().filter(\.isHexDigit) == serial,
+               number.lowercased().filter(\.isHexDigit) == wanted,
                let path: String = property(kIOCalloutDeviceKey, ofParents: false) {
                 return path
             }
@@ -128,5 +200,9 @@ final class SerialPort: SerialLink, @unchecked Sendable {
 extension Duration {
     var milliseconds: Int64 {
         components.seconds * 1000 + components.attoseconds / 1_000_000_000_000_000
+    }
+
+    var seconds: Double {
+        Double(components.seconds) + Double(components.attoseconds) / 1e18
     }
 }

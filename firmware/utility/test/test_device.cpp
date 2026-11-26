@@ -74,7 +74,7 @@ class FaultInjectingTransport : public device::Transport {
 };
 
 void frames() {
-	// The request vector of docs/usb-data-protocol.md.
+	// The request vector of docs/usb-data-protocol.adoc.
 	const std::vector<uint8_t> hello = {0x01, 0x06, 0x00, 0x01, 0xf5, 0x50};
 	CHECK(device::request(Command::hello) == hello);
 	usb::protocol::Decoder decoder(true);

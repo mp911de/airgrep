@@ -7,6 +7,7 @@
 
 #include "check.hpp"
 #include "device/emulator.hpp"
+#include "device/fixtures.hpp"
 #include "remote/connection.hpp"
 
 namespace {
@@ -475,10 +476,39 @@ void flight() {
 	connection.watch(5ms);
 	device::DeviceState first, second;
 	CHECK(eventually([&] { return connection.take_new_picture(first); }));
-	std::this_thread::sleep_for(50ms);
-	CHECK(eventually([&] { return connection.take_new_picture(second); }));
+	const auto observed = connection.status().pictures;
+	CHECK(eventually(
+		[&] { return connection.status().pictures >= observed + 2; }));
+	second = first;
+	static unsigned comparisons;
+	const auto compare = [](const auto& previous, const auto& latest) {
+		++comparisons;
+		CHECK(previous.states.adsbee.gnss.longitude !=
+			  latest.states.adsbee.gnss.longitude);
+	};
+	CHECK(connection.take_new_picture(second, compare));
+	CHECK_EQUAL(1u, comparisons);
 	CHECK(second.states.adsbee.gnss.longitude !=
 		  first.states.adsbee.gnss.longitude);
+}
+
+void connection_publishes_updated_hello_immediately() {
+	ConnectionFixture bench;
+	bench.device.hello.uptime_seconds = 10;
+	Connection connection(bench.open());
+	CHECK(eventually([&] {
+		return connected(connection) &&
+			   connection.status().hello.uptime_seconds == 10;
+	}));
+	bench.device.hello.uptime_seconds = 42;
+	connection.watch(10s);
+	CHECK(eventually([&] {
+		return connection.status().pictures == 1 &&
+			   connection.status().hello.uptime_seconds == 42;
+	}));
+	CHECK(failure([] {
+			  (void)device::fixtures::open("");
+		  }).find("No fixture") != std::string::npos);
 }
 }
 
@@ -500,5 +530,6 @@ int main() {
 		TEST(newer_settings_replace_those_that_wait),
 		TEST(connection_ends_with_the_reason),
 		TEST(flight),
+		TEST(connection_publishes_updated_hello_immediately),
 	});
 }

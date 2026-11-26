@@ -46,8 +46,12 @@ void ensure_display_initialized() {
 	display::create(panel, remote::view::actions());
 }
 void follow(airgrep_connection* connection, const char* serial) {
+	if (!connection) {
+		remote::view::unfollow();
+		return;
+	}
 	ensure_display_initialized();
-	remote::view::follow(connection->connection, serial);
+	remote::view::follow(connection->connection, serial ? serial : "");
 }
 
 bool step(uint32_t elapsed_ms) {

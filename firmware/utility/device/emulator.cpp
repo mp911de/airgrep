@@ -121,13 +121,6 @@ bool erase_settings(void* owner) {
 	return true;
 }
 
-template <size_t Size>
-void put(char (&field)[Size], std::string_view text) {
-	const size_t count = std::min(text.size(), Size - 1);
-	text.copy(field, count);
-	field[count] = 0;
-}
-
 constexpr double kFlightCenterLatitude = 50.03, kFlightCenterLongitude = 8.57;
 // The racetrack of the own ship lies this far east and north of it, so the
 // flight begins where the nearest of that traffic passes.

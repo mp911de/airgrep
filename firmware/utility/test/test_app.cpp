@@ -1,8 +1,7 @@
-#include <dlfcn.h>
-
 #include <cstdio>
 #include <cstring>
 #include <stdexcept>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -11,6 +10,7 @@
 #include "app/display.h"
 #include "check.hpp"
 #include "device/emulator.hpp"
+#include "display_loader.hpp"
 #include "remote/settings_edits.hpp"
 
 namespace {
@@ -212,6 +212,14 @@ void shows_the_device() {
 	}));
 	CHECK(settings.theme == display::Theme::dark);
 
+	// Unfollowing stops background conflict work and following again resumes.
+	display->follow(nullptr, nullptr);
+	CHECK(eventually([&] {
+		run(1);
+		return shows_guidance_bands(display->explained());
+	}));
+
+	display->follow(nullptr, nullptr);
 	airgrep_watch(connection, 0);
 	airgrep_disconnect(connection);
 }
@@ -256,13 +264,10 @@ int main(int argc, char* const* argv) {
 		std::printf("usage: %s display-library [--abi]\n", argv[0]);
 		return 2;
 	}
-	void* library = dlopen(argv[1], RTLD_NOW | RTLD_LOCAL);
-	if (library) {
-		get_display = reinterpret_cast<airgrep_display_getter_ptr>(
-			dlsym(library, "airgrep_display_get_api"));
-	}
+	std::string load_error;
+	get_display = display_loader::load_getter(argv[1], load_error);
 	if (!get_display) {
-		(void)std::fprintf(stderr, "%s\n", dlerror());
+		(void)std::fprintf(stderr, "%s\n", load_error.c_str());
 		return 1;
 	}
 	return abi_only

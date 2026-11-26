@@ -15,7 +15,8 @@ extern "C" {
 
 typedef struct {
 	int32_t width, height;
-	// Shows what the connection read. A different serial starts a new display.
+	// Shows what the connection read, or stops background work when connection
+	// is NULL. A different serial starts a new display.
 	void (*follow)(airgrep_connection* connection, const char* serial);
 	// Lets this much time pass. True when the pixels changed.
 	bool (*step)(uint32_t elapsed_ms);

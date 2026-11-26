@@ -10,7 +10,7 @@ struct DeviceView: View {
 
     var body: some View {
         if let session = utility.session, session.device.id == device.id {
-            ConnectedView(session: session)
+            ConnectedView(device: device, session: session)
                 .id(ObjectIdentifier(session))
         } else {
             VStack(spacing: 16) {
@@ -33,7 +33,7 @@ struct DeviceView: View {
                     Text("An emulated device in flight, to try the utility without hardware.")
                         .foregroundStyle(.secondary)
                 } else if !device.hasDataInterface {
-                    Text("This firmware has no data interface. Install a newer one with tools/build-flash.py.")
+                    Text("This firmware has no data interface. Install a newer one with cmake --workflow --preset s3-flash.")
                         .foregroundStyle(.secondary)
                 }
                 Button("Connect") { utility.connect(device) }
@@ -116,6 +116,7 @@ private final class Prompt: ObservableObject {
 private struct ConnectedView: View {
     @EnvironmentObject private var utility: Utility
     @Environment(\.openWindow) private var openWindow
+    let device: Device
     @ObservedObject var session: Session
     @StateObject private var prompt = Prompt()
 
@@ -177,11 +178,11 @@ private struct ConnectedView: View {
             Section("Maintenance") {
                 LabeledContent("Console") {
                     Button("Open Console") {
-                        utility.openConsole(of: session.device)
+                        utility.openConsole(of: device)
                         openWindow(id: ConsoleWindow.id)
                     }
-                    .disabled(!session.device.hasConsole)
-                    .help(session.device.hasConsole ? "" : "This device shows no console port")
+                    .disabled(!device.hasConsole)
+                    .help(device.hasConsole ? "" : "This device shows no console port")
                 }
                 LabeledContent("Restart") {
                     Button("Restart") { session.reboot() }.disabled(!connected)
@@ -323,6 +324,7 @@ private struct ConnectedView: View {
     private func takeOffered() {
         guard let file = utility.offered else { return }
         utility.offered = nil
+        guard installable, session.installation == nil else { return }
         do {
             prompt.asking = .install(try Maintenance.Image(file, board: details.board))
         } catch {

@@ -130,15 +130,21 @@ final class Session: ObservableObject {
         if length >= dataBytes.count {
             dataBytes = [CChar](repeating: 0, count: length * 2)
             length = airgrep_data_text(connection, &dataBytes, dataBytes.count)
+            guard length > 0 else { return "No picture of the device yet." }
         }
-        let shown = library.flatMap { $0.api.explained() }.map { String(cString: $0) } ?? ""
+        let shown = library.flatMap { $0.isFollowing(self) ? $0.api.explained() : nil }.map { String(cString: $0) } ?? ""
         return (shown.isEmpty ? "" : shown + "\n") + text(dataBytes)
     }
 
     /// Lets a display show what was read since it last asked.
     func follow(on library: DisplayLibrary) {
         guard let connection else { return }
-        device.serial.withCString { library.api.follow(connection, $0) }
+        library.follow(self, connection: connection)
+    }
+
+    /// Stops the display's background work when this session is no longer shown.
+    func unfollow(on library: DisplayLibrary) {
+        library.unfollow(self)
     }
 
     func reboot() {

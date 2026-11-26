@@ -1,9 +1,7 @@
 #include "airgrep.h"
 
-#include <algorithm>
 #include <cstring>
 #include <memory>
-#include <string_view>
 
 #include "connection.hpp"
 #include "device/dump.hpp"
@@ -12,19 +10,6 @@
 #include "device/usb.hpp"
 #include "system/health.hpp"
 #include "system/power_mode.h"
-
-namespace {
-void put(char* field, size_t size, std::string_view text) {
-	const size_t count = std::min(text.size(), size - 1);
-	text.copy(field, count);
-	field[count] = 0;
-}
-
-template <size_t Size>
-void put(char (&field)[Size], std::string_view text) {
-	put(field, Size, text);
-}
-}
 
 size_t airgrep_devices(airgrep_device* devices, size_t capacity,
 					   char problem[256]) {
@@ -36,11 +21,11 @@ size_t airgrep_devices(airgrep_device* devices, size_t capacity,
 				break;
 			}
 			airgrep_device& out = devices[count++];
-			put(out.serial, found.serial);
+			device::put(out.serial, found.serial);
 			out.data = found.has_data_interface;
 		}
 	} catch (const device::Error& error) {
-		put(problem, 256, error.what());
+		device::put(problem, 256, error.what());
 	}
 	return count;
 }
@@ -90,18 +75,21 @@ void airgrep_status_of(const airgrep_connection* connection,
 				  static_cast<int>(Phase::connected) == AIRGREP_CONNECTED &&
 				  static_cast<int>(Phase::ended) == AIRGREP_ENDED);
 	status->phase = static_cast<int>(from.phase);
-	put(status->error, from.error);
+	device::put(status->error, from.error);
 	status->readable = from.supports_component_reads;
 	status->uptime_seconds = hello.uptime_seconds;
-	put(status->firmware, {hello.firmware_description,
-						   strnlen(hello.firmware_description,
-								   sizeof hello.firmware_description)});
-	put(status->board, {hello.board, strnlen(hello.board, sizeof hello.board)});
-	put(status->chip, {hello.chip, strnlen(hello.chip, sizeof hello.chip)});
+	device::put(status->firmware, {hello.firmware_description,
+								   strnlen(hello.firmware_description,
+										   sizeof hello.firmware_description)});
+	device::put(status->board,
+				{hello.board, strnlen(hello.board, sizeof hello.board)});
+	device::put(status->chip,
+				{hello.chip, strnlen(hello.chip, sizeof hello.chip)});
 	status->health = hello.health;
 	health::format(hello.health, status->health_names,
 				   sizeof status->health_names);
-	put(status->mode, power_mode_name(static_cast<power_mode_t>(hello.mode)));
+	device::put(status->mode,
+				power_mode_name(static_cast<power_mode_t>(hello.mode)));
 	status->cpu_core0 = hello.cpu_core0;
 	status->cpu_core1 = hello.cpu_core1;
 	status->cpu_overall = hello.cpu_overall;
@@ -128,7 +116,7 @@ size_t airgrep_data_text(const airgrep_connection* connection, char* text,
 	}
 	const std::string whole = device::dump(picture);
 	if (capacity) {
-		put(text, capacity, whole);
+		device::put(text, capacity, whole);
 	}
 	return whole.size();
 }

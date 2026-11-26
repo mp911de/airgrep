@@ -4,12 +4,13 @@
 
 #include <chrono>
 #include <cmath>
-#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <optional>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 extern "C" {
@@ -181,13 +182,16 @@ struct Table {
 	bool mounted = false;
 	// By zone number. Number 0 is no zone.
 	std::vector<Rule> rules;
+	std::unordered_map<std::string_view, size_t> by_name;
+	std::optional<int64_t> listed_at_s;
 	std::vector<display::Zone> listed;
 };
 
 // The table lies in the application beside the library that holds this code.
 std::filesystem::path table_path() {
 	Dl_info library;
-	if (dladdr(reinterpret_cast<const void*>(&at), &library) == 0) {
+	if (dladdr(reinterpret_cast<const void*>(&at), &library) == 0 ||
+		!library.dli_fname) {
 		return {};
 	}
 	return std::filesystem::path(library.dli_fname)
@@ -197,36 +201,47 @@ std::filesystem::path table_path() {
 }
 
 Table& table() {
-	static Table loaded = [] {
-		Table read;
+	static Table loaded;
+	static const bool initialized = [] {
 		std::ifstream file(table_path(), std::ios::binary);
-		read.blob.assign(std::istreambuf_iterator<char>(file), {});
-		read.mounted = tz_init(&read.lookup, read.blob.data(),
-							   static_cast<uint32_t>(read.blob.size())) != 0;
-		for (uint16_t zone = 0;
-			 read.mounted && zone < tz_zone_count(&read.lookup); zone++) {
-			read.rules.push_back(parse(tz_posix(&read.lookup, zone)));
+		loaded.blob.assign(std::istreambuf_iterator<char>(file), {});
+		loaded.mounted =
+			tz_init(&loaded.lookup, loaded.blob.data(),
+					static_cast<uint32_t>(loaded.blob.size())) != 0;
+		const uint16_t count =
+			loaded.mounted ? tz_zone_count(&loaded.lookup) : 0;
+		loaded.rules.reserve(count);
+		loaded.by_name.reserve(count);
+		for (uint16_t zone = 0; zone < count; zone++) {
+			loaded.rules.push_back(parse(tz_posix(&loaded.lookup, zone)));
+			if (zone > 0) {
+				loaded.by_name.emplace(tz_name(&loaded.lookup, zone), zone);
+			}
 		}
-		return read;
+		return true;
 	}();
+	(void)initialized;
 	return loaded;
 }
 
 const Rule* rule_of(const char* zone) {
-	Table& known = table();
-	for (size_t number = 1; number < known.rules.size(); number++) {
-		if (std::strcmp(tz_name(&known.lookup, static_cast<uint16_t>(number)),
-						zone) == 0) {
-			return &known.rules[number];
-		}
+	if (!zone || !zone[0]) {
+		return nullptr;
 	}
-	return nullptr;
+	const Table& known = table();
+	const auto found = known.by_name.find(zone);
+	return found == known.by_name.end() ? nullptr : &known.rules[found->second];
 }
 }
 
 std::span<const display::Zone> listed(int64_t utc_s) {
 	Table& known = table();
+	if (known.listed_at_s == utc_s) {
+		return known.listed;
+	}
+	known.listed_at_s = utc_s;
 	known.listed.clear();
+	known.listed.reserve(known.rules.size() > 1 ? known.rules.size() - 1 : 0);
 	for (size_t number = 1; number < known.rules.size(); number++) {
 		known.listed.push_back(
 			{tz_name(&known.lookup, static_cast<uint16_t>(number)),
@@ -237,7 +252,9 @@ std::span<const display::Zone> listed(int64_t utc_s) {
 
 const char* at(double latitude, double longitude) {
 	const Table& known = table();
-	if (!known.mounted) {
+	if (!known.mounted || !std::isfinite(latitude) ||
+		!std::isfinite(longitude) || latitude < -90.0 || latitude > 90.0 ||
+		longitude < -180.0 || longitude > 180.0) {
 		return "";
 	}
 	const uint16_t zone =
@@ -251,11 +268,12 @@ display::mapping::Clock local(const char* zone, int64_t utc_s) {
 	static const Rule utc;
 	const Rule* found = rule_of(zone);
 	const Rule& rule = found ? *found : utc;
+	const bool dst = daylight(rule, utc_s);
+	const int32_t offset_s = dst ? rule.daylight_east_s : rule.standard_east_s;
 	const int64_t minutes =
-		((utc_s + east_s(rule, utc_s)) / 60 % kDayMinutes + kDayMinutes) %
-		kDayMinutes;
-	return {
-		static_cast<uint8_t>(minutes / 60), static_cast<uint8_t>(minutes % 60),
-		daylight(rule, utc_s) ? rule.daylight.c_str() : rule.standard.c_str()};
+		((utc_s + offset_s) / 60 % kDayMinutes + kDayMinutes) % kDayMinutes;
+	return {static_cast<uint8_t>(minutes / 60),
+			static_cast<uint8_t>(minutes % 60),
+			dst ? rule.daylight.c_str() : rule.standard.c_str()};
 }
 }

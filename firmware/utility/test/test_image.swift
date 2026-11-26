@@ -76,6 +76,13 @@ func testImages() {
             check(failure { _ = try dropped(other) }?.contains("neither") == true, "a file of \(other.count) other bytes is refused")
         }
         check(Maintenance.Image.kind(of: folder.appendingPathComponent("missing.bin")) == nil, "a file that is not there is nothing")
+
+        // Empty columns, indented comments, CRLF, uppercase 0X, and invalid sizes in partitions.csv.
+        try "  # comment\r\nbad,app,, ,0x2000\r\nzero,data,0x40,0x10000,0\r\nfactory,app,factory,0X10000,0x2000\r\n"
+            .write(to: table, atomically: true, encoding: .utf8)
+        let parsed = try read(firmware(board: board, digest: true))
+        check(parsed.partition == 0x10000..<0x12000, "partitions.csv preserves empty columns and uppercase hex")
+        check(failure { _ = try read(tz, .timeZones) }?.contains("partition") == true, "missing partition after empty-column rows is refused")
     } catch {
         check(false, error.localizedDescription)
     }

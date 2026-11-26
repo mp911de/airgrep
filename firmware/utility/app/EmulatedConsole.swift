@@ -11,9 +11,13 @@ final class EmulatedConsole: SerialLink, @unchecked Sendable {
 
     private let arrived = NSCondition()
     private var output: [UInt8] = []
+    private var closed = false
     private var line = ""
 
     func write(_ bytes: [UInt8]) {
+        arrived.lock()
+        defer { arrived.unlock() }
+        guard !closed else { return }
         var answer = ""
         for byte in bytes {
             switch byte {
@@ -41,21 +45,28 @@ final class EmulatedConsole: SerialLink, @unchecked Sendable {
                 break
             }
         }
-        arrived.lock()
         output += Array(answer.utf8)
         arrived.signal()
-        arrived.unlock()
     }
 
-    func read(atMost count: Int, within timeout: Duration) -> [UInt8] {
+    func read(atMost count: Int, within timeout: Duration) throws -> [UInt8] {
         arrived.lock()
         defer { arrived.unlock() }
-        let deadline = Date.now + Double(timeout.components.seconds)
-            + Double(timeout.components.attoseconds) / 1e18
-        while output.isEmpty, arrived.wait(until: deadline) {}
+        let deadline = Date.now + timeout.seconds
+        while output.isEmpty && !closed, arrived.wait(until: deadline) {}
+        if closed {
+            throw CancellationError()
+        }
         let bytes = Array(output.prefix(count))
         output.removeFirst(bytes.count)
         return bytes
+    }
+
+    func cancel() {
+        arrived.lock()
+        closed = true
+        arrived.broadcast()
+        arrived.unlock()
     }
 
     func discardInput() {

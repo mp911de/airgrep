@@ -226,6 +226,10 @@ final class Utility: ObservableObject {
             refusal = ("Cannot Install", "The demo device takes no files.")
             return
         }
+        guard session.installation == nil else {
+            refusal = ("Cannot Install", "An installation is already in progress.")
+            return
+        }
         selected = session.device.id
         offered = file
     }
@@ -247,6 +251,7 @@ final class Utility: ObservableObject {
     /// that lost its content would dismiss itself the next time it is shown.
     func openConsole(of device: Device) {
         if console?.device != device {
+            console?.close()
             console = Console(device)
         } else if console?.isOpen == false {
             console?.open()

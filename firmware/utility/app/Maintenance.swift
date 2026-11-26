@@ -159,7 +159,8 @@ enum Maintenance {
     /// The table the application was built with, partitions.csv in its resources, by partition name.
     private static func partitions(_ file: URL?) throws -> [String: (offset: Int, size: Int)] {
         func number(_ text: String) -> Int? {
-            text.hasPrefix("0x") ? Int(text.dropFirst(2), radix: 16) : Int(text)
+            let lowered = text.lowercased()
+            return lowered.hasPrefix("0x") ? Int(lowered.dropFirst(2), radix: 16) : Int(text)
         }
         guard let file,
               let table = try? String(contentsOf: file, encoding: .utf8)
@@ -167,9 +168,14 @@ enum Maintenance {
             throw Failure("This application has no partition table.")
         }
         var partitions: [String: (offset: Int, size: Int)] = [:]
-        for line in table.split(separator: "\n") where !line.hasPrefix("#") {
-            let fields = line.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-            if fields.count >= 5, let offset = number(fields[3]), let size = number(fields[4]) {
+        for raw in table.split(whereSeparator: \.isNewline) {
+            let line = raw.trimmingCharacters(in: .whitespaces)
+            guard !line.isEmpty, !line.hasPrefix("#") else { continue }
+            let fields = line.split(separator: ",", omittingEmptySubsequences: false)
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+            if fields.count >= 5, !fields[0].isEmpty,
+               let offset = number(fields[3]), offset >= 0,
+               let size = number(fields[4]), size > 0, offset <= Int.max - size {
                 partitions[fields[0]] = (offset, size)
             }
         }

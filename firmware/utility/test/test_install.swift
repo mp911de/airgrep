@@ -103,7 +103,7 @@ final class FakeRom: SerialLink {
         case 0x11:
             let sequence = Int(word(data, 1)), block = Array(data[16...])
             if sequence == unplugAtBlock {
-                throw SerialPort.Failure(errorDescription: "The port closed: the device is gone.")
+                throw Failure("The port closed: the device is gone.")
             }
             guard block.count == Int(word(data, 0)), block.count <= FlashUtil.blockSize, sequence < blocks else {
                 return reply(command, error: 0x0A)
@@ -247,6 +247,33 @@ func testFailures() {
 }
 
 func testCancel() async {
+    let duringConnect = Task.detached {
+        final class Silent: SerialLink {
+            let clock = ManualClock()
+            var reads = 0
+            func write(_ bytes: [UInt8]) throws {}
+            func read(atMost count: Int, within timeout: Duration) throws -> [UInt8] {
+                reads += 1
+                clock.advance(by: timeout)
+                if reads == 2 {
+                    withUnsafeCurrentTask { $0?.cancel() }
+                }
+                return []
+            }
+            func discardInput() {}
+            func setModemLines(dtr: Bool, rts: Bool) {}
+        }
+        let silent = Silent()
+        do {
+            try FlashUtil(silent, clock: silent.clock).connect()
+            return false
+        } catch is CancellationError {
+            return silent.reads < 5
+        } catch {
+            return false
+        }
+    }
+    check(await duringConnect.value, "cancelling during connect stops promptly")
     let beforeErase = Task.detached {
         let rom = FakeRom()
         let flash = FlashUtil(rom, clock: rom.clock)
@@ -317,6 +344,18 @@ func testTerminal() {
     let drops = terminal.drops
     terminal.clear()
     check(terminal.text.isEmpty && terminal.column == 0 && terminal.drops == drops + 1, "clear forgets the text and says the lines moved")
+
+    // Clear resets incomplete escape and UTF-8 state, control bytes flush partial UTF-8, and huge or zero widths stay safe.
+    _ = terminal.feed([0x1B, UInt8(ascii: "["), UInt8(ascii: "3")])
+    terminal.clear()
+    _ = terminal.feed(Array("plain".utf8))
+    check(terminal.text == "plain", "clear resets pending escape sequence: \(terminal.text)")
+    _ = terminal.feed([0xC3, UInt8(ascii: "\n")] + Array("next".utf8))
+    check(terminal.text == "plain\u{FFFD}\nnext", "control byte flushes partial UTF-8: \(terminal.text)")
+    _ = terminal.feed(Array("\u{1B}[99999999999999999999C\u{1B}[6n".utf8), columns: 40)
+    check(terminal.column == 39, "overflowing count clamps to width: \(terminal.column)")
+    _ = terminal.feed(Array("\u{1B}[1\u{1B}[2K\rhi".utf8), columns: 0)
+    check(terminal.text.hasSuffix("\nhi"), "nested ESC and zero width stay safe: \(terminal.text)")
 }
 
 @main

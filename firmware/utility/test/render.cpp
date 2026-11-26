@@ -1,7 +1,7 @@
-#include <dlfcn.h>
-
 #include <chrono>
 #include <cstdio>
+#include <fstream>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -10,6 +10,7 @@
 #include "app/airgrep.h"
 #include "app/connection.hpp"
 #include "app/display.h"
+#include "display_loader.hpp"
 #include "gestures.hpp"
 #include "png.hpp"
 
@@ -54,6 +55,7 @@ bool write(const char* path, const airgrep_display_api& display) {
 
 int main(int argc, char* const* argv) {
 	bool startup = false;
+	const char* frames_path = nullptr;
 	std::chrono::sys_days day = kDay;
 	std::vector<Gesture> steps;
 	bool understood = argc >= 4;
@@ -61,6 +63,8 @@ int main(int argc, char* const* argv) {
 		const std::string_view option = argv[i];
 		if (option == "--startup") {
 			startup = true;
+		} else if (option == "--frames" && i + 1 < argc) {
+			frames_path = argv[++i];
 		} else if (option == "--date" && i + 1 < argc) {
 			i++;
 			int year = 0;
@@ -80,7 +84,7 @@ int main(int argc, char* const* argv) {
 		(void)std::fprintf(
 			stderr,
 			"usage: %s display-library fixture png [--startup] [--date "
-			"YYYY-MM-DD] [--do gesture]...\n"
+			"YYYY-MM-DD] [--frames bgr0-file] [--do gesture]...\n"
 			"Draws what a display shows of a fixture into a PNG file and "
 			"prints what the display explains.\n"
 			"  fixture    its name and the display settings, in one word "
@@ -88,6 +92,8 @@ int main(int argc, char* const* argv) {
 			"  --startup  the screen before the first picture\n"
 			"  --date     the day of the time the device says, 2026-01-15 "
 			"without it\n"
+			"  --frames   record gestures at 25 fps, advancing the fixture "
+			"once per simulated second\n"
 			"  --do       tap:X,Y  drag:X,Y,X,Y  hold:X,Y,X,Y  wait:MS  "
 			"gnss:FIXTURE  device:MS, one after the other.\n"
 			"             gnss hands the device the GNSS data of that "
@@ -97,21 +103,22 @@ int main(int argc, char* const* argv) {
 			argv[0]);
 		return 2;
 	}
-	airgrep_display_getter_ptr get_display = nullptr;
-	if (void* library = dlopen(argv[1], RTLD_NOW | RTLD_LOCAL)) {
-		get_display = reinterpret_cast<airgrep_display_getter_ptr>(
-			dlsym(library, "airgrep_display_get_api"));
-	}
-	if (!get_display) {
-		return fail(dlerror());
-	}
+	std::string load_error;
 	const airgrep_display_api* display =
-		get_display(AIRGREP_DISPLAY_ABI, sizeof(airgrep_display_api));
+		display_loader::load_api(argv[1], load_error);
 	if (!display) {
-		return fail("The display library has another interface");
+		return fail(load_error.c_str());
 	}
 
-	airgrep_connection* connection = airgrep_connect_fixture(argv[2]);
+	struct ConnectionGuard {
+		void operator()(airgrep_connection* c) const {
+			airgrep_watch(c, 0);
+			airgrep_disconnect(c);
+		}
+	};
+	const std::unique_ptr<airgrep_connection, ConnectionGuard> owned_connection(
+		airgrep_connect_fixture(argv[2]));
+	airgrep_connection* connection = owned_connection.get();
 	airgrep_set_day(connection, day.time_since_epoch().count());
 	airgrep_watch(connection, startup ? 0 : 20);
 	const auto pass = [&](uint32_t display_ms) {
@@ -146,6 +153,14 @@ int main(int argc, char* const* argv) {
 	for (uint32_t at = 0; shown && at < kSettleMs; at += kStepMs) {
 		pass(kStepMs);
 	}
+	std::ofstream frames;
+	if (frames_path) {
+		frames.open(frames_path, std::ios::binary);
+		if (!frames) {
+			return fail("Cannot open the raw video file");
+		}
+	}
+	uint32_t recorded_ms = 0;
 	for (const Gesture& gesture : steps) {
 		if (shown && gesture.kind == Gesture::gnss) {
 			connection->connection.update_gnss(gesture.reported);
@@ -160,8 +175,25 @@ int main(int argc, char* const* argv) {
 		const uint32_t lasts =
 			gesture.kind == Gesture::wait ? gesture.wait_ms : kGestureMs;
 		for (uint32_t at = 0; shown && at < lasts; at += kStepMs) {
+			// Sample before publishing inputs at the same timestamp.
+			if (frames_path && recorded_ms % 40 == 0) {
+				frames.write(
+					reinterpret_cast<const char*>(display->pixels()),
+					std::streamsize{display->width} * display->height * 4);
+			}
+			if (frames_path && recorded_ms && recorded_ms % 1000 == 0) {
+				airgrep_fixture_pass(connection, 1000);
+				rest();
+			}
 			gestures::touch(*display, gesture, at);
 			pass(kStepMs);
+			recorded_ms += kStepMs;
+		}
+	}
+	if (frames_path) {
+		frames.close();
+		if (!frames) {
+			return fail("Cannot write the raw video file");
 		}
 	}
 	if (shown && !steps.empty()) {
@@ -173,8 +205,6 @@ int main(int argc, char* const* argv) {
 	}
 	const bool written = shown && write(argv[3], *display);
 	(void)std::fputs(display->explained(), stdout);
-	airgrep_watch(connection, 0);
-	airgrep_disconnect(connection);
 	if (!shown) {
 		return fail(status.error[0] ? status.error : "The device sent nothing");
 	}

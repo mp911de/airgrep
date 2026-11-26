@@ -16,6 +16,7 @@
 #include "display/display_mapping.hpp"
 #include "remote/conflicts.hpp"
 #include "remote/conversation.hpp"
+#include "remote/radar_publication.hpp"
 
 namespace {
 using namespace std::chrono_literals;
@@ -57,8 +58,10 @@ display::mapping::ViewInputs sources(const device::DeviceState& picture,
 }
 
 void await_update(remote::Conflicts& engine, conflicts::StateData& state,
-				  unsigned expected_updates, bool expect_bands) {
-	if (!engine.loop().wait_idle(2s) || !engine.take_latest(state)) {
+				  unsigned expected_updates, bool expect_bands,
+				  remote::Conflicts::Change before_copy = nullptr) {
+	if (!engine.loop().wait_idle(2s) ||
+		!engine.take_latest(state, before_copy)) {
 		throw std::runtime_error(
 			"Conflict update did not publish before the deadline");
 	}
@@ -152,6 +155,58 @@ void tasks_run_in_the_order_submitted() {
 	CHECK(std::ranges::is_sorted(ran));
 }
 
+void radar_publications_ignore_status_and_observe_flight_changes() {
+	Flight flight;
+	auto before = flight.next_picture();
+	auto after = before;
+	CHECK(!after.traffic_listing.nearest_targets.empty());
+	auto& tracked = after.traffic_listing.nearest_targets.front();
+	++tracked.target.last_seen_us;
+	++tracked.target.rssi_dbm;
+	++after.states.adsbee.gnss.satellites_used;
+	++after.states.adsbee.gnss.utc_second;
+	CHECK(remote::radar::same_traffic(before.traffic_listing,
+									  after.traffic_listing, true));
+	CHECK(remote::radar::same_navigation(before, after, true));
+	tracked.past[2].longitude += 1.0f;
+	CHECK(!remote::radar::same_traffic(before.traffic_listing,
+									   after.traffic_listing, true));
+	CHECK(remote::radar::same_traffic(before.traffic_listing,
+									  after.traffic_listing, false));
+	tracked.target.track_deg += 8.0f;
+	CHECK(!remote::radar::same_traffic(before.traffic_listing,
+									   after.traffic_listing, false));
+	after.states.adsbee.gnss.latitude += 0.00001f;
+	CHECK(!remote::radar::same_navigation(before, after, true));
+	CHECK(remote::radar::same_navigation(before, after, false));
+
+	after = before;
+	after.hello.uptime_seconds += 6;
+	CHECK(!remote::radar::same_navigation(before, after, false));
+	after = before;
+	before.states.barometer.status = after.states.barometer.status = Status::ok;
+	before.states.barometer.updated_us =
+		device::end_of_uptime_second_us(before.hello);
+	after.states.barometer.updated_us =
+		before.states.barometer.updated_us - kStateMaxAgeUs - 1;
+	CHECK(!remote::radar::same_navigation(before, after, true));
+
+	Direct engine;
+	engine.alert(before, true);
+	const auto threats = engine.state;
+	engine.bands();
+	CHECK(remote::radar::same_conflicts(threats, engine.state, false));
+	CHECK(!remote::radar::same_conflicts(threats, engine.state, true));
+	CHECK(threats.result_count != 0);
+	auto clock_only = threats;
+	++clock_only.update_count;
+	++clock_only.results[0].conflict.within_s;
+	CHECK(remote::radar::same_conflicts(threats, clock_only, true));
+	clock_only.results[0].conflict.enters_corrective_volume =
+		!threats.results[0].conflict.enters_corrective_volume;
+	CHECK(!remote::radar::same_conflicts(threats, clock_only, false));
+}
+
 void a_loop_that_ends_runs_no_task_that_waits() {
 	std::atomic<int> ran = 0;
 	std::promise<void> running, open;
@@ -218,6 +273,100 @@ void duplicate_polls_do_not_advance_conflict_rounds() {
 	CHECK_EQUAL(0u, found.band_updates_skipped);
 }
 
+void a_continuing_encounter_keeps_its_completed_guidance() {
+	Flight flight;
+	flight.seconds = 66;
+	remote::Conflicts engine;
+	conflicts::StateData found;
+	auto picture = flight.next_picture();
+	engine.alert(sources(picture, true).conflict_input(), true);
+	await_update(engine, found, 1, true);
+
+	// Read exactly after alerting has cleared its working bands and before
+	// recalculation.
+	std::promise<void> start, paused, resume;
+	engine.loop().submit([&] { start.get_future().wait(); });
+	picture = flight.next_picture();
+	std::ranges::reverse(picture.traffic_listing.nearest_targets);
+	engine.alert(sources(picture, true).conflict_input(), true);
+	engine.loop().submit([&] {
+		paused.set_value();
+		resume.get_future().wait();
+	});
+	start.set_value();
+	paused.get_future().wait();
+	CHECK(!engine.take_latest(found));
+	CHECK(!found.bands[1].intervals().empty());
+	resume.set_value();
+	await_update(engine, found, 2, true);
+
+	picture = flight.next_picture();
+	picture.states.adsbee.gnss.fix = adsbee::Fix::none;
+	engine.alert(sources(picture, true).conflict_input(), true);
+	await_update(engine, found, 3, false);
+}
+
+void invalid_inputs_clear_guidance_before_queued_work_can_publish() {
+	enum class Loss {
+		fix,
+		indicator,
+		ownship,
+		traffic,
+		position,
+		altitude,
+		motion
+	};
+	for (const auto loss :
+		 {Loss::fix, Loss::indicator, Loss::ownship, Loss::traffic,
+		  Loss::position, Loss::altitude, Loss::motion}) {
+		Flight flight;
+		flight.seconds = 66;
+		remote::Conflicts engine;
+		Direct direct;
+		conflicts::StateData found;
+		auto picture = flight.next_picture();
+		CHECK(direct.alert(picture, true));
+		direct.bands();
+		engine.alert(sources(picture, true).conflict_input(), true);
+		await_update(engine, found, 1, true);
+
+		std::promise<void> resume;
+		engine.loop().submit([&] { resume.get_future().wait(); });
+		picture = flight.next_picture();
+		CHECK(direct.alert(picture, true));
+		engine.alert(sources(picture, true).conflict_input(), true);
+		auto& targets = picture.traffic_listing.nearest_targets;
+		if (loss == Loss::fix) {
+			picture.states.adsbee.gnss.fix = adsbee::Fix::none;
+		} else if (loss == Loss::traffic) {
+			targets.clear();
+		}
+		for (auto& t : targets) {
+			if (loss == Loss::position) {
+				t.target.position_valid = false;
+			} else if (loss == Loss::altitude) {
+				t.target.gnss_alt_valid = t.target.baro_alt_valid = false;
+			} else if (loss == Loss::motion) {
+				t.target.speed_valid = t.target.direction_valid = false;
+				std::ranges::fill(t.past, traffic::Position{});
+			}
+		}
+		auto invalid = sources(picture, true).conflict_input();
+		if (loss == Loss::ownship) {
+			invalid.own_address = targets.front().target.address;
+		}
+		engine.alert(invalid, loss != Loss::indicator);
+		direct.rounds.alert(invalid, loss != Loss::indicator, direct.state);
+		direct.bands();
+		CHECK(engine.take_latest(found));
+		CHECK_EQUAL(0u, band_count(found));
+		resume.set_value();
+		CHECK(engine.loop().wait_idle(2s));
+		CHECK(engine.take_latest(found));
+		check_same(direct.state, found);
+	}
+}
+
 void no_bands_without_the_switch() {
 	Flight flight;
 	remote::Conflicts engine;
@@ -267,7 +416,15 @@ void a_round_that_still_runs_skips_the_next() {
 	CHECK(!direct.alert(second, true));
 	direct.bands();
 	conflicts::StateData found;
-	await_update(engine, found, 2, true);
+	static unsigned comparisons;
+	await_update(
+		engine, found, 2, true, [](const auto& previous, const auto& latest) {
+			++comparisons;
+			CHECK_EQUAL(0u, previous.update_count);
+			CHECK_EQUAL(2u, latest.update_count);
+			CHECK(!remote::radar::same_conflicts(previous, latest, true));
+		});
+	CHECK_EQUAL(1u, comparisons);
 	CHECK_EQUAL(2u, found.update_count);
 	CHECK_EQUAL(1u, found.band_updates_skipped);
 	CHECK(band_count(found) > 0);
@@ -391,13 +548,17 @@ int main(int argc, char**) {
 		print_encounter_by_second();
 		return 0;
 	}
-	return check::run({TEST(tasks_run_in_the_order_submitted),
-					   TEST(a_loop_that_ends_runs_no_task_that_waits),
-					   TEST(bands_with_the_switch_as_the_rounds_give_them),
-					   TEST(duplicate_polls_do_not_advance_conflict_rounds),
-					   TEST(no_bands_without_the_switch),
-					   TEST(disabling_indicator_clears_previous_round),
-					   TEST(a_round_that_still_runs_skips_the_next),
-					   TEST(head_on_recovery_at_second_66),
-					   TEST(shutdown_discards_pending_conflict_tasks)});
+	return check::run(
+		{TEST(tasks_run_in_the_order_submitted),
+		 TEST(radar_publications_ignore_status_and_observe_flight_changes),
+		 TEST(a_loop_that_ends_runs_no_task_that_waits),
+		 TEST(bands_with_the_switch_as_the_rounds_give_them),
+		 TEST(duplicate_polls_do_not_advance_conflict_rounds),
+		 TEST(a_continuing_encounter_keeps_its_completed_guidance),
+		 TEST(invalid_inputs_clear_guidance_before_queued_work_can_publish),
+		 TEST(no_bands_without_the_switch),
+		 TEST(disabling_indicator_clears_previous_round),
+		 TEST(a_round_that_still_runs_skips_the_next),
+		 TEST(head_on_recovery_at_second_66),
+		 TEST(shutdown_discards_pending_conflict_tasks)});
 }

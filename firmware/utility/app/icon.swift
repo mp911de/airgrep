@@ -33,16 +33,20 @@ func render(_ pixels: Int) -> Data {
     return bitmap.representation(using: .png, properties: [:])!
 }
 
-let set = FileManager.default.temporaryDirectory.appendingPathComponent("airgrep-\(getpid()).iconset")
-try FileManager.default.createDirectory(at: set, withIntermediateDirectories: true)
-for points in [16, 32, 128, 256, 512] {
-    try render(points).write(to: set.appendingPathComponent("icon_\(points)x\(points).png"))
-    try render(points * 2).write(to: set.appendingPathComponent("icon_\(points)x\(points)@2x.png"))
+func buildIcon() throws -> Int32 {
+    let set = FileManager.default.temporaryDirectory.appendingPathComponent("airgrep-\(getpid()).iconset")
+    try FileManager.default.createDirectory(at: set, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: set) }
+    for points in [16, 32, 128, 256, 512] {
+        try render(points).write(to: set.appendingPathComponent("icon_\(points)x\(points).png"))
+        try render(points * 2).write(to: set.appendingPathComponent("icon_\(points)x\(points)@2x.png"))
+    }
+    let iconutil = Process()
+    iconutil.executableURL = URL(fileURLWithPath: "/usr/bin/iconutil")
+    iconutil.arguments = ["--convert", "icns", "--output", arguments[2], set.path]
+    try iconutil.run()
+    iconutil.waitUntilExit()
+    return iconutil.terminationStatus
 }
-let iconutil = Process()
-iconutil.executableURL = URL(fileURLWithPath: "/usr/bin/iconutil")
-iconutil.arguments = ["--convert", "icns", "--output", arguments[2], set.path]
-try iconutil.run()
-iconutil.waitUntilExit()
-try FileManager.default.removeItem(at: set)
-exit(iconutil.terminationStatus)
+
+exit(try buildIcon())

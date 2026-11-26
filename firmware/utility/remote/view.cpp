@@ -6,13 +6,16 @@
 #include <format>
 #include <memory>
 #include <random>
+#include <string_view>
 
 #include "conflicts.hpp"
 #include "device/inspect.hpp"
 #include "display/display.hpp"
 #include "display/display_mapping.hpp"
+#include "display/render_study.h"
 #include "display_settings.hpp"
 #include "licenses.hpp"
+#include "radar_publication.hpp"
 #include "settings/settings_model.hpp"
 #include "settings_edits.hpp"
 #include "zones.hpp"
@@ -57,6 +60,7 @@ struct DeviceDisplayPreferences {
 struct State {
 	DeviceDisplayPreferences preferences;
 	device::DeviceState picture;
+	display::RadarGenerations radar;
 	uint64_t connection_id = 0;
 	// The settings asked of the device and not yet answered: those of this
 	// display first, then those of the device.
@@ -84,6 +88,62 @@ struct State {
 State& state() {
 	static State instance;
 	return instance;
+}
+
+bool study_radar() {
+	if constexpr (std::string_view{AIRGREP_DISPLAY} == "800x480-touch") {
+		return (airgrep_render_study_flags & RENDER_STUDY_GENERATIONS) != 0;
+	}
+	return false;
+}
+
+void changed_picture(const device::DeviceState& before,
+					 const device::DeviceState& after) {
+	auto& s = state();
+	const bool fix = after.states.adsbee
+						 .gnss_at(device::end_of_uptime_second_us(after.hello))
+						 .fix != adsbee::Fix::none;
+	if (fix &&
+		!radar::same_traffic(before.traffic_listing, after.traffic_listing,
+							 s.preferences.settings.tracks != 0)) {
+		s.radar.bump(s.radar.traffic);
+	}
+	const bool bands = s.preferences.settings.conflict_indicator &&
+					   std::ranges::any_of(s.conflict_state.bands,
+										   [](const conflicts::Bands& b) {
+											   return !b.intervals().empty();
+										   });
+	if (!radar::same_navigation(
+			before, after,
+			bands || !after.traffic_listing.nearest_targets.empty())) {
+		s.radar.bump(s.radar.gnss);
+	}
+}
+
+void changed_conflicts(const conflicts::StateData& before,
+					   const conflicts::StateData& after) {
+	if (!radar::same_conflicts(
+			before, after,
+			state().preferences.settings.conflict_indicator != 0)) {
+		state().radar.bump(state().radar.daidalus);
+	}
+}
+
+bool poll_conflicts(bool inputs_changed) {
+	auto& s = state();
+	if (!s.conflicts || s.starting) {
+		return false;
+	}
+	if (inputs_changed) {
+		const conflicts::ConflictInput sample{
+			s.picture.states.adsbee, s.picture.traffic_listing.nearest_targets,
+			s.picture.states.barometer,
+			device::end_of_uptime_second_us(s.picture.hello),
+			s.preferences.own_address};
+		s.conflicts->alert(sample, s.preferences.settings.conflict_indicator);
+	}
+	return s.conflicts->take_latest(
+		s.conflict_state, study_radar() ? changed_conflicts : nullptr);
 }
 
 std::optional<uint8_t> busiest_core(const usb::protocol::Hello& hello) {
@@ -203,8 +263,11 @@ std::string explain(
 void refresh() {
 	const device::DeviceState& picture = state().picture;
 	auto now = std::chrono::steady_clock::now();
-	std::erase_if(state().preferences.silenced,
-				  [&](const Silenced& entry) { return entry.until <= now; });
+	if (std::erase_if(state().preferences.silenced, [&](const Silenced& entry) {
+			return entry.until <= now;
+		})) {
+		state().radar.bump(state().radar.traffic);
+	}
 	std::vector<conflicts::Id> muted;
 	muted.reserve(state().preferences.silenced.size());
 	for (const Silenced& entry : state().preferences.silenced) {
@@ -270,15 +333,29 @@ void refresh() {
 							.first(state().conflict_state.result_count);
 	conflicts::show(state().conflict_state, sources);
 	state().target_details.resize(sources.traffic.size());
-	const display::ViewState model = display::mapping::build_view_state(
+	display::ViewState model = display::mapping::build_view_state(
 		sources, state().targets, state().bands, state().target_details);
 	state().explained = explain(sources, model, state().target_details);
 	for (const std::string& asked : state().asked) {
 		state().explained += "asked " + asked + "\n";
 	}
+	if (study_radar()) {
+		const auto id = [](const auto& target) {
+			return std::tie(target.address, target.source);
+		};
+		if (!std::ranges::equal(state().previous_ring_members,
+								model.traffic.first(model.traffic_inside), {},
+								id, id)) {
+			state().radar.bump(state().radar.traffic);
+		}
+		model.radar_generations = state().radar;
+	}
 	state().previous_ring_members.resize(model.traffic_inside);
 	display::mapping::inside_ids(model, state().previous_ring_members);
 	display::update(model);
+	if (model.radar_generations) {
+		state().radar.acknowledge();
+	}
 }
 
 void note(std::string asked) {
@@ -290,6 +367,9 @@ void note(std::string asked) {
 
 void mark_settings_dirty_and_refresh(SettingsEdits::Field field) {
 	state().preferences.edits.changed.set(field);
+	if (field == SettingsEdits::indicator) {
+		poll_conflicts(true);
+	}
 	refresh();
 }
 }
@@ -355,12 +435,17 @@ display::Actions actions() {
 					note(std::format("{} {:06X}", muted ? "mute" : "unmute",
 									 address));
 					source = mute_source(source);
-					std::erase_if(state().preferences.silenced, [&](const Silenced& entry) {
+					const auto matches = [&](const Silenced& entry) {
 						return entry.target.address == address &&
 							   entry.target.source == source;
-					});
+					};
+					auto& silenced = state().preferences.silenced;
+					const bool was_muted = std::erase_if(silenced, matches) != 0;
+					if (was_muted != muted) {
+						state().radar.bump(state().radar.traffic);
+					}
 					if (muted) {
-						state().preferences.silenced.push_back(
+						silenced.push_back(
 							{{address, source},
 							 std::chrono::steady_clock::now() + kMutedFor});
 					}
@@ -372,6 +457,7 @@ display::Actions actions() {
 							 ? "set_own_ship none"
 							 : std::format("set_own_ship {:06X}", address));
 					state().preferences.own_address = address;
+					poll_conflicts(true);
 					refresh();
 				},
 			.set_own_callsign =
@@ -407,7 +493,9 @@ void follow(Connection& connection, const std::string& serial) {
 		state().asked.clear();
 		state().display_device_id = "airgrep-" + serial;
 	}
+	bool conflicts_restarted = false;
 	if (connection.id() != state().connection_id) {
+		state().radar.resync = true;
 		state().connection_id = connection.id();
 		state().picture = {};
 		state().picture.hello = status.hello;
@@ -420,6 +508,9 @@ void follow(Connection& connection, const std::string& serial) {
 		connection.read_settings(display::kSettingsKey);
 		state().awaited = State::Awaited::display;
 		refresh();
+	} else if (!state().conflicts) {
+		state().conflicts = std::make_unique<Conflicts>();
+		conflicts_restarted = true;
 	}
 	const auto answered = state().awaited == State::Awaited::none
 							  ? std::nullopt
@@ -437,6 +528,7 @@ void follow(Connection& connection, const std::string& serial) {
 			state().preferences.own_callsign = read.own_callsign;
 			state().preferences.zone_automatic = read.tz_detect != 0;
 			state().preferences.zone = read.zone;
+			poll_conflicts(true);
 			refresh();
 		}
 	} else if (const auto& bytes = answered) {
@@ -451,6 +543,7 @@ void follow(Connection& connection, const std::string& serial) {
 				state().preferences.settings = state().preferences.edits.merge(
 					read, state().preferences.settings);
 				state().preferences.device_accepts_settings = true;
+				poll_conflicts(true);
 				refresh();
 			}
 		}
@@ -464,24 +557,17 @@ void follow(Connection& connection, const std::string& serial) {
 			{bytes, bytes + sizeof state().preferences.settings});
 		state().preferences.edits.changed.reset();
 	}
-	if (connection.take_new_picture(state().picture)) {
+	const bool new_picture = connection.take_new_picture(
+		state().picture, study_radar() ? changed_picture : nullptr);
+	if (new_picture) {
 		state().starting = false;
-		const auto& picture = state().picture;
-		const conflicts::ConflictInput sample{
-			picture.states.adsbee,
-			state().picture.traffic_listing.nearest_targets,
-			picture.states.barometer,
-			device::end_of_uptime_second_us(picture.hello),
-			state().preferences.own_address};
-		state().conflicts->alert(
-			sample, state().preferences.settings.conflict_indicator);
-		refresh();
 	}
-	if (state().conflicts &&
-		state().conflicts->take_latest(state().conflict_state)) {
+	if (poll_conflicts(new_picture || conflicts_restarted) || new_picture) {
 		refresh();
 	}
 }
+
+void unfollow() { state().conflicts.reset(); }
 
 bool muted() { return state().picture.states.expander.input.mute; }
 

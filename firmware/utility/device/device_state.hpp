@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+#include <string_view>
 #include <type_traits>
 
 #include "session.hpp"
@@ -44,5 +46,19 @@ auto bytes_of(State& state) {
 	using Byte =
 		std::conditional_t<std::is_const_v<State>, const uint8_t, uint8_t>;
 	return std::span<Byte>{reinterpret_cast<Byte*>(&state), sizeof state};
+}
+
+inline void put(char* field, size_t size, std::string_view text) {
+	if (size == 0) {
+		return;
+	}
+	const size_t count = std::min(text.size(), size - 1);
+	text.copy(field, count);
+	field[count] = 0;
+}
+
+template <size_t Size>
+void put(char (&field)[Size], std::string_view text) {
+	put(field, Size, text);
 }
 }
