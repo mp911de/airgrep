@@ -114,6 +114,28 @@ void radar_destructor_hook(lv_obj_t * obj)
     recovery_sectors_release(&radar->recovery_sectors);
 }
 
+static int32_t radar_outer_radius(lv_obj_t * obj)
+{
+    return lv_obj_get_width(obj) / 2 - OUTER_RING_MARGIN_PX;
+}
+
+bool radar_warm_recovery_next(lv_obj_t * radar)
+{
+    radar_t * widget = (radar_t *)radar;
+    struct recovery_sectors * cache = widget->recovery_sectors;
+    if(!cache) {
+        lv_obj_update_layout(radar);
+    }
+    int32_t radius = radar_outer_radius(radar);
+    if(!cache || cache->radius != radius) {
+        return recovery_sectors_get(&widget->recovery_sectors, radius) != NULL;
+    }
+    if(cache->next_angle == RECOVERY_ANGLES || !recovery_prepare_spoke(cache, cache->next_angle)) {
+        return false;
+    }
+    return ++cache->next_angle < RECOVERY_ANGLES;
+}
+
 void radar_event_hook(lv_event_t * e)
 {
     if(lv_event_get_code(e) == LV_EVENT_DRAW_MAIN) {
@@ -251,7 +273,7 @@ static void draw(lv_event_t * e)
     lv_area_t area;
     lv_obj_get_coords(obj, &area);
     lv_point_t center = {area.x1 + lv_area_get_width(&area) / 2, area.y1 + lv_area_get_height(&area) / 2};
-    int32_t outer = lv_area_get_width(&area) / 2 - OUTER_RING_MARGIN_PX;
+    int32_t outer = radar_outer_radius(obj);
     int32_t inner = outer / 2;
 
     bool lost = lv_subject_get_int(subject_gps) == 0 || radar->range_nm <= 0;

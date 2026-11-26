@@ -65,6 +65,9 @@ typedef enum {
  */
 void radar_set_track_bands(lv_obj_t * radar, const radar_track_band_t * bands, uint32_t count);
 
+/* Prepare the recovery rings or one spoke angle. True while more work remains. */
+bool radar_warm_recovery_next(lv_obj_t * radar);
+
 /**
  * Replace the Bands of a tape. The radar keeps a copy. The middle of a tape is what the own ship flies now.
  * @param bands     shares of what the tape spans to either side of its middle, -1 at its lower end and 1 at its

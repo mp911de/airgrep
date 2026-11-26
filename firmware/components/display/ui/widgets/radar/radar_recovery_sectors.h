@@ -1,4 +1,9 @@
 /* Private to radar.c. All coordinates are relative to the radar centre. */
+#include <stdlib.h>
+#ifdef ESP_PLATFORM
+    #include "esp_heap_caps.h"
+#endif
+
 typedef struct {
     int16_t x, y;
     uint8_t alpha, degree;
@@ -9,12 +14,31 @@ typedef struct {
     size_t count, capacity;
 } recovery_stamp_t;
 
-enum { RECOVERY_OCTANTS = 8, RECOVERY_GRID = 8 };
+enum {
+    RECOVERY_OCTANTS = 8, RECOVERY_GRID = 8, RECOVERY_ANGLES = 46,
+    DASH_PERIOD = RECOVERY_DASH + RECOVERY_GAP, DASH_PHASES = DASH_PERIOD / 2,
+    SUBPIXELS = 16, PERIOD_UNITS = DASH_PERIOD * SUBPIXELS,
+    STROKE_REACH = (RADAR_STROKE_WIDTH_PX + 1) * SUBPIXELS / 2,
+    SPOKE_HALF_ROW = RADAR_STROKE_WIDTH_PX, SPOKE_ROW_WIDTH = 2 * SPOKE_HALF_ROW + 1
+};
+
+/* Within one octant the stroke fits in a narrow strip on each scanline. */
+typedef struct {
+    int16_t x;
+    uint8_t alpha[DASH_PHASES][SPOKE_ROW_WIDTH];
+} recovery_row_t;
+
+typedef struct {
+    recovery_row_t * rows;
+    int32_t top, bottom;
+} recovery_spoke_t;
 
 struct recovery_sectors {
     int32_t radius, extent, cell_shift;
     recovery_stamp_t rings[RECOVERY_OCTANTS];
-    recovery_stamp_t spokes[46];
+    recovery_spoke_t spokes[RECOVERY_ANGLES];
+    uint8_t dash_alpha[PERIOD_UNITS][STROKE_REACH + 1];
+    unsigned next_angle;
     lv_draw_buf_t * mask;
     lv_area_t occupied[RECOVERY_GRID * RECOVERY_GRID];
     uint8_t visible[360];
@@ -23,7 +47,7 @@ struct recovery_sectors {
 
 typedef struct {
     struct recovery_sectors * cache;
-    recovery_stamp_t * spoke;
+    recovery_spoke_t * spoke;
     int32_t x, y;
     bool failed;
 } recovery_pen_t;
@@ -37,8 +61,8 @@ static void recovery_sectors_release(struct recovery_sectors ** owner)
     for(size_t i = 0; i < RECOVERY_OCTANTS; i++) {
         lv_free(cache->rings[i].pixels);
     }
-    for(size_t i = 0; i < 46; i++) {
-        lv_free(cache->spokes[i].pixels);
+    for(size_t i = 0; i < RECOVERY_ANGLES; i++) {
+        free(cache->spokes[i].rows);
     }
     if(cache->mask) {
         lv_image_cache_drop(cache->mask);
@@ -53,14 +77,15 @@ static void recovery_store_pixels(void * user, int32_t x, int32_t y, int32_t len
     recovery_pen_t * pen = user;
     x += pen->x;
     y += pen->y;
+    if(pen->spoke) {
+        recovery_row_t * row = &pen->spoke->rows[y - pen->spoke->top];
+        memset(row->alpha[0] + (x - row->x), alpha, (size_t)length);
+        return;
+    }
     for(int32_t end = x + length; x < end && !pen->failed; x++) {
-        int32_t degree = 0;
-        recovery_stamp_t * stamp = pen->spoke;
-        if(!stamp) {
-            float bearing = atan2f((float)x + 0.5f, -(float)y - 0.5f) / radians_per_degree;
-            degree = radar_bearing_deg((int32_t)floorf(bearing));
-            stamp = &pen->cache->rings[degree / 45];
-        }
+        float bearing = atan2f((float)x + 0.5f, -(float)y - 0.5f) / radians_per_degree;
+        int32_t degree = radar_bearing_deg((int32_t)floorf(bearing));
+        recovery_stamp_t * stamp = &pen->cache->rings[degree / 45];
         if(stamp->count == stamp->capacity) {
             size_t capacity = stamp->capacity ? stamp->capacity * 2 : 128;
             recovery_pixel_t * pixels = lv_realloc(stamp->pixels, capacity * sizeof(*pixels));
@@ -113,14 +138,20 @@ static struct recovery_sectors * recovery_sectors_allocate(int32_t radius)
     return cache;
 }
 
-static struct recovery_sectors * recovery_sectors_create(int32_t radius)
+static struct recovery_sectors * recovery_sectors_get(struct recovery_sectors ** owner, int32_t radius)
 {
+    if(*owner && (*owner)->radius != radius) {
+        recovery_sectors_release(owner);
+    }
+    if(*owner) {
+        return *owner;
+    }
     struct recovery_sectors * cache = recovery_sectors_allocate(radius);
     if(!cache) {
         return NULL;
     }
     recovery_pen_t pen = {.cache = cache};
-    for(int ring = 0; cache->mask && !pen.failed && ring < 2; ring++) {
+    for(int ring = 0; !pen.failed && ring < 2; ring++) {
         float r = ring ? (float)radius : (float)WEDGE_INNER_RADIUS_PX;
         float length = 2 * (float)M_PI * r;
         for(int i = 0; i < (int)ceilf(length / (RECOVERY_DASH + RECOVERY_GAP)); i++) {
@@ -130,9 +161,22 @@ static struct recovery_sectors * recovery_sectors_create(int32_t radius)
                                (radar_point_t){sinf(to) * r, -cosf(to) * r});
         }
     }
-    if(!cache->mask || pen.failed) {
+    if(pen.failed) {
         recovery_sectors_release(&cache);
+        return NULL;
     }
+    /* Distance to the nearest rounded dash, including the next dash across the gap. */
+    for(int along = 0; along < PERIOD_UNITS; along++) {
+        int cap = RADAR_STROKE_WIDTH_PX * SUBPIXELS / 2;
+        int end = RECOVERY_DASH * SUBPIXELS - cap;
+        int beyond = LV_MAX(0, LV_MAX(cap - along, LV_MIN(along - end, PERIOD_UNITS + cap - along)));
+        for(int across = 0; across <= STROKE_REACH; across++) {
+            float distance = sqrtf((float)(beyond * beyond + across * across));
+            float opacity = LV_CLAMP(0.0f, ((float)STROKE_REACH - distance) / SUBPIXELS, 1.0f);
+            cache->dash_alpha[along][across] = (uint8_t)lrintf(255.0f * opacity);
+        }
+    }
+    *owner = cache;
     return cache;
 }
 
@@ -151,57 +195,78 @@ static void recovery_plot(struct recovery_sectors * cache, int32_t x, int32_t y,
     rect->y2 = LV_MAX(rect->y2, y);
 }
 
-static bool recovery_stamp_spoke(struct recovery_sectors * cache, int32_t deg)
+static bool recovery_prepare_spoke(struct recovery_sectors * cache, unsigned angle)
 {
-    int32_t octant = deg / 45;
-    int32_t canonical = octant % 2 ? 45 - deg % 45 : deg % 45;
-    recovery_stamp_t * stamp = &cache->spokes[canonical];
-    if(!stamp->count) {
-        float dx = sinf((float)canonical * radians_per_degree), dy = -cosf((float)canonical * radians_per_degree);
-        recovery_pen_t pen = {.spoke = stamp};
-        for(int32_t from = WEDGE_INNER_RADIUS_PX; from < cache->radius; from += RECOVERY_DASH + RECOVERY_GAP) {
-            float to = (float)LV_MIN(cache->radius, from + RECOVERY_DASH);
-            recovery_bake_dash(&pen, (radar_point_t){dx * (float)from, dy * (float)from}, (radar_point_t){dx * to, dy * to});
-        }
-        if(pen.failed) {
-            return false;
+    recovery_spoke_t * spoke = &cache->spokes[angle];
+    if(spoke->rows) {
+        return true;
+    }
+    float sine = sinf((float)angle * radians_per_degree), cosine = cosf((float)angle * radians_per_degree);
+    spoke->top = (int32_t)floorf(-(float)cache->radius * cosine) - SPOKE_HALF_ROW;
+    spoke->bottom = (int32_t)ceilf(-WEDGE_INNER_RADIUS_PX * cosine) + SPOKE_HALF_ROW;
+    int32_t rows = spoke->bottom - spoke->top + 1;
+#ifdef ESP_PLATFORM
+    spoke->rows = heap_caps_calloc((size_t)rows, sizeof(*spoke->rows), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+#else
+    spoke->rows = calloc((size_t)rows, sizeof(*spoke->rows));
+#endif
+    if(!spoke->rows) {
+        return false;
+    }
+    for(int32_t y = spoke->top; y <= spoke->bottom; y++) {
+        recovery_row_t * row = &spoke->rows[y - spoke->top];
+        float cy = (float)y + 0.5f;
+        row->x = (int16_t)((int32_t)floorf(-cy * sine / cosine - 0.5f) - SPOKE_HALF_ROW);
+        for(int col = 0; col < SPOKE_ROW_WIDTH; col++) {
+            float cx = (float)(row->x + col) + 0.5f;
+            float along = cx * sine - cy * cosine - WEDGE_INNER_RADIUS_PX;
+            float across = fabsf(cx * cosine + cy * sine);
+            if(along < 0 || along > (float)(cache->radius - WEDGE_INNER_RADIUS_PX) || across >= (float)STROKE_REACH / SUBPIXELS) {
+                continue;
+            }
+            int u = (int)lrintf(along * SUBPIXELS) % PERIOD_UNITS;
+            int v = (int)lrintf(across * SUBPIXELS);
+            for(int phase = 1; phase < DASH_PHASES; phase++) {
+                u = (u + PERIOD_UNITS - 2 * SUBPIXELS) % PERIOD_UNITS;
+                row->alpha[phase][col] = cache->dash_alpha[u][v];
+            }
         }
     }
-    for(size_t i = 0; i < stamp->count; i++) {
-        const recovery_pixel_t * p = &stamp->pixels[i];
-        int32_t x = p->x, y = p->y;
-        /* Reflect pixel centres, which sit half a pixel beyond integer coordinates. */
-        switch(octant) {
-        case 0:
-            recovery_plot(cache, x, y, p->alpha);
-            break;
-        case 1:
-            recovery_plot(cache, -y - 1, -x - 1, p->alpha);
-            break;
-        case 2:
-            recovery_plot(cache, -y - 1, x, p->alpha);
-            break;
-        case 3:
-            recovery_plot(cache, x, -y - 1, p->alpha);
-            break;
-        case 4:
-            recovery_plot(cache, -x - 1, -y - 1, p->alpha);
-            break;
-        case 5:
-            recovery_plot(cache, y, x, p->alpha);
-            break;
-        case 6:
-            recovery_plot(cache, y, -x - 1, p->alpha);
-            break;
-        default:
-            recovery_plot(cache, -x - 1, y, p->alpha);
-            break;
+    recovery_pen_t pen = {.spoke = spoke};
+    for(int32_t from = WEDGE_INNER_RADIUS_PX; from < cache->radius; from += DASH_PERIOD) {
+        float to = (float)LV_MIN(cache->radius, from + RECOVERY_DASH);
+        recovery_bake_dash(&pen, (radar_point_t){sine * (float)from, -cosine * (float)from},
+                           (radar_point_t){sine * to, -cosine * to});
+    }
+    return true;
+}
+
+static bool recovery_stamp_spoke(struct recovery_sectors * cache, int32_t deg, int phase)
+{
+    int octant = deg / 45;
+    unsigned angle = (unsigned)(octant % 2 ? 45 - deg % 45 : deg % 45);
+    if(!recovery_prepare_spoke(cache, angle)) {
+        return false;
+    }
+    const recovery_spoke_t * spoke = &cache->spokes[angle];
+    bool swap = octant == 1 || octant == 2 || octant == 5 || octant == 6;
+    bool flip_x = octant == 1 || octant == 2 || octant == 4 || octant == 7;
+    bool flip_y = octant == 1 || octant == 3 || octant == 4 || octant == 6;
+    for(int32_t y = spoke->top; y <= spoke->bottom; y++) {
+        const recovery_row_t * row = &spoke->rows[y - spoke->top];
+        for(int col = 0; col < SPOKE_ROW_WIDTH; col++) {
+            uint8_t alpha = row->alpha[phase][col];
+            if(alpha) {
+                int32_t x = row->x + col, u = swap ? y : x, v = swap ? x : y;
+                /* Pixel centres lie half a pixel beyond integer coordinates. */
+                recovery_plot(cache, flip_x ? -u - 1 : u, flip_y ? -v - 1 : v, alpha);
+            }
         }
     }
     return true;
 }
 
-static bool recovery_compose(struct recovery_sectors * cache, const uint8_t visible[360])
+static bool recovery_compose(struct recovery_sectors * cache, const radar_track_bands_t * bands, const uint8_t visible[360])
 {
     lv_draw_buf_clear(cache->mask, NULL);
     for(int32_t i = 0; i < RECOVERY_GRID * RECOVERY_GRID; i++) {
@@ -221,8 +286,17 @@ static bool recovery_compose(struct recovery_sectors * cache, const uint8_t visi
             }
         }
     }
-    for(int32_t deg = 0; deg < 360; deg++) {
-        if(visible[deg] != visible[(deg + 359) % 360] && !recovery_stamp_spoke(cache, deg)) {
+    for(uint32_t i = 0; i < bands->wedge_count; i++) {
+        const radar_wedge_t * wedge = &bands->wedges[i];
+        if(wedge->level != RADAR_BAND_RECOVERY || wedge->sweep_deg == 360) {
+            continue;
+        }
+        float perimeter = (float)(2 * (cache->radius - WEDGE_INNER_RADIUS_PX) - RECOVERY_DASH) +
+                          (float)cache->radius * (float)wedge->sweep_deg * radians_per_degree;
+        int units = (int)lroundf(perimeter * SUBPIXELS);
+        int phase = ((units + PERIOD_UNITS + SUBPIXELS) / (2 * SUBPIXELS)) % DASH_PHASES;
+        if(!recovery_stamp_spoke(cache, wedge->start_deg, 0) ||
+           !recovery_stamp_spoke(cache, radar_bearing_deg(wedge->start_deg + wedge->sweep_deg), phase)) {
             return false;
         }
     }
@@ -231,8 +305,6 @@ static bool recovery_compose(struct recovery_sectors * cache, const uint8_t visi
     cache->prepared = true;
     return true;
 }
-
-#include "radar_recovery_flash.h"
 
 static bool recovery_sectors_draw(struct recovery_sectors ** owner, lv_layer_t * layer,
                                   const radar_track_bands_t * bands, lv_point_t center, int32_t outer, lv_color_t color)
@@ -252,19 +324,12 @@ static bool recovery_sectors_draw(struct recovery_sectors ** owner, lv_layer_t *
     if(!any) {
         return true;
     }
-    bool flash = RECOVERY_FLASH_AVAILABLE && outer == 176;
-    if(*owner && (*owner)->radius != outer) {
-        recovery_sectors_release(owner);
-    }
-    if(!*owner) {
-        *owner = flash ? recovery_sectors_allocate(outer) : recovery_sectors_create(outer);
-    }
-    struct recovery_sectors * cache = *owner;
+    struct recovery_sectors * cache = recovery_sectors_get(owner, outer);
     if(!cache) {
         return false;
     }
     bool changed = !cache->prepared || memcmp(visible, cache->visible, sizeof(visible));
-    if(changed && !(flash ? recovery_flash_compose(cache, bands, visible) : recovery_compose(cache, visible))) {
+    if(changed && !recovery_compose(cache, bands, visible)) {
         recovery_sectors_release(owner);
         return false;
     }

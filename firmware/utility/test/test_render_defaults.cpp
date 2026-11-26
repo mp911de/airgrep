@@ -77,10 +77,14 @@ void startup_symbols(lv_display_t* panel, std::span<uint16_t> pixels) {
 	show(Mode::charger);
 	run_timers(2100);
 	CHECK_EQUAL(0U, atlas_masks());
+	auto* radar_obj = lv_obj_find_by_name(home, "radar");
+	auto* radar = reinterpret_cast<radar_t*>(radar_obj);
+	CHECK(radar->recovery_sectors == nullptr);
 	for (const auto next : {Mode::on, Mode::charger}) {
 		welcome();
 		run_timers(5);
 		CHECK(atlas_masks() > 0 && atlas_masks() <= masks_per_slice);
+		CHECK(radar->recovery_sectors != nullptr);
 		show(next);
 		const auto before = atlas_masks();
 		run_timers(100);
@@ -109,6 +113,9 @@ void startup_symbols(lv_display_t* panel, std::span<uint16_t> pixels) {
 			CHECK(atlas_masks() <= before + masks_per_slice);
 		}
 		CHECK_EQUAL(expected, atlas_masks());
+		if (!simple) {
+			CHECK(!radar_warm_recovery_next(radar_obj));
+		}
 		uint32_t hits = 0, misses = 0;
 		radar_symbol_atlas_lookups(&hits, &misses);
 		const auto warm_hits = hits, warm_misses = misses;
@@ -290,7 +297,7 @@ void home_with_recovery() {
 			crc32_z(recovery_crc, reinterpret_cast<const Bytef*>(pixels.data()),
 					sizeof(pixels));
 	}
-	CHECK_EQUAL(0UL, recovery_crc);
+	CHECK_EQUAL(1885486653UL, recovery_crc);
 	default_grid(panel, pixels);
 	covered_home(panel, pixels, model);
 	lv_deinit();

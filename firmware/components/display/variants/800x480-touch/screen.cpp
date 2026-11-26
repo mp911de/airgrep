@@ -742,22 +742,31 @@ struct WelcomeWarmup {
 	uint32_t started{};
 	unsigned bucket{};
 	bool simple{};
+	bool symbols_done{}, recovery_done{}, recovery_turn{};
 };
 WelcomeWarmup welcome;
 constexpr uint32_t WELCOME_WARMUP_MS = 2000;
 constexpr uint32_t WELCOME_SLICE_MS = 18;
 
-void warm_symbols(lv_timer_t* timer) {
+void warm_radar(lv_timer_t* timer) {
 	auto* panel = static_cast<lv_display_t*>(lv_timer_get_user_data(timer));
 	const uint32_t slice_start = lv_tick_get();
 	// The host LVGL clock advances between timer calls, so also bound the work
 	// by count.
 	for (unsigned i = 0; i < 12; ++i) {
 		if (lv_tick_elaps(welcome.started) >= WELCOME_WARMUP_MS ||
-			!radar_symbol_atlas_warm_next(panel, welcome.simple,
-										  welcome.bucket++)) {
+			(welcome.symbols_done && welcome.recovery_done)) {
 			lv_timer_pause(timer);
 			return;
+		}
+		if (!welcome.recovery_done &&
+			(welcome.symbols_done || welcome.recovery_turn)) {
+			welcome.recovery_done = !radar_warm_recovery_next(radar);
+			welcome.recovery_turn = false;
+		} else {
+			welcome.symbols_done = !radar_symbol_atlas_warm_next(
+				panel, welcome.simple, welcome.bucket++);
+			welcome.recovery_turn = true;
 		}
 		if (lv_tick_elaps(slice_start) >= WELCOME_SLICE_MS) {
 			return;
@@ -776,8 +785,8 @@ void welcome_event(lv_event_t* event) {
 			// frame.
 			if (!welcome.timer) {
 				welcome.started = lv_tick_get();
-				welcome.timer = lv_timer_create(warm_symbols, 5,
-												lv_obj_get_display(screen));
+				welcome.timer =
+					lv_timer_create(warm_radar, 5, lv_obj_get_display(screen));
 			}
 			break;
 		case LV_EVENT_DELETE:
@@ -795,6 +804,7 @@ void show_startup(const ViewState& model) {
 	if (welcome.simple != model.simple_symbols) {
 		welcome.simple = model.simple_symbols;
 		welcome.bucket = 0;
+		welcome.symbols_done = false;
 		if (welcome.timer &&
 			lv_tick_elaps(welcome.started) < WELCOME_WARMUP_MS) {
 			lv_timer_resume(welcome.timer);
