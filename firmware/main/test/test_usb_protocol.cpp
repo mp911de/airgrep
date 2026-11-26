@@ -274,6 +274,7 @@ CASE(hello_response, "USB HELLO encodes all fields at their declared offsets") {
 	Hello sample{};
 	sample.uptime_seconds = 0x0807060504030201ULL;
 	std::strcpy(sample.firmware_version, "0.1.0");
+	std::strcpy(sample.variant, "s3+800x480-touch");
 	std::strcpy(sample.firmware_description,
 				"airgrep 0.1.0 (Nov 15 2026 14:23:45)");
 	std::strcpy(sample.board, "S3 Plus");
@@ -302,17 +303,18 @@ CASE(hello_response, "USB HELLO encodes all fields at their declared offsets") {
 	TEST_ASSERT_EQUAL_HEX8_ARRAY(uptime, output + 7, 8);
 	TEST_ASSERT_EQUAL_STRING("0.1.0", output + 15);
 	TEST_ASSERT_EQUAL_MEMORY(sample.firmware_version, output + 15, 32);
+	TEST_ASSERT_EQUAL_MEMORY(sample.variant, output + 47, 32);
 	const uint8_t tail[] = {
 		0x11, 0x22, 0x33, 0x44, 0x22, 0x33, 0x44, 0x55, 0x33, 0x44, 0x55,
 		0x66, 0x44, 0x55, 0x66, 0x77, 0x55, 0x66, 0x77, 0x88, 0x66, 0x77,
 		0x88, 0x99, 0x02, 0x03, 2,    10,   20,   15,   2,    0,
 	};
-	TEST_ASSERT_EQUAL_HEX8_ARRAY(tail, output + 47, sizeof tail);
+	TEST_ASSERT_EQUAL_HEX8_ARRAY(tail, output + 79, sizeof tail);
 	TEST_ASSERT_EQUAL_STRING("airgrep 0.1.0 (Nov 15 2026 14:23:45)",
-							 output + 79);
-	TEST_ASSERT_EQUAL_MEMORY(sample.firmware_description, output + 79, 128);
-	TEST_ASSERT_EQUAL_MEMORY(sample.board, output + 207, 128);
-	TEST_ASSERT_EQUAL_MEMORY(sample.chip, output + 335, 128);
+							 output + 111);
+	TEST_ASSERT_EQUAL_MEMORY(sample.firmware_description, output + 111, 128);
+	TEST_ASSERT_EQUAL_MEMORY(sample.board, output + 239, 128);
+	TEST_ASSERT_EQUAL_MEMORY(sample.chip, output + 367, 128);
 	const uint16_t expected_crc =
 		crc16(output + 6, sizeof output - 6, crc16(output, 4));
 	TEST_ASSERT_EQUAL_HEX16(expected_crc, output[4] | (output[5] << 8));

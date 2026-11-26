@@ -7,6 +7,15 @@ include("${CMAKE_CURRENT_LIST_DIR}/../../ui/user_config.cmake")
 # in the repo and not built.
 list(FILTER LV_EDITOR_PROJECT_SOURCES EXCLUDE REGEX "/images/[^/]+_data\\.c$")
 set(ui "${CMAKE_CURRENT_LIST_DIR}/../../ui")
+include("${CMAKE_CURRENT_LIST_DIR}/../../../../tools/lvgl-glyphs.cmake")
+foreach(source IN LISTS LV_EDITOR_PROJECT_SOURCES)
+    if(source MATCHES "/fonts/([^/]+_data\\.c)$")
+        set(output "${CMAKE_CURRENT_BINARY_DIR}/generated/ui/fonts/${CMAKE_MATCH_1}")
+        airgrep_glyph_source("${source}" "${output}")
+        list(REMOVE_ITEM LV_EDITOR_PROJECT_SOURCES "${source}")
+        list(APPEND LV_EDITOR_PROJECT_SOURCES "${output}")
+    endif()
+endforeach()
 set(image_tool "${CMAKE_CURRENT_LIST_DIR}/../../../../tools/png2lvgl_c_data.py")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${ui}/globals.xml")
 file(STRINGS "${ui}/globals.xml" image_tags REGEX "<data name=")
@@ -37,4 +46,10 @@ add_custom_command(OUTPUT "${greetings}"
         DEPENDS "${greetings_tool}" "${greetings_catalog}"
         VERBATIM)
 set(variant_sources ${LV_EDITOR_PROJECT_SOURCES} ${images} "${greetings}")
+if(CONFIG_IDF_TARGET_ESP32S3)
+    list(APPEND variant_sources
+            "${ui}/widgets/radar/radar_labels_s3.S"
+            "${ui}/widgets/radar/radar_wedge_blend.c"
+            "${ui}/widgets/radar/radar_wedge_pie.S")
+endif()
 set(variant_includes "${CMAKE_CURRENT_LIST_DIR}/../../ui" "${CMAKE_CURRENT_BINARY_DIR}/generated")

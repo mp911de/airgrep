@@ -1,13 +1,25 @@
 CONFIG_IDF_TARGET="esp32s3"
+
+#################################
+# Flashing and Partitions
+#################################
 CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
-CONFIG_ESP_CONSOLE_NONE=y
-CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+#################################
+# Tiny USB
+#################################
 CONFIG_TINYUSB_CDC_ENABLED=y
 CONFIG_TINYUSB_CDC_COUNT=1
 CONFIG_TINYUSB_VENDOR_COUNT=1
 CONFIG_TINYUSB_VENDOR_RX_BUFSIZE=512
 CONFIG_TINYUSB_VENDOR_TX_BUFSIZE=512
 CONFIG_TINYUSB_VENDOR_EPSIZE=512
+
+#################################
+# USB Vendor Settings
+#################################
 CONFIG_TINYUSB_DESC_USE_ESPRESSIF_VID=n
 CONFIG_TINYUSB_DESC_CUSTOM_VID=0xFA00
 CONFIG_TINYUSB_DESC_USE_DEFAULT_PID=n
@@ -15,32 +27,54 @@ CONFIG_TINYUSB_DESC_CUSTOM_PID=0xFA01
 CONFIG_TINYUSB_DESC_MANUFACTURER_STRING="airgrep"
 CONFIG_TINYUSB_DESC_PRODUCT_STRING="airgrep"
 CONFIG_TINYUSB_DESC_CDC_STRING="airgrep Console"
-CONFIG_AIRGREP_USB_SERVICE_COMMANDS=n
+
+#################################
+# Logging
+#################################
 CONFIG_LOG_DEFAULT_LEVEL_INFO=y
 CONFIG_LOG_MAXIMUM_LEVEL_DEBUG=y
 CONFIG_LOG_COLORS=y
 CONFIG_LOG_TAG_LEVEL_IMPL_LINKED_LIST=y
+
+CONFIG_ESP_CONSOLE_NONE=y
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+
+#################################
+# Service Commands
+#################################
+CONFIG_AIRGREP_USB_SERVICE_COMMANDS=n
+
+#################################
+# PS RAM
+#################################
 CONFIG_SPIRAM=y
 CONFIG_SPIRAM_MODE_OCT=y
-CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS=y
-CONFIG_FREERTOS_RUN_TIME_STATS_USING_ESP_TIMER=y
+CONFIG_SPIRAM_SPEED_80M=y
+# The 8 MB test takes 730 ms per boot, the hwtest profile runs it.
+CONFIG_SPIRAM_MEMTEST=n
+CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY=y
+
+#################################
+# Serviceability, Core Dumps
+#################################
 CONFIG_FREERTOS_RUN_TIME_COUNTER_TYPE_U64=y
-CONFIG_PARTITION_TABLE_CUSTOM=y
-CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH=y
+CONFIG_ESP_COREDUMP_STACK_SIZE=2048
+CONFIG_ESP_COREDUMP_LOGS=n
+
 # The event loop task is watched with the 5 s default timeout. Expiry restarts.
 CONFIG_ESP_TASK_WDT_PANIC=y
 # The conflict engine is many small C++ functions: built for debugging it is several times slower.
+
+#################################
+# Performance Tuning
+#################################
+# The conflict engine runs through more code than 16 KB of instruction cache hold
+CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB=y
+CONFIG_ESP32S3_DATA_CACHE_64KB=y
+CONFIG_ESP32S3_DATA_CACHE_LINE_64B=y
 CONFIG_COMPILER_OPTIMIZATION_PERF=y
 CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
 CONFIG_PM_ENABLE=y
 CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
-# The 8 MB test takes 730 ms per boot, the hwtest profile runs it.
-CONFIG_SPIRAM_MEMTEST=n
-CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY=y
-# The conflict engine runs through more code than 16 KB of instruction cache hold
-CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB=y
 CONFIG_DAIDALUS_SINGLE_PRECISION=y
-# Capture coredumps
-CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH=y
-CONFIG_ESP_COREDUMP_STACK_SIZE=2048
-CONFIG_ESP_COREDUMP_LOGS=n

@@ -1,0 +1,27 @@
+{
+	"version": 6,
+	"configurePresets": [
+		{ "name": "tzdata", "displayName": "Time zone table, 0.01 degree cells", "generator": "Ninja", "binaryDir": "${sourceDir}/build" }
+	],
+	"buildPresets": [
+		{ "name": "tzdata", "configurePreset": "tzdata" },
+		{ "name": "tzdata-flash", "configurePreset": "tzdata", "targets": ["flash-tzdata"] }
+	],
+	"testPresets": [
+		{ "name": "tzdata", "configurePreset": "tzdata", "output": { "outputOnFailure": true }, "execution": { "noTestsAction": "error" } }
+	],
+	"workflowPresets": [
+		{
+			"name": "tzdata",
+			"steps": [
+				{ "type": "configure", "name": "tzdata" },
+				{ "type": "build", "name": "tzdata" },
+				{ "type": "test", "name": "tzdata" }
+			]
+		},
+		{
+			"name": "tzdata-flash",
+			"steps": [{ "type": "configure", "name": "tzdata" }, { "type": "build", "name": "tzdata-flash" }]
+		}
+	]
+}

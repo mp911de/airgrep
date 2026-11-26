@@ -1,7 +1,7 @@
 # What runs on a computer: the airgrep Utility application and the C++ tools that talk to a device.
 # Uses ESP-IDF's Component Manager for LVGL and the native macOS toolchain for the application.
 #
-#   cmake -S utility -B utility/build -G Ninja && cmake --build utility/build
+#   cmake --workflow --preset utility-macos
 #
 # This file is the one build.
 cmake_minimum_required(VERSION 3.27)
@@ -75,6 +75,8 @@ if (NOT "$ENV{LVGL_VERSION}" STREQUAL "${lvgl_version}")
 endif ()
 # A Debug build is for stepping through the application. LVGL draws in software and stays fast.
 target_compile_options(lvgl PRIVATE $<$<CONFIG:Debug>:-O2>)
+include("${FIRMWARE_DIR}/tools/lvgl-glyphs.cmake")
+airgrep_lvgl_glyphs(lvgl "${lvgl_SOURCE_DIR}")
 
 # The conflict engine of the display: NASA's DAIDALUS, the firmware component, as the firmware builds it without files.
 set(DAIDALUS_FILE_IO OFF)
@@ -303,13 +305,14 @@ add_custom_command(OUTPUT "${signed}"
         COMMAND "${CMAKE_COMMAND}" -E touch "${signed}"
         DEPENDS airgrep-utility core ${displays} ${resources} "${CMAKE_CURRENT_BINARY_DIR}/Info.plist"
         VERBATIM)
-add_custom_target(app ALL DEPENDS "${signed}")
+add_custom_target(utility-macos ALL DEPENDS "${signed}")
 
 enable_testing()
 # The firmware's host tests and the rules of the sources, which need no utility.
 add_subdirectory("${FIRMWARE_DIR}/tests/host" host)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
-add_test(NAME usb_layout_python COMMAND "${Python3_EXECUTABLE}" "${FIRMWARE_DIR}/tools/test_usb_layout.py")
+add_test(NAME usb_layout_python COMMAND "${Python3_EXECUTABLE}" "${FIRMWARE_DIR}/tests/host/test_usb_layout.py")
+set_tests_properties(usb_layout_python PROPERTIES ENVIRONMENT "PYTHONPATH=${FIRMWARE_DIR}/tools")
 foreach (test display_mapping device usb_layout remote remote_conflicts flight)
     add_executable(test_${test} test/test_${test}.cpp)
     target_compile_options(test_${test} PRIVATE ${warnings})
@@ -333,6 +336,10 @@ add_executable(test_render test/render.cpp test/png.cpp)
 target_compile_options(test_render PRIVATE ${warnings})
 target_link_libraries(test_render PRIVATE core ZLIB::ZLIB)
 add_dependencies(test_render ${displays})
+add_executable(test_render_live EXCLUDE_FROM_ALL test/render_live.cpp)
+target_compile_options(test_render_live PRIVATE ${warnings})
+target_link_libraries(test_render_live PRIVATE core)
+add_dependencies(test_render_live ${displays})
 # The display of a fixture device: every designed screen against its image, and what gestures do.
 add_test(NAME screens COMMAND "${FIRMWARE_DIR}/tools/check-screens.py")
 add_test(NAME behaviour COMMAND "${FIRMWARE_DIR}/tools/check-behaviour.py")
@@ -354,10 +361,15 @@ foreach (variant ${variants})
     target_link_libraries(test_touch_${variant} PRIVATE ${variant}-objects)
     add_test(NAME touch-${variant} COMMAND test_touch_${variant})
 endforeach ()
+add_executable(test_render_defaults test/test_render_defaults.cpp)
+target_compile_options(test_render_defaults PRIVATE ${warnings})
+target_link_libraries(test_render_defaults PRIVATE 800x480-touch-objects)
+add_test(NAME render_defaults COMMAND test_render_defaults)
 # Where the radar puts tails and dots: pixels only, so it needs no LVGL.
 foreach (part track sections bands labels grow)
     add_executable(test_radar_${part} test/test_radar_${part}.cpp "${DISPLAY_DIR}/ui/widgets/radar/radar_${part}.c")
-    target_include_directories(test_radar_${part} PRIVATE "${DISPLAY_DIR}/ui" "${AIRGREP_DIR}")
+    target_sources(test_radar_${part} PRIVATE "${DISPLAY_DIR}/ui/widgets/radar/render_study.c")
+    target_include_directories(test_radar_${part} PRIVATE "${DISPLAY_DIR}/include" "${DISPLAY_DIR}/ui" "${AIRGREP_DIR}")
     target_compile_options(test_radar_${part} PRIVATE ${warnings})
     add_test(NAME radar_${part} COMMAND test_radar_${part})
 endforeach ()
@@ -384,7 +396,7 @@ target_link_libraries(test_conflict_monitor PRIVATE firmware)
 add_test(NAME conflict_monitor COMMAND test_conflict_monitor)
 
 # ctest -L picks a group: display, device and what tests/host/ names.
-set(display_tests display_mapping app scenario conflict conflict_monitor)
+set(display_tests display_mapping app render_defaults scenario conflict conflict_monitor)
 foreach (display IN LISTS displays)
     list(APPEND display_tests abi-${display})
 endforeach ()

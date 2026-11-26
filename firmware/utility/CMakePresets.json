@@ -1,0 +1,22 @@
+{
+	"version": 6,
+	"configurePresets": [
+		{ "name": "utility-macos", "displayName": "airgrep Utility for macOS", "generator": "Ninja", "binaryDir": "build" }
+	],
+	"buildPresets": [
+		{ "name": "utility-macos", "configurePreset": "utility-macos" }
+	],
+	"testPresets": [
+		{ "name": "utility-macos", "configurePreset": "utility-macos", "output": { "outputOnFailure": true }, "execution": { "noTestsAction": "error" } }
+	],
+	"workflowPresets": [
+		{
+			"name": "utility-macos",
+			"steps": [
+				{ "type": "configure", "name": "utility-macos" },
+				{ "type": "build", "name": "utility-macos" },
+				{ "type": "test", "name": "utility-macos" }
+			]
+		}
+	]
+}

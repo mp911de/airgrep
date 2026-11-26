@@ -18,7 +18,10 @@ else ()
         list(APPEND display_sources "daidalus/detection.cpp" "display/display_mapping.cpp" "daidalus/monitor.cpp" "daidalus/scheduler.cpp"
                 "display/active_display_settings.cpp")
     endif()
-    idf_component_register(SRCS "main.cpp" "console.c" "banner.c" "commands/cmd_uptime.cpp"
+    if(CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH)
+        set(panic_command "commands/cmd_panic.c")
+    endif()
+    idf_component_register(SRCS "main.cpp" "console.c" "banner.c" "commands/cmd_uptime.cpp" ${panic_command}
             "commands/cmd_reboot.c" "commands/cmd_logs.c" "log/log_ring.c" "log/log_session.c" "commands/cmd_exp.cpp"
             "commands/cmd_charger.cpp" "commands/cmd_battery_level.cpp" "commands/cmd_baro.cpp"
             "commands/cmd_fusb.cpp" "commands/cmd_beep.cpp" "commands/cmd_adsbee.cpp" "commands/cmd_gnss.cpp" "commands/cmd_clock.cpp" "commands/cmd_settings.cpp" "commands/cmd_wifi.cpp" "commands/cmd_traffic.cpp"
@@ -27,7 +30,7 @@ else ()
             ${usb_service_sources} ${display_sources}
             INCLUDE_DIRS "." "log" "commands" "system"
             PRIV_REQUIRES airgrep loop hwtest display daidalus console esp_timer esp_driver_gpio
-            esp_tinyusb esp_pm esp_app_format esp_hw_support)
+            esp_tinyusb esp_pm esp_app_format esp_hw_support espcoredump esp_partition)
     target_compile_definitions(${COMPONENT_LIB} PRIVATE AIRGREP_HAS_DISPLAY=$<BOOL:${CONFIG_AIRGREP_DISPLAY}>)
 endif ()
 # Wraps an esp_private symbol of the log component and the console's terminal probe.

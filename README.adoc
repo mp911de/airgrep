@@ -1,0 +1,36 @@
+A portable ADS-B / FLARM receiver based on
+https://github.com/PantsForBirds/adsbee[ADSbee]. Started as carrier
+board for a removable ESP32-S3 touch display and
+https://pantsforbirds.com/product/adsbee-1090u/[ADSBee 1090U] receiver,
+with a soldered MAX-M10S GNSS receiver. It adds a single-cell Li-ion
+charger, a 5 V boost rail, a fuel gauge, a barometer and a buzzer.
+
+=== Current state
+
+* Schematic (7 sheets) and board (105 x 95 mm, 4 layers, all SMD parts
+on top) are implemented. The active TI PCB and schematics define the
+hardware; `tools/check.sh` reports the ERC, DRC and parity state.
+* Order status and open work are in docs/open-issues.md.
+
+=== Where things are
+
+[width="100%",cols="50%,50%",options="header",]
+|===
+|Path |Content
+|docs/ |Specs, design decisions, mechanics, pin maps, I2C limits,
+firmware requirements, USB protocol, hand-sourced BOM, open issues
+
+|issues/ |Local issue tracker, one file per issue
+
+|specs/ |Power model inputs behind the tables in `docs/specs.md`
+
+|hardware/ |KiCad projects: `carrier-ti-charger` (active, BQ25798, with
+schematic PDF and JLCPCB exports), `carrier-max-charger` (frozen
+reference), `insulator`, `sim`
+
+|firmware/ |Display firmware and utility app
+
+|mechanical/ |Placement drawing and extracted module geometry
+
+|datasheets/ |Data sheets of the parts in use
+|===

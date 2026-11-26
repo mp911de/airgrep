@@ -23,6 +23,13 @@ menu "airgrep"
 			Boots the normal loop, then runs the hardware checks and prints
 			one "HWTEST <name> PASS|FAIL <detail>" line per check.
 
+	config AIRGREP_PROFILER
+		bool "LVGL draw profiler"
+		default y if AIRGREP_HWTEST
+		help
+			Hooks the LVGL draw calls for the render_profile hardware check.
+			It costs time on every draw, so release builds leave it out.
+
 	config AIRGREP_DISPLAY
 		string "Display variant"
 		default ""

@@ -2,10 +2,12 @@
 import calendar
 import datetime as dt
 import hashlib
+import http.client
 import importlib.resources as resources
 import json
 from pathlib import Path
-import urllib.request
+import shutil
+import urllib.parse
 import zipfile
 from zoneinfo import ZoneInfo
 import shapely
@@ -13,27 +15,57 @@ from shapely.geometry import shape, Point
 
 ROOT = Path(__file__).resolve().parents[1]
 YEAR = 2026
+CONNECT_TIMEOUT = 10
+READ_TIMEOUT = 30
+
+
+def get(url, headers=None):
+    """The response to a GET, after redirects. Waits at most 10 s to connect and 30 s for each read."""
+    for _ in range(5):
+        parts = urllib.parse.urlsplit(url)
+        connection = http.client.HTTPSConnection(parts.netloc, timeout=CONNECT_TIMEOUT)
+        connection.connect()
+        connection.sock.settimeout(READ_TIMEOUT)
+        connection.request('GET', urllib.parse.urlunsplit(('', '', parts.path, parts.query, '')),
+                           headers={'User-Agent': 'tzdb-builder', **(headers or {})})
+        response = connection.getresponse()
+        if response.status in (301, 302, 303, 307, 308):
+            url = urllib.parse.urljoin(url, response.getheader('Location'))
+            connection.close()
+            continue
+        if response.status != 200:
+            raise OSError(f'GET {url}: HTTP {response.status}')
+        return response
+    raise OSError(f'GET {url}: too many redirects')
 
 
 def fetch(tag, dataset):
     if dataset != 'timezones':
         raise ValueError('dataset must be timezones, the unmerged land zones')
-    endpoint = 'latest' if tag == 'latest' else 'tags/' + tag
-    request = urllib.request.Request(
-        'https://api.github.com/repos/evansiroky/timezone-boundary-builder/releases/' + endpoint,
-        headers={'Accept': 'application/vnd.github+json', 'User-Agent': 'tzdb-builder'})
-    with urllib.request.urlopen(request) as response:
-        release = json.load(response)
+    # A tagged release does not change, so its metadata and archive are fetched once into data/TAG.
+    cached = ROOT / 'data' / tag / 'release.json'
+    if tag != 'latest' and cached.exists():
+        release = json.loads(cached.read_text())
+    else:
+        endpoint = 'latest' if tag == 'latest' else 'tags/' + tag
+        with get('https://api.github.com/repos/evansiroky/timezone-boundary-builder/releases/' + endpoint,
+                 {'Accept': 'application/vnd.github+json'}) as response:
+            release = json.load(response)
     resolved = release['tag_name']
     if tag != 'latest' and resolved != tag:
         raise ValueError('release tag mismatch')
     print('Resolved release:', resolved, flush=True)
     folder = ROOT / 'data' / resolved
     folder.mkdir(parents=True, exist_ok=True)
+    (folder / 'release.json').write_text(json.dumps(release))
     asset = next(a for a in release['assets'] if a['name'] == dataset + '.geojson.zip')
     archive = folder / asset['name']
     if not archive.exists():
-        urllib.request.urlretrieve(asset['browser_download_url'], archive)
+        # An interrupted download leaves only the .part file, never a cached archive.
+        part = archive.with_name(archive.name + '.part')
+        with get(asset['browser_download_url']) as response, part.open('wb') as file:
+            shutil.copyfileobj(response, file)
+        part.replace(archive)
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
     published = asset.get('digest')
     if published and published.startswith('sha256:'):

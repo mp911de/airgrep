@@ -11,3 +11,6 @@ idf_component_register(SRCS "adsbee/adsbee_link.cpp" "adsbee/adsbee_decoder.c" "
         REQUIRES loop esp_driver_i2c nvs_flash esp_partition
         PRIV_REQUIRES esp_driver_uart esp_driver_ledc esp_driver_gpio esp_timer esp_pm
         esp_app_format efuse spi_flash esp_psram)
+# Every image declares its board, also one whose code never asks for it: the Utility and airgrep.py flash
+# check it before they write the image.
+target_link_options(${COMPONENT_LIB} INTERFACE "LINKER:-u,device_board_name")

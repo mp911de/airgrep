@@ -1,6 +1,4 @@
-# The lint preset of the firmware and the utility. Both builds run clang-tidy with it and stop on a finding.
-# Checks: the groups that apply to this code, then the backlog, the checks that report on the code as it
-# is. Fix what a check finds, then remove its line. A clang-diagnostic line is a warning of the compiler.
+# Lint preset for the firmware and the utility.
 Checks:
   - bugprone-*
   - cert-*

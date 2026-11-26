@@ -5,5 +5,5 @@ phy_init,   data, phy,     0xF000,   0x1000,
 factory,    app,  factory, 0x10000,  0x800000,
 coredump,   data, coredump, 0x810000, 0x80000,
 # 0x890000 to 0xE00000 unused.
-# TZL time zone table built by tzdb/, flashed with tools/flash-tzdata.sh.
+# TZL time zone table built by tzdb/, flashed with tools/airgrep.py flash-tzdata.
 tzdata,     data, 0x40,    0xE00000, 0x200000,

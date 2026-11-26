@@ -1,132 +1,97 @@
 {
-	"version": 3,
+	"version": 6,
 	"configurePresets": [
 		{
 			"name": "esp32s3",
 			"hidden": true,
 			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/build/${presetName}",
 			"cacheVariables": {
 				"IDF_TARGET": "esp32s3",
-				"IDF_TOOLCHAIN": "clang"
+				"IDF_TOOLCHAIN": "clang",
+				"PYTHON": "$env{IDF_PYTHON_ENV_PATH}/bin/python",
+				"SDKCONFIG": "${sourceDir}/build/${presetName}/sdkconfig"
 			}
+		},
+		{ "name": "+service", "hidden": true, "cacheVariables": { "AIRGREP_SERVICE_CONFIG": "sdkconfig.usb-service" } },
+		{ "name": "+debug", "hidden": true, "cacheVariables": { "AIRGREP_DEBUG_CONFIG": "sdkconfig.debug" } },
+		{ "name": "+uart0", "hidden": true, "cacheVariables": { "AIRGREP_CONSOLE_CONFIG": "sdkconfig.uart0" } },
+		{ "name": "+hwtest", "hidden": true, "cacheVariables": { "AIRGREP_MODE_CONFIG": "sdkconfig.hwtest" } },
+		{
+			"name": "+test",
+			"hidden": true,
+			"cacheVariables": { "AIRGREP_MODE_CONFIG": "sdkconfig.test", "AIRGREP_TEST": "ON", "TEST_COMPONENTS": "airgrep loop" }
+		},
+		{
+			"name": "+800x480-touch",
+			"hidden": true,
+			"cacheVariables": {
+				"AIRGREP_DISPLAY_CONFIG": "components/display/variants/800x480-touch/sdkconfig;components/display/variants/800x480-touch/sdkconfig.s3"
+			}
+		},
+		{
+			"name": "+seeed-172x320-touch",
+			"hidden": true,
+			"cacheVariables": { "AIRGREP_DISPLAY_CONFIG": "components/display/variants/seeed-172x320-touch/sdkconfig" }
 		},
 		{
 			"name": "s3",
 			"displayName": "airgrep on XIAO ESP32-S3 Plus",
 			"inherits": "esp32s3",
-			"binaryDir": "build/s3",
-			"cacheVariables": {
-				"SDKCONFIG": "build/s3/sdkconfig",
-				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.s3"
-			}
+			"cacheVariables": { "AIRGREP_BOARD_CONFIG": "sdkconfig.board.s3" }
 		},
-		{
-			"name": "s3-800x480-touch",
-			"displayName": "XIAO ESP32-S3 Plus, headless 800x480 rendering",
-			"inherits": "s3",
-			"binaryDir": "build/s3+800x480-touch",
-			"cacheVariables": {
-				"SDKCONFIG": "build/s3+800x480-touch/sdkconfig",
-				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.s3;components/display/variants/800x480-touch/sdkconfig;components/display/variants/800x480-touch/sdkconfig.s3"
-			}
-		},
-		{
-			"name": "s3-debug",
-			"displayName": "airgrep on XIAO ESP32-S3 Plus, USB service commands",
-			"inherits": "s3",
-			"binaryDir": "build/s3-debug",
-			"cacheVariables": {
-				"SDKCONFIG": "build/s3-debug/sdkconfig",
-				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.s3;sdkconfig.usb-service"
-			}
-		},
-		{
-			"name": "display",
-			"displayName": "Seeed display module, app",
-			"inherits": "esp32s3",
-			"binaryDir": "build/display",
-			"cacheVariables": {
-				"SDKCONFIG": "build/display/sdkconfig",
-				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display"
-			}
-		},
-		{
-			"name": "display-800x480-touch",
-			"displayName": "Seeed display module with the 800x480 touch display, app",
-			"inherits": "display",
-			"binaryDir": "build/display+800x480-touch",
-			"cacheVariables": {
-				"SDKCONFIG": "build/display+800x480-touch/sdkconfig",
-				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display;components/display/variants/800x480-touch/sdkconfig"
-			}
-		},
-		{
-			"name": "display-seeed-172x320-touch",
-			"displayName": "Seeed display module with the Seeed 172x320 touch display, app",
-			"inherits": "display",
-			"binaryDir": "build/display+seeed-172x320-touch",
-			"cacheVariables": {
-				"SDKCONFIG": "build/display+seeed-172x320-touch/sdkconfig",
-				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display;components/display/variants/seeed-172x320-touch/sdkconfig"
-			}
-		},
-		{
-			"name": "s3-test",
-			"displayName": "airgrep on ESP32-S3 Plus, tests",
-			"inherits": "esp32s3",
-			"binaryDir": "build/s3-test",
-			"cacheVariables": {
-				"SDKCONFIG": "build/s3-test/sdkconfig",
-				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.s3;sdkconfig.test",
-				"AIRGREP_TEST": "ON",
-				"TEST_COMPONENTS": "airgrep loop"
-			}
-		},
-		{
-			"name": "display-test",
-			"displayName": "Seeed display module, tests",
-			"inherits": "esp32s3",
-			"binaryDir": "build/display-test",
-			"cacheVariables": {
-				"SDKCONFIG": "build/display-test/sdkconfig",
-				"SDKCONFIG_DEFAULTS": "sdkconfig.defaults;sdkconfig.board.display;sdkconfig.test",
-				"AIRGREP_TEST": "ON",
-				"TEST_COMPONENTS": "airgrep loop"
-			}
-		}
+		{ "name": "s3+service", "displayName": "S3 Plus, service commands", "inherits": ["s3", "+service"] },
+		{ "name": "s3+debug", "displayName": "S3 Plus, debug controls", "inherits": ["s3", "+debug"] },
+		{ "name": "s3+uart0", "displayName": "S3 Plus, console on UART0", "inherits": ["s3", "+uart0"] },
+		{ "name": "s3+hwtest", "displayName": "S3 Plus, hardware test", "inherits": ["s3", "+hwtest"] },
+		{ "name": "s3+test", "displayName": "S3 Plus, on-device tests", "inherits": ["s3", "+test"] },
+		{ "name": "s3+800x480-touch", "displayName": "S3 Plus, headless 800x480 rendering", "inherits": ["s3", "+800x480-touch"] },
+		{ "name": "s3+800x480-touch+debug", "displayName": "S3 Plus, 800x480, debug controls", "inherits": ["s3", "+800x480-touch", "+debug"] },
+		{ "name": "s3+800x480-touch+hwtest", "displayName": "S3 Plus, 800x480, hardware test", "inherits": ["s3", "+800x480-touch", "+hwtest"] },
+		{ "name": "s3+seeed-172x320-touch", "displayName": "S3 Plus, Seeed 172x320 touch display", "inherits": ["s3", "+seeed-172x320-touch"] }
 	],
 	"buildPresets": [
-		{
-			"name": "s3",
-			"configurePreset": "s3"
-		},
-		{
-			"name": "s3-800x480-touch",
-			"configurePreset": "s3-800x480-touch"
-		},
-		{
-			"name": "s3-debug",
-			"configurePreset": "s3-debug"
-		},
-		{
-			"name": "display",
-			"configurePreset": "display"
-		},
-		{
-			"name": "display-800x480-touch",
-			"configurePreset": "display-800x480-touch"
-		},
-		{
-			"name": "display-seeed-172x320-touch",
-			"configurePreset": "display-seeed-172x320-touch"
-		},
-		{
-			"name": "s3-test",
-			"configurePreset": "s3-test"
-		},
-		{
-			"name": "display-test",
-			"configurePreset": "display-test"
-		}
+		{ "name": "s3", "configurePreset": "s3" },
+		{ "name": "s3-flash", "configurePreset": "s3", "targets": ["flash-device"] },
+		{ "name": "s3+service", "configurePreset": "s3+service" },
+		{ "name": "s3+service-flash", "configurePreset": "s3+service", "targets": ["flash-device"] },
+		{ "name": "s3+debug", "configurePreset": "s3+debug" },
+		{ "name": "s3+debug-flash", "configurePreset": "s3+debug", "targets": ["flash-device"] },
+		{ "name": "s3+uart0", "configurePreset": "s3+uart0" },
+		{ "name": "s3+uart0-flash", "configurePreset": "s3+uart0", "targets": ["flash-device"] },
+		{ "name": "s3+hwtest", "configurePreset": "s3+hwtest" },
+		{ "name": "s3+hwtest-flash", "configurePreset": "s3+hwtest", "targets": ["flash-device"] },
+		{ "name": "s3+test", "configurePreset": "s3+test" },
+		{ "name": "s3+test-flash", "configurePreset": "s3+test", "targets": ["flash-device"] },
+		{ "name": "s3+800x480-touch", "configurePreset": "s3+800x480-touch" },
+		{ "name": "s3+800x480-touch-flash", "configurePreset": "s3+800x480-touch", "targets": ["flash-device"] },
+		{ "name": "s3+800x480-touch+debug", "configurePreset": "s3+800x480-touch+debug" },
+		{ "name": "s3+800x480-touch+debug-flash", "configurePreset": "s3+800x480-touch+debug", "targets": ["flash-device"] },
+		{ "name": "s3+800x480-touch+hwtest", "configurePreset": "s3+800x480-touch+hwtest" },
+		{ "name": "s3+800x480-touch+hwtest-flash", "configurePreset": "s3+800x480-touch+hwtest", "targets": ["flash-device"] },
+		{ "name": "s3+seeed-172x320-touch", "configurePreset": "s3+seeed-172x320-touch" },
+		{ "name": "s3+seeed-172x320-touch-flash", "configurePreset": "s3+seeed-172x320-touch", "targets": ["flash-device"] }
+	],
+	"workflowPresets": [
+		{ "name": "s3", "steps": [{ "type": "configure", "name": "s3" }, { "type": "build", "name": "s3" }] },
+		{ "name": "s3-flash", "steps": [{ "type": "configure", "name": "s3" }, { "type": "build", "name": "s3-flash" }] },
+		{ "name": "s3+service", "steps": [{ "type": "configure", "name": "s3+service" }, { "type": "build", "name": "s3+service" }] },
+		{ "name": "s3+service-flash", "steps": [{ "type": "configure", "name": "s3+service" }, { "type": "build", "name": "s3+service-flash" }] },
+		{ "name": "s3+debug", "steps": [{ "type": "configure", "name": "s3+debug" }, { "type": "build", "name": "s3+debug" }] },
+		{ "name": "s3+debug-flash", "steps": [{ "type": "configure", "name": "s3+debug" }, { "type": "build", "name": "s3+debug-flash" }] },
+		{ "name": "s3+uart0", "steps": [{ "type": "configure", "name": "s3+uart0" }, { "type": "build", "name": "s3+uart0" }] },
+		{ "name": "s3+uart0-flash", "steps": [{ "type": "configure", "name": "s3+uart0" }, { "type": "build", "name": "s3+uart0-flash" }] },
+		{ "name": "s3+hwtest", "steps": [{ "type": "configure", "name": "s3+hwtest" }, { "type": "build", "name": "s3+hwtest" }] },
+		{ "name": "s3+hwtest-flash", "steps": [{ "type": "configure", "name": "s3+hwtest" }, { "type": "build", "name": "s3+hwtest-flash" }] },
+		{ "name": "s3+test", "steps": [{ "type": "configure", "name": "s3+test" }, { "type": "build", "name": "s3+test" }] },
+		{ "name": "s3+test-flash", "steps": [{ "type": "configure", "name": "s3+test" }, { "type": "build", "name": "s3+test-flash" }] },
+		{ "name": "s3+800x480-touch", "steps": [{ "type": "configure", "name": "s3+800x480-touch" }, { "type": "build", "name": "s3+800x480-touch" }] },
+		{ "name": "s3+800x480-touch-flash", "steps": [{ "type": "configure", "name": "s3+800x480-touch" }, { "type": "build", "name": "s3+800x480-touch-flash" }] },
+		{ "name": "s3+800x480-touch+debug", "steps": [{ "type": "configure", "name": "s3+800x480-touch+debug" }, { "type": "build", "name": "s3+800x480-touch+debug" }] },
+		{ "name": "s3+800x480-touch+debug-flash", "steps": [{ "type": "configure", "name": "s3+800x480-touch+debug" }, { "type": "build", "name": "s3+800x480-touch+debug-flash" }] },
+		{ "name": "s3+800x480-touch+hwtest", "steps": [{ "type": "configure", "name": "s3+800x480-touch+hwtest" }, { "type": "build", "name": "s3+800x480-touch+hwtest" }] },
+		{ "name": "s3+800x480-touch+hwtest-flash", "steps": [{ "type": "configure", "name": "s3+800x480-touch+hwtest" }, { "type": "build", "name": "s3+800x480-touch+hwtest-flash" }] },
+		{ "name": "s3+seeed-172x320-touch", "steps": [{ "type": "configure", "name": "s3+seeed-172x320-touch" }, { "type": "build", "name": "s3+seeed-172x320-touch" }] },
+		{ "name": "s3+seeed-172x320-touch-flash", "steps": [{ "type": "configure", "name": "s3+seeed-172x320-touch" }, { "type": "build", "name": "s3+seeed-172x320-touch-flash" }] }
 	]
 }

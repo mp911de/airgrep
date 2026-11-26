@@ -16,11 +16,46 @@ endif()
 if(AIRGREP_CHANGES)
     string(APPEND PROJECT_VER "-dirty")
 endif()
+if(NOT DEFINED ENV{IDF_PATH})
+    message(FATAL_ERROR "Activate ESP-IDF first: source ~/.espressif/tools/activate_idf_v6.1.sh")
+endif()
+# Each preset mixin names the fragment of one axis, so mixins combine. A later fragment wins.
+set(SDKCONFIG_DEFAULTS sdkconfig.defaults ${AIRGREP_BOARD_CONFIG} ${AIRGREP_DISPLAY_CONFIG}
+        ${AIRGREP_MODE_CONFIG} ${AIRGREP_CONSOLE_CONFIG} ${AIRGREP_SERVICE_CONFIG} ${AIRGREP_DEBUG_CONFIG})
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 idf_build_set_property(MINIMAL_BUILD ON)
 # Requirements are resolved in a script-mode pass that cannot see cache variables.
 idf_build_set_property(AIRGREP_TEST "${AIRGREP_TEST}")
 project(airgrep)
+
+if(CONFIG_AIRGREP_DISPLAY STREQUAL "800x480-touch")
+    idf_component_get_property(lvgl_dir lvgl__lvgl COMPONENT_DIR)
+    idf_component_get_property(lvgl_lib lvgl__lvgl COMPONENT_LIB)
+    include(tools/lvgl-glyphs.cmake)
+    airgrep_lvgl_glyphs(${lvgl_lib} "${lvgl_dir}")
+endif()
+
+if(CONFIG_IDF_TARGET_ESP32S3 AND CONFIG_AIRGREP_DISPLAY STREQUAL "800x480-touch")
+    idf_component_get_property(lvgl_dir lvgl__lvgl COMPONENT_DIR)
+    idf_component_get_property(lvgl_lib lvgl__lvgl COMPONENT_LIB)
+    # LVGL renders full circles through its border rasterizer. Both keep the original arc task.
+    set_property(SOURCE "${lvgl_dir}/src/draw/sw/lv_draw_sw_arc.c"
+            "${lvgl_dir}/src/draw/sw/lv_draw_sw_border.c" TARGET_DIRECTORY ${lvgl_lib}
+            APPEND PROPERTY COMPILE_DEFINITIONS lv_draw_sw_blend=radar_wedge_blend)
+endif()
+
+if(CONFIG_AIRGREP_PROFILER AND CONFIG_AIRGREP_BOARD_PLUS AND CONFIG_AIRGREP_DISPLAY STREQUAL "800x480-touch")
+    idf_component_get_property(lvgl_lib lvgl__lvgl COMPONENT_LIB)
+    set(draw_profiler_dir "${CMAKE_CURRENT_SOURCE_DIR}/components/hwtest")
+    set(draw_profiler_defs LV_USE_PROFILER=1 LV_PROFILER_DRAW=1
+            LV_PROFILER_INCLUDE="render_profile_hooks.h")
+    target_include_directories(${lvgl_lib} PRIVATE "${draw_profiler_dir}")
+    target_compile_definitions(${lvgl_lib} PRIVATE ${draw_profiler_defs})
+    idf_component_get_property(display_lib display COMPONENT_LIB)
+    set_source_files_properties(components/display/ui/widgets/radar/radar_wedge_blend.c
+            TARGET_DIRECTORY ${display_lib} PROPERTIES INCLUDE_DIRECTORIES "${draw_profiler_dir}"
+            COMPILE_DEFINITIONS "${draw_profiler_defs}")
+endif()
 
 # The variant is the build directory name, the preset's binaryDir: s3+800x480-touch. Each build also
 # leaves its image in build/images, named for the variant and the version the image reports.
@@ -33,6 +68,14 @@ add_custom_command(TARGET app POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin"
                 "${AIRGREP_IMAGES}/${CMAKE_PROJECT_NAME}-${AIRGREP_VARIANT}-${PROJECT_VER}.bin"
         VERBATIM)
+
+# Builds the application image, then airgrep.py puts the device into its bootloader, writes the image
+# into the factory partition and opens the console.
+idf_build_get_property(python PYTHON)
+add_custom_target(flash-device
+        COMMAND "${python}" "${CMAKE_SOURCE_DIR}/tools/airgrep.py" flash "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin"
+        USES_TERMINAL VERBATIM)
+add_dependencies(flash-device app)
 
 find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format REQUIRED)
 file(GLOB_RECURSE AIRGREP_FORMAT_SOURCES CONFIGURE_DEPENDS

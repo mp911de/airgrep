@@ -35,7 +35,7 @@ menu "airgrep hardware"
     config AIRGREP_CPU_METRICS
         bool "Measure the CPU load for the health check"
         default y
-        depends on FREERTOS_GENERATE_RUN_TIME_STATS
+        select FREERTOS_GENERATE_RUN_TIME_STATS
         help
             Off leaves the CPU health bit at 0.
 

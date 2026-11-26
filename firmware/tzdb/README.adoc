@@ -9,13 +9,14 @@ Run from `firmware/tzdb`:
 
 [source,sh]
 ----
-cmake -S . -B build
-cmake --build build
-ctest --test-dir build --output-on-failure
+cmake --workflow --preset tzdata         # build build/tzdata.bin, run the tests
+cmake --workflow --preset tzdata-flash   # build, flash when the device holds another table
 ----
 
+A tagged boundary release is downloaded once into `data/`, pip reuses its wheel cache, and the table is rebuilt only when a tool, the requirements or a setting change.
+
 In airgrep Utility, connect to the device and choose *Time Zone Data…* under *Maintenance* to install `build/tzdata.bin`.
-For a command-line install, use link:../tools/flash-tzdata.sh[flash-tzdata.sh].
+From the command line, `tools/airgrep.py flash-tzdata tzdb/build/tzdata.bin` installs it, `--force` also when the device holds it already.
 
 == Choosing a resolution
 

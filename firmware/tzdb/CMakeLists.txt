@@ -29,7 +29,7 @@ set(interpreter "${out}/CMakeFiles/tzdb-python.txt")
 file(CONFIGURE OUTPUT "${interpreter}" CONTENT "${Python3_EXECUTABLE}\n${Python3_VERSION}\n")
 add_custom_command(OUTPUT "${venv}/.ready"
         COMMAND "${Python3_EXECUTABLE}" -m venv --clear "${venv}"
-        COMMAND "${python}" -m pip install --no-cache-dir -r "${requirements}"
+        COMMAND "${python}" -m pip install -r "${requirements}"
         COMMAND "${CMAKE_COMMAND}" -E touch "${venv}/.ready"
         DEPENDS "${requirements}" "${interpreter}"
         VERBATIM)
@@ -49,15 +49,25 @@ set(raster "${out}/raster-${step}.bin")
 set(rows "${out}/tz-${step}-rows.bin")
 set(quadtree "${out}/tz-${step}-quadtree.bin")
 set(table "${out}/tzdata.bin")
-add_custom_target(tables
+# Rebuilt only when a tool, the requirements or a setting change. The latest release is not a setting
+# that changes, so RELEASE=latest needs a clean build to pick up a new one.
+add_custom_command(OUTPUT "${raster}" "${rows}" "${quadtree}" "${out}/tz-${step}.bin" "${table}" "${out}/sizes.json" "${out}/zones.json"
         COMMAND ${run_python} "${tools}/build_table.py" ${source_options} --cell "${CELL}" --output "${out}"
-        BYPRODUCTS "${raster}" "${rows}" "${quadtree}" "${out}/tz-${step}.bin" "${table}" "${out}/sizes.json" "${out}/zones.json"
+        DEPENDS "${tools}/build_table.py" "${tools}/source.py" "${venv}/.ready"
         VERBATIM)
-add_dependencies(tables setup)
+add_custom_target(tables DEPENDS "${table}")
 add_custom_target(tzdata ALL
         COMMAND "${CMAKE_COMMAND}" -E sha256sum "${table}"
         VERBATIM)
 add_dependencies(tzdata tables)
+
+# Flashes the table when the device holds another one, with the ESP-IDF Python that has esptool.
+find_program(IDF_PYTHON NAMES python3 HINTS "$ENV{IDF_PYTHON_ENV_PATH}/bin"
+        "$ENV{HOME}/.espressif/tools/python/v6.1/venv/bin" NO_DEFAULT_PATH)
+add_custom_target(flash-tzdata
+        COMMAND "${IDF_PYTHON}" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/airgrep.py" flash-tzdata "${table}"
+        USES_TERMINAL VERBATIM)
+add_dependencies(flash-tzdata tables)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)

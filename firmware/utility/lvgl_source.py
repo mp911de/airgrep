@@ -26,7 +26,7 @@ def lvgl_source(lockfile, version, offline):
     component = LockManager(lockfile).load().solved_components.get("lvgl/lvgl")
     if component is None or str(component.version) != version:
         sys.exit(
-            f"Lockfile does not contain LVGL {version}. Run idf.py --preset s3 reconfigure."
+            f"Lockfile does not contain LVGL {version}. Run cmake --preset s3."
         )
 
     cache = Path(component.source.component_cache_path(component))
