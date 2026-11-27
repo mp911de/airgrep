@@ -7,10 +7,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 # Other people's trees, and what builds write.
 FOREIGN = ("adsbee", "firmware/components/daidalus", "firmware/managed_components", "firmware/third_party",
-           "firmware/build", "firmware/cmake-build-debug", "firmware/utility/build", "firmware/tzdb/venv",
-           "hardware/sim/.venv", ".git", ".idea", ".claude")
+           "firmware/build", "firmware/cmake-build-debug", "firmware/utility/build", "firmware/tzdb/build",
+           "firmware/tzdb/venv", "hardware/sim/.venv", ".git", ".idea", ".claude")
 ENDINGS = (".md", ".adoc", ".py", ".sh", ".c", ".cpp", ".h", ".hpp", ".json", ".xml", ".cmake", ".txt", ".html", ".yml")
-BUILT = ("build/", "netmap/", ".venv/", "~/")
+BUILT = ("build/", "netmap/", ".venv/", "pdf2text/", "data/", "~/")
 MARKDOWN_LINK = re.compile(r"\]\(([^)\s#]+)(?:#[^)]*)?\)")
 ASCIIDOC_LINK = re.compile(r"\b(?:link|xref):([^\s\[#]+)(?:#[^\s\[]*)?\[")
 QUOTED = re.compile(r"`([^`\s]+)`")

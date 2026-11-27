@@ -5,6 +5,7 @@ import hashlib
 import http.client
 import importlib.resources as resources
 import json
+import os
 from pathlib import Path
 import shutil
 import urllib.parse
@@ -26,8 +27,11 @@ def get(url, headers=None):
         connection = http.client.HTTPSConnection(parts.netloc, timeout=CONNECT_TIMEOUT)
         connection.connect()
         connection.sock.settimeout(READ_TIMEOUT)
+        request_headers = {'User-Agent': 'tzdb-builder', **(headers or {})}
+        if parts.netloc != 'api.github.com':
+            request_headers.pop('Authorization', None)
         connection.request('GET', urllib.parse.urlunsplit(('', '', parts.path, parts.query, '')),
-                           headers={'User-Agent': 'tzdb-builder', **(headers or {})})
+                           headers=request_headers)
         response = connection.getresponse()
         if response.status in (301, 302, 303, 307, 308):
             url = urllib.parse.urljoin(url, response.getheader('Location'))
@@ -48,8 +52,12 @@ def fetch(tag, dataset):
         release = json.loads(cached.read_text())
     else:
         endpoint = 'latest' if tag == 'latest' else 'tags/' + tag
+        headers = {'Accept': 'application/vnd.github+json'}
+        token = os.environ.get('GITHUB_TOKEN') or os.environ.get('GH_TOKEN')
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
         with get('https://api.github.com/repos/evansiroky/timezone-boundary-builder/releases/' + endpoint,
-                 {'Accept': 'application/vnd.github+json'}) as response:
+                 headers) as response:
             release = json.load(response)
     resolved = release['tag_name']
     if tag != 'latest' and resolved != tag:

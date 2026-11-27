@@ -1,0 +1,120 @@
+name: Firmware
+
+on:
+  push:
+    paths:
+      - 'firmware/**'
+      - '!firmware/tzdb/**'
+      - 'docs/**'
+      - 'tools/check-docs.py'
+      - '.github/workflows/firmware.yml'
+  pull_request:
+    paths:
+      - 'firmware/**'
+      - '!firmware/tzdb/**'
+      - 'docs/**'
+      - 'tools/check-docs.py'
+      - '.github/workflows/firmware.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (${{ matrix.preset }})
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:release-v6.1
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        preset:
+          - s3
+          - s3+service
+          - s3+800x480-touch
+          - s3+800x480-touch+debug
+          - s3+test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install clang-format
+        run: |
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+          apt-get update
+          apt-get install -y --no-install-recommends clang-format
+
+      - name: Cache esp-clang
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /opt/esp/tools/tools/esp-clang
+          key: esp-clang-release-v6.1-${{ runner.arch }}
+
+      - name: Install esp-clang
+        run: |
+          "${IDF_PATH}/tools/idf_tools.py" --non-interactive install esp-clang
+
+      - name: Cache managed components
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: firmware/managed_components
+          key: idf-components-${{ hashFiles('firmware/dependencies.lock') }}
+
+      - name: Build preset
+        id: build
+        working-directory: firmware
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC1091
+          source "${IDF_PATH}/export.sh"
+          cmake --workflow --preset "${{ matrix.preset }}"
+          shopt -s nullglob
+          bins=(build/images/airgrep-*.bin)
+          (( ${#bins[@]} == 1 ))
+          echo "path=firmware/${bins[0]}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload firmware image
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          path: ${{ steps.build.outputs.path }}
+          archive: false
+          if-no-files-found: error
+
+  host-tests:
+    name: Host tests and linters
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:release-v6.1
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install linters
+        run: |
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+          apt-get update
+          apt-get install -y --no-install-recommends shellcheck python3-venv
+          python3 -m venv /opt/ci-tools
+          /opt/ci-tools/bin/pip install --quiet ruff
+          echo "/opt/ci-tools/bin" >> "${GITHUB_PATH}"
+
+      - name: Build and run host tests
+        working-directory: firmware
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC1091
+          source "${IDF_PATH}/export.sh"
+          cmake -S tests/host -B build/host -G Ninja \
+            -DCMAKE_C_COMPILER=/usr/bin/cc \
+            -DCMAKE_CXX_COMPILER=/usr/bin/c++
+          cmake --build build/host
+          ctest --test-dir build/host --no-tests=error --output-on-failure

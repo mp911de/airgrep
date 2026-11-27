@@ -1,0 +1,113 @@
+name: macOS Utility
+
+on:
+  push:
+    paths:
+      - 'firmware/**'
+      - 'assets/**'
+      - 'tools/check-docs.py'
+      - '.github/workflows/utility.yml'
+  pull_request:
+    paths:
+      - 'firmware/**'
+      - 'assets/**'
+      - 'tools/check-docs.py'
+      - '.github/workflows/utility.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  utility:
+    runs-on: macos-15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+
+      - name: Install build dependencies
+        run: brew install cmake ninja clang-format llvm libusb pkgconf ruff shellcheck
+
+      - name: Set up Python tools
+        run: |
+          python3 -m venv "${RUNNER_TEMP}/ci-venv"
+          "${RUNNER_TEMP}/ci-venv/bin/pip" install --quiet idf-component-manager pillow dmgbuild
+          echo "${RUNNER_TEMP}/ci-venv/bin" >> "${GITHUB_PATH}"
+          echo "IDF_PYTHON_ENV_PATH=${RUNNER_TEMP}/ci-venv" >> "${GITHUB_ENV}"
+
+      - name: Cache timezone database
+        id: tzdb-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: firmware/tzdb/build/tzdata.bin
+          key: tzdata-${{ hashFiles('firmware/tzdb/CMakeLists.txt', 'firmware/tzdb/requirements.txt', 'firmware/tzdb/tools/**') }}
+
+      - name: Build timezone database
+        if: steps.tzdb-cache.outputs.cache-hit != 'true'
+        working-directory: firmware/tzdb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -G Ninja
+          cmake --build build --target tables
+
+      - name: Cache Unity
+        id: unity-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/unity
+          key: unity-v2.6.0
+
+      - name: Fetch Unity
+        if: steps.unity-cache.outputs.cache-hit != 'true'
+        run: git clone --depth 1 --branch v2.6.0 https://github.com/ThrowTheSwitch/Unity.git "${RUNNER_TEMP}/unity"
+
+      - name: Export UNITY_DIR
+        run: echo "UNITY_DIR=${RUNNER_TEMP}/unity/src" >> "${GITHUB_ENV}"
+
+      - name: Cache LVGL package
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/Library/Caches/Espressif/ComponentManager
+          key: lvgl-${{ hashFiles('firmware/dependencies.lock') }}
+
+      - name: Build, test, and package DMG
+        working-directory: firmware/utility
+        run: cmake --workflow --preset utility-macos-dmg
+
+      - name: Verify mounted DMG
+        id: dmg
+        working-directory: firmware/utility
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          dmgs=(build/airgrep-utility-*.dmg)
+          (( ${#dmgs[@]} == 1 ))
+          dmg="${dmgs[0]}"
+          echo "path=firmware/utility/${dmg}" >> "${GITHUB_OUTPUT}"
+          mount_dir="${RUNNER_TEMP}/dmg-mount"
+          hdiutil attach "${dmg}" -mountpoint "${mount_dir}" -nobrowse -readonly
+          trap 'hdiutil detach "${mount_dir}" -quiet || true' EXIT
+          test -f "${mount_dir}/.DS_Store"
+          test -f "${mount_dir}/.VolumeIcon.icns"
+          test -L "${mount_dir}/Applications"
+          test -f "${mount_dir}/airgrep Utility.app/Contents/Resources/tzdata.bin"
+          codesign --verify --deep --strict "${mount_dir}/airgrep Utility.app"
+
+      - name: Upload macOS DMG
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          path: ${{ steps.dmg.outputs.path }}
+          archive: false
+          if-no-files-found: error

@@ -59,14 +59,20 @@ final class Console: ObservableObject {
                     }
                     opened = try SerialPort(path: path)
                 }
-                let accepted = DispatchQueue.main.sync {
-                    MainActor.assumeIsolated { self?.attach(opened, for: generation) ?? false }
+                let accepted: Bool
+                if let console = self {
+                    accepted = DispatchQueue.main.sync {
+                        MainActor.assumeIsolated { console.attach(opened, for: generation) }
+                    }
+                } else {
+                    return
                 }
                 guard accepted else { return }
                 while true {
                     let bytes = try opened.read(atMost: 4096, within: .milliseconds(200))
+                    guard let console = self else { return }
                     let running = DispatchQueue.main.sync {
-                        MainActor.assumeIsolated { self?.received(bytes, from: generation) ?? false }
+                        MainActor.assumeIsolated { console.received(bytes, from: generation) }
                     }
                     if !running { return }
                 }
@@ -75,9 +81,9 @@ final class Console: ObservableObject {
             } catch {
                 failure = error.localizedDescription
             }
-            if let failure {
+            if let failure, let console = self {
                 DispatchQueue.main.async {
-                    MainActor.assumeIsolated { self?.end(failure, of: generation) }
+                    MainActor.assumeIsolated { console.end(failure, of: generation) }
                 }
             }
         }
@@ -101,8 +107,10 @@ final class Console: ObservableObject {
             } catch is CancellationError {
             } catch {
                 let message = error.localizedDescription
-                DispatchQueue.main.async {
-                    MainActor.assumeIsolated { self?.end(message, of: generation) }
+                if let console = self {
+                    DispatchQueue.main.async {
+                        MainActor.assumeIsolated { console.end(message, of: generation) }
+                    }
                 }
             }
         }

@@ -338,6 +338,7 @@ else ()
 endif ()
 set(dmg_file "${CMAKE_CURRENT_BINARY_DIR}/airgrep-utility-${PROJECT_VERSION}.dmg")
 add_custom_command(OUTPUT "${dmg_file}"
+        COMMAND "${CMAKE_COMMAND}" -E rm -f "${dmg_file}"
         COMMAND "${dmgbuild_cmd}" -s "${CMAKE_CURRENT_SOURCE_DIR}/app/dmg_settings.py"
                 -D "app=$<TARGET_BUNDLE_DIR:airgrep-utility>"
                 -D "background=${dmg_background}"

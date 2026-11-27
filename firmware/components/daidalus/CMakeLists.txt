@@ -73,7 +73,9 @@ if(DAIDALUS_BUILD_EXAMPLES AND DAIDALUS_FILE_IO)
     endforeach()
 endif()
 
-if(DAIDALUS_BUILD_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../main/daidalus/monitor.cpp")
+if(DAIDALUS_BUILD_TESTS
+        AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt"
+        AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../main/daidalus/monitor.cpp")
     enable_testing()
     add_subdirectory(tests)
 endif()

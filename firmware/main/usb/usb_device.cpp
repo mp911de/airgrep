@@ -440,20 +440,20 @@ esp_err_t start() {
 }
 }
 
-extern "C" void tud_vendor_rx_cb(uint8_t interface, const uint8_t*,
+extern "C" void tud_vendor_rx_cb(uint8_t idx, const uint8_t*,
 #if CFG_TUD_API_V0_19_COMPAT
 								 uint16_t
 #else
 								 uint32_t
 #endif
 ) {
-	if (interface == 0) {
+	if (idx == 0) {
 		usb::receive();
 	}
 }
 
-extern "C" void tud_vendor_tx_cb(uint8_t interface, uint32_t sent_bytes) {
-	if (interface == 0 && sent_bytes) {
+extern "C" void tud_vendor_tx_cb(uint8_t idx, uint32_t sent_bytes) {
+	if (idx == 0 && sent_bytes) {
 		usb::transmitted();
 	}
 }
