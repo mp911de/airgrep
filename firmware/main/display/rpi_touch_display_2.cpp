@@ -14,6 +14,7 @@
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "p4_maintenance.hpp"
 #include "screen_mode.hpp"
 #include "system/device_info.h"
 #include "usb/usb_device.hpp"
@@ -277,5 +278,6 @@ extern "C" void app_main(void) {
 								nullptr) == pdPASS
 						? ESP_OK
 						: ESP_ERR_NO_MEM);
+	ESP_ERROR_CHECK_WITHOUT_ABORT(start_p4_maintenance());
 	ESP_ERROR_CHECK_WITHOUT_ABORT(usb::start());
 }

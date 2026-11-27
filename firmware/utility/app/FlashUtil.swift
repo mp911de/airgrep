@@ -19,6 +19,7 @@ final class FlashUtil {
 
     private enum Command: UInt8 {
         case writeRegister = 0x09, readRegister = 0x0A, setFlashParameters = 0x0B, attachFlash = 0x0D
+        case securityInfo = 0x14
         case sync = 0x08, beginCompressed = 0x10, compressedData = 0x11, flashMD5 = 0x13
     }
 
@@ -58,7 +59,7 @@ final class FlashUtil {
     }
 
     /// Finds the ROM on the port and keeps it from resetting the chip while it is written.
-    func connect() throws {
+    func connect(p4: Bool = false) throws {
         var answered = false
         for _ in 0..<Self.syncAttempts where !answered {
             try Task.checkCancellation()
@@ -74,6 +75,13 @@ final class FlashUtil {
         while (try? frame(within: timeLeft(Self.syncReply))) != nil {}
         try Task.checkCancellation()
 
+        if p4 {
+            let info = try check(.securityInfo, [], "Checking chip", replyBytes: 20)
+            guard Array(info[12..<16]) == [18, 0, 0, 0] else { throw Failure("Expected an ESP32-P4.") }
+            try powerP4Flash()
+            return
+        }
+
         // Over USB Serial/JTAG nothing feeds the watchdogs of the chip.
         if try readRegister(Register.port) & 0xFF == Register.portSerialJTAG {
             try writeRegister(Register.watchdogProtect, Register.watchdogKey)
@@ -84,6 +92,32 @@ final class FlashUtil {
                 Register.superWatchdogConfiguration,
                 try readRegister(Register.superWatchdogConfiguration) | Register.superWatchdogAutoFeed)
         }
+    }
+
+    /// P4 ECO6 and ECO7 ROMs require flash power before SPI attach.
+    /// Register sequence from Espressif esptool ESP32P4ROM.power_on_flash.
+    private func powerP4Flash() throws {
+        let revision = try readRegister(0x5012_D04C)
+        let major = ((revision >> 23) & 1) << 2 | ((revision >> 4) & 3)
+        let minor = revision & 15
+        guard major == 3, minor == 1 || minor == 2 else { return }
+        let forceOn: UInt32 = 0x5011_53FC
+        if minor == 2, try readRegister(0x5012_D034) & (1 << 16) != 0 {
+            if try readRegister(forceOn) & 3 == 3 { try writeRegister(forceOn, 0, mask: 3) }
+            return
+        }
+        let ldo: UInt32 = 0x5011_51B8, analog: UInt32 = 0x5011_51BC
+        try writeRegister(0x5011_010C, 1)
+        Thread.sleep(forTimeInterval: 0.01)
+        try writeRegister(analog, 1 << 27, mask: 1 << 27)
+        try writeRegister(ldo, 0x80, mask: 0x80)
+        try writeRegister(forceOn, 3, mask: 3)
+        Thread.sleep(forTimeInterval: 0.00005)
+        try writeRegister(analog, 0, mask: 1 << 27)
+        try writeRegister(ldo, 0, mask: 0xFF << 23)
+        try writeRegister(ldo, 0x80, mask: 0x80)
+        try writeRegister(ldo, 0, mask: 0x80)
+        Thread.sleep(forTimeInterval: 0.002)
     }
 
     /// Cancellation is safe until the erase starts. After that, finish writing and verify the digest.

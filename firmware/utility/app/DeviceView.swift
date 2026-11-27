@@ -9,7 +9,9 @@ struct DeviceView: View {
     private static let logoHeight = 40.0
 
     var body: some View {
-        if let session = utility.session, session.device.id == device.id {
+        if device.bridge {
+            BridgeMaintenanceView(device: device).id(device.id)
+        } else if let session = utility.session, session.device.id == device.id {
             ConnectedView(device: device, session: session)
                 .id(ObjectIdentifier(session))
         } else {

@@ -123,7 +123,7 @@ enum Maintenance {
         }
 
         private static func checkFirmware(_ bytes: [UInt8], board: String) throws {
-            guard bytes[12] == 9, bytes[13] == 0 else { throw Failure("The firmware is for another chip.") }
+            guard bytes[12] == (board == "P4 Nano" ? 18 : 9), bytes[13] == 0 else { throw Failure("The firmware is for another chip.") }
             guard (1...16).contains(bytes[1]), bytes[23] <= 1 else { throw Failure("Invalid ESP image header.") }
             let boardAt = descriptionAt + 256
             let descriptor = Array("airgrep-board:\(board)".utf8) + [0]

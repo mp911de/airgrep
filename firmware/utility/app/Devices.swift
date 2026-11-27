@@ -7,9 +7,10 @@ struct Device: Identifiable, Hashable {
     /// The serial port of its console, or empty. The demo device has a console without a port.
     let console: String
 
-    var id: String { serial }
+    var bridge = false
+    var id: String { bridge ? "uart-\(serial)" : serial }
     var isEmulated: Bool { serial == AIRGREP_EMULATED }
-    var name: String { isEmulated ? "Demo Device" : "airgrep-\(serial)" }
+    var name: String { bridge ? "UART bridge \(serial)" : isEmulated ? "Demo Device" : "airgrep-\(serial)" }
     var hasConsole: Bool { isEmulated || !console.isEmpty }
 
     /// An emulated device in flight, which is always there.
@@ -27,7 +28,10 @@ struct Device: Identifiable, Hashable {
                 return Device(serial: serial, hasDataInterface: found.data, console: console ?? "")
             }
             .sorted { $0.serial < $1.serial }
-        return (devices, text(problem))
+        let bridges = SerialPort.ports(vendor: 0x1A86, product: 0x55D3).map {
+            Device(serial: $0.serial, hasDataInterface: false, console: $0.path, bridge: true)
+        }
+        return (devices + bridges, text(problem))
     }
 }
 
@@ -95,6 +99,8 @@ struct DevicesView: View {
                 Text(device.name)
                 if let session = utility.session, session.device.id == device.id {
                     SessionCaption(session: session)
+                } else if device.bridge {
+                    Text("Maintenance").font(.caption).foregroundStyle(.secondary)
                 } else if !device.hasDataInterface {
                     Text("Firmware too old").font(.caption).foregroundStyle(.secondary)
                 }

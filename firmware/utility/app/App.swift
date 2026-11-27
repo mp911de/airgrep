@@ -201,6 +201,7 @@ final class Utility: ObservableObject {
     var listed: [Device] { [Device.demo] + devices }
 
     func connect(_ device: Device) {
+        guard device.hasDataInterface else { return }
         disconnect()
         session = Session(device)
     }

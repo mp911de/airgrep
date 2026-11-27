@@ -473,13 +473,82 @@ def console_ports(ports, interfaces, serial_number=None):
             if port_role(interfaces.get(port.device)) == "console"]
 
 
+def uart_bridges(ports, serial_number=None):
+    return [port for port in ports if (port.vid, port.pid) == (0x1A86, 0x55D3)
+            and selects(serial_number, port.serial_number)]
+
+
+def bridge_command(port, command, arguments, force=False):
+    if command not in ("hello", "reboot", "dfu", "flash", "flash-tzdata"):
+        raise ProtocolError(f"{command} requires the native USB service")
+    serial, _ = load_serial()
+    link = serial.Serial(port=None, baudrate=115200, timeout=0.2, exclusive=True)
+    link.port = port.device
+    link.dtr = link.rts = False
+    with link:
+        link.reset_input_buffer()
+        next_request = 0
+        deadline = time.monotonic() + TIMEOUT
+        while time.monotonic() < deadline:
+            if time.monotonic() >= next_request:
+                link.write(b"\rhello\r")
+                next_request = time.monotonic() + 0.6
+            reply = link.readline(512).strip().decode("ascii", errors="replace")
+            fields = reply.split("\t")
+            if (len(fields) == 9 and fields[:2] == ["AIRGREP/1", "P4 Nano"]
+                    and re.fullmatch("[0-9a-fA-F]{12}", fields[2])
+                    and all(value.isdecimal() for value in fields[5:])):
+                break
+        else:
+            raise ProtocolError("No AIRGREP P4 Nano HELLO on the selected UART bridge")
+        print(f"{fields[1]}, {fields[2]}, {fields[3]}, {fields[4]}", flush=True)
+        if command == "hello":
+            return
+        if command == "reboot":
+            link.rts = True
+            time.sleep(0.1)
+            link.rts = False
+            return
+    if command == "dfu":
+        esptool(port.device, "--after=no-reset", "read-mac", chip="esp32p4", rom=True)
+        return
+    image = Path(arguments[0])
+    data = image.read_bytes()
+    if command == "flash":
+        if image_board(image, data, chip=18) != fields[1]:
+            raise ProtocolError("The firmware declares another board")
+        name, location = "factory", fields[5:7]
+    else:
+        if len(data) < TZDATA_HEADER or data[:4] != b"TZL2" or int.from_bytes(data[40:44], "little") != len(data):
+            raise ProtocolError("Invalid TZL2 time zone table")
+        name, location = "tzdata", fields[7:9]
+    offset, size = partition(name)
+    if tuple(map(int, location)) != (offset, size) or len(data) > size:
+        raise ProtocolError(f"Image or installed {name} partition does not match the board layout")
+    if name == "tzdata" and not force:
+        with tempfile.TemporaryDirectory() as folder:
+            header = Path(folder) / "header.bin"
+            esptool(port.device, "--after=hard-reset", "read-flash", hex(offset), str(TZDATA_HEADER),
+                    str(header), chip="esp32p4")
+            if header.read_bytes() == data[:TZDATA_HEADER]:
+                print("The device already holds this time zone table.")
+                return
+    esptool(port.device, "--after=hard-reset", "write-flash", hex(offset), str(image), chip="esp32p4")
+
+
 def print_devices(records, ports, interfaces, serial_number=None):
     records = [record for record in records if selects(serial_number, record.serial_number)]
-    if not records:
+    bridges = uart_bridges(ports, serial_number)
+    if not records and not bridges:
         print("No AIRGREP USB devices found.")
     for record in sorted(records, key=lambda r: r.serial_number or r.product):
         selector = f"--serial {record.serial_number}" if record.serial_number else "Serial unavailable"
         print_device(record, ports, interfaces, selector)
+    for port in sorted(bridges, key=lambda p: p.device):
+        selector = f"  --serial {port.serial_number}" if port.serial_number else ""
+        print(f"UART bridge (P4 Nano compatible){selector}")
+        print(f"  Console {port.device}")
+        print("  Maintenance: hello, reboot, dfu, flash, flash-tzdata")
 
 
 def print_device(record, ports, interfaces, selector=None):
@@ -501,12 +570,12 @@ def print_device(record, ports, interfaces, selector=None):
 
 def select_port(ports, interfaces, serial_number=None):
     devices = airgrep_ports(ports, serial_number)
-    matches = console_ports(devices, interfaces)
+    matches = console_ports(devices, interfaces) + uart_bridges(ports, serial_number)
     if len(matches) == 1:
         return matches[0].device
     if len(matches) > 1:
         choices = ", ".join(f"{p.device} (serial {p.serial_number})" for p in matches)
-        raise ProtocolError(f"Multiple AIRGREP devices: {choices}. Select --serial or --port")
+        raise ProtocolError(f"Multiple console ports: {choices}. Select --serial or --port")
     if devices:
         choices = ", ".join(port.device for port in devices)
         raise ProtocolError(f"Cannot identify CDC console port among {choices}. Use --port")
@@ -746,8 +815,8 @@ def into_rom(usb, selector, board, image, force):
     return target.mac, wait_rom_port(usb, target.mac)
 
 
-def esptool(port, *arguments):
-    subprocess.run([sys.executable, "-m", "esptool", "--chip", "esp32s3", "-p", port,
+def esptool(port, *arguments, chip="esp32s3", rom=False):
+    subprocess.run([sys.executable, "-m", "esptool", "--chip", chip, "-p", port, *(["--no-stub"] if rom else []),
                     "--before=default-reset", *arguments], check=True)
 
 
@@ -760,14 +829,14 @@ def partition(name):
     raise ProtocolError(f"partitions.csv has no {name} partition")
 
 
-def image_board(image, data):
+def image_board(image, data, chip=9):
     """The board an application image declares, after the checks of the Utility's Maintenance.Image."""
     if len(data) < 112 or data[0] != 0xE9 or data[32:36] != bytes((0x32, 0x54, 0xCD, 0xAB)):
         raise ProtocolError(f"{image} is no ESP application image")
     project = data[80:112].split(b"\0")[0].decode(errors="replace")
     if project != "airgrep":
         raise ProtocolError(f"{image} is firmware of another project, {project}")
-    if data[12:14] != bytes((9, 0)):
+    if data[12:14] != bytes((chip, 0)):
         raise ProtocolError(f"{image} is firmware for another chip")
     # device_info.c places "airgrep-board:" BOARD_NAME at the start of the first segment's data.
     descriptor = b"airgrep-board:"
@@ -917,14 +986,6 @@ def main(argv=None):
     if args.command is None:
         parser.print_usage()
     try:
-        if args.command == "flash":
-            flash(Path(args.arguments[0]), selector, args.force)
-            return 0
-        if args.command == "flash-tzdata":
-            flash_tzdata(Path(args.arguments[0]), selector, args.force)
-            return 0
-        if args.command == "console":
-            require_picocom()
         ports, interfaces = [], {}
         if not args.port:
             try:
@@ -934,7 +995,29 @@ def main(argv=None):
                     raise
             else:
                 ports = list(list_ports.comports())
-                interfaces = interface_numbers(ports)
+                if args.command not in ("flash", "flash-tzdata"):
+                    interfaces = interface_numbers(ports)
+        if args.command not in (None, "console"):
+            bridge_ports = uart_bridges(ports, selector)
+            if bridge_ports:
+                if len(bridge_ports) != 1 or (not selector and any(
+                        (p.vid, p.pid) in (APP_USB, LEGACY_USB, ESPRESSIF_USB) for p in ports)):
+                    raise ProtocolError("Multiple devices connected, select one with --serial")
+                if not selector:
+                    usb = load_usb()
+                    with usb_snapshot(usb.core, usb.util, usb.backend) as records:
+                        if records:
+                            raise ProtocolError("Multiple devices connected, select one with --serial")
+                bridge_command(bridge_ports[0], args.command, args.arguments, args.force)
+                return 0
+        if args.command == "flash":
+            flash(Path(args.arguments[0]), selector, args.force)
+            return 0
+        if args.command == "flash-tzdata":
+            flash_tzdata(Path(args.arguments[0]), selector, args.force)
+            return 0
+        if args.command == "console":
+            require_picocom()
         if args.command == "console":
             device = args.port or select_port(ports, interfaces, selector)
             open_console(device)

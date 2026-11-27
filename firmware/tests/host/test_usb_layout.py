@@ -1,6 +1,8 @@
 import struct
 import unittest
-from unittest.mock import Mock, call
+from tempfile import TemporaryDirectory
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, call, patch
 
 import airgrep
 
@@ -25,6 +27,28 @@ class UsbLayout(unittest.TestCase):
         self.assertEqual((hello.health, hello.mode, hello.service), (0x4102, 1, 2))
         self.assertEqual(hello.load, (17, 63, 40))
         self.assertEqual((hello.firmware, hello.board, hello.chip), ("Firmware", "Board", "Chip"))
+
+    def test_bridge_refuses_service_commands_before_opening_the_port(self):
+        with patch.object(airgrep, "load_serial") as serial:
+            with self.assertRaisesRegex(airgrep.ProtocolError, "native USB"):
+                airgrep.bridge_command(Mock(), "write", [])
+            serial.assert_not_called()
+
+    def test_bridge_refuses_a_mismatched_installed_partition_even_with_force(self):
+        link = MagicMock()
+        link.readline.return_value = b"AIRGREP/1\tP4 Nano\te8f60ae7f6b1\t1\tp4\t65536\t8388608\t4096\t65536\n"
+        driver = Mock()
+        driver.Serial.return_value = link
+        with TemporaryDirectory() as folder, patch.object(airgrep, "load_serial", return_value=(driver, None)), \
+                patch.object(airgrep, "esptool") as flash:
+            table = Path(folder) / "tzdata.bin"
+            data = bytearray(airgrep.TZDATA_HEADER)
+            data[:4] = b"TZL2"
+            struct.pack_into("<I", data, 40, len(data))
+            table.write_bytes(data)
+            with self.assertRaisesRegex(airgrep.ProtocolError, "partition"):
+                airgrep.bridge_command(Mock(), "flash-tzdata", [table], True)
+            flash.assert_not_called()
 
     def test_adsbee_write_preserves_other_bytes(self):
         frame = bytes.fromhex("01 f7 00 02 34 87 00") + bytes(range(240))

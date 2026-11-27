@@ -265,6 +265,7 @@ add_executable(airgrep-utility MACOSX_BUNDLE
         app/App.swift
         app/Devices.swift
         app/Session.swift
+        app/BridgeMaintenance.swift
         app/DeviceView.swift
         app/RemoteDisplay.swift
         app/DataWindow.swift

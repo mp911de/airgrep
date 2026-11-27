@@ -175,10 +175,14 @@ final class SerialPort: SerialLink, @unchecked Sendable {
     /// macOS names the port of a bootloader after the place of the device on the bus, so the port is
     /// found by what the device says about itself.
     static func path(vendor: Int, product: Int, serial: String) -> String? {
-        let wanted = serial.lowercased()
+        ports(vendor: vendor, product: product).first { $0.serial.lowercased().filter(\.isHexDigit) == serial.lowercased() }?.path
+    }
+
+    static func ports(vendor: Int, product: Int) -> [(serial: String, path: String)] {
+        var matches: [(String, String)] = []
         var ports: io_iterator_t = 0
         guard IOServiceGetMatchingServices(kIOMainPortDefault, IOServiceMatching(kIOSerialBSDServiceValue), &ports) == KERN_SUCCESS
-        else { return nil }
+        else { return [] }
         defer { IOObjectRelease(ports) }
         while case let port = IOIteratorNext(ports), port != 0 {
             defer { IOObjectRelease(port) }
@@ -188,12 +192,12 @@ final class SerialPort: SerialLink, @unchecked Sendable {
             }
             let number: String = property("USB Serial Number", ofParents: true) ?? ""
             if property("idVendor", ofParents: true) == vendor, property("idProduct", ofParents: true) == product,
-               number.lowercased().filter(\.isHexDigit) == wanted,
+               !number.isEmpty,
                let path: String = property(kIOCalloutDeviceKey, ofParents: false) {
-                return path
+                matches.append((number, path))
             }
         }
-        return nil
+        return matches
     }
 }
 
