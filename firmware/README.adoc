@@ -90,7 +90,9 @@ cmake --workflow --preset s3+800x480-touch+debug-flash
 Each preset in link:CMakePresets.json[CMakePresets.json] has a build workflow and a `-flash` workflow.
 Flashing puts the device into its bootloader over USB and opens the console afterwards. `AIRGREP_SERIAL` selects a device by its factory MAC.
 
-A preset is the `s3` board plus `+` mixins, one sdkconfig fragment each.
+For the P4 Nano with the Raspberry Pi 5-inch Touch Display 2, use `p4+rpi5+debug-flash` over USB-C.
+
+An S3 preset is the `s3` board plus `+` mixins, one sdkconfig fragment each.
 A new combination is one line in `configurePresets`, `"inherits": ["s3", "+800x480-touch", "+debug"]`, plus its build and workflow entries.
 
 [cols="1m,3",options="header"]

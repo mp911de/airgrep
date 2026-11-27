@@ -1,4 +1,19 @@
 idf_build_get_property(test AIRGREP_TEST)
+set(usb_sources "usb/usb_device.cpp" "usb/usb_protocol.cpp" "usb/usb_console.cpp")
+if(CONFIG_AIRGREP_USB_SERVICE_COMMANDS)
+    list(APPEND usb_sources "usb/usb_commands.cpp" "usb/usb_components.cpp")
+endif()
+if (IDF_TARGET STREQUAL "esp32p4")
+    set(app_sources "display/rpi_touch_display_2.cpp")
+    if(CONFIG_AIRGREP_FPS_OVERLAY)
+        list(APPEND app_sources "display/stats_overlay.cpp")
+    endif()
+    idf_component_register(SRCS ${app_sources} ${usb_sources} INCLUDE_DIRS "."
+            PRIV_REQUIRES display esp_lcd esp_driver_i2c airgrep loop esp_tinyusb esp_pm esp_timer esp_hw_support esp_app_format)
+    # esp-clang links libunwind after compiler-rt. Pull its float conversion in first.
+    target_link_options(${COMPONENT_LIB} INTERFACE "LINKER:-u,__truncdfsf2")
+    return()
+endif()
 if (test)
     idf_component_register(SRCS "test_main.c" "log/log_ring.c" "test/test_log_ring.c"
             "log/log_session.c" "test/test_log_session.c" "system/task_stats.c" "test/test_task_stats.c"
@@ -7,10 +22,6 @@ if (test)
             INCLUDE_DIRS "." "log" "commands" "system" PRIV_INCLUDE_DIRS "../components/display/include" "../components/display/variants/800x480-touch" "../components/daidalus"
             PRIV_REQUIRES unity airgrep WHOLE_ARCHIVE)
 else ()
-    set(usb_service_sources)
-    if(CONFIG_AIRGREP_USB_SERVICE_COMMANDS)
-        list(APPEND usb_service_sources "usb/usb_commands.cpp" "usb/usb_components.cpp")
-    endif()
     # The ViewState a display shows of the States, and the conflict engine on the event loop. Nothing
     # pushes either to a panel yet.
     set(display_sources)
@@ -26,8 +37,7 @@ else ()
             "commands/cmd_charger.cpp" "commands/cmd_battery_level.cpp" "commands/cmd_baro.cpp"
             "commands/cmd_fusb.cpp" "commands/cmd_beep.cpp" "commands/cmd_adsbee.cpp" "commands/cmd_gnss.cpp" "commands/cmd_clock.cpp" "commands/cmd_settings.cpp" "commands/cmd_wifi.cpp" "commands/cmd_traffic.cpp"
             "commands/cmd_hwtest.cpp" "commands/cmd_conflicts.cpp" "commands/command_status.cpp" "commands/cmd_tasks.c" "system/task_stats.c"
-            "usb/usb_device.cpp" "usb/usb_protocol.cpp" "usb/usb_console.cpp"
-            ${usb_service_sources} ${display_sources}
+            ${usb_sources} ${display_sources}
             INCLUDE_DIRS "." "log" "commands" "system"
             PRIV_REQUIRES airgrep loop hwtest display daidalus console esp_timer esp_driver_gpio
             esp_tinyusb esp_pm esp_app_format esp_hw_support espcoredump esp_partition)

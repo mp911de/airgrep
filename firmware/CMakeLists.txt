@@ -23,6 +23,11 @@ endif()
 set(SDKCONFIG_DEFAULTS sdkconfig.defaults ${AIRGREP_BOARD_CONFIG} ${AIRGREP_DISPLAY_CONFIG}
         ${AIRGREP_MODE_CONFIG} ${AIRGREP_CONSOLE_CONFIG} ${AIRGREP_SERVICE_CONFIG} ${AIRGREP_DEBUG_CONFIG})
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+if(IDF_TARGET STREQUAL "esp32p4")
+    # Component Manager records the resolved target in its lockfile.
+    configure_file(dependencies.lock "${CMAKE_BINARY_DIR}/dependencies.lock" COPYONLY)
+    idf_build_set_property(DEPENDENCIES_LOCK "${CMAKE_BINARY_DIR}/dependencies.lock")
+endif()
 idf_build_set_property(MINIMAL_BUILD ON)
 # Requirements are resolved in a script-mode pass that cannot see cache variables.
 idf_build_set_property(AIRGREP_TEST "${AIRGREP_TEST}")
@@ -33,6 +38,12 @@ if(CONFIG_AIRGREP_DISPLAY STREQUAL "800x480-touch")
     idf_component_get_property(lvgl_lib lvgl__lvgl COMPONENT_LIB)
     include(tools/lvgl-glyphs.cmake)
     airgrep_lvgl_glyphs(${lvgl_lib} "${lvgl_dir}")
+    if(CONFIG_LV_USE_PPA)
+        # LVGL's private draw headers expose the PPA driver and cache API to widgets.
+        idf_component_get_property(ppa_lib esp_driver_ppa COMPONENT_LIB)
+        idf_component_get_property(mm_lib esp_mm COMPONENT_LIB)
+        target_link_libraries(${lvgl_lib} INTERFACE ${ppa_lib} ${mm_lib})
+    endif()
 endif()
 
 if(CONFIG_IDF_TARGET_ESP32S3 AND CONFIG_AIRGREP_DISPLAY STREQUAL "800x480-touch")
@@ -69,13 +80,19 @@ add_custom_command(TARGET app POST_BUILD
                 "${AIRGREP_IMAGES}/${CMAKE_PROJECT_NAME}-${AIRGREP_VARIANT}-${PROJECT_VER}.bin"
         VERBATIM)
 
-# Builds the application image, then airgrep.py puts the device into its bootloader, writes the image
-# into the factory partition and opens the console.
+# The Nano flashes through its UART bridge. The S3 service boots and flashes over native USB.
 idf_build_get_property(python PYTHON)
-add_custom_target(flash-device
-        COMMAND "${python}" "${CMAKE_SOURCE_DIR}/tools/airgrep.py" flash "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin"
-        USES_TERMINAL VERBATIM)
-add_dependencies(flash-device app)
+if(CONFIG_AIRGREP_BOARD_P4_NANO)
+    add_custom_target(flash-device
+            COMMAND "${python}" "$ENV{IDF_PATH}/tools/idf.py" -B "${CMAKE_BINARY_DIR}" monitor
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+            DEPENDS flash USES_TERMINAL VERBATIM)
+else()
+    add_custom_target(flash-device
+            COMMAND "${python}" "${CMAKE_SOURCE_DIR}/tools/airgrep.py" flash "${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin"
+            USES_TERMINAL VERBATIM)
+    add_dependencies(flash-device app)
+endif()
 
 find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format REQUIRED)
 file(GLOB_RECURSE AIRGREP_FORMAT_SOURCES CONFIGURE_DEPENDS

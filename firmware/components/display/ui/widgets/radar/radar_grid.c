@@ -21,12 +21,13 @@ void radar_grid_release(radar_grid_cache_t **cache)
 
 static bool layer_ready(lv_layer_t *layer)
 {
+    /* With no draw threads, software and the blocking PPA both finish in dispatch. */
     const lv_draw_buf_t *buf = layer->draw_buf;
     if(LV_USE_OS != LV_OS_NONE || LV_USE_DRAW_SW_ASM != LV_DRAW_SW_ASM_NONE ||
        layer->color_format != LV_COLOR_FORMAT_RGB565 || layer->opa != LV_OPA_COVER || layer->recolor.alpha ||
        !buf || !buf->data || buf->header.cf != LV_COLOR_FORMAT_RGB565 ||
        ((uintptr_t)buf->data & 1u) || (buf->header.stride & 1u) ||
-       lv_draw_get_unit_count() != 1 || lv_draw_sw_get_blend_handler(LV_COLOR_FORMAT_RGB565) ||
+       lv_draw_get_unit_count() != 1u + LV_USE_PPA || lv_draw_sw_get_blend_handler(LV_COLOR_FORMAT_RGB565) ||
        lv_draw_sw_get_blend_handler(LV_COLOR_FORMAT_A8)) {
         return false;
     }

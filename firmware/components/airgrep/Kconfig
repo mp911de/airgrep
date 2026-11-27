@@ -2,10 +2,16 @@ menu "airgrep hardware"
 
     choice AIRGREP_BOARD
         prompt "Controller module"
+        default AIRGREP_BOARD_P4_NANO if IDF_TARGET_ESP32P4
         default AIRGREP_BOARD_PLUS
 
         config AIRGREP_BOARD_PLUS
             bool "XIAO ESP32-S3 Plus"
+            depends on IDF_TARGET_ESP32S3
+
+        config AIRGREP_BOARD_P4_NANO
+            bool "Waveshare ESP32-P4 Nano"
+            depends on IDF_TARGET_ESP32P4
     endchoice
 
     config AIRGREP_PIN_UART_RX

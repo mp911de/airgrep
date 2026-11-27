@@ -23,6 +23,10 @@ menu "airgrep"
 			Boots the normal loop, then runs the hardware checks and prints
 			one "HWTEST <name> PASS|FAIL <detail>" line per check.
 
+	config AIRGREP_FPS_OVERLAY
+		bool "Show live display statistics"
+		default n
+
 	config AIRGREP_PROFILER
 		bool "LVGL draw profiler"
 		default y if AIRGREP_HWTEST

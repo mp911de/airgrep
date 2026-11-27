@@ -2,12 +2,11 @@
 	"version": 6,
 	"configurePresets": [
 		{
-			"name": "esp32s3",
+			"name": "esp-idf",
 			"hidden": true,
 			"generator": "Ninja",
 			"binaryDir": "${sourceDir}/build/${presetName}",
 			"cacheVariables": {
-				"IDF_TARGET": "esp32s3",
 				"IDF_TOOLCHAIN": "clang",
 				"PYTHON": "$env{IDF_PYTHON_ENV_PATH}/bin/python",
 				"SDKCONFIG": "${sourceDir}/build/${presetName}/sdkconfig"
@@ -26,7 +25,7 @@
 			"name": "+800x480-touch",
 			"hidden": true,
 			"cacheVariables": {
-				"AIRGREP_DISPLAY_CONFIG": "components/display/variants/800x480-touch/sdkconfig;components/display/variants/800x480-touch/sdkconfig.s3"
+				"AIRGREP_DISPLAY_CONFIG": "components/display/variants/800x480-touch/sdkconfig;components/display/variants/800x480-touch/sdkconfig.pool"
 			}
 		},
 		{
@@ -37,9 +36,11 @@
 		{
 			"name": "s3",
 			"displayName": "airgrep on XIAO ESP32-S3 Plus",
-			"inherits": "esp32s3",
-			"cacheVariables": { "AIRGREP_BOARD_CONFIG": "sdkconfig.board.s3" }
+			"inherits": "esp-idf",
+			"cacheVariables": { "IDF_TARGET": "esp32s3", "AIRGREP_BOARD_CONFIG": "sdkconfig.board.s3" }
 		},
+		{ "name": "p4+rpi5", "displayName": "P4 Nano, Raspberry Pi 5-inch Touch Display 2", "inherits": ["esp-idf", "+800x480-touch"], "cacheVariables": { "IDF_TARGET": "esp32p4", "AIRGREP_BOARD_CONFIG": "sdkconfig.board.p4" } },
+		{ "name": "p4+rpi5+debug", "displayName": "P4 Nano, Raspberry Pi 5-inch Touch Display 2 with display statistics", "inherits": ["p4+rpi5", "+debug"] },
 		{ "name": "s3+service", "displayName": "S3 Plus, service commands", "inherits": ["s3", "+service"] },
 		{ "name": "s3+debug", "displayName": "S3 Plus, debug controls", "inherits": ["s3", "+debug"] },
 		{ "name": "s3+uart0", "displayName": "S3 Plus, console on UART0", "inherits": ["s3", "+uart0"] },
@@ -51,6 +52,10 @@
 		{ "name": "s3+seeed-172x320-touch", "displayName": "S3 Plus, Seeed 172x320 touch display", "inherits": ["s3", "+seeed-172x320-touch"] }
 	],
 	"buildPresets": [
+		{ "name": "p4+rpi5", "configurePreset": "p4+rpi5" },
+		{ "name": "p4+rpi5+debug", "configurePreset": "p4+rpi5+debug" },
+		{ "name": "p4+rpi5-flash", "configurePreset": "p4+rpi5", "targets": ["flash-device"] },
+		{ "name": "p4+rpi5+debug-flash", "configurePreset": "p4+rpi5+debug", "targets": ["flash-device"] },
 		{ "name": "s3", "configurePreset": "s3" },
 		{ "name": "s3-flash", "configurePreset": "s3", "targets": ["flash-device"] },
 		{ "name": "s3+service", "configurePreset": "s3+service" },
@@ -73,6 +78,10 @@
 		{ "name": "s3+seeed-172x320-touch-flash", "configurePreset": "s3+seeed-172x320-touch", "targets": ["flash-device"] }
 	],
 	"workflowPresets": [
+		{ "name": "p4+rpi5", "steps": [{ "type": "configure", "name": "p4+rpi5" }, { "type": "build", "name": "p4+rpi5" }] },
+		{ "name": "p4+rpi5+debug", "steps": [{ "type": "configure", "name": "p4+rpi5+debug" }, { "type": "build", "name": "p4+rpi5+debug" }] },
+		{ "name": "p4+rpi5-flash", "steps": [{ "type": "configure", "name": "p4+rpi5" }, { "type": "build", "name": "p4+rpi5-flash" }] },
+		{ "name": "p4+rpi5+debug-flash", "steps": [{ "type": "configure", "name": "p4+rpi5+debug" }, { "type": "build", "name": "p4+rpi5+debug-flash" }] },
 		{ "name": "s3", "steps": [{ "type": "configure", "name": "s3" }, { "type": "build", "name": "s3" }] },
 		{ "name": "s3-flash", "steps": [{ "type": "configure", "name": "s3" }, { "type": "build", "name": "s3-flash" }] },
 		{ "name": "s3+service", "steps": [{ "type": "configure", "name": "s3+service" }, { "type": "build", "name": "s3+service" }] },

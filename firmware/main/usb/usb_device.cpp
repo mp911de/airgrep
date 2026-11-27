@@ -2,9 +2,10 @@
 
 #include "sdkconfig.h"
 
-#if CONFIG_TINYUSB_CDC_ENABLED
-#if CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG_ENABLED || \
-	CONFIG_ESP_CONSOLE_USB_CDC || CONFIG_ESP_CONSOLE_UART
+#if CONFIG_TINYUSB_VENDOR_COUNT
+#if CONFIG_TINYUSB_CDC_ENABLED &&                  \
+	(CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG_ENABLED || \
+	 CONFIG_ESP_CONSOLE_USB_CDC || CONFIG_ESP_CONSOLE_UART)
 #error \
 	"TinyUSB console requires ESP_CONSOLE_NONE and ESP_CONSOLE_SECONDARY_NONE"
 #endif
@@ -20,13 +21,21 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
+#if CONFIG_IDF_TARGET_ESP32P4
+#include "settings/settings.hpp"
+#include "soc/lp_system_reg.h"
+#include "traffic/traffic.hpp"
+#else
 #include "soc/rtc_cntl_reg.h"
+#endif
 #include "soc/soc.h"
 #include "system/cpu_sampler.hpp"
 #include "system/device_info.h"
 #include "system/system.h"
 #include "tinyusb.h"
+#if CONFIG_TINYUSB_CDC_ENABLED
 #include "tinyusb_cdc_acm.h"
+#endif
 #include "tinyusb_default_config.h"
 #include "usb_console.hpp"
 #include "usb_protocol.hpp"
@@ -41,11 +50,11 @@ namespace {
 using protocol::Command;
 using protocol::Status;
 constexpr uint8_t kData = 0;
-constexpr uint16_t kDataInterface = 2;
+constexpr uint16_t kDataInterface = CFG_TUD_CDC * 2;
 constexpr size_t kFrameCapacity = UINT16_MAX;
 constexpr size_t kTransferCapacity =
 	std::min(CONFIG_TINYUSB_VENDOR_EPSIZE, CONFIG_TINYUSB_VENDOR_TX_BUFSIZE);
-static_assert(CONFIG_TINYUSB_CDC_COUNT == 1);
+static_assert(CFG_TUD_CDC <= 1);
 static_assert(CONFIG_TINYUSB_VENDOR_COUNT == 1);
 static_assert(CFG_TUD_VENDOR_TXRX_BUFFERED);
 static_assert(kTransferCapacity >= 64);
@@ -125,8 +134,12 @@ protocol::Hello hello() {
 	result.psram_free = heap_caps_get_free_size(psram);
 	result.psram_minimum = heap_caps_get_minimum_free_size(psram);
 	result.psram_total = heap_caps_get_total_size(psram);
+#if CONFIG_IDF_TARGET_ESP32P4
+	result.mode = POWER_MODE_UNKNOWN;
+#else
 	result.health = system_health();
 	result.mode = system_mode();
+#endif
 #if CONFIG_AIRGREP_USB_SERVICE_COMMANDS
 	result.service = protocol::Service::present;
 #else
@@ -337,12 +350,17 @@ void restart(Command action) {
 	// Give the host an observable detach before the ROM/application enumerates.
 	vTaskDelay(pdMS_TO_TICKS(100));
 	if (action == Command::enter_bootloader) {
+#if CONFIG_IDF_TARGET_ESP32P4
+		REG_SET_BIT(LP_SYSTEM_REG_SYS_CTRL_REG,
+					LP_SYSTEM_REG_FORCE_DOWNLOAD_BOOT);
+#else
 		usb_phy_config_t config{};
 		config.controller = USB_PHY_CTRL_SERIAL_JTAG;
 		config.target = USB_PHY_TARGET_INT;
 		usb_phy_handle_t phy = nullptr;
 		ESP_ERROR_CHECK(usb_new_phy(&config, &phy));
 		REG_SET_BIT(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
+#endif
 	}
 	esp_restart();
 }
@@ -394,6 +412,11 @@ void transmitted() {
 }
 
 esp_err_t start() {
+#if CONFIG_IDF_TARGET_ESP32P4 && CONFIG_AIRGREP_USB_SERVICE_COMMANDS
+	loop::start();
+	ESP_ERROR_CHECK(settings::init());
+	ESP_ERROR_CHECK(traffic::start());
+#endif
 	input = static_cast<uint8_t*>(
 		heap_caps_malloc(kFrameCapacity, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
 	response = static_cast<uint8_t*>(
@@ -419,12 +442,29 @@ esp_err_t start() {
 									CONFIG_TINYUSB_DESC_MANUFACTURER_STRING,
 									device_info()->device_id,
 									device_serial(),
+#if CONFIG_TINYUSB_CDC_ENABLED
 									CONFIG_TINYUSB_DESC_CDC_STRING,
+#endif
 									"airgrep Data"};
 	auto config = TINYUSB_DEFAULT_CONFIG(device_event);
+#if !CONFIG_TINYUSB_CDC_ENABLED
+	// esp_tinyusb requires explicit configuration descriptors for vendor-only
+	// devices.
+	static constexpr uint8_t full_speed[] = {
+		TUD_CONFIG_DESCRIPTOR(
+			1, 1, 0, TUD_CONFIG_DESC_LEN + TUD_VENDOR_DESC_LEN, 0, 100),
+		TUD_VENDOR_DESCRIPTOR(kDataInterface, 4, 0x01, 0x81, 64)};
+	static constexpr uint8_t high_speed[] = {
+		TUD_CONFIG_DESCRIPTOR(
+			1, 1, 0, TUD_CONFIG_DESC_LEN + TUD_VENDOR_DESC_LEN, 0, 100),
+		TUD_VENDOR_DESCRIPTOR(kDataInterface, 4, 0x01, 0x81, 512)};
+	config.descriptor.full_speed_config = full_speed;
+	config.descriptor.high_speed_config = high_speed;
+#endif
 	config.task.xCoreID = 0;
 	config.descriptor.string = strings;
 	config.descriptor.string_count = sizeof strings / sizeof strings[0];
+#if CONFIG_IDF_TARGET_ESP32S3
 	// The ROM's USB download keeps the USB controller out of reset across a
 	// restart. The driver's reset of it then does nothing and the host keeps
 	// the ROM's device until the cable is pulled. Espressif's Arduino core
@@ -432,11 +472,16 @@ esp_err_t start() {
 	// any other start.
 	REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_IO_MUX_RESET_DISABLE);
 	REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_USB_RESET_DISABLE);
+#endif
 	ESP_ERROR_CHECK(tinyusb_driver_install(&config));
+#if CONFIG_TINYUSB_CDC_ENABLED
 	tinyusb_config_cdcacm_t cdc{};
 	cdc.cdc_port = TINYUSB_CDC_ACM_0;
 	ESP_ERROR_CHECK(tinyusb_cdcacm_init(&cdc));
 	return usb_console_init();
+#else
+	return ESP_OK;
+#endif
 }
 }
 

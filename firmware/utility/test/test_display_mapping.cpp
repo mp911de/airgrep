@@ -220,7 +220,13 @@ void device_facts() {
 
 	device.sources.starting = true;
 	CHECK(device.map().mode == display::Mode::starting);
+	device.sources.mode = POWER_MODE_UNKNOWN;
+	CHECK(device.map().mode == display::Mode::starting);
+	device.sources.mode = POWER_MODE_OFF;
+	CHECK(device.map().mode == display::Mode::on);
 	device.sources.mode = POWER_MODE_CHARGER;
+	CHECK(device.map().mode == display::Mode::starting);
+	device.sources.starting = false;
 	shown = device.map();
 	CHECK(shown.mode == display::Mode::charger);
 	CHECK(shown.dark_theme);

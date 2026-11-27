@@ -11,6 +11,7 @@
 #include "device.h"
 #include "navigation/great_circle.hpp"
 #include "navigation/units.h"
+#include "screen_mode.hpp"
 #include "system/health.hpp"
 #include "traffic/traffic_table.hpp"
 
@@ -471,9 +472,7 @@ display::ViewState build_view_state(const ViewInputs& sources,
 	const uint16_t duration = minutes(sources.battery.charge_duration_hours);
 	display::ViewState result;
 	result.language = preferences.language;
-	result.mode = charger_mode       ? display::Mode::charger
-				  : sources.starting ? display::Mode::starting
-									 : display::Mode::on;
+	result.mode = screen_mode(sources.mode, sources.starting);
 	result.device_name = sources.device_name;
 	result.version = sources.version;
 	result.greeting_seed = sources.greeting;
