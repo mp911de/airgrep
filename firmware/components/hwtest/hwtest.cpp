@@ -5,20 +5,20 @@
 #include <cstdarg>
 #include <cstdio>
 
-#include "baro/barometer.hpp"
-#include "battery/max17048.hpp"
-#include "charger/bq25798.hpp"
-#include "device.h"
 #include "esp_heap_caps.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
-#include "i2c_expander/tca9534.hpp"
 #include "soc/soc.h"
-#include "usb/fusb303.hpp"
 #if CONFIG_IDF_TARGET_ESP32S3
+#include "baro/barometer.hpp"
+#include "battery/max17048.hpp"
+#include "charger/bq25798.hpp"
+#include "device.h"
+#include "i2c_expander/tca9534.hpp"
 #include "soc/extmem_reg.h"
+#include "usb/fusb303.hpp"
 #endif
 
 #ifdef HWTEST_BENCHMARKS
@@ -27,6 +27,7 @@
 #endif
 #ifdef HWTEST_RENDER
 #include "display/display.hpp"
+#include "esp_app_desc.h"
 #include "render_benchmark.hpp"
 #endif
 
@@ -44,8 +45,10 @@ void Output::report(const char* name, bool pass, const char* detail) {
 }
 
 namespace {
-constexpr int64_t kReadyTimeoutUs = 6000000;
 constexpr uint32_t kStackBytes = 32 * 1024;
+
+#if CONFIG_AIRGREP_BOARD_PLUS
+constexpr int64_t kReadyTimeoutUs = 6000000;
 
 void charger_identity(Output& output) {
 	const auto charger = charger::State::copy();
@@ -124,6 +127,7 @@ void report_driver_readiness(Output& output, int64_t deadline_us) {
 }
 
 void drivers_ready(Output& output) { report_driver_readiness(output, 0); }
+#endif
 
 #ifdef HWTEST_BENCHMARKS
 constexpr uint32_t kBenchmarkSteps = 20;
@@ -263,6 +267,22 @@ void render_memory(Output& output, const char* phase) {
 }
 
 lv_display_t* render_panel(Output& output) {
+	char sha256[65]{};
+	const auto& digest = esp_app_get_description()->app_elf_sha256;
+	for (size_t i = 0; i < sizeof digest; ++i) {
+		(void)std::snprintf(sha256 + i * 2, 3, "%02x", digest[i]);
+	}
+	output.print(
+#if CONFIG_IDF_TARGET_ESP32P4
+		"Render image ELF %s PSRAM %u MHz L2 cache line %u B, L2 %u KiB\n",
+		sha256, CONFIG_SPIRAM_SPEED, CONFIG_CACHE_L2_CACHE_LINE_SIZE,
+		CONFIG_CACHE_L2_CACHE_SIZE / 1024U);
+#else
+		"Render image ELF %s PSRAM %u MHz cache line %u B, "
+		"D-cache %u KiB\n",
+		sha256, CONFIG_SPIRAM_SPEED, CONFIG_ESP32S3_DATA_CACHE_LINE_SIZE,
+		CONFIG_ESP32S3_DATA_CACHE_SIZE / 1024U);
+#endif
 	render_memory(output, "Before render setup");
 	static lv_display_t* panel = nullptr;
 	if (panel) {
@@ -325,6 +345,7 @@ void render_profile(Output& output) {
 #endif
 
 constexpr Entry kEntries[] = {
+#if CONFIG_AIRGREP_BOARD_PLUS
 	{"charger_identity", "The charger names itself", false, charger_identity},
 	{"battery_identity", "The fuel gauge names itself", false,
 	 battery_identity},
@@ -335,6 +356,7 @@ constexpr Entry kEntries[] = {
 	{"expander_identity", "The port expander answers", false,
 	 expander_identity},
 	{"drivers_ready", "Every driver is ready", false, drivers_ready},
+#endif
 #ifdef HWTEST_BENCHMARKS
 	{"alerting_10", "DAIDALUS alerting only, 10 aircraft", true, engine<10>},
 	{"alerting_50", "DAIDALUS alerting only, 50 aircraft", true, engine<50>},
@@ -407,6 +429,7 @@ RunResult run(const Entry& entry, std::FILE* stream) {
 }
 
 void run_boot_checks() {
+#if CONFIG_AIRGREP_BOARD_PLUS
 	Output output(stdout);
 	for (const Entry& entry : kEntries) {
 		if (entry.benchmark) {
@@ -419,5 +442,6 @@ void run_boot_checks() {
 			entry.run(output);
 		}
 	}
+#endif
 }
 }

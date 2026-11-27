@@ -31,6 +31,7 @@ endif()
 idf_build_set_property(MINIMAL_BUILD ON)
 # Requirements are resolved in a script-mode pass that cannot see cache variables.
 idf_build_set_property(AIRGREP_TEST "${AIRGREP_TEST}")
+idf_build_set_property(AIRGREP_PANEL "${AIRGREP_PANEL}")
 project(airgrep)
 
 if(CONFIG_AIRGREP_DISPLAY STREQUAL "800x480-touch")
@@ -55,7 +56,7 @@ if(CONFIG_IDF_TARGET_ESP32S3 AND CONFIG_AIRGREP_DISPLAY STREQUAL "800x480-touch"
             APPEND PROPERTY COMPILE_DEFINITIONS lv_draw_sw_blend=radar_wedge_blend)
 endif()
 
-if(CONFIG_AIRGREP_PROFILER AND CONFIG_AIRGREP_BOARD_PLUS AND CONFIG_AIRGREP_DISPLAY STREQUAL "800x480-touch")
+if(CONFIG_AIRGREP_PROFILER AND NOT AIRGREP_PANEL AND CONFIG_AIRGREP_DISPLAY STREQUAL "800x480-touch")
     idf_component_get_property(lvgl_lib lvgl__lvgl COMPONENT_LIB)
     set(draw_profiler_dir "${CMAKE_CURRENT_SOURCE_DIR}/components/hwtest")
     set(draw_profiler_defs LV_USE_PROFILER=1 LV_PROFILER_DRAW=1

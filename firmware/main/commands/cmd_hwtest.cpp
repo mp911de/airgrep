@@ -37,10 +37,18 @@ bool run_selection(const char* asked) {
 	if (std::strcmp(asked, "all") == 0) {
 		return std::ranges::all_of(entries, run_entry);
 	}
+	const auto named =
+		std::ranges::find_if(entries, [asked](const auto& entry) {
+			return std::strcmp(asked, entry.name) == 0;
+		});
 	char* end = nullptr;
-	const unsigned long number = std::strtoul(asked, &end, 10);
-	if (end == asked || *end != '\0' || number < 1 || number > entries.size()) {
-		std::printf("hwtest: %s is not a number of the list\n", asked);
+	const unsigned long number =
+		named != entries.end()
+			? static_cast<unsigned long>(named - entries.begin()) + 1
+			: std::strtoul(asked, &end, 10);
+	if ((end && (end == asked || *end != '\0')) || number < 1 ||
+		number > entries.size()) {
+		std::printf("hwtest: %s is not a listed test\n", asked);
 		return false;
 	}
 	return run_entry(entries[number - 1]);
@@ -48,7 +56,7 @@ bool run_selection(const char* asked) {
 
 int hwtest_command(int argc, char** argv) {
 	if (argc > 2) {
-		std::printf("usage: hwtest [NUMBER|all]\n");
+		std::printf("usage: hwtest [NAME|NUMBER|all]\n");
 		return 1;
 	}
 	if (argc == 2) {
@@ -56,7 +64,7 @@ int hwtest_command(int argc, char** argv) {
 	}
 	list();
 	for (;;) {
-		char* line = linenoise("hwtest, number or all, empty to leave> ");
+		char* line = linenoise("hwtest, name, number or all, empty to leave> ");
 		const bool leave = line == nullptr || line[0] == '\0';
 		if (!leave) {
 			run_selection(line);
@@ -73,7 +81,7 @@ extern "C" esp_err_t console_register_hwtest(void) {
 	const esp_console_cmd_t command = {
 		.command = "hwtest",
 		.help = "List the checks and benchmarks of the device and run them.",
-		.hint = "[NUMBER|all]",
+		.hint = "[NAME|NUMBER|all]",
 		.func = hwtest_command,
 		.argtable = nullptr,
 		.func_w_context = nullptr,
