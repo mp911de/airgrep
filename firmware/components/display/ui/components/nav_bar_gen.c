@@ -33,10 +33,11 @@ lv_obj_t * nav_bar_create(lv_obj_t * parent, const char * title, int32_t page, i
     #if AIRGREP_UI_CHECK_COMPILE_TARGET(AIRGREP_UI_TARGET_ALL)
     if (airgrep_ui_check_target(AIRGREP_UI_TARGET_ALL)) {
         lv_obj_t * lv_obj_0 = lv_obj_create(parent);
-        lv_obj_set_name_static(lv_obj_0, "nav_bar_#");
+        lv_obj_set_name(lv_obj_0, "back_button");
         lv_obj_set_width(lv_obj_0, lv_pct(100));
         lv_obj_set_height(lv_obj_0, TOUCH);
         lv_obj_set_flex_flow(lv_obj_0, LV_FLEX_FLOW_ROW);
+        lv_obj_set_clickable(lv_obj_0, true);
         lv_obj_set_scrollable(lv_obj_0, false);
         lv_obj_set_style_flex_cross_place(lv_obj_0, LV_FLEX_ALIGN_CENTER, 0);
         lv_obj_set_style_flex_track_place(lv_obj_0, LV_FLEX_ALIGN_CENTER, 0);
@@ -48,22 +49,20 @@ lv_obj_t * nav_bar_create(lv_obj_t * parent, const char * title, int32_t page, i
         lv_obj_set_style_border_side(lv_obj_0, LV_BORDER_SIDE_BOTTOM, 0);
 
         lv_obj_remove_theme(lv_obj_0, LV_PART_MAIN);
-        lv_obj_t * back_button = lv_obj_create(lv_obj_0);
-        lv_obj_set_name(back_button, "back_button");
-        lv_obj_set_width(back_button, TOUCH);
-        lv_obj_set_height(back_button, TOUCH);
-        lv_obj_set_clickable(back_button, true);
-        lv_obj_set_scrollable(back_button, false);
-        lv_obj_remove_theme(back_button, LV_PART_MAIN);
-        lv_obj_add_style(back_button, &style_pressed_clear, LV_STATE_PRESSED);
-        lv_obj_t * lv_image_0 = lv_image_create(back_button);
+        lv_obj_add_style(lv_obj_0, &style_pressed_clear, LV_STATE_PRESSED);
+        lv_obj_add_event_cb(lv_obj_0, nav_bar_set_subject_cb, LV_EVENT_CLICKED, inst);
+        lv_obj_add_event_cb(lv_obj_0, nav_bar_set_subject_cb_2, LV_EVENT_CLICKED, inst);
+        lv_obj_t * lv_obj_1 = lv_obj_create(lv_obj_0);
+        lv_obj_set_width(lv_obj_1, TOUCH);
+        lv_obj_set_height(lv_obj_1, TOUCH);
+        lv_obj_set_clickable(lv_obj_1, false);
+        lv_obj_set_scrollable(lv_obj_1, false);
+        lv_obj_remove_theme(lv_obj_1, LV_PART_MAIN);
+        lv_obj_t * lv_image_0 = lv_image_create(lv_obj_1);
         lv_image_set_src(lv_image_0, icon_chevron_left);
         lv_obj_set_align(lv_image_0, LV_ALIGN_CENTER);
         lv_subject_add_observer_obj(color_tint, nav_bar_lv_image_0_style_image_recolor_binding_cb, lv_image_0, NULL);
         lv_obj_set_style_image_recolor_opa(lv_image_0, (255 * 100 / 100), 0);
-
-        lv_obj_add_event_cb(back_button, nav_bar_set_subject_cb, LV_EVENT_CLICKED, inst);
-        lv_obj_add_event_cb(back_button, nav_bar_set_subject_cb_2, LV_EVENT_CLICKED, inst);
 
         lv_obj_t * bar_title = lv_label_create(lv_obj_0);
         lv_obj_set_name(bar_title, "bar_title");
